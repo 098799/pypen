@@ -20,24 +20,26 @@ class Ink():
         self.__dict__.update(entries)
         self.Lista.append(self)
 
-def DoTheImporting():
-    with open('pens.json', 'r') as infile:
-        PenList = json.load(infile)
-        pioro = {}
-    for number, pen in enumerate(PenList):
-        pioro[number] = Pen(**pen)
-
-    with open('nibs.json', 'r') as infile:
-        NibList = json.load(infile)
-        stalowka = {}
-    for number, nib in enumerate(NibList):
-        stalowka[number] = Nib(**nib)
-
-    with open('inks.json', 'r') as infile:
-        InkList = json.load(infile)
-        atrament = {}
-    for number, ink in enumerate(InkList):
-        atrament[number] = Ink(**ink)
+def DoTheImporting(item):
+    if item == "p":
+        with open('pens.json', 'r') as infile:
+            Lista = json.load(infile)
+            global pioro
+            pioro = {}
+        for number, pen in enumerate(Lista):
+            pioro[number] = Pen(**pen)
+    elif item == "n":
+        with open('nibs.json', 'r') as infile:
+            Lista = json.load(infile)
+            stalowka = {}
+        for number, nib in enumerate(Lista):
+            stalowka[number] = Nib(**nib)
+    elif item == "i":
+        with open('inks.json', 'r') as infile:
+            Lista = json.load(infile)
+            atrament = {}
+        for number, ink in enumerate(Lista):
+            atrament[number] = Ink(**ink)
 
 def DoTheExporting():
     PenList = []
@@ -57,20 +59,35 @@ def DoTheExporting():
         json.dump(InkList,outfile)
 
 def DoTheAdding(item):
-    brand = input("Pen brand?\n")
-    model = input("Pen model?\n")
-    nachste = item(**{'Brand': brand, 'Model': model})
+    if item == "p":
+        brand = input("Pen brand?\n")
+        model = input("Pen model?\n")
+        price = eval(input("Price?\n"))
+        nibs = eval(input("Nibs?\n"))
+        boughtmonth, boughtyear = eval(input("Bought in (month,year)?\n"))
+        pioro[len(Pen.Lista)] = Pen(**{'Brand': brand, 'Model': model, 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Nibs': nibs})
+    if item == "n":
+        pass
+    if item == "i":
+        pass
 
 def main():
-    DoTheImporting()
+    DoTheImporting('p')
+    DoTheImporting('n')
+    DoTheImporting('i')
     while True:
-        x = input("What do you want to do?\n Possible options are:\n\n export (e) -- exports json files\n quit (q) -- quits the program\n add (a) -- add or change something \n")
+        print(pioro)
+        x = input("What do you want to do?\n Possible options are:\n\n export (e) -- exports json files\n quit (q) -- quits the program\n add pen (ap)\n add nib (an)\n add ink (ai)\n")
         if x == "export" or x == "e":
             DoTheExporting()
         elif x == "quit" or x == "q":
             exit()
-        elif x == "add" or x == "ap":
-            DoTheAdding(Pen)
+        elif x == "ap":
+            DoTheAdding('p')
+        elif x == "an":
+            DoTheAdding('n')
+        elif x == "ai":
+            DoTheAdding('i')
         else:
             print("Invalid command")
 
