@@ -67,7 +67,30 @@ def DoTheAdding(item):
         boughtmonth, boughtyear = eval(input("Bought in (month,year)?\n"))
         pioro[len(Pen.Lista)] = Pen(**{'Brand': brand, 'Model': model, 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Nibs': nibs})
     if item == "n":
-        pass
+        brand = input("Nib Brand?\n")
+        q = input("Size? Available:\n a) #6,\n b) #6 small,\n c) #5.5,\n d) #5,\n e) #5 small,\n f) lamy,\n g) none of the above \n")
+        if q == "a":
+            size = "#6"
+        elif q == "b":
+            size = "#6s"
+        elif q == "c":
+            size = "#5.5"
+        elif q == "d":
+            size = "#5"
+        elif q == "e":
+            size = "#5s"
+        elif q == "f":
+            size = "lamy"
+        elif q == "g":
+            size = "other"
+        else:
+            print("Invalid nib size, bombing out")
+            return
+        width = input("Nib width? (xxf, ef, f, m, mk, b, ) \n")
+        price = input("Price if sold separately?\n")
+        boughtmonth, boughtyear = eval(input("Bought in (month,year) if separately?\n"))
+
+        # stalowka[len(Nib.Lista)] = Nib(**{'Brand': brand, 'Size': size, 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Nibs': nibs})
     if item == "i":
         pass
 
@@ -77,6 +100,8 @@ def main():
     DoTheImporting('i')
     while True:
         print(pioro)
+        print(stalowka)
+        print(atrament)
         x = input("What do you want to do?\n Possible options are:\n\n export (e) -- exports json files\n quit (q) -- quits the program\n add pen (ap)\n add nib (an)\n add ink (ai)\n")
         if x == "export" or x == "e":
             DoTheExporting()
