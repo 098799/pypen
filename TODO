@@ -1,0 +1,9 @@
+#TODOS in the pypen project:
+
+0. Write down uses of pens. This will be the core of your library and the reason for doing all of this stuff.
+1. Get the data flowing. During the collection of the data you will figure out what additional fields need to be added. There's not so much data for this to be too tedious.
+2. Functionalities of the program:
+ a) Generating a JSON file for archival reasons.
+ b) Adding new entries, this actually doesn't matter too much since we don't really have the bulk data to parse. I find the current method of choosing the options more managable than the pure input of tables and clearly more then editing the JSON.
+ c) Presenting the data -- unknown.
+ d) Additional functions for choosing next combo and so on -- to be added while using the program.
