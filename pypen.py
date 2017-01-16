@@ -1,11 +1,13 @@
 #!/usr/bin/python3.5
-from datetime import date
 import json
-from sys import argv, exit
+from sys import exit
 
-PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year', 'Nibs')#, 'Filling system')
-NibTuple = ('Brand', 'Size', 'Price', 'BoughtMonth', 'BoughtYear', 'Plating', 'Material')
-InkTuple = ()
+PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
+            'Bought From', 'Nibs', 'Filling system')
+NibTuple = ('Brand', 'Size', 'Width', 'Price', 'BoughtMonth', 'BoughtYear',
+            'Plating', 'Material')
+InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity')
+
 
 def DoTheImporting(item):
     if item == "p":
@@ -21,28 +23,47 @@ def DoTheImporting(item):
             global InkList
             InkList = json.load(infile)
 
+
 def DoTheExporting():
     with open('pens.json', 'w') as outfile:
-        json.dump(PenList,outfile)
+        json.dump(PenList, outfile)
     with open('nibs.json', 'w') as outfile:
-        json.dump(NibList,outfile)
+        json.dump(NibList, outfile)
     with open('inks.json', 'w') as outfile:
-        json.dump(InkList,outfile)
+        json.dump(InkList, outfile)
+
 
 def DoTheAdding(item):
     if item == "p":
         brand = input("Pen brand?\n")
         model = input("Pen model?\n")
+        penid = brand+model
+        penid = penid.replace(" ", "")
         price = eval(input("Price?\n"))
-        nibs = eval(input("Nibs?\n"))
+        size = input("""Nib Size? Available:
+a) #6,
+b) #6 small [also: ab) for both],
+c) #5.5,
+d) #5,
+e) #5 small [also: de) for both],
+f) lamy,
+g) hooded
+h) other \n""")
+        sizeDict = {'a': '#6', 'b': '#6s', 'ab': ['#6', '#6s'], 'c': '#5.5',
+                    'd': '#5', 'e': '#5s', 'de': ['#5', '#5s'],
+                    'f': 'lamy', 'g': 'hooded', 'h': 'other'}
         boughtmonth, boughtyear = eval(input("Bought in (month,year)?\n"))
         boughtfrom = input("Bought from?\n")
-        fillingsystem = input("Filling system? enter for c/c, something else for piston")
+        fillingsystem = input("Filling system? enter for c/c, something else for \
+piston")
         if fillingsystem == '':
             fillingsystem = "Cartridge/converter"
-        else:
+        elif fillingsystem == 'piston' or fillingsystem == 'p':
             fillingsystem = "Piston"
-        PenList.append({'Brand': brand, 'Model': model, 'Price': price, 'Bought Month': boughtmonth, 'Bought Year': boughtyear, 'Nibs': nibs, 'Filling system': fillingsystem})
+        PenList[penid] = {'Brand': brand, 'Model': model, 'Price': price,
+                          'Bought Month': boughtmonth, 'Bought Year':
+                          boughtyear, 'Bought From': boughtfrom, 'Nibs':
+                          sizeDict[size], 'Filling system': fillingsystem}
 
     if item == "n":
         brand = input("Nib Brand?\n")
@@ -51,8 +72,10 @@ def DoTheAdding(item):
             steelorgold = 'Steel'
         else:
             steelorgold = '14k gold'
-        size = input("Size? Available:\n a) #6,\n b) #6 small,\n c) #5.5,\n d) #5,\n e) #5 small,\n f) lamy,\n g) none of the above \n")
-        sizeDict = {'a': '#6', 'b': '#6s', 'c': '#5.5', 'd': '#5', 'e': '#5s', 'f': 'lamy', 'g': 'hooded', 'h': 'other'}
+        size = input("Size? Available:\n a) #6,\n b) #6 small,\n c) #5.5,\n \
+        d) #5,\n e) #5 small,\n f) lamy,\n g) none of the above \n")
+        sizeDict = {'a': '#6', 'b': '#6s', 'c': '#5.5', 'd': '#5', 'e': '#5s',
+        'f': 'lamy', 'g': 'hooded', 'h': 'other'}
         width = input("Nib width? (xxf, ef, f, m, mk, b, ) \n")
         price = input("Price if sold separately?\n")
         boughtyear = input("Bought in (year) if separately?\n")
@@ -64,36 +87,46 @@ def DoTheAdding(item):
         NibList.append({'Brand': brand, 'Size': sizeDict[size], 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Plating': colorDict[color], 'Material': steelorgold})
 
     if item == "i":
-        pass
+        brand =  input("Ink brand?\n")
+        name  =  input("Ink name\n")
+        inkid = brand+name
+        inkid = inkid.replace(" ", "")
+        color =  input("Ink actual color\n")
+        volume = input("Bottle capacity in ml?\n")
+        if int(volume)>3:
+            bottle = "Bottle"
+        else:
+            bottle = "Sample"
+        InkList[inkid] = {'Brand': brand, 'Name': name, 'Color': color, 'BottleOrSample': bottle, 'Bottle capacity': volume}
 
-def DoTheChanging():
-    change = input("What do you want to change? (p)en, (n)ib or (i)nk \n")
-    changeDict = {'p': Pen, 'n': Nib, 'i': Ink}
-    print("Which of the items below do you want to modify? Type a number")
-    i = 0
-    association = {}
-    for item in changeDict[change].Lista:
-        i += 1
-        association[i] = item
-        print(i,item.Brand,item.Model)
-    ourpen = association[int(input())].__dict__
-    print("Which thing do you want to change? Type a number")
-    i = 0
-    association2 = {}
-    for thing in ourpen:
-        i += 1
-        association2[i] = thing
-        print(i,thing,"--",ourpen[thing])
-    thingtobechanged = association2[int(input())]
-    ourpen[thingtobechanged] = input("Type the correct value\n")
+def DoTheChanging(val):
+    if val == "p":
+        print("Which pen do you want to change?")
+        for item in PenList:
+            print(item)
+        whichpen = input()
+        print("Press the number of what you want to change:")
+        for numb, item in enumerate(PenTuple):
+            print(numb, item)
+        which = input()
+        print("To what are we changing it?")
+        PenList[whichpen][PenTuple[int(which)]] = input()
 
-def DoTheListing():
-    val = input("What do you want to list? (p)ens, (n)ibs or (i)nks?\n")
-    valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple), 'i': (InkList, InkTuple)}
-    for item in valDict[val][0]:
+
+def DoTheListing(val):
+    valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
+               'i': (InkList, InkTuple)}
+    print('')
+    for n, item in enumerate(valDict[val][0]):
+        print(str(n+1).zfill(2), end=' ')
         for items in valDict[val][1]:
-            print(items,":",item[items],end=', ')
+            try:
+                print(valDict[val][0][item][items], end=', ')
+            except:
+                pass
         print('')
+    print('')
+
 
 def main():
     DoTheImporting('p')
@@ -101,14 +134,22 @@ def main():
     DoTheImporting('i')
     print("#################")
     print("Welcome to pypen!")
-    print("#################\n")
-    for pen in PenList:
-        print(pen['Model'])
     while True:
-        x = input("What do you want to do?\n Possible options are:\n\n (l)ist -- lists items\n (e)xport -- exports json files\n (q)uit -- quits the program\n (ap) add pen\n (an) add nib\n (ai) add ink\n (c)hange something\n")
+        print("#################\n")
+        x = input("""What do you want to do?
+Possible options are:
+
+(lp) list pens, (li) list inks
+(e)xport -- exports json files
+(q)uit -- exports the database and quits the program, (qwe) -- quit without export
+(ap) add pen, (an) add nib, (ai) add ink
+(cp) change pen\n""")
         if x == "export" or x == "e":
             DoTheExporting()
         elif x == "quit" or x == "q":
+            DoTheExporting()
+            exit()
+        elif x == "qwe":
             exit()
         elif x == "ap":
             DoTheAdding('p')
@@ -116,12 +157,15 @@ def main():
             DoTheAdding('n')
         elif x == "ai":
             DoTheAdding('i')
-        elif x == "c":
-            DoTheChanging()
-        elif x == "l":
-            DoTheListing()
+        elif x == "cp":
+            DoTheChanging('p')
+        elif x == "lp":
+            DoTheListing('p')
+        elif x == "li":
+            DoTheListing('i')
         else:
             print("Invalid command")
+
 
 if __name__ == "__main__":
     main()
