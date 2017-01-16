@@ -6,7 +6,8 @@ PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
             'Bought From', 'Nibs', 'Filling system')
 NibTuple = ('Brand', 'Size', 'Width', 'Price', 'BoughtMonth', 'BoughtYear',
             'Plating', 'Material')
-InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity')
+InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity',
+            'BoughtOrPresent', 'BoughtMonth', 'BoughtYear', 'GotFrom')
 
 
 def DoTheImporting(item):
@@ -97,20 +98,36 @@ piston")
             bottle = "Bottle"
         else:
             bottle = "Sample"
-        InkList[inkid] = {'Brand': brand, 'Name': name, 'Color': color, 'BottleOrSample': bottle, 'Bottle capacity': volume}
+        bop = input("Bought or present? enter for bought\n")
+        if bog == '':
+            bop = 'Bought'
+        else:
+            bop = 'Present'
+        bm, by = eval(input("Bought in (month,year)?\n"))
+        gf = input("Got from?\n")
+        InkList[inkid] = {'Brand': brand, 'Name': name, 'Color': color, 'BottleOrSample': bottle, 'Bottle capacity': volume, "BoughtOrPresent": bop, 'BoughtMonth': bm, 'BoguhtYear': by, 'GotFrom': gf}
 
 def DoTheChanging(val):
-    if val == "p":
-        print("Which pen do you want to change?")
-        for item in PenList:
-            print(item)
-        whichpen = input()
-        print("Press the number of what you want to change:")
-        for numb, item in enumerate(PenTuple):
-            print(numb, item)
-        which = input()
-        print("To what are we changing it?")
-        PenList[whichpen][PenTuple[int(which)]] = input()
+    valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
+               'i': (InkList, InkTuple)}
+    print('')
+    print("Which item do you want to change?")
+    association = {}
+    for numb, item in enumerate(valDict[val][0]):
+        association[numb] = item
+        print(numb, item)
+    whichpen = input()
+    print("Press the number of what you want to change:")
+    for numb, item in enumerate(valDict[val][1]):
+        print(numb, item)
+    which = input()
+    print("To what are we changing it? (was:",
+          valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]], ")")
+    reading = input()
+    if reading == '':
+        pass
+    else:
+        valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]] = reading
 
 
 def DoTheListing(val):
@@ -132,6 +149,24 @@ def main():
     DoTheImporting('p')
     DoTheImporting('n')
     DoTheImporting('i')
+    print("2015")
+    i = 0
+    for item in InkList:
+        if InkList[item]['BoughtYear'] == 2015:
+            i += 1
+            print(i, item)
+    print("2016")
+    i = 0
+    for item in InkList:
+        if InkList[item]['BoughtYear'] == 2016:
+            i += 1
+            print(i, item)
+    print("2017")
+    i = 0
+    for item in InkList:
+        if InkList[item]['BoughtYear'] == 2017:
+            i += 1
+            print(i, item)
     print("#################")
     print("Welcome to pypen!")
     while True:
@@ -143,7 +178,7 @@ Possible options are:
 (e)xport -- exports json files
 (q)uit -- exports the database and quits the program, (qwe) -- quit without export
 (ap) add pen, (an) add nib, (ai) add ink
-(cp) change pen\n""")
+(cp) change pen, (ci) change ink\n""")
         if x == "export" or x == "e":
             DoTheExporting()
         elif x == "quit" or x == "q":
@@ -159,6 +194,8 @@ Possible options are:
             DoTheAdding('i')
         elif x == "cp":
             DoTheChanging('p')
+        elif x == "ci":
+            DoTheChanging('i')
         elif x == "lp":
             DoTheListing('p')
         elif x == "li":
