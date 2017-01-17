@@ -4,7 +4,7 @@ from sys import exit
 
 PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
             'Bought From', 'Nibs', 'Filling system')
-NibTuple = ('Brand', 'Size', 'Width', 'Price', 'BoughtMonth', 'BoughtYear',
+NibTuple = ('Brand', 'Size', 'Width', 'Stubness', 'Price', 'BoughtMonth', 'BoughtYear',
             'Plating', 'Material')
 InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity',
             'BoughtOrPresent', 'BoughtMonth', 'BoughtYear', 'GotFrom', 'Price')
@@ -23,6 +23,10 @@ def DoTheImporting(item):
         with open('inks.json', 'r') as infile:
             global InkList
             InkList = json.load(infile)
+    if item == "u":
+        with open('usage.json', 'r') as infile:
+            global UsageList
+            UsageList = json.load(infile)
 
 
 def DoTheExporting():
@@ -32,6 +36,8 @@ def DoTheExporting():
         json.dump(NibList, outfile)
     with open('inks.json', 'w') as outfile:
         json.dump(InkList, outfile)
+    with open('usage.json', 'w') as outfile:
+        json.dump(UsageList, outfile)
 
 
 def DoTheAdding(item):
@@ -48,11 +54,18 @@ c) #5.5,
 d) #5,
 e) #5 small [also: de) for both],
 f) lamy,
-g) hooded
-h) other \n""")
+g) hooded nonremovable,
+h) Pilot number 5,
+i) Waterman Hemisphere,
+j) Parker Frontier,
+k) Sheaffer Agio,
+l) Preppy,
+m) WingSung -- Pilot steel,
+o) other \n""")
         sizeDict = {'a': '#6', 'b': '#6s', 'ab': ['#6', '#6s'], 'c': '#5.5',
                     'd': '#5', 'e': '#5s', 'de': ['#5', '#5s'],
-                    'f': 'lamy', 'g': 'hooded', 'h': 'other'}
+                    'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
+                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other'}
         boughtmonth, boughtyear = eval(input("Bought in (month,year)?\n"))
         boughtfrom = input("Bought from?\n")
         fillingsystem = input("Filling system? enter for c/c, something else for \
@@ -144,7 +157,7 @@ def DoTheChanging(val):
     print('')
     print("Which item do you want to change?")
     association = {}
-    for numb, item in enumerate(valDict[val][0]):
+    for numb, item in enumerate(sorted(valDict[val][0])):
         association[numb] = item
         print(numb, item)
     whichpen = input()
@@ -165,7 +178,7 @@ def DoTheListing(val):
     valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
                'i': (InkList, InkTuple)}
     print('')
-    for n, item in enumerate(valDict[val][0]):
+    for n, item in enumerate(sorted(valDict[val][0])):
         print(str(n+1).zfill(2), end=' ')
         for items in valDict[val][1]:
             try:
@@ -176,28 +189,42 @@ def DoTheListing(val):
     print('')
 
 
+def AddUsage():
+    print("Which pen has been used?\n")
+    association = {}
+    for numb, item in enumerate(sorted(PenList)):
+        association[numb] = item
+        print(numb, item)
+    whichpen = association[int(input())]
+    print("Which nib has been used?\n")
+    association = {}
+    for numb, item in enumerate(sorted(NibList)):
+        association[numb] = item
+        print(numb, item)
+    whichnib = association[int(input())]
+    print("Which ink has been used?\n")
+    association = {}
+    for numb, item in enumerate(sorted(InkList)):
+        association[numb] = item
+        print(numb, item)
+    whichink = association[int(input())]
+    begd,begm,begy = eval(input("When inked up? d,m,y   "))
+    endd,endm,endy = eval(input("When inked down? d,m,y   "))
+    usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
+    UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
+                          'Begin': [begd,begm,begy], 'End': [endd,endm,endy]}
+
+
+def UsageListing():
+    for item in UsageList:
+        print(item)
+
+
 def main():
     DoTheImporting('p')
     DoTheImporting('n')
     DoTheImporting('i')
-    print("2015")
-    i = 0
-    for item in InkList:
-        if InkList[item]['BoughtYear'] == 2015:
-            i += 1
-            print(i, item)
-    print("2016")
-    i = 0
-    for item in InkList:
-        if InkList[item]['BoughtYear'] == 2016:
-            i += 1
-            print(i, item)
-    print("2017")
-    i = 0
-    for item in InkList:
-        if InkList[item]['BoughtYear'] == 2017:
-            i += 1
-            print(i, item)
+    DoTheImporting('u')
     print("#################")
     print("Welcome to pypen!")
     while True:
@@ -209,7 +236,9 @@ Possible options are:
 (e)xport -- exports json files
 (q)uit -- exports the database and quits the program, (qwe) -- quit without export
 (ap) add pen, (an) add nib, (ai) add ink
-(cp) change pen, (cn) change nibs, (ci) change ink\n""")
+(cp) change pen, (cn) change nibs, (ci) change ink
+        or maybeeeeeeee
+u) add a usage or lu) list usages \n""")
         if x == "export" or x == "e":
             DoTheExporting()
         elif x == "quit" or x == "q":
@@ -235,6 +264,10 @@ Possible options are:
             DoTheListing('n')
         elif x == "li":
             DoTheListing('i')
+        elif x == "u":
+            AddUsage()
+        elif x == "lu":
+            UsageListing()
         else:
             print("Invalid command")
 
