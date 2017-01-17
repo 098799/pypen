@@ -75,10 +75,10 @@ piston")
             steelorgold = '14k gold'
         size = input("""Size? Available:
 a) #6,
-b) #6 small,   ab) both of them
+b) #6 small
 c) #5.5,
 d) #5,
-e) #5 small,   de) both of them
+e) #5 small
 f) lamy,
 g) hooded nonremovable,
 h) Pilot number 5,
@@ -88,17 +88,17 @@ k) Sheaffer Agio,
 l) Preppy,
 m) WingSung -- Pilot steel,
 o) other \n""")
-        sizeDict = {'a': '#6', 'b': '#6s', 'ab': ["#6", "#6s"], 'c': '#5.5', 'd': '#5', 'e': '#5s',
-                    'ef': ['#5', '#5s'], 'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
+        sizeDict = {'a': '#6', 'b': '#6s', 'c': '#5.5', 'd': '#5', 'e': '#5s',
+                    'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
                     'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other'}
-        width = input("Nib width? [1) xxf, 2) ef, 3) f, 4) m, 5) mk, 6) b, 7) bb, 8) 1.1, 9) 1.5) \n")
-        widthDict = {'1': "XXF", "2": "EF", "3": "F", "4": "M", "5": "MK", "6": "B", "7": "BB", "8": "1.1", "9": "1.5"}
+        width = input("Nib width? [1) xxf, 2) ef, 3) f, 4) m, 5) mk, 6) b, 7) bb, 8) 1.1, 9) 1.5), 10) 1.9 \n")
+        widthDict = {'1': "XXF", "2": "EF", "3": "F", "4": "M", "5": "MK", "6": "B", "7": "BB", "8": "1.1", "9": "1.5", "10": "1.9"}
         nibid = brand+sizeDict[size]+widthDict[width]
         nibid = nibid.replace(" ", "")
         while nibid in NibList:
             nibid = nibid+'i'
         stubness = input("Enter for round, 's' for stub, 'i' for italic \n")
-        if stubness != '':
+        if stubness == '':
             stubness = "Round"
         elif stubness == 's':
             stubness = "Stub"
