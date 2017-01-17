@@ -7,7 +7,7 @@ PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
 NibTuple = ('Brand', 'Size', 'Width', 'Price', 'BoughtMonth', 'BoughtYear',
             'Plating', 'Material')
 InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity',
-            'BoughtOrPresent', 'BoughtMonth', 'BoughtYear', 'GotFrom')
+            'BoughtOrPresent', 'BoughtMonth', 'BoughtYear', 'GotFrom', 'Price')
 
 
 def DoTheImporting(item):
@@ -68,24 +68,54 @@ piston")
 
     if item == "n":
         brand = input("Nib Brand?\n")
-        steelorgold = input("Steel or gold? (press enter for steel)\n")
+        steelorgold = input("Steel or gold? (press enter for steel, else for 14k gold)\n")
         if steelorgold == '':
             steelorgold = 'Steel'
         else:
             steelorgold = '14k gold'
-        size = input("Size? Available:\n a) #6,\n b) #6 small,\n c) #5.5,\n \
-        d) #5,\n e) #5 small,\n f) lamy,\n g) none of the above \n")
-        sizeDict = {'a': '#6', 'b': '#6s', 'c': '#5.5', 'd': '#5', 'e': '#5s',
-        'f': 'lamy', 'g': 'hooded', 'h': 'other'}
-        width = input("Nib width? (xxf, ef, f, m, mk, b, ) \n")
+        size = input("""Size? Available:
+a) #6,
+b) #6 small,   ab) both of them
+c) #5.5,
+d) #5,
+e) #5 small,   de) both of them
+f) lamy,
+g) hooded nonremovable,
+h) Pilot number 5,
+i) Waterman Hemisphere,
+j) Parker Frontier,
+k) Sheaffer Agio,
+l) Preppy,
+m) WingSung -- Pilot steel,
+o) other \n""")
+        sizeDict = {'a': '#6', 'b': '#6s', 'ab': ["#6", "#6s"], 'c': '#5.5', 'd': '#5', 'e': '#5s',
+                    'ef': ['#5', '#5s'], 'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
+                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other'}
+        width = input("Nib width? [1) xxf, 2) ef, 3) f, 4) m, 5) mk, 6) b, 7) bb, 8) 1.1, 9) 1.5) \n")
+        widthDict = {'1': "XXF", "2": "EF", "3": "F", "4": "M", "5": "MK", "6": "B", "7": "BB", "8": "1.1", "9": "1.5"}
+        nibid = brand+sizeDict[size]+widthDict[width]
+        nibid = nibid.replace(" ", "")
+        while nibid in NibList:
+            nibid = nibid+'i'
+        stubness = input("Enter for round, 's' for stub, 'i' for italic \n")
+        if stubness != '':
+            stubness = "Round"
+        elif stubness == 's':
+            stubness = "Stub"
+        elif stubness == 'i':
+            stubness = "Italic"
         price = input("Price if sold separately?\n")
-        boughtyear = input("Bought in (year) if separately?\n")
-        if boughtyear != '':
+        if price != '':
+            boughtyear = input("Bought in (year) if separately?\n")
             boughtmonth = input("Bought in (month)\n")
             boughtfrom = input("Bought from?\n")
-        color = input("Plating? a) rhodium, b) two-tone, c) gold, d) ruthenium/n")
+        else:
+            boughtyear = ''
+            boughtmonth = ''
+            boughtfrom = ''
+        color = input("Plating? a) rhodium, b) two-tone, c) gold, d) ruthenium \n")
         colorDict = {'a': 'Rhodium','b': 'Two-tone','c': 'Gold','d': 'Ruthenium'}
-        NibList.append({'Brand': brand, 'Size': sizeDict[size], 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Plating': colorDict[color], 'Material': steelorgold})
+        NibList[nibid] = {'Brand': brand, 'Size': sizeDict[size], 'Width': widthDict[width], 'Stubness': stubness, 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Plating': colorDict[color], 'Material': steelorgold}
 
     if item == "i":
         brand =  input("Ink brand?\n")
@@ -105,7 +135,8 @@ piston")
             bop = 'Present'
         bm, by = eval(input("Bought in (month,year)?\n"))
         gf = input("Got from?\n")
-        InkList[inkid] = {'Brand': brand, 'Name': name, 'Color': color, 'BottleOrSample': bottle, 'Bottle capacity': volume, "BoughtOrPresent": bop, 'BoughtMonth': bm, 'BoguhtYear': by, 'GotFrom': gf}
+        price = input("How much did it cost?\n")
+        InkList[inkid] = {'Brand': brand, 'Name': name, 'Color': color, 'BottleOrSample': bottle, 'Bottle capacity': volume, "BoughtOrPresent": bop, 'BoughtMonth': bm, 'BoguhtYear': by, 'GotFrom': gf, 'Price': price}
 
 def DoTheChanging(val):
     valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
@@ -174,11 +205,11 @@ def main():
         x = input("""What do you want to do?
 Possible options are:
 
-(lp) list pens, (li) list inks
+(lp) list pens, (ln) list nibs, (li) list inks
 (e)xport -- exports json files
 (q)uit -- exports the database and quits the program, (qwe) -- quit without export
 (ap) add pen, (an) add nib, (ai) add ink
-(cp) change pen, (ci) change ink\n""")
+(cp) change pen, (cn) change nibs, (ci) change ink\n""")
         if x == "export" or x == "e":
             DoTheExporting()
         elif x == "quit" or x == "q":
@@ -194,10 +225,14 @@ Possible options are:
             DoTheAdding('i')
         elif x == "cp":
             DoTheChanging('p')
+        elif x == "cn":
+            DoTheChanging('n')
         elif x == "ci":
             DoTheChanging('i')
         elif x == "lp":
             DoTheListing('p')
+        elif x == "ln":
+            DoTheListing('n')
         elif x == "li":
             DoTheListing('i')
         else:
