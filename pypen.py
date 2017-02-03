@@ -3,7 +3,8 @@ import json
 from sys import exit
 
 PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
-            'Bought From', 'Nibs', 'Filling system')
+            'Bought From', 'Nibs', 'Filling system', 'Nationality',
+            'Class', 'NibRemovability')
 NibTuple = ('Brand', 'Size', 'Width', 'Stubness', 'Price', 'BoughtMonth', 'BoughtYear',
             'Plating', 'Material')
 InkTuple = ('Brand', 'Name', 'Color', 'BottleOrSample', 'Bottle capacity',
@@ -49,35 +50,47 @@ def DoTheAdding(item):
         price = eval(input("Price?\n"))
         size = input("""Nib Size? Available:
 a) #6,
-b) #6 small [also: ab) for both],
+b) #6 small [also: ab) for both]
 c) #5.5,
 d) #5,
 e) #5 small [also: de) for both],
 f) lamy,
-g) hooded nonremovable,
+g) hooded,
 h) Pilot number 5,
 i) Waterman Hemisphere,
 j) Parker Frontier,
 k) Sheaffer Agio,
 l) Preppy,
 m) WingSung -- Pilot steel,
-o) other \n""")
+o) other
+p) Platinum 3776 Century
+s) Sailor 1911 Promenade \n""")
         sizeDict = {'a': '#6', 'b': '#6s', 'ab': ['#6', '#6s'], 'c': '#5.5',
                     'd': '#5', 'e': '#5s', 'de': ['#5', '#5s'],
                     'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
-                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other'}
+                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other',
+                    'p': 'Platinum3776', 's': 'Sailor1911'}
         boughtmonth, boughtyear = eval(input("Bought in (month,year)?\n"))
         boughtfrom = input("Bought from?\n")
-        fillingsystem = input("Filling system? enter for c/c, something else for \
-piston")
+        fillingsystem = input("Filling system? enter for c/c, (p) for piston, \
+(l) for lever \n")
         if fillingsystem == '':
             fillingsystem = "Cartridge/converter"
         elif fillingsystem == 'piston' or fillingsystem == 'p':
             fillingsystem = "Piston"
+        elif fillingsystem == 'l':
+            fillingsystem = "Lever"
+        clas = input("Class? Enter for modern, else for vintage \n")
+        if clas == '':
+            clas = "Modern"
+        else:
+            clas = "Vintage"
+        nation = input("Nationality? \n")
         PenList[penid] = {'Brand': brand, 'Model': model, 'Price': price,
                           'Bought Month': boughtmonth, 'Bought Year':
                           boughtyear, 'Bought From': boughtfrom, 'Nibs':
-                          sizeDict[size], 'Filling system': fillingsystem}
+                          sizeDict[size], 'Filling system': fillingsystem,
+                          'Class': clas, 'Nationality': nation}
 
     if item == "n":
         brand = input("Nib Brand?\n")
@@ -86,30 +99,30 @@ piston")
             steelorgold = 'Steel'
         else:
             steelorgold = '14k gold'
-        size = input("""Size? Available:
+        size = input("""Nib Size? Available:
 a) #6,
-b) #6 small
+b) #6 small [also: ab) for both]
 c) #5.5,
 d) #5,
-e) #5 small
+e) #5 small [also: de) for both],
 f) lamy,
-g) hooded nonremovable,
+g) hooded,
 h) Pilot number 5,
 i) Waterman Hemisphere,
 j) Parker Frontier,
 k) Sheaffer Agio,
 l) Preppy,
 m) WingSung -- Pilot steel,
-o) other \n""")
-        sizeDict = {'a': '#6', 'b': '#6s', 'c': '#5.5', 'd': '#5', 'e': '#5s',
+o) other
+p) Platinum 3776 Century
+s) Sailor 1911 Promenade \n""")
+        sizeDict = {'a': '#6', 'b': '#6s', 'ab': ['#6', '#6s'], 'c': '#5.5',
+                    'd': '#5', 'e': '#5s', 'de': ['#5', '#5s'],
                     'f': 'lamy', 'g': 'hooded', 'h': 'Pilot5', 'i': 'Hemi',
-                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other'}
+                    'j': 'Front', 'k': 'Agio', 'l': 'Preppy', 'm': 'PilotSteel', 'o': 'other',
+                    'p': 'Platinum3776', 's': 'Sailor1911'}
         width = input("Nib width? [1) xxf, 2) ef, 3) f, 4) m, 5) mk, 6) b, 7) bb, 8) 1.1, 9) 1.5), 10) 1.9 \n")
         widthDict = {'1': "XXF", "2": "EF", "3": "F", "4": "M", "5": "MK", "6": "B", "7": "BB", "8": "1.1", "9": "1.5", "10": "1.9"}
-        nibid = brand+sizeDict[size]+widthDict[width]
-        nibid = nibid.replace(" ", "")
-        while nibid in NibList:
-            nibid = nibid+'i'
         stubness = input("Enter for round, 's' for stub, 'i' for italic \n")
         if stubness == '':
             stubness = "Round"
@@ -128,6 +141,10 @@ o) other \n""")
             boughtfrom = ''
         color = input("Plating? a) rhodium, b) two-tone, c) gold, d) ruthenium \n")
         colorDict = {'a': 'Rhodium','b': 'Two-tone','c': 'Gold','d': 'Ruthenium'}
+        nibid = brand+sizeDict[size]+widthDict[width]+stubness+color
+        nibid = nibid.replace(" ", "")
+        while nibid in NibList:
+            nibid = nibid+'i'
         NibList[nibid] = {'Brand': brand, 'Size': sizeDict[size], 'Width': widthDict[width], 'Stubness': stubness, 'Price': price, 'BoughtMonth': boughtmonth, 'BoughtYear': boughtyear, 'Plating': colorDict[color], 'Material': steelorgold}
 
     if item == "i":
@@ -196,12 +213,15 @@ def AddUsage():
         association[numb] = item
         print(numb, item)
     whichpen = association[int(input())]
-    print("Which nib has been used?\n")
-    association = {}
-    for numb, item in enumerate(sorted(NibList)):
-        association[numb] = item
-        print(numb, item)
-    whichnib = association[int(input())]
+    if PenList[whichpen]["NibRemovability"] == "Nonremovable":
+        whichnib = PenList[whichpen]["OriginalNib"]
+    else:
+        print("Which nib has been used?\n")
+        association = {}
+        for numb, item in enumerate(sorted(NibList)):
+            association[numb] = item
+            print(numb, item)
+        whichnib = association[int(input())]
     print("Which ink has been used?\n")
     association = {}
     for numb, item in enumerate(sorted(InkList)):
