@@ -123,13 +123,15 @@ s) Sailor 1911 Promenade \n""")
                     'p': 'Platinum3776', 's': 'Sailor1911'}
         width = input("Nib width? [1) xxf, 2) ef, 3) f, 4) m, 5) mk, 6) b, 7) bb, 8) 1.1, 9) 1.5), 10) 1.9 \n")
         widthDict = {'1': "XXF", "2": "EF", "3": "F", "4": "M", "5": "MK", "6": "B", "7": "BB", "8": "1.1", "9": "1.5", "10": "1.9"}
-        stubness = input("Enter for round, 's' for stub, 'i' for italic \n")
+        stubness = input("Enter for round, 's' for stub, 'i' for italic, 'a' for architect \n")
         if stubness == '':
             stubness = "Round"
         elif stubness == 's':
             stubness = "Stub"
         elif stubness == 'i':
             stubness = "Italic"
+        elif stubness == 'a':
+            stubness = "Architect"
         price = input("Price if sold separately?\n")
         if price != '':
             boughtyear = input("Bought in (year) if separately?\n")
@@ -141,7 +143,7 @@ s) Sailor 1911 Promenade \n""")
             boughtfrom = ''
         color = input("Plating? a) rhodium, b) two-tone, c) gold, d) ruthenium \n")
         colorDict = {'a': 'Rhodium','b': 'Two-tone','c': 'Gold','d': 'Ruthenium'}
-        nibid = brand+sizeDict[size]+widthDict[width]+stubness+color
+        nibid = brand+sizeDict[size]+widthDict[width]+stubness+colorDict[color]
         nibid = nibid.replace(" ", "")
         while nibid in NibList:
             nibid = nibid+'i'
