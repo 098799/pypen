@@ -1,7 +1,9 @@
 #!/usr/bin/python3.5
 import json
-from sys import exit
+from sys import exit, argv
 from  collections import OrderedDict
+import pandas as pd
+from tabulate import tabulate
 
 PenTuple = ('Brand', 'Model', 'Price', 'Bought Month', 'Bought Year',
             'Bought From', 'Nibs', 'Filling system', 'Nationality',
@@ -199,14 +201,13 @@ def DoTheChanging(val):
         valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]] = reading
 
 
-def DoTheListing(vval):
+def LegacyDoTheListing(vval):
     val = vval[0]
     valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
                'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
     sortedby = valDict[val][1]
     try: sortedby = vval[1]
     except: pass
-    print('')
     adjusting = []
     for i in valDict[val][1]:
         adjusting.append(len(i))
@@ -231,7 +232,21 @@ def DoTheListing(vval):
                 pass
         print('')
     print("-"*(sum(adjusting)+6+len(valDict[val][1]*3)))
-    exit()
+
+
+def DoTheListing(val):
+    valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
+               'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
+    DF = pd.DataFrame.from_dict(valDict[val][0])
+    try:
+        bai = argv[2]
+        howtoascend = True
+        if bai == "Date":
+            bai = ["BoughtYear", "BoughtMonth"]
+        print(tabulate(DF.T.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt='rst'))
+    except:
+        print(tabulate(DF.T, headers='keys', tablefmt='rst'))
+        #nice formats: pipe, psql, rst
 
 
 def AddUsage():
@@ -263,42 +278,53 @@ def AddUsage():
                           'Begin': [begd,begm,begy], 'End': [endd,endm,endy]}
 
 
+def ParsingInput(x):
+    if x[0] == "e":
+        DoTheExporting()
+    elif x[0] == "q":
+        DoTheExporting()
+        exit()
+    elif x[0] == "a":
+        DoTheAdding(x[1])
+    elif x[0] == "c":
+        DoTheChanging(x[1])
+    elif x[0] == "l":
+        DoTheListing(x[1])
+    else:
+        print("Invalid command")
+
+
 def main():
     DoTheImporting('p')
     DoTheImporting('n')
     DoTheImporting('i')
     DoTheImporting('u')
-    # total=0
-    # for pen in sorted(PenList):
-    #     total+= int(PenList[pen]['Price'])
-    # print("total",total)
-    print("#################")
-    print("Welcome to pypen!")
-    while True:
-        print("#################\n")
-        x = input("""What do you want to do?
+    # for i in UsageList:
+    #     UsageList[i]['Begin'] = str(UsageList[i]['Begin'][2])+"-"+str(UsageList[i]['Begin'][1]).zfill(2)+"-"+str(UsageList[i]['Begin'][0]).zfill(2)
+    #     print(UsageList[i]['Begin'])
+    # DoTheExporting()
+    # exit()
+    try:
+        x = argv[1]
+        ParsingInput(x)
+    except:
+        print("#################")
+        print("Welcome to pypen!")
+        while True:
+            print("#################\n")
+            x = input("""What do you want to do?
 Possible options are:
 
 (e)xport -- exports json files
 (q)uit -- exports the database and quits the program
-(lX) list:
+(lX Y) list:
         X: (p)ens, (n)ibs, (i)nks, (u)sages
+        (additional) Y: Brand, Class, Model, Nationality, Nibs, Price, Date etc.
 (aX) add
-(cX) change \n""")
-        if x[0] == "e":
-            DoTheExporting()
-        elif x[0] == "q":
-            DoTheExporting()
-            exit()
-        elif x[0] == "a":
-            DoTheAdding(x[1])
-        elif x[0] == "c":
-            DoTheChanging(x[1])
-        elif x[0] == "l":
-            DoTheListing(x[1:])
-        else:
-            print("Invalid command")
-
+(cX) change
+\n""")
+            ParsingInput(x)
+    exit()
 
 
 if __name__ == "__main__":
