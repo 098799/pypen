@@ -238,14 +238,15 @@ def DoTheListing(val):
     valDict = {'p': (PenList, PenTuple), 'n': (NibList, NibTuple),
                'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
     DF = pd.DataFrame.from_dict(valDict[val][0])
+    formatt = "psql"
     try:
         bai = argv[2]
         howtoascend = True
         if bai == "Date":
-            bai = ["BoughtYear", "BoughtMonth"]
-        print(tabulate(DF.T.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt='rst'))
+            bai = "Bought"
+        print(tabulate(DF.T.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt=formatt))
     except:
-        print(tabulate(DF.T, headers='keys', tablefmt='rst'))
+        print(tabulate(DF.T, headers='keys', tablefmt=formatt))
         #nice formats: pipe, psql, rst
 
 
@@ -299,9 +300,17 @@ def main():
     DoTheImporting('n')
     DoTheImporting('i')
     DoTheImporting('u')
-    # for i in UsageList:
-    #     UsageList[i]['Begin'] = str(UsageList[i]['Begin'][2])+"-"+str(UsageList[i]['Begin'][1]).zfill(2)+"-"+str(UsageList[i]['Begin'][0]).zfill(2)
-    #     print(UsageList[i]['Begin'])
+    # for i in InkList:
+    #     if InkList[i]["BoughtYear"] != "":
+    #         InkList[i]["Bough"] = str(InkList[i]["BoughtYear"])+"-"+str(InkList[i]["BoughtMonth"]).zfill(2)
+    #     del InkList[i]["BoughtYear"]
+    #     del InkList[i]["BoughtMonth"]
+    # DoTheListing("i")
+    # DoTheExporting()
+    # exit()
+    # for i in InkList:
+    #     InkList[i]["Price"] = int(InkList[i]["Price"])
+    # DoTheListing("i")
     # DoTheExporting()
     # exit()
     try:
