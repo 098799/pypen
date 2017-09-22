@@ -215,14 +215,24 @@ def LegacyDoTheListing(vval):
 def DoTheListing(val):
     valDict = {'p': (PenList, PenTuple),  # 'n': (NibList, NibTuple),
                'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
-    DF = pd.DataFrame.from_dict(valDict[val][0])
-    formatt = "psql"
     try:
+        bai = argv[2:]
+        for number, i in enumerate(bai):
+            if "=" in i:
+                newdict = {}
+                for j in valDict[val][0]:
+                    if valDict[val][0][j][(i.split("="))[0]]==(i.split("="))[1]:
+                        newdict[j]=valDict[val][0][j]
+                bai[number]=(i.split("="))[0]
+                break
+            else:
+                newdict = valDict[val][0]
+        DF = pd.DataFrame.from_dict(newdict)
+        formatt = "psql"
         dai = []
         DF = DF.T
         for i in DF.axes[1]:
             dai.append(i)
-        bai = argv[2:]
         if "-All" not in bai:
             bai.append("-All")
         for item in bai:
@@ -240,6 +250,8 @@ def DoTheListing(val):
                 DF = DF.drop(i, 1)
         print(tabulate(DF.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt=formatt))
     except:
+        DF = pd.DataFrame.from_dict(valDict[val][0])
+        formatt = "psql"
         print(tabulate(DF, headers='keys', tablefmt=formatt))
         # nice formats: pipe, psql, rst
 
