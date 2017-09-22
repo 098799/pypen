@@ -217,20 +217,46 @@ def DoTheListing(val):
                'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
     try:
         bai = argv[2:]
+        newdict = valDict[val][0]
         for number, i in enumerate(bai):
             if "=" in i:
-                newdict = {}
-                for j in valDict[val][0]:
-                    if valDict[val][0][j][(i.split("="))[0]]==(i.split("="))[1]:
-                        newdict[j]=valDict[val][0][j]
+                overnewdict = {}
+                for j in newdict:
+                    if ("-" in valDict[val][0][j][(i.split("="))[0]]):
+                        if int(valDict[val][0][j][(i.split("="))[0]].split("-")[0])==int((i.split("="))[1]):
+                            overnewdict[j]=valDict[val][0][j]
+                    else:
+                        if valDict[val][0][j][(i.split("="))[0]]==(i.split("="))[1]:
+                            overnewdict[j]=valDict[val][0][j]
                 bai[number]=(i.split("="))[0]
-                break
-            else:
-                newdict = valDict[val][0]
-        DF = pd.DataFrame.from_dict(newdict)
+                newdict = overnewdict
+        for number, i in enumerate(bai):
+            if ".GT." in i:
+                overnewdict = {}
+                for j in newdict:
+                    if ("-" in valDict[val][0][j][(i.split(".GT."))[0]]):
+                        if float(valDict[val][0][j][(i.split(".GT."))[0]].split("-")[0])>float((i.split(".GT."))[1]):
+                            overnewdict[j]=valDict[val][0][j]
+                    else:
+                        if float((valDict[val][0][j][(i.split(".GT."))[0]]).split("-"))>float((i.split(".GT."))[1]):
+                            overnewdict[j]=valDict[val][0][j]
+                bai[number]=(i.split(".GT."))[0]
+                newdict = overnewdict
+        for number, i in enumerate(bai):
+            if ".LT." in i:
+                overnewdict = {}
+                for j in newdict:
+                    if ("-" in valDict[val][0][j][(i.split(".LT."))[0]]):
+                        if float(valDict[val][0][j][(i.split(".LT."))[0]].split("-")[0])<float((i.split(".LT."))[1]):
+                            overnewdict[j]=valDict[val][0][j]
+                    else:
+                        if float((valDict[val][0][j][(i.split(".LT."))[0]]).split("-"))<float((i.split(".LT."))[1]):
+                            overnewdict[j]=valDict[val][0][j]
+                bai[number]=(i.split(".LT."))[0]
+                newdict = overnewdict
+        DF = pd.DataFrame.from_dict(newdict).T
         formatt = "psql"
         dai = []
-        DF = DF.T
         for i in DF.axes[1]:
             dai.append(i)
         if "-All" not in bai:
@@ -250,7 +276,7 @@ def DoTheListing(val):
                 DF = DF.drop(i, 1)
         print(tabulate(DF.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt=formatt))
     except:
-        DF = pd.DataFrame.from_dict(valDict[val][0])
+        DF = pd.DataFrame.from_dict(valDict[val][0]).T
         formatt = "psql"
         print(tabulate(DF, headers='keys', tablefmt=formatt))
         # nice formats: pipe, psql, rst
