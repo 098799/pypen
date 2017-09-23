@@ -254,6 +254,12 @@ def DoTheListing(val):
                             overnewdict[j]=valDict[val][0][j]
                 bai[number]=(i.split(".LT."))[0]
                 newdict = overnewdict
+        # for number, j in enumerate(bai):
+        #     if j == ".":
+        #         for numberre, i in enumerate(sorted(newdict)):
+        #             newdict[i][".lp"] = numberre+1
+        #         print(bai)
+        #         del bai[number]
         DF = pd.DataFrame.from_dict(newdict).T
         formatt = "psql"
         dai = []
@@ -274,10 +280,15 @@ def DoTheListing(val):
         if dai != []:
             for i in dai:
                 DF = DF.drop(i, 1)
-        print(tabulate(DF.sort_values(by=bai, ascending=howtoascend), headers='keys', tablefmt=formatt))
+        DF=DF.sort_values(by=bai, ascending=howtoascend)
+        DF=DF.reset_index()
+        DF.index=range(1,len(DF.index)+1)
+        print(tabulate(DF, headers='keys', tablefmt=formatt))
     except:
         DF = pd.DataFrame.from_dict(valDict[val][0]).T
         formatt = "psql"
+        DF=DF.reset_index()
+        DF.index=range(1,len(DF.index)+1)
         print(tabulate(DF, headers='keys', tablefmt=formatt))
         # nice formats: pipe, psql, rst
 
