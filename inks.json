@@ -139,6 +139,7 @@
         "From": "f-pen",
         "Name": "Kensington Blue",
         "Price": 17,
+        "UsedUp": "No",
         "Vol": "30"
     },
     "DiamineMajesticBlue": {
@@ -171,6 +172,7 @@
         "From": "f-pen",
         "Name": "Presidential Blue",
         "Price": 17,
+        "UsedUp": "No",
         "Vol": "30"
     },
     "DiamineRoyalBlue": {
@@ -181,6 +183,7 @@
         "From": "f-pen",
         "Name": "Royal Blue",
         "Price": 17,
+        "UsedUp": "No",
         "Vol": "30"
     },
     "DiamineSaragassoSea": {
@@ -202,6 +205,7 @@
         "From": "f-pen",
         "Name": "Steel Blue",
         "Price": 17,
+        "UsedUp": "No",
         "Vol": "30"
     },
     "DiamineTwilight": {
@@ -289,6 +293,7 @@
         "From": "f-pen",
         "Name": "Baltic Memories",
         "Price": 35,
+        "UsedUp": "No",
         "Vol": "60"
     },
     "KWZGrapefruit": {
@@ -409,6 +414,7 @@
         "From": "Konrad",
         "Name": "Jentle Oku-Yama",
         "Price": 87,
+        "UsedUp": "No",
         "Vol": "50"
     },
     "SailorJentleTokiwa-Matsu": {
@@ -474,6 +480,7 @@
         "From": "f-pen",
         "Name": "Harmonious Green",
         "Price": 22,
+        "UsedUp": "No",
         "Vol": "30"
     },
     "WatermanInspiredBlue": {
@@ -528,6 +535,7 @@
         "From": "f-pen",
         "Name": "Tender Purple",
         "Price": 22,
+        "UsedUp": "No",
         "Vol": "30"
     }
 }

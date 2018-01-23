@@ -7,26 +7,23 @@ import pandas as pd
 from tabulate import tabulate
 from datetime import date
 
-PenTuple = []#('Brand', 'Model', 'Price', 'Bought'
-            #'From', 'Filling', 'Nationality',
-            #'Class')
-InkTuple = ('Brand', 'Bought', 'Name', 'Color', 'Vol',
-            'BoP', 'From', 'Price')
-UsageTuple = ('Pen', 'Nib', 'Ink', 'Begin', 'End')
+PenTuple = []
+InkTuple = [] 
+UsageTuple = []
 
 class Pen:
     """A class containing all of the information about a pen"""
-    def __init__(self,x):
+    def __init__(self, x):
         self.Name = x
 
 class Ink:
     """A class containing all of the information about an ink"""
-    def __init__(self,x):
+    def __init__(self, x):
         self.Name = x
 
 class Usage:
     """A class containing all of the information about a usage"""
-    def __init__(self,x):
+    def __init__(self, x):
         self.Name = x
 
 def DoTheImporting(item):
@@ -53,13 +50,35 @@ def DoTheImporting(item):
         if item == "i":
             global InkList
             InkList = json.load(infile)
+            for i in InkList["DeAtramentisAubergine"].keys():
+                InkTuple.append(i)
+            inks = {k: Ink(k) for k in InkList}
+            for k in InkList:
+                inks[k].BoP = InkList[k]["BoP"]
+                inks[k].Bought = InkList[k]["Bought"]
+                inks[k].Brand = InkList[k]["Brand"]
+                inks[k].Color = InkList[k]["Color"]
+                inks[k].From = InkList[k]["From"]
+                inks[k].Name = InkList[k]["Name"]
+                inks[k].Price = InkList[k]["Price"]
+                inks[k].UsedUp = InkList[k]["UsedUp"]
+                inks[k].Vol = InkList[k]["Vol"]
         if item == "u":
             global UsageList
             UsageList = json.load(infile)
+            for i in UsageList["Baoer05122.03.2017"].keys():
+                UsageTuple.append(i)
+            usages = {k: Usage(k) for k in UsageList}
+            for k in UsageList:
+                usages[k].Begin = UsageList[k]["Begin"]
+                usages[k].End = UsageList[k]["End"]
+                usages[k].Ink = UsageList[k]["Ink"]
+                usages[k].Nib = UsageList[k]["Nib"]
+                usages[k].Pen = UsageList[k]["Pen"]
 
 
 def DoTheExporting():
-    with open('pens.json', 'w') as outfile:
+    with open('pens.json', 'w') as outfile:1
         json.dump(PenList, outfile, indent=4, sort_keys=True)
     with open('inks.json', 'w') as outfile:
         json.dump(InkList, outfile, indent=4, sort_keys=True)
@@ -145,7 +164,8 @@ def DoTheChanging(val):
         print(numb, item)
     which = input()
     print("To what are we changing it? (was:",
-          valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]], ")")
+        valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]]
+          , ")")
     reading = input()
     if reading == '':
         pass
@@ -580,7 +600,8 @@ def ParsingInput(x):
 
 def main():
     DoTheImporting('p')
-    # DoTheImporting('n')
+    print(pens["Lamy2000"])
+    exit()
     DoTheImporting('i')
     DoTheImporting('u')
     if len(argv) > 1:
@@ -591,16 +612,12 @@ def main():
         print("Welcome to pypen!")
         while True:
             print("#################\n")
-            x = input("""What do you want to do?
-Possible options are:
+            x = input("""You basically should be:
 
-(e)xport -- exports json files
-(q)uit -- exports the database and quits the program
-(lX Y) list:
-        X: (p)ens, (n)ibs, (i)nks, (u)sages
-        (additional) Y: Brand, Class, Model, Nationality, Nibs, Price, Date etc.
-(aX) add
-(cX) change
+(e)xporting -- exports json files
+(q)uitting -- exports the database and quits the program
+(l)isting, (a)dding, (c)hanging:
+        X: (p)ens, (i)nks, (u)sages
 \n""")
             ParsingInput(x)
     exit()
