@@ -904,10 +904,10 @@
         "From": "Allegro",
         "Model": "Ideal 52V",
         "Nationality": "American",
-        "Out": "No",
-        "OutPr": 0,
+        "Out": "2018-01",
+        "OutPr": 100,
         "Price": 140,
-        "Rot": "5"
+        "Rot": "Out"
     },
     "WatermanHemisphere": {
         "Bought": "2010-10",
