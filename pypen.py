@@ -7,9 +7,11 @@ import pandas as pd
 from tabulate import tabulate
 from datetime import date
 
+
 PenTuple = []
 InkTuple = [] 
 UsageTuple = []
+
 
 def DoTheImporting(item):
     filename = {"p": "pens.json", "i": "inks.json", "u": "usage.json"}
@@ -46,12 +48,12 @@ def DoTheExporting():
 def DoTheAdding(item):
     valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
     if item == "p":
-        whatWeList = ValDict[item]
-        for char in whatWeList:
+        theList = ValDict[item]
+        for char in theList:
             print("\n "+"-"*len(char),"\n",char,"\n","-"*len(char))
             association = []
-            for pen in whatWeList:
-                val = whatWeList[pen][char]
+            for pen in theList:
+                val = theList[pen][char]
                 if val not in association:
                     association.append(val)
             association.sort()
@@ -76,100 +78,138 @@ def DoTheAdding(item):
 
 def DoTheChanging(val):
     valDict = {'p': (PenList, PenTuple), 'i': (InkList, InkTuple)}
+    theList = valDict[val][0]
+    theTuple = valDict[val][1]
     print('')
     print("Which item do you want to change?")
     association = {}
-    for numb, item in enumerate(sorted(valDict[val][0])):
+    for numb, item in enumerate(sorted(theList)):
         association[numb] = item
         print(numb, item)
     whichpen = input()
     print("Press the number of what you want to change:")
-    for numb, item in enumerate(valDict[val][1]):
+    for numb, item in enumerate(theTuple):
         print(numb, item)
     which = input()
     print("To what are we changing it? (was:",
-        valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]]
+        theList[association[int(whichpen)]][theTuple[int(which)]]
           , ")")
     reading = input()
     if reading == '':
         pass
     else:
-        valDict[val][0][association[int(whichpen)]][valDict[val][1][int(which)]] = reading
+        theList[association[int(whichpen)]][theTuple[int(which)]] = reading
 
 
 def DoTheListing(val):
-    valDict = {'p': (PenList, PenTuple),
-               'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
-    try:
-        bai = argv[2:]
-        newdict = valDict[val][0]
-        for number, i in enumerate(bai):
-            if "=" in i:
-                overnewdict = {}
-                for j in newdict:
-                    if ("-" in valDict[val][0][j][(i.split("="))[0]]):
-                        if int(valDict[val][0][j][(i.split("="))[0]].split("-")[0])==int((i.split("="))[1]):
-                            overnewdict[j]=valDict[val][0][j]
-                    else:
-                        if valDict[val][0][j][(i.split("="))[0]]==(i.split("="))[1]:
-                            overnewdict[j]=valDict[val][0][j]
-                bai[number]=(i.split("="))[0]
-                newdict = overnewdict
-        for number, i in enumerate(bai):
-            if ".GT." in i:
-                overnewdict = {}
-                for j in newdict:
-                    if ("-" in str(valDict[val][0][j][(i.split(".GT."))[0]])):
-                        if float(valDict[val][0][j][(i.split(".GT."))[0]].split("-")[0])>float((i.split(".GT."))[1]):
-                            overnewdict[j]=valDict[val][0][j]
-                    else:
-                        if float((valDict[val][0][j][(i.split(".GT."))[0]]))>float((i.split(".GT."))[1]):
-                            overnewdict[j]=valDict[val][0][j]
-                bai[number]=(i.split(".GT."))[0]
-                newdict = overnewdict
-        for number, i in enumerate(bai):
-            if ".LT." in i:
-                overnewdict = {}
-                for j in newdict:
-                    if ("-" in str(valDict[val][0][j][(i.split(".LT."))[0]])):
-                        if float(valDict[val][0][j][(i.split(".LT."))[0]].split("-")[0])<float((i.split(".GT."))[1]):
-                            overnewdict[j]=valDict[val][0][j]
-                    else:
-                        if float((valDict[val][0][j][(i.split(".LT."))[0]]))<float((i.split(".LT."))[1]):
-                            overnewdict[j]=valDict[val][0][j]
-                bai[number]=(i.split(".LT."))[0]
-                newdict = overnewdict
-        DF = pd.DataFrame.from_dict(newdict).T
-        formatt = "psql"
-        dai = []
-        for i in DF.axes[1]:
-            dai.append(i)
-        if "-All" not in bai:
-            bai.append("-All")
-        for item in bai:
-            if item == "-All":
-                dai = []
-                bai.remove("-All")
-                break
+    valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
+    
+    def insidesOfTheListing(theList, byWhat, dropWhat):
+        by = []
+        for item in byWhat:
+            if "=" in item:
+                firstArg = (item.split("="))[0]
+                secArg = (item.split("="))[1]
+                newDict = {}
+                for j in theList:
+                    firstValue = theList[j][firstArg]
+                    if "-" in firstValue:
+                        firstValue = firstValue.split("-")[0]
+                    if firstValue == secArg:
+                        newDict[j] = theList[j]
+                by.append(firstArg)
+                theList = newDict
+                if theList == {}:
+                    print("None")
+                    return
+            elif ".GT." in item:
+                firstArg = (item.split(".GT."))[0]
+                secArg = (item.split(".GT."))[1]
+                newDict = {}
+                for j in theList:
+                    firstValue = str(theList[j][firstArg])
+                    if "-" in firstValue:
+                        firstValue = firstValue.split("-")[0]
+                    if float(firstValue) > float(secArg):
+                        newDict[j] = theList[j]
+                by.append(firstArg)
+                theList = newDict
+                if theList == {}:
+                    print("None")
+                    return
+            elif ".LT." in item:
+                firstArg = (item.split(".LT."))[0]
+                secArg = (item.split(".LT."))[1]
+                newDict = {}
+                for j in theList:
+                    firstValue = str(theList[j][firstArg]) 
+                    if "-" in firstValue:
+                        firstValue = firstValue.split("-")[0]
+                    if float(firstValue) < float(secArg):
+                        newDict[j] = theList[j]
+                by.append(firstArg)
+                theList = newDict
+                if theList == {}:
+                    print("None")
+                    return
             else:
-                dai.remove(item)
+                by.append(item)
+        DF = pd.DataFrame.from_dict(theList).T
         howtoascend = True
-        if bai == "Date":
-            bai = "Bought"
-        if dai != []:
-            for i in dai:
+        if by == "Date":
+            by = "Bought"
+        if dropWhat != []:
+            for i in dropWhat:
                 DF = DF.drop(i, 1)
-        DF=DF.sort_values(by=bai, ascending=howtoascend)
-        DF=DF.reset_index()
-        DF.index=range(1,len(DF.index)+1)
-        print(tabulate(DF, headers='keys', tablefmt=formatt))
-    except:
-        DF = pd.DataFrame.from_dict(valDict[val][0]).T
+        DF = DF.sort_values(by=by, ascending=howtoascend)
+
         formatt = "psql"
-        DF=DF.reset_index()
-        DF.index=range(1,len(DF.index)+1)
+        DF = DF.reset_index()
+        DF.index = range(1, len(DF.index)+1)
         print(tabulate(DF, headers='keys', tablefmt=formatt))
         # nice formats: pipe, psql, rst
+
+    byWhat = []
+    dropWhat = []
+    for item in argv[2:]:
+        if item[0] == "-":
+            dropWhat.append(item[1:])
+        else:
+            byWhat.append(item)
+    
+    if val == "i":
+        theList = {}
+        theUsedUpList = {}
+        if byWhat == []: byWhat = ["Brand"]
+        for ink in valDict[val]:
+            if valDict[val][ink]["UsedUp"] == "No":
+                theList[ink] = valDict[val][ink]
+            else:
+                theUsedUpList[ink] = valDict[val][ink]
+        print("\n** Used Up ***")
+        insidesOfTheListing(theUsedUpList, byWhat, dropWhat)
+        print("\n** In Rotation ***")
+        dropWhat.append("UsedUp")
+        insidesOfTheListing(theList, byWhat, dropWhat)
+    elif val == "p":
+        theList = {}
+        theOutList = {}
+        if byWhat == []: byWhat = ["Brand"]
+        for pen in valDict[val]:
+            if valDict[val][pen]["Out"] == "No":
+                theList[pen] = valDict[val][pen]
+            else:
+                theOutList[pen] = valDict[val][pen]
+        print("\n** Left the rotation ***")
+        insidesOfTheListing(theOutList, byWhat, dropWhat)
+        print("\n** In Rotation ***")
+        dropWhat.append("Out")
+        dropWhat.append("OutPr")
+        insidesOfTheListing(theList, byWhat, dropWhat)
+    else:
+        theList = valDict[val]
+        if byWhat == []: byWhat = ["End"]
+        insidesOfTheListing(theList, byWhat, dropWhat)
 
 
 def AddUsage():
@@ -279,8 +319,8 @@ def AddEndOfUsage(**kwargs):
     
 
 def DoTheSumming(val):
-    valDict = {'p': (PenList, PenTuple),
-               'i': (InkList, InkTuple), 'u': (UsageList, UsageTuple)}
+    valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
+    theList = valDict[val]
     coDict = {'p': "pen", 'u': "usage", 'i': "ink"}
     if val == '':
         val = 'p'
@@ -290,45 +330,50 @@ def DoTheSumming(val):
 
     def numberOfDays(a,b):
         if a == "":
-            return (date.today()-date.today()).days
-        if b == "":
-            return (date.today()-date(*[int(i) for i in a.split("-")])).days
+            first = date.today()
+            second = first
+        elif b == "":
+            first = date.today()
+            second = date(*[int(i) for i in a.split("-")])
         else:
-            return (date(*[int(i) for i in b.split("-")])-date(*[int(i) for i in a.split("-")])).days
+            first = date(*[int(i) for i in b.split("-")])
+            second = date(*[int(i) for i in a.split("-")])
+        return (first-second).days
         
     def DoTheThing(thing):
         dzis = date.today()
         if thing == "Bought":
             print("**Bought**")
             boughtcounter = []
-            for item in valDict[val][0]:
-                boughtcounter.append(valDict[val][0][item]["Bought"].split("-")[0])
+            for item in theList:
+                boughtcounter.append(theList[item]["Bought"].split("-")[0])
             boughtCounter = Counter(boughtcounter)
             printing(boughtCounter)
         elif thing == "Price":
             print("**Price**")
             suma = 0
-            for item in valDict[val][0]:
-                suma += valDict[val][0][item]["Price"]
+            for item in theList:
+                suma += theList[item]["Price"]
             print("Wasted", suma, "PLN on stupid", coDict[val]+'s. By year:')
             sumapre  = 0
             suma2015 = 0
             suma2016 = 0
             suma2017 = 0
-            for item in valDict[val][0]:
-                dateofbuying=int(valDict[val][0][item]["Bought"].split("-")[0])
-                if dateofbuying<2015:
-                    sumapre += valDict[val][0][item]["Price"]
-                elif dateofbuying<2016:
-                    suma2015 += valDict[val][0][item]["Price"]
-                elif dateofbuying<2017:
-                    suma2016 += valDict[val][0][item]["Price"]
-                elif dateofbuying<2018:
-                    suma2017 += valDict[val][0][item]["Price"]
-            print("pre2015:",sumapre)
-            print("   2015:",suma2015)
-            print("   2016:",suma2016)
-            print("   2017:",suma2017)
+            for item in theList:
+                itemPrice = theList[item]["Price"]
+                dateofbuying = int(theList[item]["Bought"].split("-")[0])
+                if dateofbuying < 2015:
+                    sumapre += itemPrice
+                elif dateofbuying < 2016:
+                    suma2015 += itemPrice
+                elif dateofbuying < 2017:
+                    suma2016 += itemPrice
+                elif dateofbuying < 2018:
+                    suma2017 += itemPrice
+            print("pre2015:", sumapre)
+            print("   2015:", suma2015)
+            print("   2016:", suma2016)
+            print("   2017:", suma2017)
         elif thing == "ColorClass":
             print("**ColorClass**")
             itemziocounter = []
@@ -338,8 +383,8 @@ def DoTheSumming(val):
                            'Turquoise': 'Blue', 'Pink': 'Pink',
                            'Orange': 'Orange', 'Royal Blue': 'Blue',
                            'Grey': 'Grey', 'Teal': 'Teal', "Burgundy": "Purple"}
-            for item in valDict[val][0]:
-                itemzio = valDict[val][0][item]['Color']
+            for item in theList:
+                itemzio = theList[item]['Color']
                 itemziocounter.append(itemzioDict[itemzio])
             itemzioCounter = Counter(itemziocounter)
             printing(itemzioCounter)
@@ -347,7 +392,6 @@ def DoTheSumming(val):
             print("**"+thing+"**")
             counterek = []
             howlong = {}
-            searchlist = valDict[val][0]
             rotations = []
             for i in PenList:
                 val2 = PenList[i]["Rot"]
@@ -357,9 +401,9 @@ def DoTheSumming(val):
             for rotation in sorted(rotations)[::-1]:
                 howlong = {}
                 print("*Rotation number "+rotation+"*")
-                for item in searchlist:
-                    val1 = searchlist[item]
-                    val1th = searchlist[item][thing]
+                for item in theList:
+                    val1 = theList[item]
+                    val1th = theList[item][thing]
                     if PenList[val1th]["Rot"] == rotation:
                         if val1th not in howlong:
                             howlong[val1th] = {
@@ -378,7 +422,9 @@ def DoTheSumming(val):
                             howlong[val1th]["HowLong"] += numberOfDays(
                                 val1["Begin"], val1["End"]
                             )
-                            if numberOfDays(val1["Begin"], "") < howlong[val1th]["WhenLast"]:
+                            if numberOfDays(
+                                    val1["Begin"], ""
+                            ) < howlong[val1th]["WhenLast"]:
                                 howlong[val1th]["WhenLast"] = numberOfDays(
                                     val1["End"], ""
                                 )
@@ -394,61 +440,39 @@ def DoTheSumming(val):
             print("**"+thing+"**")
             counterek = []
             howlong = {}
-            searchlist = valDict[val][0]
             howlong = {}
             rotations = ["Bottle", "Sample"]
+            # checkOfRotations = {"Bottle": "", "Sample": "("}
             for rotation in rotations[::-1]:
                 howlong = {}
                 print("*"+rotation+"*")
-                for item in searchlist:
-                    val1 = searchlist[item]
-                    val1th = searchlist[item][thing]
-                    if rotation == "Bottle":
-                        if val1th[0:3] != "(s)":
-                            if val1th not in howlong:
-                                howlong[val1th] = {
-                                    "HowMany": 1,
-                                    "HowLong": numberOfDays(
-                                        val1["Begin"],
-                                        val1["End"]
-                                    ),
-                                    "WhenLast": numberOfDays(
-                                        val1["End"],
-                                        ""
-                                        )
-                                }
-                            else:
-                                howlong[val1th]["HowMany"] += 1
-                                howlong[val1th]["HowLong"] += numberOfDays(
-                                    val1["Begin"], val1["End"]
+                for item in theList:
+                    val1 = theList[item]
+                    val1th = theList[item][thing]
+                    cond1 = (rotation == "Bottle") and (val1th[0:3] != "(s)")
+                    cond2 = (rotation == "Sample") and (val1th[0:3] == "(s)")
+                    if cond1 or cond2:
+                        if val1th not in howlong:
+                            howlong[val1th] = {
+                                "HowMany": 1,
+                                "HowLong": numberOfDays(
+                                    val1["Begin"],
+                                    val1["End"]
+                                ),
+                                "WhenLast": numberOfDays(
+                                    val1["End"],
+                                    ""
                                     )
-                                if numberOfDays(val1["Begin"], "") < howlong[val1th]["WhenLast"]:
-                                    howlong[val1th]["WhenLast"] = numberOfDays(
-                                        val1["End"], ""
-                                    )
-                    elif rotation == "Sample":
-                        if val1th[0:3] == "(s)":
-                            if val1th not in howlong:
-                                howlong[val1th] = {
-                                    "HowMany": 1,
-                                    "HowLong": numberOfDays(
-                                        val1["Begin"],
-                                        val1["End"]
-                                    ),
-                                    "WhenLast": numberOfDays(
-                                        val1["End"],
-                                        ""
-                                        )
-                                }
-                            else:
-                                howlong[val1th]["HowMany"] += 1
-                                howlong[val1th]["HowLong"] += numberOfDays(
-                                    val1["Begin"], val1["End"]
-                                    )
-                                if numberOfDays(val1["Begin"], "") < howlong[val1th]["WhenLast"]:
-                                    howlong[val1th]["WhenLast"] = numberOfDays(
-                                        val1["End"], ""
-                                    )
+                            }
+                        else:
+                            howlong[val1th]["HowMany"] += 1
+                            howlong[val1th]["HowLong"] += numberOfDays(
+                                val1["Begin"], val1["End"]
+                                )
+                            if numberOfDays(val1["Begin"], "") < howlong[val1th]["WhenLast"]:
+                                howlong[val1th]["WhenLast"] = numberOfDays(
+                                    val1["End"], ""
+                                )
                 print(
                     tabulate(
                         pd.DataFrame(howlong).T.sort_values(
@@ -461,16 +485,16 @@ def DoTheSumming(val):
         elif thing == "Nib":
             print("**"+thing+"**")
             counterek = []
-            for item in valDict[val][0]:
-                counterek.append(valDict[val][0][item][thing])
+            for item in theList:
+                counterek.append(theList[item][thing])
                 Counterek = Counter(counterek)
             printing(Counterek)
             print("**"+"Nib materials"+"**")
             counterek = []
-            for item in valDict[val][0]:
-                if valDict[val][0][item][thing].split(" ")[0] == "14k":
+            for item in theList:
+                if theList[item][thing].split(" ")[0] == "14k":
                     counterek.append("14k")
-                elif valDict[val][0][item][thing].split(" ")[0] == "23k":
+                elif theList[item][thing].split(" ")[0] == "23k":
                     counterek.append("23k palladium")
                 else:
                     counterek.append("steel")
@@ -479,14 +503,16 @@ def DoTheSumming(val):
         else:
             print("**"+thing+"**")
             counterek = []
-            for item in valDict[val][0]:
-                counterek.append(valDict[val][0][item][thing])
+            for item in theList:
+                counterek.append(theList[item][thing])
                 Counterek = Counter(counterek)
             printing(Counterek)
             
     print("***Summary of", coDict[val], "collection***")
-    summingdict = {'p': ["Bought", "Brand", "Model", "Class", "Filling", "From", "Nationality", "Price"],
-                   'i': ['Brand', 'Bought', 'Color', 'ColorClass', 'Vol', 'BoP', 'From', 'Price'],
+    summingdict = {'p': ["Bought", "Brand", "Model", "Class", "Filling", "From",
+                         "Nationality", "Price"],
+                   'i': ['Brand', 'Bought', 'Color', 'ColorClass', 'Vol', 'BoP',
+                         'From', 'Price'],
                    'u': ['Pen', 'Ink', 'Nib']}
     try:
         what = argv[2]

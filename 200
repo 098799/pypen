@@ -1,0 +1,23 @@
+
+** Left the rotation ***
+None
+
+** In Rotation ***
++----+------------------------+----------+--------------+---------+-----------+----------------+--------------------+---------------+---------+-------+
+|    | index                  | Bought   | Brand        | Class   | Filling   | From           | Model              | Nationality   |   Price |   Rot |
+|----+------------------------+----------+--------------+---------+-----------+----------------+--------------------+---------------+---------+-------|
+|  1 | Carand'AcheEcridor     | 2012-08  | Caran d'Ache | Modern  | c/c       | ami            | Ecridor            | Swiss         |     800 |     1 |
+|  2 | DeltaDolcevitaFederico | 2016-09  | Delta        | Modern  | c/c       | MarteModena    | Dolcevita Federico | Italian       |     240 |     1 |
+|  3 | Lamy2000               | 2017-07  | Lamy         | Modern  | Piston    | suzi_scribbles | 2000               | German        |     490 |     1 |
+|  4 | PelikanM400            | 2017-10  | Pelikan      | Modern  | Piston    | engeika        | M400               | German        |     800 |     1 |
+|  5 | PilotCustomHeritage91  | 2015-12  | Pilot        | Modern  | c/c       | hobby japan    | Custom Heritage 91 | Japanese      |     350 |     1 |
+|  6 | PilotCustomHeritage92  | 2017-02  | Pilot        | Modern  | Piston    | JapanPen.com   | Custom Heritage 92 | Japanese      |     373 |     1 |
+|  7 | Platinum3776Black      | 2017-11  | Platinum     | Modern  | c/c       | japan-kamikaze | 3776 Black         | Japanese      |       0 |     1 |
+|  8 | Platinum3776Bourgogne  | 2017-01  | Platinum     | Modern  | c/c       | gamegamesan    | 3776 Bourgogne     | Japanese      |     320 |     1 |
+|  9 | Platinum3776Chartres   | 2017-07  | Platinum     | Modern  | c/c       | japanlovely    | 3776 Chartres      | Japanese      |     270 |     1 |
+| 10 | Sailor1911Promenade    | 2017-01  | Sailor       | Modern  | c/c       | JapanPen.com   | 1911 Promenade     | Japanese      |     293 |     1 |
+| 11 | SailorProGearSlim      | 2017-09  | Sailor       | Modern  | c/c       | nbz-jp         | Pro Gear Slim      | Japanese      |     370 |     1 |
+| 12 | ViscontiHomoSapiens    | 2017-12  | Visconti     | Modern  | Plunger   | Nadav          | Homo Sapiens       | Italian       |    1600 |     1 |
+| 13 | ViscontiOperaElements  | 2016-05  | Visconti     | Modern  | c/c       | Allegro        | Opera Elements     | Italian       |     800 |     1 |
+| 14 | ViscontiVanGogh        | 2015-08  | Visconti     | Modern  | c/c       | tompi          | Van Gogh           | Italian       |     850 |     1 |
++----+------------------------+----------+--------------+---------+-----------+----------------+--------------------+---------------+---------+-------+
