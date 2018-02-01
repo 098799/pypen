@@ -196,7 +196,7 @@ def DoTheListing(val):
         theOutList = {}
         if byWhat == []: byWhat = ["Brand"]
         for pen in valDict[val]:
-            if valDict[val][pen]["Out"] == "No":
+            if valDict[val][pen]["Rot"] not in ["Out", "Broken"]:
                 theList[pen] = valDict[val][pen]
             else:
                 theOutList[pen] = valDict[val][pen]
@@ -231,22 +231,32 @@ def AddUsage():
         whichink = "(s) "+inkzii
     else:
         whichink = association[int(inkzi)]
-    begd = input("When inked up? day   ")
-    begm = input("When inked up? month ")
-    begy = '2018'
-    begyq = input("When inked up? year (2018 as a default) ")
-    if not (begyq == ''):
-        begy = begyq
-    endd = input("When inked down? day   ")
-    endm = input("When inked down? month ")
-    endy = '2018'
-    endyq = input("When inked down? year (2018 as a default) ")
-    if not (endyq == ''):
-        endy = endyq
+    begd = input("When inked up? day (enter for today)   ")
+    if begd == "":
+        begd = date.today().day
+        begm = date.today().month
+        begy = date.today().year
+    else:
+        begm = input("When inked up? month ")
+        begy = '2018'
+        begyq = input("When inked up? year (2018 as a default) ")
+        if not (begyq == ''):
+            begy = begyq
+    begd = input("When inked down? day (enter for today)   ")
+    if begd == "":
+        begd = date.today().day
+        begm = date.today().month
+        begy = date.today().year
+    else:
+        begm = input("When inked down? month ")
+        begy = '2018'
+        begyq = input("When inked down? year (2018 as a default) ")
+        if not (begyq == ''):
+            begy = begyq
     usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
     UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
-                          'Begin': str(begy)+"-"+str(begm).zfill(2)+"-"+str(begd).zfill(2),
-                          'End': str(endy)+"-"+str(endm).zfill(2)+"-"+str(endd).zfill(2)}
+                          'Begin': dateFormat(begy, begm, begd),
+                          'End': dateFormat(endy, endm, endd)}
 
 
 def AddBeginningOfUsage(**kwargs):
@@ -286,9 +296,10 @@ def AddBeginningOfUsage(**kwargs):
                 begy = begyq
     usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
     UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
-                          'Begin': str(begy)+"-"+str(begm).zfill(2)+"-"+str(begd).zfill(2),
+                          'Begin': dateFormat(begy, begm, begd),
                           'End': ""}
 
+    
 def AddEndOfUsage(**kwargs):
     print("We're adding an end date to one of those pens:")
     association = {}
@@ -315,7 +326,11 @@ def AddEndOfUsage(**kwargs):
             begyq = input("When inked down? year (2018 as a default) ")
             if not (begyq == ''):
                 begy = begyq
-    UsageList[whichusage]["End"] = str(begy)+"-"+str(begm).zfill(2)+"-"+str(begd).zfill(2)
+    UsageList[whichusage]["End"] = dateFormat(begy,begm,begd)
+
+    
+def dateFormat(a,b,c):
+    return str(a)+"-"+str(b).zfill(2)+"-"+str(c).zfill(2)
     
 
 def DoTheSumming(val):
@@ -428,10 +443,18 @@ def DoTheSumming(val):
                                 howlong[val1th]["WhenLast"] = numberOfDays(
                                     val1["End"], ""
                                 )
+                for item in PenList:
+                    if PenList[item]["Rot"] == rotation:
+                        if item not in howlong:
+                            howlong[item] = {
+                                "HowMany" : 0,
+                                "HowLong": 0,
+                                "WhenLast": float('Inf')
+                            }
                 vvalues = pd.DataFrame(howlong)
                 print(
                     tabulate(vvalues.T.sort_values(
-                        by="WhenLast",
+                        by=sortedBy,
                         ascending=True
                     ),
                              tablefmt="psql",
@@ -442,7 +465,6 @@ def DoTheSumming(val):
             howlong = {}
             howlong = {}
             rotations = ["Bottle", "Sample"]
-            # checkOfRotations = {"Bottle": "", "Sample": "("}
             for rotation in rotations[::-1]:
                 howlong = {}
                 print("*"+rotation+"*")
@@ -476,7 +498,7 @@ def DoTheSumming(val):
                 print(
                     tabulate(
                         pd.DataFrame(howlong).T.sort_values(
-                            by="WhenLast", ascending=True
+                            by=sortedBy, ascending=True
                         ),
                         tablefmt="psql",
                         headers='keys'
@@ -500,6 +522,13 @@ def DoTheSumming(val):
                     counterek.append("steel")
                 Counterek = Counter(counterek)
             printing(Counterek)
+        elif thing == "Model":
+            print("**"+thing+"**")
+            counterek = []
+            for item in theList:
+                counterek.append(theList[item][thing].split(" ")[0])
+                Counterek = Counter(counterek)
+            printing(Counterek)            
         else:
             print("**"+thing+"**")
             counterek = []
@@ -516,6 +545,10 @@ def DoTheSumming(val):
                    'u': ['Pen', 'Ink', 'Nib']}
     try:
         what = argv[2]
+        if len(argv) > 3:
+            sortedBy = argv[3]
+        else:
+            sortedBy = "WhenLast"
     except:
         what = "All"
     if what in summingdict[val]:
@@ -549,10 +582,9 @@ def main():
     DoTheImporting('p')
     DoTheImporting('i')
     DoTheImporting('u')
-    if len(argv) > 1:
-        x = argv[1]
-        ParsingInput(x)
-    else:
+    try:
+        ParsingInput(argv[1])
+    except IndexError:
         print("#################")
         print("Welcome to pypen!")
         while True:

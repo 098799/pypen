@@ -28,7 +28,7 @@
         "Color": "Purple",
         "From": "Konrad",
         "Name": "Aubergine",
-        "Price": 37,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "35"
     },
@@ -369,7 +369,7 @@
         "Color": "Purple",
         "From": "Kasia",
         "Name": "Amethyst",
-        "Price": 60,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "50"
     },
@@ -391,7 +391,7 @@
         "Color": "Grey",
         "From": "Konrad",
         "Name": "Kiri-Same",
-        "Price": 140,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "50"
     },
@@ -409,11 +409,11 @@
     "SailorJentleOku-Yama": {
         "BoP": "Pre",
         "Bought": "2017-12",
-        "Brand": "Sailor",
+        "Brand": "Sailor Jentle",
         "Color": "Burgundy",
         "From": "Konrad",
         "Name": "Jentle Oku-Yama",
-        "Price": 87,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "50"
     },
@@ -424,7 +424,7 @@
         "Color": "Green",
         "From": "Kasia",
         "Name": "Tokiwa-Matsu",
-        "Price": 75,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "50"
     },
@@ -490,7 +490,7 @@
         "Color": "Turquoise",
         "From": "Rodzice",
         "Name": "Inspired Blue",
-        "Price": 24,
+        "Price": 0,
         "UsedUp": "No",
         "Vol": "50"
     },
