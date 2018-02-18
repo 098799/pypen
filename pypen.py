@@ -46,10 +46,13 @@ def DoTheExporting():
 
 
 def DoTheAdding(item):
-    valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
-    if item == "p":
-        theList = ValDict[item]
-        for char in theList:
+    valDict = {'p': (PenList, PenTuple), 'i': (InkList, InkTuple),
+               'u': (UsageList, UsageTuple)}
+    if (item == "p" or item == "i" or item == "u"):
+        theList = valDict[item][0]
+        theTuple = valDict[item][1]
+        temporary = {}
+        for char in theTuple:
             print("\n "+"-"*len(char),"\n",char,"\n","-"*len(char))
             association = []
             for pen in theList:
@@ -66,6 +69,9 @@ def DoTheAdding(item):
             else:
                 thatInput = association[int(thatInput)]
             print(thatInput)
+            temporary[char] = thatInput
+        penID = (temporary["Brand"] + temporary["Model"]).replace(" ", "")
+        theList[penID] = temporary
     if item == 'u':
         AddBeginningOfUsage()
     if item == 'd':
@@ -471,7 +477,8 @@ def DoTheSumming(val):
                 for item in theList:
                     val1 = theList[item]
                     val1th = theList[item][thing]
-                    cond1 = (rotation == "Bottle") and (val1th[0:3] != "(s)")
+                    cond1 = (rotation == "Bottle") and (val1th[0:3] != "(s)")\
+                                    and (InkList[val1th]["UsedUp"] == "No")
                     cond2 = (rotation == "Sample") and (val1th[0:3] == "(s)")
                     if cond1 or cond2:
                         if val1th not in howlong:

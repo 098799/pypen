@@ -558,6 +558,19 @@
         "Price": 10,
         "Rot": "4"
     },
+    "MoonmanM2": {
+        "Bought": "2018-02",
+        "Brand": "Moonman",
+        "Class": "Modern",
+        "Filling": "Eyedropper",
+        "From": "Ebay",
+        "Model": "M2",
+        "Nationality": "Chinese",
+        "Out": "No",
+        "OutPr": 0,
+        "Price": 50,
+        "Rot": "1"
+    },
     "ParkerFrontier": {
         "Bought": "2015-09",
         "Brand": "Parker",

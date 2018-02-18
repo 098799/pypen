@@ -34,6 +34,13 @@
         "Nib": "F",
         "Pen": "Carand'AcheEcridor"
     },
+    "Carand'AcheEcridor7.2.2018": {
+        "Begin": "2018-02-07",
+        "End": "",
+        "Ink": "J.HerbinRougeOpera",
+        "Nib": "F",
+        "Pen": "Carand'AcheEcridor"
+    },
     "Carand'AcheEcridor8.06.2017": {
         "Begin": "2017-06-08",
         "End": "2017-06-24",
@@ -594,6 +601,13 @@
         "Nib": "F",
         "Pen": "Luoshi337"
     },
+    "MoonmanM218.2.2018": {
+        "Begin": "2018-02-16",
+        "End": "",
+        "Ink": "J.HerbinLiedeThe",
+        "Nib": "EF",
+        "Pen": "MoonmanM2"
+    },
     "ParkerFrontier28.04.2017": {
         "Begin": "2017-04-28",
         "End": "2017-05-12",
@@ -626,6 +640,13 @@
         "Begin": "2017-12-06",
         "End": "2017-12-16",
         "Ink": "KWZBalticMemories",
+        "Nib": "14k F",
+        "Pen": "PelikanM400"
+    },
+    "PelikanM4007.2.2018": {
+        "Begin": "2018-02-07",
+        "End": "",
+        "Ink": "Pelikan4001BlueBlack",
         "Nib": "14k F",
         "Pen": "PelikanM400"
     },
