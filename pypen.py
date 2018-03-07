@@ -9,7 +9,7 @@ from datetime import date
 
 
 PenTuple = []
-InkTuple = [] 
+InkTuple = []
 UsageTuple = []
 
 
@@ -53,7 +53,7 @@ def DoTheAdding(item):
         theTuple = valDict[item][1]
         temporary = {}
         for char in theTuple:
-            print("\n "+"-"*len(char),"\n",char,"\n","-"*len(char))
+            print("\n " + "-"*len(char), "\n", char, "\n", "-"*len(char))
             association = []
             for pen in theList:
                 val = theList[pen][char]
@@ -98,8 +98,8 @@ def DoTheChanging(val):
         print(numb, item)
     which = input()
     print("To what are we changing it? (was:",
-        theList[association[int(whichpen)]][theTuple[int(which)]]
-          , ")")
+          theList[association[int(whichpen)]][theTuple[int(which)]],
+          ")")
     reading = input()
     if reading == '':
         pass
@@ -109,7 +109,7 @@ def DoTheChanging(val):
 
 def DoTheListing(val):
     valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
-    
+
     def insidesOfTheListing(theList, byWhat, dropWhat):
         by = []
         for item in byWhat:
@@ -248,17 +248,17 @@ def AddUsage():
         begyq = input("When inked up? year (2018 as a default) ")
         if not (begyq == ''):
             begy = begyq
-    begd = input("When inked down? day (enter for today)   ")
-    if begd == "":
-        begd = date.today().day
-        begm = date.today().month
-        begy = date.today().year
+    endd = input("When inked down? day (enter for today)   ")
+    if endd == "":
+        endd = date.today().day
+        endm = date.today().month
+        endy = date.today().year
     else:
-        begm = input("When inked down? month ")
-        begy = '2018'
-        begyq = input("When inked down? year (2018 as a default) ")
-        if not (begyq == ''):
-            begy = begyq
+        endm = input("When inked down? month ")
+        endy = '2018'
+        endyq = input("When inked down? year (2018 as a default) ")
+        if not (endyq == ''):
+            endy = endyq
     usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
     UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
                           'Begin': dateFormat(begy, begm, begd),
@@ -305,7 +305,7 @@ def AddBeginningOfUsage(**kwargs):
                           'Begin': dateFormat(begy, begm, begd),
                           'End': ""}
 
-    
+
 def AddEndOfUsage(**kwargs):
     print("We're adding an end date to one of those pens:")
     association = {}
@@ -332,12 +332,12 @@ def AddEndOfUsage(**kwargs):
             begyq = input("When inked down? year (2018 as a default) ")
             if not (begyq == ''):
                 begy = begyq
-    UsageList[whichusage]["End"] = dateFormat(begy,begm,begd)
+    UsageList[whichusage]["End"] = dateFormat(begy, begm, begd)
 
-    
-def dateFormat(a,b,c):
+
+def dateFormat(a, b, c):
     return str(a)+"-"+str(b).zfill(2)+"-"+str(c).zfill(2)
-    
+
 
 def DoTheSumming(val):
     valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
@@ -349,7 +349,7 @@ def DoTheSumming(val):
     def printing(a):
         print(tabulate(pd.DataFrame(a.most_common()), tablefmt="psql"))
 
-    def numberOfDays(a,b):
+    def numberOfDays(a, b):
         if a == "":
             first = date.today()
             second = first
@@ -360,9 +360,8 @@ def DoTheSumming(val):
             first = date(*[int(i) for i in b.split("-")])
             second = date(*[int(i) for i in a.split("-")])
         return (first-second).days
-        
+
     def DoTheThing(thing):
-        dzis = date.today()
         if thing == "Bought":
             print("**Bought**")
             boughtcounter = []
@@ -376,7 +375,7 @@ def DoTheSumming(val):
             for item in theList:
                 suma += theList[item]["Price"]
             print("Wasted", suma, "PLN on stupid", coDict[val]+'s. By year:')
-            sumapre  = 0
+            sumapre = 0
             suma2015 = 0
             suma2016 = 0
             suma2017 = 0
@@ -398,15 +397,15 @@ def DoTheSumming(val):
         elif thing == "ColorClass":
             print("**ColorClass**")
             itemziocounter = []
-            itemzioDict = {'Brown': 'Brown', 'Black': 'Black', 'Green': 'Green',
-                           'Red': 'Red', 'Purple': 'Purple',
-                           'Blue Black': 'Blue', 'Blue': 'Blue',
-                           'Turquoise': 'Blue', 'Pink': 'Pink',
-                           'Orange': 'Orange', 'Royal Blue': 'Blue',
-                           'Grey': 'Grey', 'Teal': 'Teal', "Burgundy": "Purple"}
+            itemziDict = {'Brown': 'Brown', 'Black': 'Black', 'Green': 'Green',
+                          'Red': 'Red', 'Purple': 'Purple',
+                          'Blue Black': 'Blue', 'Blue': 'Blue',
+                          'Turquoise': 'Blue', 'Pink': 'Pink',
+                          'Orange': 'Orange', 'Royal Blue': 'Blue',
+                          'Grey': 'Grey', 'Teal': 'Teal', "Burgundy": "Purple"}
             for item in theList:
                 itemzio = theList[item]['Color']
-                itemziocounter.append(itemzioDict[itemzio])
+                itemziocounter.append(itemziDict[itemzio])
             itemzioCounter = Counter(itemziocounter)
             printing(itemzioCounter)
         elif thing == "Pen":
@@ -453,7 +452,7 @@ def DoTheSumming(val):
                     if PenList[item]["Rot"] == rotation:
                         if item not in howlong:
                             howlong[item] = {
-                                "HowMany" : 0,
+                                "HowMany": 0,
                                 "HowLong": 0,
                                 "WhenLast": float('Inf')
                             }
@@ -478,7 +477,7 @@ def DoTheSumming(val):
                     val1 = theList[item]
                     val1th = theList[item][thing]
                     cond1 = (rotation == "Bottle") and (val1th[0:3] != "(s)")\
-                                    and (InkList[val1th]["UsedUp"] == "No")
+                                        and (InkList[val1th]["UsedUp"] == "No")
                     cond2 = (rotation == "Sample") and (val1th[0:3] == "(s)")
                     if cond1 or cond2:
                         if val1th not in howlong:
@@ -543,12 +542,12 @@ def DoTheSumming(val):
                 counterek.append(theList[item][thing])
                 Counterek = Counter(counterek)
             printing(Counterek)
-            
+
     print("***Summary of", coDict[val], "collection***")
-    summingdict = {'p': ["Bought", "Brand", "Model", "Class", "Filling", "From",
-                         "Nationality", "Price"],
-                   'i': ['Brand', 'Bought', 'Color', 'ColorClass', 'Vol', 'BoP',
-                         'From', 'Price'],
+    summingdict = {'p': ["Bought", "Brand", "Model", "Class", "Filling",
+                         "From", "Nationality", "Price"],
+                   'i': ['Brand', 'Bought', 'Color', 'ColorClass', 'Vol',
+                         'BoP', 'From', 'Price'],
                    'u': ['Pen', 'Ink', 'Nib']}
     try:
         what = argv[2]
