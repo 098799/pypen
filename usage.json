@@ -36,7 +36,7 @@
     },
     "Carand'AcheEcridor7.2.2018": {
         "Begin": "2018-02-07",
-        "End": "",
+        "End": "2018-03-12",
         "Ink": "J.HerbinRougeOpera",
         "Nib": "F",
         "Pen": "Carand'AcheEcridor"
@@ -366,7 +366,7 @@
     "JinhaoX750Red7.05.2017": {
         "Begin": "2017-05-07",
         "End": "2017-05-11",
-        "Ink": "DiamineSaragassoSea",
+        "Ink": "DiamineSargassoSea",
         "Nib": "EF",
         "Pen": "JinhaoX750Red"
     },
@@ -478,7 +478,7 @@
     "LamyAlStar12.1.2017": {
         "Begin": "2017-01-12",
         "End": "2017-02-01",
-        "Ink": "DiamineSaragassoSea",
+        "Ink": "DiamineSargassoSea",
         "Nib": "EF",
         "Pen": "LamyAlStar"
     },
@@ -604,7 +604,7 @@
     "MoonmanM218.2.2018": {
         "Begin": "2018-02-16",
         "End": "",
-        "Ink": "J.HerbinLiedeThe",
+        "Ink": "J.HerbinLarmesdeCassis",
         "Nib": "EF",
         "Pen": "MoonmanM2"
     },
@@ -671,33 +671,40 @@
         "Nib": "14k EF",
         "Pen": "PilotCustomHeritage91"
     },
-    "PilotCustomHeritage9218.05.2017": {
+    "PilotCustomHeritage92Blue18.05.2017": {
         "Begin": "2017-05-18",
         "End": "2017-06-13",
         "Ink": "DiamineAmazingAmethyst",
         "Nib": "14k FM",
-        "Pen": "PilotCustomHeritage92"
+        "Pen": "PilotCustomHeritage92Blue"
     },
-    "PilotCustomHeritage9220.02.2017": {
+    "PilotCustomHeritage92Blue20.02.2017": {
         "Begin": "2017-02-20",
         "End": "2017-04-02",
         "Ink": "DiamineAsaBlue",
         "Nib": "14k FM",
-        "Pen": "PilotCustomHeritage92"
+        "Pen": "PilotCustomHeritage92Blue"
     },
-    "PilotCustomHeritage9222.01.2018": {
+    "PilotCustomHeritage92Blue22.01.2018": {
         "Begin": "2018-01-22",
         "End": "",
         "Ink": "DiamineMajesticBlue",
         "Nib": "14k FM",
-        "Pen": "PilotCustomHeritage92"
+        "Pen": "PilotCustomHeritage92Blue"
     },
-    "PilotCustomHeritage9224.08.2017": {
+    "PilotCustomHeritage92Blue24.08.2017": {
         "Begin": "2017-08-24",
         "End": "2017-09-19",
-        "Ink": "DiamineSaragassoSea",
+        "Ink": "DiamineSargassoSea",
         "Nib": "14k EF",
-        "Pen": "PilotCustomHeritage92"
+        "Pen": "PilotCustomHeritage92Blue"
+    },
+    "PilotCustomHeritage92Orange10.3.2018": {
+        "Begin": "2018-03-10",
+        "End": "",
+        "Ink": "DiaminePresidentialBlue",
+        "Nib": "14k F",
+        "Pen": "PilotCustomHeritage92Orange"
     },
     "PilotParallel3.828.7.2017": {
         "Begin": "2017-07-28",
@@ -786,7 +793,7 @@
     "Platinum3776Chartres19.07.2017": {
         "Begin": "2017-07-19",
         "End": "2017-07-24",
-        "Ink": "DiamineSaragassoSea",
+        "Ink": "DiamineSargassoSea",
         "Nib": "14k M",
         "Pen": "Platinum3776Chartres"
     },
@@ -975,7 +982,7 @@
     "TWSBIEco12.02.2017": {
         "Begin": "2017-02-12",
         "End": "2017-04-02",
-        "Ink": "DiamineSaragassoSea",
+        "Ink": "DiamineSargassoSea",
         "Nib": "F",
         "Pen": "TWSBIEco"
     },

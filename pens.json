@@ -623,17 +623,30 @@
         "Price": 350,
         "Rot": "1"
     },
-    "PilotCustomHeritage92": {
+    "PilotCustomHeritage92Blue": {
         "Bought": "2017-02",
         "Brand": "Pilot",
         "Class": "Modern",
         "Filling": "Piston",
         "From": "JapanPen.com",
-        "Model": "Custom Heritage 92",
+        "Model": "Custom Heritage 92 Blue",
         "Nationality": "Japanese",
         "Out": "No",
         "OutPr": 0,
         "Price": 373,
+        "Rot": "1"
+    },
+    "PilotCustomHeritage92Orange": {
+        "Bought": "2018-03",
+        "Brand": "Pilot",
+        "Class": "Modern",
+        "Filling": "Piston",
+        "From": "BCN pen show",
+        "Model": "Custom Heritage 92 Orange",
+        "Nationality": "Japanese",
+        "Out": "No",
+        "OutPr": 0,
+        "Price": "420",
         "Rot": "1"
     },
     "PilotParallel3.8": {

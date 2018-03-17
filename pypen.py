@@ -1,66 +1,61 @@
 #!/usr/bin/env python3
 # I want my program to make Gantt charts
+import collections
+import datetime
 import json
-from sys import exit, argv
-from collections import Counter
+import sys
+import tabulate
+
 import pandas as pd
-from tabulate import tabulate
-from datetime import date
 
 
-PenTuple = []
-InkTuple = []
-UsageTuple = []
+possible_values = ['p', 'i', 'u']
+
+TheList = {'p': {}, 'i': {}, 'u': {}}
+TheTuple = {'p': [], 'i': [], 'u': []}
+
+file_name = {
+    "p": "pens.json",
+    "i": "inks.json",
+    "u": "usage.json",
+}
+
+example = {
+    'p': "Jinhao250",
+    'i': "DeAtramentisAubergine",
+    'u': "Baoer05122.03.2017",
+}
 
 
 def DoTheImporting(item):
-    filename = {"p": "pens.json", "i": "inks.json", "u": "usage.json"}
-    with open(filename[item], 'r') as infile:
-        if item == "p":
-            global PenList, PenTuple
-            PenList = json.load(infile)
-            for i in PenList["Jinhao250"].keys():
-                PenTuple.append(i)
-            PenTuple.sort()
-        if item == "i":
-            global InkList, InkTuple
-            InkList = json.load(infile)
-            for i in InkList["DeAtramentisAubergine"].keys():
-                InkTuple.append(i)
-            InkTuple.sort()
-        if item == "u":
-            global UsageList, UsageTuple
-            UsageList = json.load(infile)
-            for i in UsageList["Baoer05122.03.2017"].keys():
-                UsageTuple.append(i)
-            UsageTuple.sort()
+    def InsidesOfTheImporting(which):
+        TheList[which] = json.load(infile)
+        for i in TheList[which][example[which]].keys():
+            TheTuple[which].append(i)
+        TheTuple[which].sort()
+
+    with open(file_name[item], 'r') as infile:
+        InsidesOfTheImporting(item)
 
 
-def DoTheExporting():
-    with open('pens.json', 'w') as outfile:
-        json.dump(PenList, outfile, indent=4, sort_keys=True)
-    with open('inks.json', 'w') as outfile:
-        json.dump(InkList, outfile, indent=4, sort_keys=True)
-    with open('usage.json', 'w') as outfile:
-        json.dump(UsageList, outfile, indent=4, sort_keys=True)
+def DoTheExporting(item):
+    for item in possible_values:
+        with open(file_name[item], 'w') as outfile:
+            json.dump(TheList[item], outfile, indent=4, sort_keys=True)
 
 
 def DoTheAdding(item):
-    valDict = {'p': (PenList, PenTuple), 'i': (InkList, InkTuple),
-               'u': (UsageList, UsageTuple)}
-    if (item == "p" or item == "i" or item == "u"):
-        theList = valDict[item][0]
-        theTuple = valDict[item][1]
+    if item in ("p", "i", "u"):
         temporary = {}
-        for char in theTuple:
+        for char in TheTuple[item]:
             print("\n " + "-"*len(char), "\n", char, "\n", "-"*len(char))
             association = []
-            for pen in theList:
-                val = theList[pen][char]
+            for pen in TheList[item]:
+                val = TheList[item][pen][char]
                 if val not in association:
                     association.append(val)
             association.sort()
-            for number, item in enumerate(association):
+            for number, item in enumerate(association, 1):
                 print(number, item)
             print("or click enter to input yourself")
             thatInput = input("Which?")
@@ -70,8 +65,8 @@ def DoTheAdding(item):
                 thatInput = association[int(thatInput)]
             print(thatInput)
             temporary[char] = thatInput
-        penID = (temporary["Brand"] + temporary["Model"]).replace(" ", "")
-        theList[penID] = temporary
+        penID = make_id[temporary["Brand"], temporary["Model"]]
+        TheList[item][penID] = temporary
     if item == 'u':
         AddBeginningOfUsage()
     if item == 'd':
@@ -82,33 +77,39 @@ def DoTheAdding(item):
         AddEndOfUsage(isItToday=True)
 
 
-def DoTheChanging(val):
-    valDict = {'p': (PenList, PenTuple), 'i': (InkList, InkTuple)}
-    theList = valDict[val][0]
-    theTuple = valDict[val][1]
+def make_id(brand, model):
+    return (brand + model).replace(" ", "")
+
+
+def DoTheChanging(item):
     print('')
     print("Which item do you want to change?")
     association = {}
-    for numb, item in enumerate(sorted(theList)):
-        association[numb] = item
-        print(numb, item)
+    for numb, val in enumerate(sorted(TheList[item]), 1):
+        association[numb] = val
+        print(numb, val)
     whichpen = input()
+    pen_id = association[int(whichpen)]
     print("Press the number of what you want to change:")
-    for numb, item in enumerate(theTuple):
-        print(numb, item)
+    for numb, val in enumerate(TheTuple[item], 1):
+        print(numb, val)
     which = input()
+    char_id = TheTuple[item][int(which)-1]
     print("To what are we changing it? (was:",
-          theList[association[int(whichpen)]][theTuple[int(which)]],
+          TheList[item][pen_id][char_id],
           ")")
     reading = input()
     if reading == '':
         pass
     else:
-        theList[association[int(whichpen)]][theTuple[int(which)]] = reading
+        TheList[item][pen_id][char_id] = reading
+
+
+# I stopped refactoring here, so go from here
 
 
 def DoTheListing(val):
-    valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
+    valDict = {'p': TheList['p'], 'i': TheList['i'], 'u': TheList['u']}
 
     def insidesOfTheListing(theList, byWhat, dropWhat):
         by = []
@@ -148,7 +149,7 @@ def DoTheListing(val):
                 secArg = (item.split(".LT."))[1]
                 newDict = {}
                 for j in theList:
-                    firstValue = str(theList[j][firstArg]) 
+                    firstValue = str(theList[j][firstArg])
                     if "-" in firstValue:
                         firstValue = firstValue.split("-")[0]
                     if float(firstValue) < float(secArg):
@@ -172,21 +173,22 @@ def DoTheListing(val):
         formatt = "psql"
         DF = DF.reset_index()
         DF.index = range(1, len(DF.index)+1)
-        print(tabulate(DF, headers='keys', tablefmt=formatt))
+        print(tabulate.tabulate(DF, headers='keys', tablefmt=formatt))
         # nice formats: pipe, psql, rst
 
     byWhat = []
     dropWhat = []
-    for item in argv[2:]:
+    for item in sys.argv[2:]:
         if item[0] == "-":
             dropWhat.append(item[1:])
         else:
             byWhat.append(item)
-    
+
     if val == "i":
         theList = {}
         theUsedUpList = {}
-        if byWhat == []: byWhat = ["Brand"]
+        if byWhat == []:
+            byWhat = ["Brand"]
         for ink in valDict[val]:
             if valDict[val][ink]["UsedUp"] == "No":
                 theList[ink] = valDict[val][ink]
@@ -200,7 +202,8 @@ def DoTheListing(val):
     elif val == "p":
         theList = {}
         theOutList = {}
-        if byWhat == []: byWhat = ["Brand"]
+        if byWhat == []:
+            byWhat = ["Brand"]
         for pen in valDict[val]:
             if valDict[val][pen]["Rot"] not in ["Out", "Broken"]:
                 theList[pen] = valDict[val][pen]
@@ -214,21 +217,22 @@ def DoTheListing(val):
         insidesOfTheListing(theList, byWhat, dropWhat)
     else:
         theList = valDict[val]
-        if byWhat == []: byWhat = ["End"]
+        if byWhat == []:
+            byWhat = ["End"]
         insidesOfTheListing(theList, byWhat, dropWhat)
 
 
 def AddUsage():
     print("Which pen has been used?\n")
     association = {}
-    for numb, item in enumerate(sorted(PenList)):
+    for numb, item in enumerate(sorted(TheList['p']), 1):
         association[numb] = item
         print(numb, item)
     whichpen = association[int(input())]
     whichnib = input("What sized nib? ")
     print("Which ink has been used? enter for ink sample \n")
     association = {}
-    for numb, item in enumerate(sorted(InkList)):
+    for numb, item in enumerate(sorted(TheList['i']), 1):
         association[numb] = item
         print(numb, item)
     inkzi = input()
@@ -239,9 +243,9 @@ def AddUsage():
         whichink = association[int(inkzi)]
     begd = input("When inked up? day (enter for today)   ")
     if begd == "":
-        begd = date.today().day
-        begm = date.today().month
-        begy = date.today().year
+        begd = datetime.date.today().day
+        begm = datetime.date.today().month
+        begy = datetime.date.today().year
     else:
         begm = input("When inked up? month ")
         begy = '2018'
@@ -250,9 +254,9 @@ def AddUsage():
             begy = begyq
     endd = input("When inked down? day (enter for today)   ")
     if endd == "":
-        endd = date.today().day
-        endm = date.today().month
-        endy = date.today().year
+        endd = datetime.date.today().day
+        endm = datetime.date.today().month
+        endy = datetime.date.today().year
     else:
         endm = input("When inked down? month ")
         endy = '2018'
@@ -260,22 +264,22 @@ def AddUsage():
         if not (endyq == ''):
             endy = endyq
     usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
-    UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
-                          'Begin': dateFormat(begy, begm, begd),
-                          'End': dateFormat(endy, endm, endd)}
+    TheList['u'][usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
+                             'Begin': dateFormat(begy, begm, begd),
+                             'End': dateFormat(endy, endm, endd)}
 
 
 def AddBeginningOfUsage(**kwargs):
     print("Which pen has been used?\n")
     association = {}
-    for numb, item in enumerate(sorted(PenList)):
+    for numb, item in enumerate(sorted(TheList['p']), 1):
         association[numb] = item
         print(numb, item)
     whichpen = association[int(input())]
     whichnib = input("What sized nib? ")
     print("Which ink has been used? enter for ink sample \n")
     association = {}
-    for numb, item in enumerate(sorted(InkList)):
+    for numb, item in enumerate(sorted(TheList['i']), 1):
         association[numb] = item
         print(numb, item)
     inkzi = input()
@@ -285,15 +289,15 @@ def AddBeginningOfUsage(**kwargs):
     else:
         whichink = association[int(inkzi)]
     if 'isItToday' in kwargs:
-        begd = date.today().day
-        begm = date.today().month
-        begy = date.today().year
+        begd = datetime.date.today().day
+        begm = datetime.date.today().month
+        begy = datetime.date.today().year
     else:
         begd = input("When inked up? day (enter for today)   ")
         if begd == "":
-            begd = date.today().day
-            begm = date.today().month
-            begy = date.today().year
+            begd = datetime.date.today().day
+            begm = datetime.date.today().month
+            begy = datetime.date.today().year
         else:
             begm = input("When inked up? month ")
             begy = '2018'
@@ -301,64 +305,62 @@ def AddBeginningOfUsage(**kwargs):
             if not (begyq == ''):
                 begy = begyq
     usageid = whichpen+str(begd)+"."+str(begm)+"."+str(begy)
-    UsageList[usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
-                          'Begin': dateFormat(begy, begm, begd),
-                          'End': ""}
+    TheList['u'][usageid] = {'Pen': whichpen, 'Nib': whichnib, 'Ink': whichink,
+                             'Begin': dateFormat(begy, begm, begd),
+                             'End': ""}
 
 
 def AddEndOfUsage(**kwargs):
     print("We're adding an end date to one of those pens:")
     association = {}
     i = 0
-    for item in UsageList:
-        if UsageList[item]["End"] == "":
+    for item in TheList['u']:
+        if TheList['u'][item]["End"] == "":
             i += 1
             print(i, item)
             association[i] = item
     whichusage = association[int(input("Which one?"))]
     if 'isItToday' in kwargs:
-        begd = date.today().day
-        begm = date.today().month
-        begy = date.today().year
+        begd = datetime.date.today().day
+        begm = datetime.date.today().month
+        begy = datetime.date.today().year
     else:
         begd = input("When inked down? day (enter for today)   ")
         if begd == "":
-            begd = date.today().day
-            begm = date.today().month
-            begy = date.today().year
+            begd = datetime.date.today().day
+            begm = datetime.date.today().month
+            begy = datetime.date.today().year
         else:
             begm = input("When inked down? month ")
             begy = '2018'
             begyq = input("When inked down? year (2018 as a default) ")
             if not (begyq == ''):
                 begy = begyq
-    UsageList[whichusage]["End"] = dateFormat(begy, begm, begd)
+    TheList['u'][whichusage]["End"] = dateFormat(begy, begm, begd)
 
 
 def dateFormat(a, b, c):
     return str(a)+"-"+str(b).zfill(2)+"-"+str(c).zfill(2)
 
 
-def DoTheSumming(val):
-    valDict = {'p': PenList, 'i': InkList, 'u': UsageList}
+def DoTheSumming(val='p'):
+    valDict = {'p': TheList['p'], 'i': TheList['i'], 'u': TheList['u']}
     theList = valDict[val]
     coDict = {'p': "pen", 'u': "usage", 'i': "ink"}
-    if val == '':
-        val = 'p'
 
     def printing(a):
-        print(tabulate(pd.DataFrame(a.most_common()), tablefmt="psql"))
+        print(tabulate.tabulate(pd.DataFrame(a.most_common()), tablefmt="psql"))
 
     def numberOfDays(a, b):
         if a == "":
-            first = date.today()
+            first = datetime.date.today()
             second = first
         elif b == "":
-            first = date.today()
-            second = date(*[int(i) for i in a.split("-")])
+            first = datetime.date.today()
+            second = datetime.date(*[int(i) for i in a.split("-")])
         else:
-            first = date(*[int(i) for i in b.split("-")])
-            second = date(*[int(i) for i in a.split("-")])
+            first = datetime.date(*[int(i) for i in b.split("-")])
+            second = datetime.date(*[int(i) for i in a.split("-")])
         return (first-second).days
 
     def DoTheThing(thing):
@@ -367,7 +369,7 @@ def DoTheSumming(val):
             boughtcounter = []
             for item in theList:
                 boughtcounter.append(theList[item]["Bought"].split("-")[0])
-            boughtCounter = Counter(boughtcounter)
+            boughtCounter = collections.Counter(boughtcounter)
             printing(boughtCounter)
         elif thing == "Price":
             print("**Price**")
@@ -406,15 +408,15 @@ def DoTheSumming(val):
             for item in theList:
                 itemzio = theList[item]['Color']
                 itemziocounter.append(itemziDict[itemzio])
-            itemzioCounter = Counter(itemziocounter)
+            itemzioCounter = collections.Counter(itemziocounter)
             printing(itemzioCounter)
         elif thing == "Pen":
             print("**"+thing+"**")
             counterek = []
             howlong = {}
             rotations = []
-            for i in PenList:
-                val2 = PenList[i]["Rot"]
+            for i in TheList['p']:
+                val2 = TheList['p'][i]["Rot"]
                 if val2 not in rotations:
                     rotations.append(val2)
             rotations.remove("Broken")
@@ -424,7 +426,7 @@ def DoTheSumming(val):
                 for item in theList:
                     val1 = theList[item]
                     val1th = theList[item][thing]
-                    if PenList[val1th]["Rot"] == rotation:
+                    if TheList['p'][val1th]["Rot"] == rotation:
                         if val1th not in howlong:
                             howlong[val1th] = {
                                 "HowMany": 1,
@@ -448,8 +450,8 @@ def DoTheSumming(val):
                                 howlong[val1th]["WhenLast"] = numberOfDays(
                                     val1["End"], ""
                                 )
-                for item in PenList:
-                    if PenList[item]["Rot"] == rotation:
+                for item in TheList['p']:
+                    if TheList['p'][item]["Rot"] == rotation:
                         if item not in howlong:
                             howlong[item] = {
                                 "HowMany": 0,
@@ -458,7 +460,7 @@ def DoTheSumming(val):
                             }
                 vvalues = pd.DataFrame(howlong)
                 print(
-                    tabulate(vvalues.T.sort_values(
+                    tabulate.tabulate(vvalues.T.sort_values(
                         by=sortedBy,
                         ascending=True
                     ),
@@ -476,10 +478,11 @@ def DoTheSumming(val):
                 for item in theList:
                     val1 = theList[item]
                     val1th = theList[item][thing]
-                    cond1 = (rotation == "Bottle") and (val1th[0:3] != "(s)")\
-                                        and (InkList[val1th]["UsedUp"] == "No")
+                    cond1a = rotation == "Bottle"
+                    cond1b = val1th[0:3] != "(s)"
+                    cond1c = TheList['i'][val1th]["UsedUp"] == "No"
                     cond2 = (rotation == "Sample") and (val1th[0:3] == "(s)")
-                    if cond1 or cond2:
+                    if (cond1a and cond1b and cond1c) or cond2:
                         if val1th not in howlong:
                             howlong[val1th] = {
                                 "HowMany": 1,
@@ -502,7 +505,7 @@ def DoTheSumming(val):
                                     val1["End"], ""
                                 )
                 print(
-                    tabulate(
+                    tabulate.tabulate(
                         pd.DataFrame(howlong).T.sort_values(
                             by=sortedBy, ascending=True
                         ),
@@ -515,7 +518,7 @@ def DoTheSumming(val):
             counterek = []
             for item in theList:
                 counterek.append(theList[item][thing])
-                Counterek = Counter(counterek)
+                Counterek = collections.Counter(counterek)
             printing(Counterek)
             print("**"+"Nib materials"+"**")
             counterek = []
@@ -526,21 +529,21 @@ def DoTheSumming(val):
                     counterek.append("23k palladium")
                 else:
                     counterek.append("steel")
-                Counterek = Counter(counterek)
+                Counterek = collections.Counter(counterek)
             printing(Counterek)
         elif thing == "Model":
             print("**"+thing+"**")
             counterek = []
             for item in theList:
                 counterek.append(theList[item][thing].split(" ")[0])
-                Counterek = Counter(counterek)
-            printing(Counterek)            
+                Counterek = collections.Counter(counterek)
+            printing(Counterek)
         else:
             print("**"+thing+"**")
             counterek = []
             for item in theList:
                 counterek.append(theList[item][thing])
-                Counterek = Counter(counterek)
+                Counterek = collections.Counter(counterek)
             printing(Counterek)
 
     print("***Summary of", coDict[val], "collection***")
@@ -550,9 +553,9 @@ def DoTheSumming(val):
                          'BoP', 'From', 'Price'],
                    'u': ['Pen', 'Ink', 'Nib']}
     try:
-        what = argv[2]
-        if len(argv) > 3:
-            sortedBy = argv[3]
+        what = sys.argv[2]
+        if len(sys.argv) > 3:
+            sortedBy = sys.argv[3]
         else:
             sortedBy = "WhenLast"
     except:
@@ -571,7 +574,7 @@ def ParsingInput(x):
         DoTheExporting()
     elif x[0] == "q":
         DoTheExporting()
-        exit()
+        sys.exit()
     elif x[0] == "a":
         DoTheAdding(x[1])
     elif x[0] == "c":
@@ -589,7 +592,7 @@ def main():
     DoTheImporting('i')
     DoTheImporting('u')
     try:
-        ParsingInput(argv[1])
+        ParsingInput(sys.argv[1])
     except IndexError:
         print("#################")
         print("Welcome to pypen!")
@@ -597,17 +600,17 @@ def main():
             print("#################\n")
             x = input("""You basically should be:
 
-(e)xporting -- exports json files
-(q)uitting -- exports the database and quits the program
-(l)isting, (a)dding, (c)hanging:
-        X: (p)ens, (i)nks, (u)sages
+            (e)xporting -- exports json files
+            (q)uitting -- exports the database and quits the program
+            (l)isting, (a)dding, (c)hanging:
+            X: (p)ens, (i)nks, (u)sages
 
-    Note: important usage functions are:
-(ab): add beginnig of usage of a pen for today
-(ae): add done pen for today.
-\n""")
+            Note: important usage functions are:
+            (ab): add beginnig of usage of a pen for today
+            (ae): add done pen for today.
+            \n""")
             ParsingInput(x)
-    exit()
+    sys.exit()
 
 
 if __name__ == "__main__":
