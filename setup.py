@@ -1,7 +1,6 @@
-from setuptools import setup
-
+from setuptools import setup, find_packages
+  
 setup(
-    install_requires=[
-        'pandas',
-    ]
+    name='pypen',
+    packages=find_packages()
 )
