@@ -450,7 +450,8 @@ def sum_items(val='p'):
                           'Blue Black': 'Blue', 'Blue': 'Blue',
                           'Turquoise': 'Blue', 'Pink': 'Pink',
                           'Orange': 'Orange', 'Royal Blue': 'Blue',
-                          'Grey': 'Grey', 'Teal': 'Teal', "Burgundy": "Purple"}
+                          'Grey': 'Grey', 'Teal': 'Teal', "Burgundy": "Purple",
+                          "Yellow": "Yellow"}
             for item in theList:
                 itemzio = theList[item]['color']
                 itemziocounter.append(itemziDict[itemzio])
@@ -593,7 +594,7 @@ def sum_items(val='p'):
     summingdict = {'p': ["bought", "brand", "model", "class", "filling",
                          "from", "nationality", "price"],
                    'i': ['brand', 'bought', 'color', 'colorclass', 'vol',
-                         'bop', 'from', 'price'],
+                         'how', 'from', 'price'],
                    'u': ['pen', 'ink', 'nib']}
     try:
         what = sys.argv[2]

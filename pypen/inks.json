@@ -116,7 +116,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Beau Blue",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -160,7 +160,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Coral",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -204,7 +204,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Golden Brown",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -248,7 +248,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Jade Green",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -292,7 +292,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Midnight",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -369,7 +369,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Sunshine Yellow",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -380,7 +380,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Syrah",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -413,7 +413,7 @@
         "from": "Diamine",
         "how": "Bou",
         "name": "Yellow",
-        "price": "16",
+        "price": 16,
         "used_up": "No",
         "vol": "30"
     },
@@ -516,6 +516,17 @@
         "used_up": "No",
         "vol": "60"
     },
+    "LamyCrystalBenitoite": {
+        "bought": "2018-12",
+        "brand": "Lamy Crystal",
+        "color": "Blue Black",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Benitoite",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "MonteverdeCaliforniaTeal": {
         "bought": "2017-05",
         "brand": "Monteverde",
@@ -567,6 +578,17 @@
         "from": "Kasia",
         "how": "Pre",
         "name": "Amethyst",
+        "price": 0,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "PelikanEdelsteinOlivine": {
+        "bought": "2018-09",
+        "brand": "Pelikan Edelstein",
+        "color": "Green",
+        "from": "Pelikan Hub",
+        "how": "Pre",
+        "name": "Olivine",
         "price": 0,
         "used_up": "No",
         "vol": "50"

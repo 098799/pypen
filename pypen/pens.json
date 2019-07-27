@@ -10,7 +10,7 @@
         "out": "No",
         "price": 10,
         "price_out": 0,
-        "rot": "4"
+        "rot": "3"
     },
     "Bookworm829": {
         "bought": "2015-08",
@@ -75,7 +75,7 @@
         "out": "No",
         "price": 14,
         "price_out": 0,
-        "rot": "4"
+        "rot": "3"
     },
     "EsterbrookLJ": {
         "bought": "2015-10",
@@ -88,7 +88,7 @@
         "out": "No",
         "price": 51,
         "price_out": 0,
-        "rot": "5"
+        "rot": "Broken"
     },
     "Faber-CastellE-Motion": {
         "bought": "2015-08",
@@ -127,7 +127,7 @@
         "out": "No",
         "price": 61,
         "price_out": 0,
-        "rot": "5"
+        "rot": "4"
     },
     "Jinhao108": {
         "bought": "2015-09",
@@ -192,7 +192,7 @@
         "out": "No",
         "price": 17,
         "price_out": 0,
-        "rot": "4"
+        "rot": "3"
     },
     "Jinhao500": {
         "bought": "2016-12",
@@ -478,7 +478,7 @@
         "out": "No",
         "price": 30,
         "price_out": 0,
-        "rot": "4"
+        "rot": "3"
     },
     "LamySafari(Yellow)": {
         "bought": "2015-09",
@@ -491,7 +491,7 @@
         "out": "No",
         "price": 30,
         "price_out": 0,
-        "rot": "4"
+        "rot": "3"
     },
     "LamyVista": {
         "bought": "2015-09",
@@ -519,6 +519,19 @@
         "price_out": 0,
         "rot": "3"
     },
+    "LeonardoMomentoZero": {
+        "bought": "2019-07",
+        "brand": "Leonardo",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "miestilografica",
+        "model": "Momento Zero",
+        "nationality": "Italian",
+        "out": "No",
+        "price": 650,
+        "price_out": 0,
+        "rot": "1"
+    },
     "LingmoLorelei": {
         "bought": "2017-03",
         "brand": "Lingmo",
@@ -545,31 +558,57 @@
         "price_out": 0,
         "rot": "3"
     },
-    "Luoshi589": {
+    "Luoshi589Green": {
         "bought": "2015-08",
         "brand": "Luoshi",
         "class": "Modern",
         "filling": "c/c",
         "from": "Allegro",
-        "model": "589",
+        "model": "589 Green",
         "nationality": "Chinese",
         "out": "No",
         "price": 10,
         "price_out": 0,
         "rot": "4"
     },
-    "Luoshi589A": {
+    "Luoshi589Violet": {
         "bought": "2015-08",
         "brand": "Luoshi",
         "class": "Modern",
         "filling": "c/c",
         "from": "Allegro",
-        "model": "589A",
+        "model": "589 Violet",
         "nationality": "Chinese",
         "out": "No",
         "price": 10,
         "price_out": 0,
         "rot": "4"
+    },
+    "Montblanc146": {
+        "bought": "2019-03",
+        "brand": "Montblanc",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "BCN pen show",
+        "model": "146",
+        "nationality": "German",
+        "out": "No",
+        "price": 1075,
+        "price_out": 0,
+        "rot": "1"
+    },
+    "MoonmanC1": {
+        "bought": "2019-06",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "Eyedropper",
+        "from": "office_supplies_pen",
+        "model": "C1",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 90,
+        "price_out": 0,
+        "rot": "2"
     },
     "MoonmanM2": {
         "bought": "2018-02",
@@ -607,6 +646,19 @@
         "nationality": "Taiwanese",
         "out": "No",
         "price": 450,
+        "price_out": 0,
+        "rot": "1"
+    },
+    "ParkerDuofoldCentennial": {
+        "bought": "2019-06",
+        "brand": "Parker",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "endlesspens",
+        "model": "Duofold Centennial",
+        "nationality": "French",
+        "out": "No",
+        "price": 1600,
         "price_out": 0,
         "rot": "1"
     },
@@ -675,6 +727,19 @@
         "price_out": 0,
         "rot": "1"
     },
+    "PelikanTwist": {
+        "bought": "2018-11",
+        "brand": "Pelikan",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "Ozlem",
+        "model": "Twist",
+        "nationality": "German",
+        "out": "No",
+        "price": 0,
+        "price_out": 0,
+        "rot": "Ozlem"
+    },
     "PenBBS266308": {
         "bought": "2018-08",
         "brand": "PenBBS",
@@ -685,6 +750,32 @@
         "nationality": "Chinese",
         "out": "No",
         "price": 65,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "PenBBS308GT": {
+        "bought": "2019-05",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "beini zheng",
+        "model": "308 GT",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 67,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "PenBBS309": {
+        "bought": "2019-01",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "eBay",
+        "model": "309",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 71,
         "price_out": 0,
         "rot": "2"
     },
@@ -701,6 +792,19 @@
         "price_out": 0,
         "rot": "2"
     },
+    "PenBBS323koi": {
+        "bought": "2019-05",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "beini zheng",
+        "model": "323 koi",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 78,
+        "price_out": 0,
+        "rot": "2"
+    },
     "PenBBS349": {
         "bought": "2018-09",
         "brand": "PenBBS",
@@ -713,6 +817,58 @@
         "price": 85,
         "price_out": 0,
         "rot": "2"
+    },
+    "PenBBS355": {
+        "bought": "2019-01",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "Bulkfiller",
+        "from": "eBay",
+        "model": "355",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 185,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "PenBBS380": {
+        "bought": "2019-04",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "Etsy",
+        "model": "380",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 150,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "PenBBS456": {
+        "bought": "2018-12",
+        "brand": "PenBBS",
+        "class": "Modern",
+        "filling": "Plunger",
+        "from": "eBay",
+        "model": "456",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 157,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "PilotCapless": {
+        "bought": "2019-01",
+        "brand": "Pilot",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "eBay",
+        "model": "Capless",
+        "nationality": "Japanese",
+        "out": "No",
+        "price": 263,
+        "price_out": 0,
+        "rot": "1"
     },
     "PilotCustomHeritage91": {
         "bought": "2015-12",
@@ -752,6 +908,19 @@
         "price": 420,
         "price_out": 0,
         "rot": "1"
+    },
+    "PilotMR": {
+        "bought": "2018-01",
+        "brand": "Pilot",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "Ozlem",
+        "model": "MR",
+        "nationality": "Japanese",
+        "out": "No",
+        "price": 0,
+        "price_out": 0,
+        "rot": "Ozlem"
     },
     "PilotParallel3.8": {
         "bought": "2016-11",
@@ -935,6 +1104,19 @@
         "price_out": 0,
         "rot": "1"
     },
+    "SailorLecoule": {
+        "bought": "2018-05",
+        "brand": "Sailor",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "Ozlem",
+        "model": "Lecoule",
+        "nationality": "Japanese",
+        "out": "No",
+        "price": 0,
+        "price_out": 0,
+        "rot": "Ozlem"
+    },
     "SailorProGearSlim": {
         "bought": "2017-09",
         "brand": "Sailor",
@@ -1037,7 +1219,7 @@
         "out": "No",
         "price": 150,
         "price_out": 0,
-        "rot": "5"
+        "rot": "4"
     },
     "Waterman'sIdeal52V": {
         "bought": "2015-09",
@@ -1078,13 +1260,13 @@
         "price_out": 0,
         "rot": "3"
     },
-    "WingSung3003": {
+    "WingSung3003Pink": {
         "bought": "2017-12",
         "brand": "Wing Sung",
         "class": "Modern",
         "filling": "c/c",
         "from": "eBay",
-        "model": "3003",
+        "model": "3003 Pink",
         "nationality": "Chinese",
         "out": "No",
         "price": 5,

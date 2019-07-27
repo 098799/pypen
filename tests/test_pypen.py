@@ -66,4 +66,5 @@ class BasicTests(unittest.TestCase):
         assert result == "TWSBIEco"
 
     def test_edit(self):
+        import ipdb; ipdb.set_trace()
         self.pens.edit()
