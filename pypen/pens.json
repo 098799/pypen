@@ -116,6 +116,19 @@
         "price_out": 0,
         "rot": "2"
     },
+    "Fuliwen017": {
+        "bought": "2019-10",
+        "brand": "Fuliwen",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "Etsy",
+        "model": "017",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 100,
+        "price_out": 0,
+        "rot": "2"
+    },
     "Greifnoname": {
         "bought": "2015-09",
         "brand": "Greif",
@@ -607,6 +620,19 @@
         "nationality": "Chinese",
         "out": "No",
         "price": 90,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "MoonmanC2": {
+        "bought": "2019-10",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "Eyedropper",
+        "from": "Etsy",
+        "model": "C2",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 71,
         "price_out": 0,
         "rot": "2"
     },

@@ -8,7 +8,7 @@ def add_numbers(mappings):
     return mappings
 
 
-def create_bins(buckets):
+def create_bins(buckets, foo=None):
     initial_length = len(buckets.get(""))
 
     for i in range(3):
@@ -17,6 +17,7 @@ def create_bins(buckets):
                 which_letter_now = len(bucket)
 
                 for content in contents:
+                    content = str(content)
                     current_letter = content[: which_letter_now + 1]
 
                     if current_letter != bucket:
@@ -25,7 +26,10 @@ def create_bins(buckets):
 
                         buckets[current_letter].append(content)
 
-                buckets.pop(bucket)
+                current_bucket = buckets.pop(bucket)
+
+                if bucket in current_bucket:
+                    buckets[bucket] = [bucket]
 
         if initial_length == len(buckets):
             break
@@ -37,16 +41,13 @@ def create_buckets(what_collection, fields=None):
     field_bins = []
 
     for field in fields:
-        field_bins.append(
-            create_bins({"": list({getattr(item, field) for item in what_collection})})
-        )
+        field_bins.append(create_bins({"": list({getattr(item, field) for item in what_collection})}))
 
     mappings = {}
 
     for item in what_collection:
         mappings[item.item_id] = "".join(
-            mapping_from_bins(bin_, getattr(item, field))
-            for bin_, field in zip(field_bins, fields)
+            mapping_from_bins(bin_, getattr(item, field)) for bin_, field in zip(field_bins, fields)
         )
 
     return add_numbers(mappings)
@@ -59,9 +60,13 @@ def create_single_bucket(list_of_fields):
     return add_numbers(mappings)
 
 
+def generate_name(klass, dictionary):
+    return "".join([dictionary[param] for param in klass.prompt_params])
+
+
 def mapping_from_bins(bins, target):
     for mapping, items in bins.items():
-        if target in items:
+        if str(target) in items:
             return mapping
 
 

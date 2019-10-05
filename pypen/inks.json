@@ -417,6 +417,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "J.HerbinBouquetd'Antan": {
+        "bought": "2019-08",
+        "brand": "J. Herbin",
+        "color": "Pink",
+        "from": "miestilografica",
+        "how": "Bou",
+        "name": "Bouquet d'Antan",
+        "price": 30,
+        "used_up": "No",
+        "vol": "30"
+    },
     "J.HerbinLarmesdeCassis": {
         "bought": "2015-08",
         "brand": "J. Herbin",
@@ -483,6 +494,17 @@
         "used_up": "No",
         "vol": "10"
     },
+    "J.HerbinVertOlive": {
+        "bought": "2019-08",
+        "brand": "J. Herbin",
+        "color": "Green",
+        "from": "miestilografica",
+        "how": "Bou",
+        "name": "Vert Olive",
+        "price": 30,
+        "used_up": "No",
+        "vol": "30"
+    },
     "KWZBalticMemories": {
         "bought": "2017-11",
         "brand": "KWZ",
@@ -515,6 +537,28 @@
         "price": 35,
         "used_up": "No",
         "vol": "60"
+    },
+    "KawecoParadiseBlue": {
+        "bought": "2019-08",
+        "brand": "Kaweco",
+        "color": "Turquoise",
+        "from": "miestilografica",
+        "how": "Bou",
+        "name": "Paradise Blue",
+        "price": 53,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "KawecoSummerPurple": {
+        "bought": "2019-08",
+        "brand": "Kaweco",
+        "color": "Purple",
+        "from": "miestilografica",
+        "how": "Bou",
+        "name": "Summer Purple",
+        "price": 53,
+        "used_up": "No",
+        "vol": "30"
     },
     "LamyCrystalBenitoite": {
         "bought": "2018-12",
@@ -601,6 +645,17 @@
         "how": "Bou",
         "name": "Sapphire",
         "price": 50,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "PelikanEdelsteinStarRuby": {
+        "bought": "2019-09",
+        "brand": "Pelikan Edelstein",
+        "color": "Red",
+        "from": "Pelikan Hub",
+        "how": "Pre",
+        "name": "Star Ruby",
+        "price": 0,
         "used_up": "No",
         "vol": "50"
     },

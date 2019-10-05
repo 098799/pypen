@@ -176,7 +176,7 @@
     },
     "Faber-CastellE-Motion8.6.2019": {
         "begin": "2019-06-08",
-        "end": "",
+        "end": "2019-08-02",
         "ink": "SailorJentleKin-Mokusei",
         "nib": "B",
         "pen": "Faber-CastellE-Motion"
@@ -211,10 +211,17 @@
     },
     "Faber-CastellOndoro8.6.2019": {
         "begin": "2019-06-08",
-        "end": "",
+        "end": "2019-08-02",
         "ink": "J.HerbinRougeOpera",
         "nib": "F",
         "pen": "Faber-CastellOndoro"
+    },
+    "Fuliwen0175.10.2019": {
+        "begin": "2019-10-04",
+        "end": "",
+        "ink": "DiamineIndigo",
+        "nib": "M",
+        "pen": "Fuliwen017"
     },
     "Jinhao1082.1.2017": {
         "begin": "2017-01-02",
@@ -377,6 +384,13 @@
         "nib": "F",
         "pen": "Jinhao950"
     },
+    "Jinhao992Black29.8.2019": {
+        "begin": "2019-08-29",
+        "end": "",
+        "ink": "DiamineAmazingAmethyst",
+        "nib": "F",
+        "pen": "Jinhao992Black"
+    },
     "Jinhao992Black6.05.2017": {
         "begin": "2017-05-06",
         "end": "2017-05-26",
@@ -419,6 +433,13 @@
         "nib": "F",
         "pen": "Jinhao992DemoGreen"
     },
+    "Jinhao992DemoGreen5.10.2019": {
+        "begin": "2019-10-05",
+        "end": "",
+        "ink": "DiamineAppleGlory",
+        "nib": "F",
+        "pen": "Jinhao992DemoGreen"
+    },
     "Jinhao992DemoOrange1.06.2017": {
         "begin": "2017-06-01",
         "end": "2017-06-13",
@@ -444,6 +465,13 @@
         "begin": "2018-10-18",
         "end": "2018-11-03",
         "ink": "DiamineAutumnOak",
+        "nib": "F",
+        "pen": "Jinhao992DemoOrange"
+    },
+    "Jinhao992DemoOrange5.10.2019": {
+        "begin": "2019-09-04",
+        "end": "",
+        "ink": "DiamineCoral",
         "nib": "F",
         "pen": "Jinhao992DemoOrange"
     },
@@ -615,6 +643,13 @@
         "nib": "EF",
         "pen": "KawecoAl-Sport"
     },
+    "KawecoAl-Sport28.8.2019": {
+        "begin": "2019-08-15",
+        "end": "2019-09-22",
+        "ink": "KawecoParadiseBlue",
+        "nib": "F",
+        "pen": "KawecoAl-Sport"
+    },
     "KawecoAl-Sport6.07.2017": {
         "begin": "2017-07-06",
         "end": "2017-08-18",
@@ -633,6 +668,13 @@
         "begin": "2018-11-28",
         "end": "2019-01-26",
         "ink": "DiamineMidnight",
+        "nib": "1.1",
+        "pen": "KawecoSport"
+    },
+    "KawecoSport28.8.2019": {
+        "begin": "2019-08-15",
+        "end": "",
+        "ink": "(s) Rotring Black",
         "nib": "1.1",
         "pen": "KawecoSport"
     },
@@ -689,6 +731,13 @@
         "begin": "2018-11-28",
         "end": "2019-01-26",
         "ink": "DiamineSyrah",
+        "nib": "F",
+        "pen": "LamyAlStar(Purple)"
+    },
+    "LamyAlStar(Purple)29.8.2019": {
+        "begin": "2019-08-29",
+        "end": "2019-10-05",
+        "ink": "DiamineGrape",
         "nib": "F",
         "pen": "LamyAlStar(Purple)"
     },
@@ -755,6 +804,13 @@
         "nib": "MK",
         "pen": "LamyAlStar"
     },
+    "LamyAlStar5.10.2019": {
+        "begin": "2019-10-05",
+        "end": "",
+        "ink": "SailorJentleKin-Mokusei",
+        "nib": "MK",
+        "pen": "LamyAlStar"
+    },
     "LamySafari(Blue)12.2.2019": {
         "begin": "2019-02-12",
         "end": "2019-05-08",
@@ -773,6 +829,13 @@
         "begin": "2018-11-28",
         "end": "2019-01-26",
         "ink": "DiamineSunshineYellow",
+        "nib": "B",
+        "pen": "LamySafari(Yellow)"
+    },
+    "LamySafari(Yellow)5.10.2019": {
+        "begin": "2019-09-04",
+        "end": "",
+        "ink": "DiamineYellow",
         "nib": "B",
         "pen": "LamySafari(Yellow)"
     },
@@ -855,8 +918,15 @@
     },
     "LeonardoMomentoZero27.7.2019": {
         "begin": "2019-07-26",
-        "end": "",
+        "end": "2019-08-11",
         "ink": "DiamineMajesticBlue",
+        "nib": "F",
+        "pen": "LeonardoMomentoZero"
+    },
+    "LeonardoMomentoZero28.8.2019": {
+        "begin": "2019-08-24",
+        "end": "2019-09-22",
+        "ink": "KawecoSummerPurple",
         "nib": "F",
         "pen": "LeonardoMomentoZero"
     },
@@ -916,6 +986,13 @@
         "nib": "F",
         "pen": "Luoshi589Violet"
     },
+    "Montblanc14629.8.2019": {
+        "begin": "2019-08-29",
+        "end": "2019-09-22",
+        "ink": "DiamineTwilight",
+        "nib": "14k M",
+        "pen": "Montblanc146"
+    },
     "Montblanc14630.03.2019": {
         "begin": "2019-03-30",
         "end": "2019-04-06",
@@ -936,6 +1013,13 @@
         "ink": "DiamineSapphireBlue",
         "nib": "F",
         "pen": "MoonmanC1"
+    },
+    "MoonmanC25.10.2019": {
+        "begin": "2019-10-04",
+        "end": "",
+        "ink": "DiamineFloridaBlue",
+        "nib": "F",
+        "pen": "MoonmanC2"
     },
     "MoonmanM218.2.2018": {
         "begin": "2018-02-16",
@@ -967,7 +1051,7 @@
     },
     "Opus88KoloroDemo16.3.2019": {
         "begin": "2019-03-16",
-        "end": "",
+        "end": "2019-08-08",
         "ink": "PilotIroshizukuMomiji",
         "nib": "F",
         "pen": "Opus88KoloroDemo"
@@ -988,7 +1072,7 @@
     },
     "ParkerDuofoldCentennial27.7.2019": {
         "begin": "2019-06-15",
-        "end": "",
+        "end": "2019-08-28",
         "ink": "(s) Parker Quink Black",
         "nib": "18k F",
         "pen": "ParkerDuofoldCentennial"
@@ -1030,7 +1114,7 @@
     },
     "PelikanM40011.7.2019": {
         "begin": "2019-07-11",
-        "end": "",
+        "end": "2019-09-21",
         "ink": "DiamineSyrah",
         "nib": "14k F",
         "pen": "PelikanM400"
@@ -1060,6 +1144,13 @@
         "begin": "2018-06-14",
         "end": "2018-08-10",
         "ink": "WatermanIntenseBlack",
+        "nib": "14k F",
+        "pen": "PelikanM400"
+    },
+    "PelikanM4005.10.2019": {
+        "begin": "2019-09-21",
+        "end": "",
+        "ink": "(s) Pelikan Edelstein Jade",
         "nib": "14k F",
         "pen": "PelikanM400"
     },
@@ -1107,7 +1198,7 @@
     },
     "PelikanM6008.6.2019": {
         "begin": "2019-06-08",
-        "end": "",
+        "end": "2019-08-08",
         "ink": "J.HerbinLierreSauvage",
         "nib": "14k F",
         "pen": "PelikanM600"
@@ -1142,14 +1233,14 @@
     },
     "PelikanM8058.6.2019": {
         "begin": "2019-06-08",
-        "end": "",
+        "end": "2019-08-11",
         "ink": "WatermanInspiredBlue",
         "nib": "18k EF",
         "pen": "PelikanM805"
     },
     "PelikanTwist7.3.2019": {
         "begin": "2019-03-07",
-        "end": "",
+        "end": "2019-07-07",
         "ink": "J.HerbinLarmesdeCassis",
         "nib": "M",
         "pen": "PelikanTwist"
@@ -1170,10 +1261,17 @@
     },
     "PenBBS308GT17.5.2019": {
         "begin": "2019-05-17",
-        "end": "",
+        "end": "2019-08-02",
         "ink": "KWZHoney",
         "nib": "F",
         "pen": "PenBBS308GT"
+    },
+    "PenBBS30928.8.2019": {
+        "begin": "2019-08-24",
+        "end": "2019-10-05",
+        "ink": "J.HerbinRouilled'Ancre",
+        "nib": "B",
+        "pen": "PenBBS309"
     },
     "PenBBS3094.1.2019": {
         "begin": "2019-01-04",
@@ -1189,6 +1287,13 @@
         "nib": "F",
         "pen": "PenBBS323"
     },
+    "PenBBS32328.8.2019": {
+        "begin": "2019-08-24",
+        "end": "2019-09-22",
+        "ink": "J.HerbinVertOlive",
+        "nib": "F",
+        "pen": "PenBBS323"
+    },
     "PenBBS3236.4.2019": {
         "begin": "2019-03-31",
         "end": "2019-05-10",
@@ -1199,6 +1304,13 @@
     "PenBBS323koi17.5.2019": {
         "begin": "2019-05-02",
         "end": "2019-06-09",
+        "ink": "KWZGrapefruit",
+        "nib": "M",
+        "pen": "PenBBS323koi"
+    },
+    "PenBBS323koi5.10.2019": {
+        "begin": "2019-09-04",
+        "end": "2019-10-05",
         "ink": "KWZGrapefruit",
         "nib": "M",
         "pen": "PenBBS323koi"
@@ -1219,7 +1331,7 @@
     },
     "PenBBS35517.5.2019": {
         "begin": "2019-05-15",
-        "end": "",
+        "end": "2019-08-28",
         "ink": "DiamineGreenBlack",
         "nib": "F",
         "pen": "PenBBS355"
@@ -1240,7 +1352,7 @@
     },
     "PenBBS45612.2.2019": {
         "begin": "2019-02-12",
-        "end": "",
+        "end": "2019-08-04",
         "ink": "DiamineSunshineYellow",
         "nib": "F",
         "pen": "PenBBS456"
@@ -1261,7 +1373,7 @@
     },
     "PilotCapless18.5.2019": {
         "begin": "2019-05-18",
-        "end": "",
+        "end": "2019-08-02",
         "ink": "SailorJentleBlueBlack",
         "nib": "F",
         "pen": "PilotCapless"
@@ -1298,6 +1410,13 @@
         "begin": "2018-10-07",
         "end": "2018-11-17",
         "ink": "SailorJentleBlueBlack",
+        "nib": "14k EF",
+        "pen": "PilotCustomHeritage91"
+    },
+    "PilotCustomHeritage915.10.2019": {
+        "begin": "2019-10-02",
+        "end": "",
+        "ink": "KWZBalticMemories",
         "nib": "14k EF",
         "pen": "PilotCustomHeritage91"
     },
@@ -1355,6 +1474,13 @@
         "end": "2019-06-09",
         "ink": "WatermanTenderPurple",
         "nib": "M",
+        "pen": "PilotMR"
+    },
+    "PilotMR29.8.2019": {
+        "begin": "2019-08-29",
+        "end": "",
+        "ink": "WatermanTenderPurple",
+        "nib": "F",
         "pen": "PilotMR"
     },
     "PilotMR7.3.2019": {
@@ -1546,6 +1672,13 @@
         "nib": "14k M",
         "pen": "Platinum3776Chartres"
     },
+    "PlatinumPreppyA5.10.2019": {
+        "begin": "2019-09-21",
+        "end": "",
+        "ink": "PelikanEdelsteinStarRuby",
+        "nib": "M",
+        "pen": "PlatinumPreppyA"
+    },
     "SKBPentonF1027.8.2018": {
         "begin": "2018-07-10",
         "end": "2018-12-15",
@@ -1588,6 +1721,13 @@
         "nib": "EF",
         "pen": "SKBPentonF19"
     },
+    "SKBPentonF1929.8.2019": {
+        "begin": "2019-08-29",
+        "end": "2019-09-22",
+        "ink": "PelikanEdelsteinAmethyst",
+        "nib": "EF",
+        "pen": "SKBPentonF19"
+    },
     "SKBPentonF2016.09.2017": {
         "begin": "2017-09-16",
         "end": "2017-10-03",
@@ -1599,6 +1739,13 @@
         "begin": "2018-12-16",
         "end": "2019-01-26",
         "ink": "DiamineBeauBlue",
+        "nib": "EF",
+        "pen": "SKBPentonF20"
+    },
+    "SKBPentonF2029.8.2019": {
+        "begin": "2019-08-29",
+        "end": "2019-10-05",
+        "ink": "DiamineBilberry",
         "nib": "EF",
         "pen": "SKBPentonF20"
     },
@@ -1700,6 +1847,13 @@
         "nib": "21k HM",
         "pen": "Sailor1911Realo"
     },
+    "SailorLecoule28.8.2019": {
+        "begin": "2019-08-24",
+        "end": "",
+        "ink": "J.HerbinBouquetd'Antan",
+        "nib": "MF",
+        "pen": "SailorLecoule"
+    },
     "SailorLecoule7.3.2019": {
         "begin": "2019-03-07",
         "end": "2019-05-08",
@@ -1793,7 +1947,7 @@
     },
     "TWSBIDiamond58027.7.2019": {
         "begin": "2019-07-09",
-        "end": "",
+        "end": "2019-10-05",
         "ink": "DiamineBlueBlack",
         "nib": "F",
         "pen": "TWSBIDiamond580"
@@ -1884,7 +2038,7 @@
     },
     "ViscontiHomoSapiens8.6.2019": {
         "begin": "2019-06-08",
-        "end": "",
+        "end": "2019-08-11",
         "ink": "DiamineAncientCopper",
         "nib": "EF",
         "pen": "ViscontiHomoSapiens"
@@ -2050,6 +2204,13 @@
         "nib": "EF",
         "pen": "WingSung3003Pink"
     },
+    "WingSung3003Pink29.8.2019": {
+        "begin": "2019-08-29",
+        "end": "",
+        "ink": "DeAtramentisAubergine",
+        "nib": "EF",
+        "pen": "WingSung3003Pink"
+    },
     "WingSung3003Pink31.12.2017": {
         "begin": "2017-12-31",
         "end": "2018-01-22",
@@ -2110,6 +2271,13 @@
         "begin": "2018-08-27",
         "end": "2018-09-15",
         "ink": "SailorJentleRikyu-Cha",
+        "nib": "F",
+        "pen": "WingSung9133"
+    },
+    "WingSung913329.8.2019": {
+        "begin": "2019-08-29",
+        "end": "2019-09-22",
+        "ink": "J.HerbinLarmesdeCassis",
         "nib": "F",
         "pen": "WingSung9133"
     },

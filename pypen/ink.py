@@ -2,12 +2,9 @@ from pypen import base
 
 
 class Ink(base.CollectionItem):
-    pass
+    type_name = "Ink"
+    prompt_params = ["brand", "name"]
 
 
 class InkCollection(base.Collection):
-    TYPE = Ink
-
-    @property
-    def get_prompt_params(self):
-        return ['brand', 'name']
+    item_class = Ink
