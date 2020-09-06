@@ -160,13 +160,6 @@
         "nib": "M arch",
         "pen": "Duke209"
     },
-    "EdisonNouveauPremiereDelphinium29.7.2020": {
-        "begin": "2020-07-29",
-        "end": "2020-08-23",
-        "ink": "WatermanTenderPurple",
-        "nib": "M",
-        "pen": "EdisonNouveauPremiereDelphinium"
-    },
     "Faber-CastellE-Motion13.06.2017": {
         "begin": "2017-06-13",
         "end": "2017-06-24",
@@ -243,13 +236,6 @@
         "ink": "J.HerbinRougeOpera",
         "nib": "F",
         "pen": "Faber-CastellOndoro"
-    },
-    "Franklin-Christoph46SolidIce22.7.2020": {
-        "begin": "2020-07-22",
-        "end": "2020-09-06",
-        "ink": "(s) Franklin-Christoph Blue 72",
-        "nib": "SIG F",
-        "pen": "Franklin-Christoph46SolidIce"
     },
     "Fuliwen0175.10.2019": {
         "begin": "2019-10-04",
@@ -666,7 +652,7 @@
     },
     "KawecoAl-Sport11.1.2020": {
         "begin": "2020-01-11",
-        "end": "2020-05-31",
+        "end": "",
         "ink": "(s) Kaweco Caramel Brown",
         "nib": "F",
         "pen": "KawecoAl-Sport"
@@ -701,7 +687,7 @@
     },
     "KawecoSport11.1.2020": {
         "begin": "2020-01-11",
-        "end": "2020-08-17",
+        "end": "",
         "ink": "(s) Kaweco Smokey Grey",
         "nib": "1.1",
         "pen": "KawecoSport"
@@ -757,7 +743,7 @@
     },
     "Lamy200025.3.2020": {
         "begin": "2020-03-25",
-        "end": "2020-07-13",
+        "end": "",
         "ink": "Pelikan4001BlueBlack",
         "nib": "14k F",
         "pen": "Lamy2000"
@@ -993,13 +979,6 @@
         "nib": "F",
         "pen": "LeonardoMomentoZero"
     },
-    "LeonardoMomentoZero12.7.2020": {
-        "begin": "2020-06-14",
-        "end": "2020-07-12",
-        "ink": "SailorJentleBlueBlack",
-        "nib": "F",
-        "pen": "LeonardoMomentoZero"
-    },
     "LeonardoMomentoZero27.7.2019": {
         "begin": "2019-07-26",
         "end": "2019-08-11",
@@ -1189,16 +1168,9 @@
         "nib": "EF",
         "pen": "Opus88KoloroDemo"
     },
-    "ParkerDuofoldCentennial12.7.2020": {
-        "begin": "2020-06-14",
-        "end": "2020-08-13",
-        "ink": "(s) Parker Quink Black",
-        "nib": "18k F",
-        "pen": "ParkerDuofoldCentennial"
-    },
     "ParkerDuofoldCentennial2.4.2020": {
         "begin": "2020-04-02",
-        "end": "2020-06-14",
+        "end": "",
         "ink": "J.HerbinVertOlive",
         "nib": "18k F",
         "pen": "ParkerDuofoldCentennial"
@@ -1216,13 +1188,6 @@
         "ink": "(s) Diamine Wagner",
         "nib": "18k F",
         "pen": "ParkerDuofoldCentennial"
-    },
-    "ParkerFrontier12.8.2020": {
-        "begin": "2020-08-12",
-        "end": "2020-08-23",
-        "ink": "J.HerbinOrangeIndien",
-        "nib": "F",
-        "pen": "ParkerFrontier"
     },
     "ParkerFrontier14.6.2018": {
         "begin": "2018-06-14",
@@ -1378,13 +1343,6 @@
         "nib": "18k EF",
         "pen": "PelikanM805"
     },
-    "PelikanM80513.8.2020": {
-        "begin": "2020-08-13",
-        "end": "",
-        "ink": "DiamineRoyalBlue",
-        "nib": "18k EF",
-        "pen": "PelikanM805"
-    },
     "PelikanM80527.8.2018": {
         "begin": "2018-07-29",
         "end": "2018-10-04",
@@ -1413,13 +1371,6 @@
         "nib": "18k EF",
         "pen": "PelikanM805"
     },
-    "PelikanM805Stresemann22.8.2020": {
-        "begin": "2020-08-22",
-        "end": "",
-        "ink": "PilotIroshizukuKiri-Same",
-        "nib": "18k F",
-        "pen": "PelikanM805Stresemann"
-    },
     "PelikanM805Stresemann31.1.2020": {
         "begin": "2020-01-31",
         "end": "2020-03-09",
@@ -1429,7 +1380,7 @@
     },
     "PelikanTwist25.1.2020": {
         "begin": "2020-01-25",
-        "end": "2020-07-05",
+        "end": "",
         "ink": "J.HerbinLarmesdeCassis",
         "nib": "F",
         "pen": "PelikanTwist"
@@ -1443,7 +1394,7 @@
     },
     "PenBBS26630810.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-05-31",
+        "end": "",
         "ink": "WatermanRed",
         "nib": "F",
         "pen": "PenBBS266308"
@@ -1464,7 +1415,7 @@
     },
     "PenBBS308GT10.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-07-05",
+        "end": "",
         "ink": "DiamineJadeGreen",
         "nib": "F",
         "pen": "PenBBS308GT"
@@ -1478,7 +1429,7 @@
     },
     "PenBBS30910.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-07-05",
+        "end": "",
         "ink": "SailorJentleOku-Yama",
         "nib": "F",
         "pen": "PenBBS309"
@@ -1527,7 +1478,7 @@
     },
     "PenBBS323koi10.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-07-05",
+        "end": "",
         "ink": "PilotIroshizukuMomiji",
         "nib": "F",
         "pen": "PenBBS323koi"
@@ -1548,7 +1499,7 @@
     },
     "PenBBS34910.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-05-31",
+        "end": "",
         "ink": "DiamineAquaLagoon",
         "nib": "F",
         "pen": "PenBBS349"
@@ -1569,7 +1520,7 @@
     },
     "PenBBS35510.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-08-30",
+        "end": "",
         "ink": "DiamineAutumnOak",
         "nib": "F",
         "pen": "PenBBS355"
@@ -1604,7 +1555,7 @@
     },
     "PenBBS45610.4.2020": {
         "begin": "2020-04-10",
-        "end": "2020-07-05",
+        "end": "",
         "ink": "WatermanMysteriousBlue",
         "nib": "M",
         "pen": "PenBBS456"
@@ -1643,13 +1594,6 @@
         "ink": "SailorJentleBlueBlack",
         "nib": "F",
         "pen": "PilotCapless"
-    },
-    "PilotCustom82313.7.2020": {
-        "begin": "2020-07-13",
-        "end": "",
-        "ink": "PilotIroshizukuShin-Kai",
-        "nib": "14k F",
-        "pen": "PilotCustom823"
     },
     "PilotCustomHeritage9110.10.2017": {
         "begin": "2017-10-10",
@@ -1758,7 +1702,7 @@
     },
     "PilotMR25.1.2020": {
         "begin": "2020-01-25",
-        "end": "2020-04-19",
+        "end": "",
         "ink": "PilotIroshizukuYama-Budo",
         "nib": "F",
         "pen": "PilotMR"
@@ -1919,7 +1863,7 @@
     },
     "Platinum3776Chartres10.3.2020": {
         "begin": "2020-03-10",
-        "end": "2020-05-31",
+        "end": "",
         "ink": "SailorJentleBlue",
         "nib": "14k F",
         "pen": "Platinum3776Chartres"
@@ -2057,16 +2001,9 @@
         "nib": "EF",
         "pen": "SKBPentonF20"
     },
-    "Sailor1911Ivory13.8.2020": {
-        "begin": "2020-08-13",
-        "end": "",
-        "ink": "WatermanBlack",
-        "nib": "14k HM",
-        "pen": "Sailor1911Ivory"
-    },
     "Sailor1911Ivory17.2.2020": {
         "begin": "2020-02-17",
-        "end": "2020-05-31",
+        "end": "",
         "ink": "(s) Sailor Black",
         "nib": "14k HM",
         "pen": "Sailor1911Ivory"
@@ -2111,13 +2048,6 @@
         "end": "2017-04-25",
         "ink": "J.HerbinRouilled'Ancre",
         "nib": "14k HM",
-        "pen": "Sailor1911Promenade"
-    },
-    "Sailor1911Promenade21.8.2020": {
-        "begin": "2020-08-21",
-        "end": "",
-        "ink": "WatermanSerenityBlue",
-        "nib": "14k HF",
         "pen": "Sailor1911Promenade"
     },
     "Sailor1911Promenade22.02.2017": {
@@ -2183,13 +2113,6 @@
         "nib": "21k HM",
         "pen": "Sailor1911Realo"
     },
-    "SailorLecoule13.8.2020": {
-        "begin": "2020-08-13",
-        "end": "",
-        "ink": "J.HerbinBouquetd'Antan",
-        "nib": "MF",
-        "pen": "SailorLecoule"
-    },
     "SailorLecoule28.8.2019": {
         "begin": "2019-08-24",
         "end": "2019-11-01",
@@ -2209,13 +2132,6 @@
         "end": "2017-11-04",
         "ink": "DiamineTwilight",
         "nib": "14k HF",
-        "pen": "SailorProGearSlim"
-    },
-    "SailorProGearSlim12.7.2020": {
-        "begin": "2020-06-04",
-        "end": "2020-08-03",
-        "ink": "DiamineRedDragon",
-        "nib": "14k HM",
         "pen": "SailorProGearSlim"
     },
     "SailorProGearSlim14.09.2017": {
@@ -2309,16 +2225,9 @@
         "nib": "F",
         "pen": "TWSBIDiamond580ALR"
     },
-    "TWSBIDiamond580ALR12.7.2020": {
-        "begin": "2020-04-19",
-        "end": "2020-07-05",
-        "ink": "WatermanIntenseBlack",
-        "nib": "F",
-        "pen": "TWSBIDiamond580ALR"
-    },
     "TWSBIDiamond580ALR25.1.2020": {
         "begin": "2020-01-25",
-        "end": "2020-04-19",
+        "end": "",
         "ink": "WatermanIntenseBlack",
         "nib": "F",
         "pen": "TWSBIDiamond580ALR"
@@ -2539,13 +2448,6 @@
         "ink": "(s) Noodler's Apache Sunset",
         "nib": "14k flex",
         "pen": "Waterman'sIdeal2A"
-    },
-    "WatermanException12.7.2020": {
-        "begin": "2020-07-12",
-        "end": "2020-08-03",
-        "ink": "PilotIroshizukuAsa-Gao",
-        "nib": "18k M",
-        "pen": "WatermanException"
     },
     "WatermanHemisphere10.10.2017": {
         "begin": "2017-10-10",

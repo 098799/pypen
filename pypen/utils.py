@@ -57,7 +57,9 @@ def create_single_bucket(list_of_fields):
     field_bins = create_bins({"": list_of_fields})
     mappings = {field: mapping_from_bins(field_bins, field) for field in list_of_fields}
 
-    return add_numbers(mappings)
+    numbered_mappings = add_numbers(mappings)
+
+    return trim_mappings(numbered_mappings)
 
 
 def generate_name(klass, dictionary):
@@ -77,3 +79,14 @@ def remove_duplicates(list_of_items):
             result.append(item)
 
     return result
+
+
+def trim_mappings(mappings):
+    """Sometimes mappings can be longer than necessary."""
+    shortest_mapping = min(len(mapping) for mapping in mappings.values())
+
+    if shortest_mapping > 1 and len(set(mapping[0:1] for mapping in mappings.values())) == 1:
+        mappings = {k: v[1:] for k, v in mappings.items()}
+        mappings = trim_mappings(mappings)
+
+    return mappings

@@ -57,6 +57,7 @@ def add_item(item):
         temporary = {}
 
         for char in BIG_TUPLE[item]:
+            print("")
             print("\n " + "-" * len(char), "\n", char, "\n", "-" * len(char))
             association = []
 
@@ -80,6 +81,7 @@ def add_item(item):
     if item in ("p", "i", "u"):
         temporary = {}
         for char in BIG_TUPLE[item]:
+            print("")
             print("\n " + "-" * len(char), "\n", char, "\n", "-" * len(char))
             association = []
             for pen in BIG_LIST[item]:
@@ -423,6 +425,8 @@ def sum_items(val="p"):
             suma2016 = 0
             suma2017 = 0
             suma2018 = 0
+            suma2019 = 0
+            suma2020 = 0
             for item in theList:
                 itemPrice = theList[item]["price"]
                 dateofbuying = int(theList[item]["bought"].split("-")[0])
@@ -436,11 +440,17 @@ def sum_items(val="p"):
                     suma2017 += itemPrice
                 elif dateofbuying < 2019:
                     suma2018 += itemPrice
+                elif dateofbuying < 2020:
+                    suma2019 += itemPrice
+                elif dateofbuying < 2021:
+                    suma2020 += itemPrice
             print("pre2015:", sumapre)
             print("   2015:", suma2015)
             print("   2016:", suma2016)
             print("   2017:", suma2017)
             print("   2018:", suma2018)
+            print("   2019:", suma2019)
+            print("   2020:", suma2020)
         elif thing == "colorclass":
             print("**ColorClass**")
             itemziocounter = []
@@ -478,6 +488,7 @@ def sum_items(val="p"):
             rotations.remove("Broken")
             for rotation in sorted(rotations)[::-1]:
                 howlong = {}
+                print("")
                 print("*Rotation number " + rotation + "*")
                 for item in theList:
                     val1 = theList[item]
@@ -511,6 +522,7 @@ def sum_items(val="p"):
             rotations = ["Bottle", "Sample"]
             for rotation in rotations[::-1]:
                 howlong = {}
+                print("")
                 print("*" + rotation + "*")
                 for item in theList:
                     val1 = theList[item]

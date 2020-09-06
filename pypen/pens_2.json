@@ -77,19 +77,6 @@
         "price_out": 0,
         "rot": "3"
     },
-    "EdisonNouveauPremiereDelphinium": {
-        "bought": "2020-07",
-        "brand": "Edison",
-        "class": "Modern",
-        "filling": "c/c",
-        "from": "Hapka",
-        "model": "Nouveau Premiere Delphinium",
-        "nationality": "American",
-        "out": "No",
-        "price": 0,
-        "price_out": 0,
-        "rot": "1"
-    },
     "EsterbrookLJ": {
         "bought": "2015-10",
         "brand": "Esterbrook",
@@ -128,19 +115,6 @@
         "price": 330,
         "price_out": 0,
         "rot": "2"
-    },
-    "Franklin-Christoph46SolidIce": {
-        "bought": "2020-07",
-        "brand": "Franklin-Christoph",
-        "class": "Modern",
-        "filling": "Eyedropper",
-        "from": "Franklin-Christoph",
-        "model": "46 Solid Ice",
-        "nationality": "American",
-        "out": "No",
-        "price": 700,
-        "price_out": 0,
-        "rot": "1"
     },
     "Fuliwen017": {
         "bought": "2019-10",
@@ -935,19 +909,6 @@
         "price_out": 0,
         "rot": "1"
     },
-    "PilotCustom823": {
-        "bought": "2020-07",
-        "brand": "Pilot",
-        "class": "Modern",
-        "filling": "Plunger",
-        "from": "eBay",
-        "model": "Custom 823",
-        "nationality": "Japanese",
-        "out": "No",
-        "price": 1100,
-        "price_out": 0,
-        "rot": "1"
-    },
     "PilotCustomHeritage91": {
         "bought": "2015-12",
         "brand": "Pilot",
@@ -1337,19 +1298,6 @@
         "price": 140,
         "price_out": 100,
         "rot": "Out"
-    },
-    "WatermanException": {
-        "bought": "2020-07",
-        "brand": "Waterman",
-        "class": "Modern",
-        "filling": "c/c",
-        "from": "digitec",
-        "model": "Exception",
-        "nationality": "French",
-        "out": "No",
-        "price": 910,
-        "price_out": 0,
-        "rot": "1"
     },
     "WatermanHemisphere": {
         "bought": "2010-10",

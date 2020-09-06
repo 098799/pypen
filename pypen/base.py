@@ -90,7 +90,7 @@ class Collection(list):
     def prompt(self, mapping):
         print("Choose from the following:")
 
-        for item, map_ in mapping.items():
+        for item, map_ in sorted(mapping.items()):
             print((map_ + ":").ljust(8), item)
 
         which_one = input("Which one?\n")

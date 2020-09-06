@@ -417,6 +417,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "J.HerbinAmbredeBirmanie": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Yellow",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Ambre de Birmanie",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
+    },
     "J.HerbinBouquetd'Antan": {
         "bought": "2019-08",
         "brand": "J. Herbin",
@@ -427,6 +438,28 @@
         "price": 30,
         "used_up": "No",
         "vol": "30"
+    },
+    "J.HerbinCafedesIles": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Brown",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Cafe des Iles",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
+    },
+    "J.HerbinDiaboloMenthe": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Turquoise",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Diabolo Menthe",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
     },
     "J.HerbinLarmesdeCassis": {
         "bought": "2015-08",
@@ -494,6 +527,28 @@
         "used_up": "No",
         "vol": "10"
     },
+    "J.HerbinTerredeFeu": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Brown",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Terre de Feu",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
+    },
+    "J.HerbinVertEmpire": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Green",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Vert Empire",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
+    },
     "J.HerbinVertOlive": {
         "bought": "2019-08",
         "brand": "J. Herbin",
@@ -504,6 +559,17 @@
         "price": 30,
         "used_up": "No",
         "vol": "30"
+    },
+    "J.HerbinVertRoseda": {
+        "bought": "2019-10",
+        "brand": "J. Herbin",
+        "color": "Green",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Vert Roseda",
+        "price": 8,
+        "used_up": "No",
+        "vol": "10"
     },
     "KWZBalticMemories": {
         "bought": "2017-11",
@@ -535,6 +601,17 @@
         "how": "Bou",
         "name": "Honey",
         "price": 35,
+        "used_up": "No",
+        "vol": "60"
+    },
+    "KWZSheenMachine": {
+        "bought": "2019-10",
+        "brand": "KWZ",
+        "color": "Blue",
+        "from": "Appelboom",
+        "how": "Bou",
+        "name": "Sheen Machine",
+        "price": 28,
         "used_up": "No",
         "vol": "60"
     },
@@ -659,6 +736,17 @@
         "used_up": "No",
         "vol": "50"
     },
+    "PilotIroshizukuAsa-Gao": {
+        "bought": "2020-01",
+        "brand": "Pilot Iroshizuku",
+        "color": "Royal Blue",
+        "from": "eBay",
+        "how": "Bou",
+        "name": "Asa-Gao",
+        "price": 83,
+        "used_up": "No",
+        "vol": "50"
+    },
     "PilotIroshizukuKiri-Same": {
         "bought": "2012-12",
         "brand": "Pilot Iroshizuku",
@@ -670,6 +758,17 @@
         "used_up": "No",
         "vol": "50"
     },
+    "PilotIroshizukuKon-Peki": {
+        "bought": "2020-01",
+        "brand": "Pilot Iroshizuku",
+        "color": "Blue",
+        "from": "eBay",
+        "how": "Bou",
+        "name": "Kon-Peki",
+        "price": 83,
+        "used_up": "No",
+        "vol": "50"
+    },
     "PilotIroshizukuMomiji": {
         "bought": "2018-10",
         "brand": "Pilot Iroshizuku",
@@ -678,6 +777,28 @@
         "how": "Pre",
         "name": "Momiji",
         "price": 0,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "PilotIroshizukuShin-Kai": {
+        "bought": "2020-01",
+        "brand": "Pilot Iroshizuku",
+        "color": "Blue Black",
+        "from": "eBay",
+        "how": "Bou",
+        "name": "Shin-Kai",
+        "price": 83,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "PilotIroshizukuYama-Budo": {
+        "bought": "2020-01",
+        "brand": "Pilot Iroshizuku",
+        "color": "Purple",
+        "from": "eBay",
+        "how": "Bou",
+        "name": "Yama-Budo",
+        "price": 83,
         "used_up": "No",
         "vol": "50"
     },
@@ -770,13 +891,13 @@
         "vol": "50"
     },
     "WatermanAudaciousRed": {
-        "bought": "2010-10",
+        "bought": "2019-12",
         "brand": "Waterman",
         "color": "Red",
-        "from": "Allegro",
-        "how": "Bou",
+        "from": "Ozlem",
+        "how": "Pre",
         "name": "Audacious Red",
-        "price": 17,
+        "price": 0,
         "used_up": "No",
         "vol": "50"
     },
@@ -831,6 +952,17 @@
         "from": "Allegro",
         "how": "Bou",
         "name": "Mysterious Blue",
+        "price": 17,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "WatermanRed": {
+        "bought": "2010-10",
+        "brand": "Waterman",
+        "color": "Red",
+        "from": "Allegro",
+        "how": "Bou",
+        "name": "Red",
         "price": 17,
         "used_up": "No",
         "vol": "50"
