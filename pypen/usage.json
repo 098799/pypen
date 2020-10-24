@@ -258,6 +258,13 @@
         "nib": "M",
         "pen": "Fuliwen017"
     },
+    "Jinhao100Centennial12.10.2020": {
+        "begin": "2020-10-01",
+        "end": "2020-10-2",
+        "ink": "DiamineFloridaBlue",
+        "nib": "F",
+        "pen": "Jinhao100Centennial"
+    },
     "Jinhao1082.1.2017": {
         "begin": "2017-01-02",
         "end": "2017-01-10",
@@ -1119,9 +1126,16 @@
         "nib": "F",
         "pen": "MoonmanC2"
     },
+    "MoonmanF916.9.2020": {
+        "begin": "2020-09-16",
+        "end": "2020-10-14",
+        "ink": "J.HerbinTerredeFeu",
+        "nib": "F",
+        "pen": "MoonmanF9"
+    },
     "MoonmanM210.4.2020": {
         "begin": "2020-04-10",
-        "end": "",
+        "end": "2020-10-20",
         "ink": "DiamineMidnight",
         "nib": "EF",
         "pen": "MoonmanM2"
@@ -1380,7 +1394,7 @@
     },
     "PelikanM80513.8.2020": {
         "begin": "2020-08-13",
-        "end": "",
+        "end": "2020-09-20",
         "ink": "DiamineRoyalBlue",
         "nib": "18k EF",
         "pen": "PelikanM805"
@@ -1415,7 +1429,7 @@
     },
     "PelikanM805Stresemann22.8.2020": {
         "begin": "2020-08-22",
-        "end": "",
+        "end": "2020-10-23",
         "ink": "PilotIroshizukuKiri-Same",
         "nib": "18k F",
         "pen": "PelikanM805Stresemann"
@@ -1646,7 +1660,7 @@
     },
     "PilotCustom82313.7.2020": {
         "begin": "2020-07-13",
-        "end": "",
+        "end": "2020-09-20",
         "ink": "PilotIroshizukuShin-Kai",
         "nib": "14k F",
         "pen": "PilotCustom823"
@@ -2059,7 +2073,7 @@
     },
     "Sailor1911Ivory13.8.2020": {
         "begin": "2020-08-13",
-        "end": "",
+        "end": "2020-10-05",
         "ink": "WatermanBlack",
         "nib": "14k HM",
         "pen": "Sailor1911Ivory"
@@ -2185,7 +2199,7 @@
     },
     "SailorLecoule13.8.2020": {
         "begin": "2020-08-13",
-        "end": "",
+        "end": "2020-10-05",
         "ink": "J.HerbinBouquetd'Antan",
         "nib": "MF",
         "pen": "SailorLecoule"
@@ -2309,6 +2323,13 @@
         "nib": "F",
         "pen": "TWSBIDiamond580ALR"
     },
+    "TWSBIDiamond580ALR12.10.2020": {
+        "begin": "2020-10-05",
+        "end": "",
+        "ink": "DiamineBilberry",
+        "nib": "F",
+        "pen": "TWSBIDiamond580ALR"
+    },
     "TWSBIDiamond580ALR12.7.2020": {
         "begin": "2020-04-19",
         "end": "2020-07-05",
@@ -2407,6 +2428,13 @@
         "nib": "23k Pd B",
         "pen": "ViscontiHomoSapiens"
     },
+    "ViscontiHomoSapiens6.9.2020": {
+        "begin": "2020-09-06",
+        "end": "2020-10-05",
+        "ink": "SailorJentleTokiwa-Matsu",
+        "nib": "EF",
+        "pen": "ViscontiHomoSapiens"
+    },
     "ViscontiHomoSapiens8.6.2019": {
         "begin": "2019-06-08",
         "end": "2019-08-11",
@@ -2439,6 +2467,13 @@
         "begin": "2017-08-16",
         "end": "2017-09-03",
         "ink": "PelikanEdelsteinAmethyst",
+        "nib": "M",
+        "pen": "ViscontiOperaElements"
+    },
+    "ViscontiOperaElements24.10.2020": {
+        "begin": "2020-10-15",
+        "end": "2020-10-23",
+        "ink": "WatermanAbsoluteBrown",
         "nib": "M",
         "pen": "ViscontiOperaElements"
     },
@@ -2488,6 +2523,13 @@
         "begin": "2017-06-24",
         "end": "2017-07-07",
         "ink": "DiamineAquaLagoon",
+        "nib": "F",
+        "pen": "ViscontiVanGogh"
+    },
+    "ViscontiVanGogh24.10.2020": {
+        "begin": "2020-10-22",
+        "end": "",
+        "ink": "SailorJentleRikyu-Cha",
         "nib": "F",
         "pen": "ViscontiVanGogh"
     },
@@ -2544,6 +2586,13 @@
         "begin": "2020-07-12",
         "end": "2020-08-03",
         "ink": "PilotIroshizukuAsa-Gao",
+        "nib": "18k M",
+        "pen": "WatermanException"
+    },
+    "WatermanException14.9.2020": {
+        "begin": "2020-09-14",
+        "end": "2020-10-13",
+        "ink": "DiamineSargassoSea",
         "nib": "18k M",
         "pen": "WatermanException"
     },

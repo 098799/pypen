@@ -168,6 +168,19 @@
         "price_out": 0,
         "rot": "4"
     },
+    "Jinhao100Centennial": {
+        "bought": "2020-10",
+        "brand": "Jinhao",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "eBay",
+        "model": "100 Centennial",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 52,
+        "price_out": 0,
+        "rot": "2"
+    },
     "Jinhao108": {
         "bought": "2015-09",
         "brand": "Jinhao",
@@ -659,6 +672,19 @@
         "nationality": "Chinese",
         "out": "No",
         "price": 71,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "MoonmanF9": {
+        "bought": "2020-09",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "eBay",
+        "model": "F9",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 78,
         "price_out": 0,
         "rot": "2"
     },
