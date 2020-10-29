@@ -30,3 +30,47 @@ NATIONALITIES = (
     ("CH", "Swiss"),
     ("TW", "Taiwanese"),
 )
+
+
+NIB_CUTS = (
+    choice("round"),
+    choice("stub"),
+    choice("italic"),
+    choice("SIG"),
+    choice("WA"),
+    choice("flex"),
+    choice("architect"),
+)
+
+
+NIB_MATERIALS = (
+    choice("14k Gold"),
+    choice("18k Gold"),
+    choice("21k Gold"),
+    choice("23k Palladium"),
+    choice("Steel"),
+)
+
+
+COLORS = (
+    choice('Black'),
+    choice('Blue'),
+    choice('Blue Black'),
+    choice('Brown'),
+    choice('Burgundy'),
+    choice('Green'),
+    choice('Grey'),
+    choice('Orange'),
+    choice('Pink'),
+    choice('Purple'),
+    choice('Red'),
+    choice('Royal Blue'),
+    choice('Teal'),
+    choice('Turquoise'),
+    choice('Yellow'),
+)
+
+HOW = (
+    choice('Bought'),
+    choice('Present'),
+)
