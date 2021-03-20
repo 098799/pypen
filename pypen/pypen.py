@@ -427,6 +427,7 @@ def sum_items(val="p"):
             suma2018 = 0
             suma2019 = 0
             suma2020 = 0
+            suma2021 = 0
             for item in theList:
                 itemPrice = theList[item]["price"]
                 dateofbuying = int(theList[item]["bought"].split("-")[0])
@@ -444,6 +445,8 @@ def sum_items(val="p"):
                     suma2019 += itemPrice
                 elif dateofbuying < 2021:
                     suma2020 += itemPrice
+                elif dateofbuying < 2022:
+                    suma2021 += itemPrice
             print("pre2015:", sumapre)
             print("   2015:", suma2015)
             print("   2016:", suma2016)
@@ -451,6 +454,7 @@ def sum_items(val="p"):
             print("   2018:", suma2018)
             print("   2019:", suma2019)
             print("   2020:", suma2020)
+            print("   2021:", suma2021)
         elif thing == "colorclass":
             print("**ColorClass**")
             itemziocounter = []
@@ -470,6 +474,7 @@ def sum_items(val="p"):
                 "Teal": "Teal",
                 "Burgundy": "Purple",
                 "Yellow": "Yellow",
+                "Olive": "Green",
             }
             for item in theList:
                 itemzio = theList[item]["color"]

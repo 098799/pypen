@@ -109,6 +109,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "DiamineBach": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Brown",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Bach",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "DiamineBeauBlue": {
         "bought": "2018-11",
         "brand": "Diamine",
@@ -117,6 +128,17 @@
         "how": "Bou",
         "name": "Beau Blue",
         "price": 16,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "DiamineBeethoven": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Green",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Beethoven",
+        "price": 0,
         "used_up": "No",
         "vol": "30"
     },
@@ -150,6 +172,17 @@
         "how": "Bou",
         "name": "Chocolate Brown",
         "price": 17,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "DiamineChopin": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Blue Black",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Chopin",
+        "price": 0,
         "used_up": "No",
         "vol": "30"
     },
@@ -230,6 +263,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "DiamineHandel": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Purple",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Handel",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "DiamineIndigo": {
         "bought": "2016-08",
         "brand": "Diamine",
@@ -296,6 +340,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "DiamineMozart": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Burgundy",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Mozart",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "DiaminePresidentialBlue": {
         "bought": "2017-09",
         "brand": "Diamine",
@@ -351,6 +406,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "DiamineSchubert": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Green",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Schubert",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "DiamineSteelBlue": {
         "bought": "2017-09",
         "brand": "Diamine",
@@ -359,6 +425,17 @@
         "how": "Bou",
         "name": "Steel Blue",
         "price": 17,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "DiamineStrauss": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Red",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Strauss",
+        "price": 0,
         "used_up": "No",
         "vol": "30"
     },
@@ -384,6 +461,17 @@
         "used_up": "No",
         "vol": "30"
     },
+    "DiamineTchaikovsky": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Blue",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Tchaikovsky",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
     "DiamineTeal": {
         "bought": "2018-01",
         "brand": "Diamine",
@@ -403,6 +491,28 @@
         "how": "Bou",
         "name": "Twilight",
         "price": 19,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "DiamineVivaldi": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Purple",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Vivaldi",
+        "price": 0,
+        "used_up": "No",
+        "vol": "30"
+    },
+    "DiamineWagner": {
+        "bought": "2020-12",
+        "brand": "Diamine",
+        "color": "Olive",
+        "from": "Ozlem",
+        "how": "Pre",
+        "name": "Wagner",
+        "price": 0,
         "used_up": "No",
         "vol": "30"
     },
@@ -552,7 +662,7 @@
     "J.HerbinVertOlive": {
         "bought": "2019-08",
         "brand": "J. Herbin",
-        "color": "Green",
+        "color": "Olive",
         "from": "miestilografica",
         "how": "Bou",
         "name": "Vert Olive",
@@ -865,6 +975,28 @@
         "how": "Pre",
         "name": "Tokiwa-Matsu",
         "price": 0,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "SailorManyoHaha": {
+        "bought": "2020-11",
+        "brand": "Sailor Manyo",
+        "color": "Purple",
+        "from": "pure pens",
+        "how": "Bou",
+        "name": "Haha",
+        "price": 100,
+        "used_up": "No",
+        "vol": "50"
+    },
+    "SailorManyoNekoyanagi": {
+        "bought": "2020-11",
+        "brand": "Sailor Manyo",
+        "color": "Purple",
+        "from": "pure pens",
+        "how": "Bou",
+        "name": "Nekoyanagi",
+        "price": 100,
         "used_up": "No",
         "vol": "50"
     },

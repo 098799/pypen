@@ -1,4 +1,17 @@
 {
+    "AuroraOptima": {
+        "bought": "2020-11",
+        "brand": "Aurora",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "Appelboom",
+        "model": "Optima",
+        "nationality": "Italian",
+        "out": "No",
+        "price": 1550,
+        "price_out": 0,
+        "rot": "0"
+    },
     "Baoer051": {
         "bought": "2015-11",
         "brand": "Baoer",
@@ -49,7 +62,7 @@
         "out": "No",
         "price": 50,
         "price_out": 0,
-        "rot": "2"
+        "rot": "3"
     },
     "DeltaDolcevitaFederico": {
         "bought": "2016-09",
@@ -155,6 +168,19 @@
         "price_out": 0,
         "rot": "2"
     },
+    "GrafvonFaber-CastellGuilloche": {
+        "bought": "2020-12",
+        "brand": "Graf von Faber-Castell",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "endlesspens",
+        "model": "Guilloche",
+        "nationality": "German",
+        "out": "No",
+        "price": 850,
+        "price_out": 0,
+        "rot": "0"
+    },
     "Greifnoname": {
         "bought": "2015-09",
         "brand": "Greif",
@@ -168,13 +194,26 @@
         "price_out": 0,
         "rot": "4"
     },
-    "Jinhao100Centennial": {
+    "Jinhao100CentennialBlue": {
         "bought": "2020-10",
         "brand": "Jinhao",
         "class": "Modern",
         "filling": "c/c",
         "from": "eBay",
-        "model": "100 Centennial",
+        "model": "100 Centennial Blue",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 52,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "Jinhao100CentennialOrange": {
+        "bought": "2020-10",
+        "brand": "Jinhao",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "eBay",
+        "model": "100 Centennial Orange",
         "nationality": "Chinese",
         "out": "No",
         "price": 52,
@@ -452,7 +491,7 @@
         "out": "No",
         "price": 78,
         "price_out": 0,
-        "rot": "2"
+        "rot": "3"
     },
     "KawecoAl-Sport": {
         "bought": "2015-11",
@@ -491,7 +530,7 @@
         "out": "No",
         "price": 490,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "LamyAlStar": {
         "bought": "2015-10",
@@ -556,7 +595,7 @@
         "out": "No",
         "price": 90,
         "price_out": 0,
-        "rot": "2"
+        "rot": "1"
     },
     "Lanbitou3059": {
         "bought": "2017-10",
@@ -688,6 +727,19 @@
         "price_out": 0,
         "rot": "2"
     },
+    "MoonmanM1000": {
+        "bought": "2021-02",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "eBay",
+        "model": "M1000",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 245,
+        "price_out": 0,
+        "rot": "2"
+    },
     "MoonmanM2": {
         "bought": "2018-02",
         "brand": "Moonman",
@@ -698,6 +750,32 @@
         "nationality": "Chinese",
         "out": "No",
         "price": 50,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "MoonmanP135": {
+        "bought": "2021-02",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "c/c",
+        "from": "eBay",
+        "model": "P135",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 73,
+        "price_out": 0,
+        "rot": "2"
+    },
+    "MoonmanT1": {
+        "bought": "2021-01",
+        "brand": "Moonman",
+        "class": "Modern",
+        "filling": "Piston",
+        "from": "eBay",
+        "model": "T1",
+        "nationality": "Chinese",
+        "out": "No",
+        "price": 100,
         "price_out": 0,
         "rot": "2"
     },
@@ -738,7 +816,7 @@
         "out": "No",
         "price": 1600,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "ParkerFrontier": {
         "bought": "2015-09",
@@ -777,7 +855,7 @@
         "out": "No",
         "price": 800,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PelikanM600": {
         "bought": "2018-08",
@@ -790,7 +868,7 @@
         "out": "No",
         "price": 950,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PelikanM805": {
         "bought": "2018-04",
@@ -803,7 +881,7 @@
         "out": "No",
         "price": 1300,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PelikanM805Stresemann": {
         "bought": "2020-01",
@@ -816,7 +894,7 @@
         "out": "No",
         "price": 1500,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PelikanTwist": {
         "bought": "2018-11",
@@ -959,7 +1037,7 @@
         "out": "No",
         "price": 263,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PilotCustom823": {
         "bought": "2020-07",
@@ -972,7 +1050,7 @@
         "out": "No",
         "price": 1100,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "PilotCustomHeritage91": {
         "bought": "2015-12",
@@ -1063,7 +1141,7 @@
         "out": "No",
         "price": 0,
         "price_out": 0,
-        "rot": "1"
+        "rot": "2"
     },
     "Platinum3776Bourgogne": {
         "bought": "2017-01",
@@ -1219,7 +1297,7 @@
         "out": "No",
         "price": 925,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "SailorLecoule": {
         "bought": "2018-05",
@@ -1375,7 +1453,7 @@
         "out": "No",
         "price": 910,
         "price_out": 0,
-        "rot": "1"
+        "rot": "0"
     },
     "WatermanHemisphere": {
         "bought": "2010-10",
