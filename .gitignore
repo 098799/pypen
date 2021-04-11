@@ -4,3 +4,8 @@ inks.txt
 .tox
 UNKNOWN*
 \#*
+.coverage
+.pytest_cache
+__pycache__
+*.egg-info
+secrets
