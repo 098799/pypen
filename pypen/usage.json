@@ -122,7 +122,7 @@
         "begin": "2019-05-17",
         "end": "2019-06-09",
         "ink": "SailorJentleOku-Yama",
-        "nib": "23k B",
+        "nib": "23k Pd B",
         "pen": "DeltaDolcevitaFederico"
     },
     "DeltaDolcevitaFederico20.12.2017": {
@@ -323,7 +323,7 @@
     },
     "GrafvonFaber-CastellGuilloche14.3.2021": {
         "begin": "2021-03-14",
-        "end": "",
+        "end": "2021-03-30",
         "ink": "J.HerbinVertOlive",
         "nib": "18k F",
         "pen": "GrafvonFaber-CastellGuilloche"
@@ -1366,8 +1366,8 @@
     },
     "ParkerDuofoldCentennial18.3.2021": {
         "begin": "2021-03-18",
-        "end": "",
-        "ink": "KWZBalticMemories",
+        "end": "2021-03-30",
+        "ink": "KWZGrapefruit",
         "nib": "18k F",
         "pen": "ParkerDuofoldCentennial"
     },
@@ -1485,7 +1485,7 @@
     },
     "PelikanM40028.1.2021": {
         "begin": "2021-01-28",
-        "end": "",
+        "end": "2021-03-23",
         "ink": "(s) Diamine Oxblood",
         "nib": "14k F",
         "pen": "PelikanM400"
@@ -2472,7 +2472,7 @@
     },
     "Sailor1911Realo18.3.2021": {
         "begin": "2021-03-18",
-        "end": "",
+        "end": "2021-04-08",
         "ink": "PelikanEdelsteinAmethyst",
         "nib": "21k HM",
         "pen": "Sailor1911Realo"
@@ -2558,6 +2558,13 @@
         "begin": "2018-10-07",
         "end": "2018-11-17",
         "ink": "J.HerbinLarmesdeCassis",
+        "nib": "14k HF",
+        "pen": "SailorProGearSlim"
+    },
+    "SailorProGearSlim31.3.2021": {
+        "begin": "2021-03-31",
+        "end": "",
+        "ink": "(s) Sailor Black",
         "nib": "14k HF",
         "pen": "SailorProGearSlim"
     },
@@ -2761,6 +2768,13 @@
         "begin": "2020-09-06",
         "end": "2020-10-05",
         "ink": "SailorJentleTokiwa-Matsu",
+        "nib": "EF",
+        "pen": "ViscontiHomoSapiens"
+    },
+    "ViscontiHomoSapiens8.4.2021": {
+        "begin": "2021-04-08",
+        "end": "",
+        "ink": "J.HerbinCafedesIles",
         "nib": "EF",
         "pen": "ViscontiHomoSapiens"
     },

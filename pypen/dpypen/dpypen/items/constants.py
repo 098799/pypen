@@ -22,6 +22,7 @@ FILLING = (
 
 NATIONALITIES = (
     ("US", "American"),
+    ("EN", "English"),
     ("CH", "Chinese"),
     ("FR", "French"),
     ("DE", "German"),
@@ -29,6 +30,7 @@ NATIONALITIES = (
     ("JP", "Japanese"),
     ("CH", "Swiss"),
     ("TW", "Taiwanese"),
+    ("PL", "Polish"),
 )
 
 
@@ -61,6 +63,7 @@ COLORS = (
     choice('Green'),
     choice('Grey'),
     choice('Orange'),
+    choice('Olive'),
     choice('Pink'),
     choice('Purple'),
     choice('Red'),

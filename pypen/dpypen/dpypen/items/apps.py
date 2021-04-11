@@ -2,4 +2,5 @@ from django.apps import AppConfig
 
 
 class ItemsConfig(AppConfig):
-    name = 'items'
+    name = 'dpypen.items'
+    label = 'items'
