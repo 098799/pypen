@@ -29,9 +29,9 @@ load_dotenv(BASE_DIR / 'secrets')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
+DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "116.203.133.96"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96"]
 
 
 # Application definition
@@ -131,9 +131,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(PROJECT_DIR, 'static', 'media')
 
 JET_DEFAULT_THEME = 'light-violet'
 JET_SIDE_MENU_COMPACT = True

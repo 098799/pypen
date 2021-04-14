@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import F
 
 from dpypen.items import models
 
@@ -10,6 +11,7 @@ class BrandAdmin(admin.ModelAdmin):
         'name',
         'nationality',
     )
+    ordering = ('name',)
 
 
 @admin.register(models.PenRotation)
@@ -21,6 +23,7 @@ class RotationAdmin(admin.ModelAdmin):
         'whos',
         'in_use',
     )
+    ordering = ('-in_use', 'priority',)
 
 
 @admin.register(models.Pen)
@@ -46,10 +49,13 @@ class PenAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
+        'rotation',
         'brand',
         'model',
         'filling',
     )
+
+    ordering = ('-rotation__in_use', 'rotation__priority', 'brand__name', 'model')
 
 
 @admin.register(models.Nib)
