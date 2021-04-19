@@ -9,3 +9,5 @@ UNKNOWN*
 __pycache__
 *.egg-info
 secrets
+db.sqlite3
+_bckp

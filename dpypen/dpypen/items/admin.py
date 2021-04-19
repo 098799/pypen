@@ -10,9 +10,10 @@ class BrandAdmin(admin.ModelAdmin):
         'name',
         'nationality',
     )
+    ordering = ('name',)
 
 
-@admin.register(models.PenRotation)
+@admin.register(models.Rotation)
 class RotationAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
@@ -21,6 +22,7 @@ class RotationAdmin(admin.ModelAdmin):
         'whos',
         'in_use',
     )
+    ordering = ('-in_use', 'priority',)
 
 
 @admin.register(models.Pen)
@@ -40,16 +42,19 @@ class PenAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        'brand',
+        'brand__name',
         'model',
         'filling',
     )
 
     list_filter = (
+        'rotation',
         'brand',
         'model',
         'filling',
     )
+
+    ordering = ('-rotation__in_use', 'rotation__priority', 'brand__name', 'model')
 
 
 @admin.register(models.Nib)
@@ -77,10 +82,11 @@ class InkAdmin(admin.ModelAdmin):
         'used_up',
         'used_up_when',
         'volume',
+        'rotation',
     )
 
     search_fields = (
-        'brand',
+        'brand__name',
         'line',
         'name',
         'color',
@@ -110,9 +116,11 @@ class UsageAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        'pen',
-        'nib',
-        'ink',
+        'pen__brand__name',
+        'pen__model',
+        'nib__width',
+        'ink__brand__name',
+        'ink__name',
     )
 
     list_filter = (

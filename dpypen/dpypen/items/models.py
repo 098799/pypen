@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import models
 from djmoney.models.fields import MoneyField
 
@@ -12,7 +14,7 @@ class Brand(models.Model):
     nationality = models.CharField(max_length=64, choices=constants.NATIONALITIES, blank=False, null=False)
 
 
-class PenRotation(models.Model):
+class Rotation(models.Model):
     def __str__(self):
         return (f"{self.priority} -- " if self.priority is not None else '') + f'{self.whos} -- ' + ("in_use" if self.in_use else "defunct")
 
@@ -35,7 +37,7 @@ class Pen(models.Model):
     out = models.BooleanField(blank=False, null=False)
     price = MoneyField(max_digits=7, decimal_places=2, default_currency='PLN', blank=False, null=False)
     price_out = MoneyField(max_digits=5, decimal_places=2, default_currency='PLN', blank=True, null=True)
-    rotation = models.ForeignKey(PenRotation, on_delete=models.CASCADE, blank=False, null=False)
+    rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, blank=False, null=False)
 
 
 class Nib(models.Model):
@@ -62,6 +64,7 @@ class Ink(models.Model):
     used_up = models.BooleanField(blank=True, null=True)
     used_up_when = models.DateField(blank=True, null=True)
     volume = models.IntegerField(blank=False, null=False)
+    rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, blank=False, null=False)
 
 
 class Usage(models.Model):
@@ -71,5 +74,5 @@ class Usage(models.Model):
     pen = models.ForeignKey(Pen, on_delete=models.CASCADE, blank=False, null=False)
     nib = models.ForeignKey(Nib, on_delete=models.CASCADE, blank=False, null=False)
     ink = models.ForeignKey(Ink, on_delete=models.CASCADE, blank=False, null=False)
-    begin = models.DateField(blank=False, null=False)
+    begin = models.DateField(blank=False, null=False, default=date.today())
     end = models.DateField(blank=True, null=True)
