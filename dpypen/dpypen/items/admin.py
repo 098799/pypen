@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from dpypen.items import models
 
@@ -27,18 +28,21 @@ class RotationAdmin(admin.ModelAdmin):
 
 @admin.register(models.Pen)
 class PenAdmin(admin.ModelAdmin):
+    list_per_page = 200
+
     list_display = (
         '__str__',
-        'rotation',
+        '_rotation',
         'brand',
         'model',
+        'finish',
         'bought',
         'filling',
-        'age',
+        # 'age',
         'obtained_from',
         'price',
-        'out',
-        'price_out',
+        # 'out',
+        # 'price_out',
     )
 
     search_fields = (
@@ -56,6 +60,9 @@ class PenAdmin(admin.ModelAdmin):
 
     ordering = ('-rotation__in_use', 'rotation__priority', 'brand__name', 'model')
 
+    def _rotation(self, pen):
+        return mark_safe(f"<b>{pen.rotation.priority}</b>" if pen.rotation.priority is not None else "-")
+
 
 @admin.register(models.Nib)
 class NibAdmin(admin.ModelAdmin):
@@ -69,6 +76,8 @@ class NibAdmin(admin.ModelAdmin):
 
 @admin.register(models.Ink)
 class InkAdmin(admin.ModelAdmin):
+    list_per_page = 200
+
     list_display = (
         '__str__',
         'bought',
@@ -103,6 +112,8 @@ class InkAdmin(admin.ModelAdmin):
         'how',
     )
 
+    ordering = ('-rotation__in_use', 'brand__name', 'line', 'name')
+
 
 @admin.register(models.Usage)
 class UsageAdmin(admin.ModelAdmin):
@@ -128,3 +139,5 @@ class UsageAdmin(admin.ModelAdmin):
         'nib',
         'ink',
     )
+
+    ordering = ('-begin', '-end')
