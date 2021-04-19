@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.db.models import F
 
 from dpypen.items import models
 
@@ -14,7 +13,7 @@ class BrandAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
-@admin.register(models.PenRotation)
+@admin.register(models.Rotation)
 class RotationAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
@@ -43,7 +42,7 @@ class PenAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        'brand',
+        'brand__name',
         'model',
         'filling',
     )
@@ -83,10 +82,11 @@ class InkAdmin(admin.ModelAdmin):
         'used_up',
         'used_up_when',
         'volume',
+        'rotation',
     )
 
     search_fields = (
-        'brand',
+        'brand__name',
         'line',
         'name',
         'color',
@@ -116,9 +116,11 @@ class UsageAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        'pen',
-        'nib',
-        'ink',
+        'pen__brand__name',
+        'pen__model',
+        'nib__width',
+        'ink__brand__name',
+        'ink__name',
     )
 
     list_filter = (
