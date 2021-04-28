@@ -57,7 +57,7 @@ class Nib(models.Model):
 
 class Ink(models.Model):
     def __str__(self):
-        return ("(sample) " if self.volume <= 5 else '') + f'{self.brand.name} {self.name}'
+        return ("(sample) " if self.volume <= 5 else '') + f'{self.brand.name} ' + (f'{self.line} ' if self.line else '') + f'{self.name}'
 
     bought = models.DateField(blank=True, null=True)
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, blank=False, null=False)

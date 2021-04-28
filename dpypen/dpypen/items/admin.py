@@ -88,10 +88,10 @@ class InkAdmin(admin.ModelAdmin):
         'obtained_from',
         'how',
         'price',
-        'used_up',
-        'used_up_when',
+        # 'used_up',
+        # 'used_up_when',
         'volume',
-        'rotation',
+        # 'rotation',
     )
 
     search_fields = (
