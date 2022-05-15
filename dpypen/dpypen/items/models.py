@@ -3,7 +3,6 @@ from datetime import date
 from django.db import models
 from django.utils.safestring import mark_safe
 from djmoney.models.fields import MoneyField
-
 from dpypen.items import constants
 
 
@@ -80,5 +79,5 @@ class Usage(models.Model):
     pen = models.ForeignKey(Pen, on_delete=models.CASCADE, blank=False, null=False)
     nib = models.ForeignKey(Nib, on_delete=models.CASCADE, blank=False, null=False)
     ink = models.ForeignKey(Ink, on_delete=models.CASCADE, blank=False, null=False)
-    begin = models.DateField(blank=False, null=False, default=date.today())
+    begin = models.DateField(blank=False, null=False, default=date.today)
     end = models.DateField(blank=True, null=True)

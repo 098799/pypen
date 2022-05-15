@@ -46,34 +46,34 @@ NIB_CUTS = (
 
 
 NIB_MATERIALS = (
-    choice("14k Gold"),
-    choice("18k Gold"),
-    choice("21k Gold"),
+    choice("14k"),
+    choice("18k"),
+    choice("21k"),
     choice("23k Palladium"),
-    choice("Steel"),
+    choice(""),
 )
 
 
 COLORS = (
-    choice('Black'),
-    choice('Blue'),
-    choice('Blue Black'),
-    choice('Brown'),
-    choice('Burgundy'),
-    choice('Green'),
-    choice('Grey'),
-    choice('Orange'),
-    choice('Olive'),
-    choice('Pink'),
-    choice('Purple'),
-    choice('Red'),
-    choice('Royal Blue'),
-    choice('Teal'),
-    choice('Turquoise'),
-    choice('Yellow'),
+    choice("Black"),
+    choice("Blue"),
+    choice("Blue Black"),
+    choice("Brown"),
+    choice("Burgundy"),
+    choice("Green"),
+    choice("Grey"),
+    choice("Orange"),
+    choice("Olive"),
+    choice("Pink"),
+    choice("Purple"),
+    choice("Red"),
+    choice("Royal Blue"),
+    choice("Teal"),
+    choice("Turquoise"),
+    choice("Yellow"),
 )
 
 HOW = (
-    choice('Bought'),
-    choice('Present'),
+    choice("Bought"),
+    choice("Present"),
 )

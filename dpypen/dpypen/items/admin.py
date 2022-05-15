@@ -7,23 +7,26 @@ from dpypen.items import models
 @admin.register(models.Brand)
 class BrandAdmin(admin.ModelAdmin):
     list_display = (
-        '__str__',
-        'name',
-        'nationality',
+        "__str__",
+        "name",
+        "nationality",
     )
-    ordering = ('name',)
+    ordering = ("name",)
 
 
 @admin.register(models.Rotation)
 class RotationAdmin(admin.ModelAdmin):
     list_display = (
-        '__str__',
-        'priority',
-        'how_often',
-        'whos',
-        'in_use',
+        "__str__",
+        "priority",
+        "how_often",
+        "whos",
+        "in_use",
     )
-    ordering = ('-in_use', 'priority',)
+    ordering = (
+        "-in_use",
+        "priority",
+    )
 
 
 @admin.register(models.Pen)
@@ -31,34 +34,34 @@ class PenAdmin(admin.ModelAdmin):
     list_per_page = 200
 
     list_display = (
-        '__str__',
-        '_rotation',
-        'brand',
-        'model',
-        'finish',
-        'bought',
-        'filling',
+        "__str__",
+        "_rotation",
+        "brand",
+        "model",
+        "finish",
+        "bought",
+        "filling",
         # 'age',
-        'obtained_from',
-        'price',
+        "obtained_from",
+        "price",
         # 'out',
         # 'price_out',
     )
 
     search_fields = (
-        'brand__name',
-        'model',
-        'filling',
+        "brand__name",
+        "model",
+        "filling",
     )
 
     list_filter = (
-        'rotation',
-        'brand',
-        'model',
-        'filling',
+        "rotation",
+        "brand",
+        "model",
+        "filling",
     )
 
-    ordering = ('-rotation__in_use', 'rotation__priority', 'brand__name', 'model')
+    ordering = ("-rotation__in_use", "rotation__priority", "brand__name", "model")
 
     def _rotation(self, pen):
         return mark_safe(f"<b>{pen.rotation.priority}</b>" if pen.rotation.priority is not None else "-")
@@ -67,10 +70,10 @@ class PenAdmin(admin.ModelAdmin):
 @admin.register(models.Nib)
 class NibAdmin(admin.ModelAdmin):
     list_display = (
-        '__str__',
-        'width',
-        'cut',
-        'material',
+        "__str__",
+        "width",
+        "cut",
+        "material",
     )
 
 
@@ -79,65 +82,72 @@ class InkAdmin(admin.ModelAdmin):
     list_per_page = 200
 
     list_display = (
-        '__str__',
-        'bought',
-        'brand',
-        'line',
-        'name',
-        'color',
-        'obtained_from',
-        'how',
-        'price',
+        "__str__",
+        "bought",
+        "brand",
+        "line",
+        "name",
+        "color",
+        "obtained_from",
+        "how",
+        "price",
         # 'used_up',
         # 'used_up_when',
-        'volume',
+        "volume",
         # 'rotation',
     )
 
     search_fields = (
-        'brand__name',
-        'line',
-        'name',
-        'color',
-        'obtained_from',
-        'how',
+        "brand__name",
+        "line",
+        "name",
+        "color",
+        "obtained_from",
+        "how",
     )
 
     list_filter = (
-        'brand',
-        'line',
-        'name',
-        'color',
-        'obtained_from',
-        'how',
+        "brand",
+        "line",
+        "name",
+        "color",
+        "obtained_from",
+        "how",
     )
 
-    ordering = ('-rotation__in_use', 'brand__name', 'line', 'name')
+    ordering = ("-rotation__in_use", "brand__name", "line", "name")
 
 
 @admin.register(models.Usage)
 class UsageAdmin(admin.ModelAdmin):
     list_display = (
-        '__str__',
-        'pen',
-        'nib',
-        'ink',
-        'begin',
-        'end',
+        "__str__",
+        "pen",
+        "_nib",
+        "ink",
+        "begin",
+        "end",
+    )
+
+    list_editable = (
+        "end",
     )
 
     search_fields = (
-        'pen__brand__name',
-        'pen__model',
-        'nib__width',
-        'ink__brand__name',
-        'ink__name',
+        "pen__brand__name",
+        "pen__model",
+        "nib__width",
+        "ink__brand__name",
+        "ink__name",
     )
 
     list_filter = (
-        'pen',
-        'nib',
-        'ink',
+        "pen",
+        "nib",
+        "ink",
     )
 
-    ordering = ('-begin', '-end')
+    ordering = ("-begin", "-end")
+
+    def _nib(self, usage):
+        return mark_safe(usage.nib)
