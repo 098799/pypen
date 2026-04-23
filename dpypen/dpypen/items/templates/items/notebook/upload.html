@@ -1,0 +1,87 @@
+{% extends "items/_shell.html" %}
+{% block title %}Import from notebook · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.drop-zone {
+  margin-top: 1rem;
+  display: flex; flex-direction: column; align-items: stretch; gap: 1rem;
+  padding: 2rem 1.5rem;
+  border: 1px dashed var(--ink-line);
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+}
+.cam-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  box-shadow: var(--plate-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  min-height: 60px;
+}
+.cam-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cam-wrap svg { width: 22px; height: 22px; }
+
+#preview {
+  display: none;
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--ink-line);
+}
+#preview.active { display: block; }
+.import-hint {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-style: italic;
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>Import from <em>notebook</em></h1>
+</div>
+
+<p class="import-hint">Snap a page of your inking journal. Claude will read your handwriting, match pens/inks from the catalog, and propose entries for review. Nothing gets saved until you confirm.</p>
+
+<form method="post" enctype="multipart/form-data" class="drop-zone">
+  {% csrf_token %}
+
+  <img id="preview" alt="Preview">
+
+  <label class="cam-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <span>Snap a page</span>
+    <input type="file" name="image" accept="image/*" capture="environment" required id="imgInput">
+  </label>
+
+  <div class="actions">
+    <button type="submit" class="btn primary">Let Claude read it</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  var input = document.getElementById("imgInput");
+  var preview = document.getElementById("preview");
+  if (!input || !preview) return;
+  input.addEventListener("change", function () {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    preview.src = URL.createObjectURL(f);
+    preview.classList.add("active");
+  });
+})();
+</script>
+
+{% endblock %}

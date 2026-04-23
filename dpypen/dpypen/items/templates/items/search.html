@@ -1,0 +1,200 @@
+{% extends "items/_shell.html" %}
+{% block title %}{% if query %}Search · {{ query }}{% else %}Search{% endif %} · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  max-width: 560px;
+}
+.search-input {
+  flex: 1 1 auto;
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 1.05rem;
+  padding: 0.85rem 1rem;
+  background: var(--chip-top);
+  color: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  min-height: 50px;
+}
+html[data-theme="dark"] .search-input { background: color-mix(in srgb, var(--chip-top) 80%, transparent); }
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.sr-count {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+.sr-empty {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  font-style: italic;
+  color: var(--muted);
+  border: 1px dashed var(--ink-line);
+  border-radius: 4px;
+}
+
+/* Search filter bar — consistent with ink list */
+.search-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.75rem;
+  padding: 0.55rem 0.8rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 18px;
+}
+.search-filter-bar .fb-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 0.3rem;
+}
+.search-filter-bar .seg-pill {
+  display: inline-flex;
+  padding: 0.2rem;
+  background: color-mix(in srgb, var(--chip-top) 80%, transparent);
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  gap: 0.15rem;
+}
+.search-filter-bar .seg-pill label {
+  position: relative;
+  cursor: pointer;
+  padding: 0.4rem 0.85rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-radius: 999px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+.search-filter-bar .seg-pill input { position: absolute; opacity: 0; pointer-events: none; }
+.search-filter-bar .seg-pill label:has(input:checked) {
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
+  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+}
+.search-filter-bar .sort-select {
+  padding: 0.4rem 2rem 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background-color: color-mix(in srgb, var(--chip-top) 80%, transparent);
+  color: var(--ink);
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23394b6a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 10px 7px;
+  min-height: 36px;
+  cursor: pointer;
+}
+html[data-theme="dark"] .search-filter-bar .sort-select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23b9ad92' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+.search-filter-bar .toggle-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.2rem 0.1rem;
+}
+.search-filter-bar .toggle-check input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+.search-filter-bar .toggle-check:has(input:checked) { color: var(--ink); }
+.search-filter-bar .sep { width: 1px; height: 22px; background: var(--ink-line); margin: 0 0.1rem; }
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1><em>Search</em></h1>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var el = document.getElementById("searchQ");
+  if (el && el.value) {
+    el.focus();
+    var len = el.value.length;
+    try { el.setSelectionRange(len, len); } catch (_) {}
+  }
+});
+</script>
+<form method="get" action="{% url 'search' %}" id="searchForm" onsubmit="return false;"
+      hx-get="{% url 'search' %}"
+      hx-trigger="keyup changed delay:200ms from:#searchQ, change from:#searchForm"
+      hx-target="#searchResults"
+      hx-swap="innerHTML"
+      hx-push-url="true">
+  <div class="search-form">
+    <input type="search" name="q" class="search-input" id="searchQ"
+           placeholder="Pen, ink, brand, colour, filler…"
+           value="{{ query }}" autofocus autocomplete="off">
+  </div>
+
+  <nav class="search-filter-bar">
+    <span class="fb-label">Type</span>
+    <div class="seg-pill" role="radiogroup">
+      {% for k, label in filters.types.items %}
+      <label>
+        <input type="radio" name="type" value="{{ k }}" {% if filters.type == k %}checked{% endif %}>
+        <span>{{ label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <span class="fb-label">Sort</span>
+    <select name="sort" class="sort-select">
+      {% for k, label in filters.sorts.items %}
+      <option value="{{ k }}" {% if filters.sort == k %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <span class="sep"></span>
+
+    <label class="toggle-check">
+      <input type="checkbox" name="defunct" value="1" {% if filters.show_defunct %}checked{% endif %}> defunct pens
+    </label>
+    <label class="toggle-check">
+      <input type="checkbox" name="used_up" value="1" {% if filters.show_used_up %}checked{% endif %}> used-up inks
+    </label>
+    <label class="toggle-check">
+      <input type="checkbox" name="samples" value="1" {% if filters.show_samples %}checked{% endif %}> samples
+    </label>
+  </nav>
+</form>
+
+<div id="searchResults">
+  {% if query %}
+    {% include "items/_search_results.html" %}
+  {% else %}
+  <p style="color: var(--muted); font-style: italic;">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

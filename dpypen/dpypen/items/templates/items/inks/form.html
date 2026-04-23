@@ -1,0 +1,196 @@
+{% extends "items/_shell.html" %}
+{% block title %}{{ title }} · Grining Fountain Pens{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>{{ title }}</h1>
+</div>
+
+<form method="post" class="form" autocomplete="off">
+  {% csrf_token %}
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.brand.id_for_label }}">Brand</label>
+      {{ form.brand }}
+      {% if form.brand.errors %}<div class="errors">{{ form.brand.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.line.id_for_label }}">Line</label>
+      {{ form.line }}
+      {% if form.line.errors %}<div class="errors">{{ form.line.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.name.id_for_label }}">Name</label>
+      {{ form.name }}
+      {% if form.name.errors %}<div class="errors">{{ form.name.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.color.id_for_label }}">Colour</label>
+      {{ form.color }}
+      {% if form.color.errors %}<div class="errors">{{ form.color.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.obtained.id_for_label }}">Obtained</label>
+      {{ form.obtained }}
+      {% if form.obtained.errors %}<div class="errors">{{ form.obtained.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.obtained_from.id_for_label }}">Obtained from</label>
+      {{ form.obtained_from }}
+      {% if form.obtained_from.errors %}<div class="errors">{{ form.obtained_from.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label>How acquired</label>
+      <div class="segmented">{{ form.how }}</div>
+      {% if form.how.errors %}<div class="errors">{{ form.how.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.volume.id_for_label }}">Volume (ml)</label>
+      {{ form.volume }}
+      {% if form.volume.errors %}<div class="errors">{{ form.volume.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.price.id_for_label }}">Price</label>
+      <div class="money-field">{{ form.price }}</div>
+      {% if form.price.errors %}<div class="errors">{{ form.price.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.rotation.id_for_label }}">Rotation</label>
+      {{ form.rotation }}
+      {% if form.rotation.errors %}<div class="errors">{{ form.rotation.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Status</label>
+    <label class="switch">
+      {{ form.used_up }}
+      <span class="track"><span class="thumb"></span></span>
+      <span>Used up / discarded</span>
+    </label>
+  </div>
+
+  <div class="field" id="usedUpWhenField"{% if not form.instance.used_up %} hidden{% endif %}>
+    <label for="{{ form.used_up_when.id_for_label }}">Used up when</label>
+    {{ form.used_up_when }}
+    {% if form.used_up_when.errors %}<div class="errors">{{ form.used_up_when.errors|join:" · " }}</div>{% endif %}
+  </div>
+
+  <script>
+    (function () {
+      var cb = document.getElementById("{{ form.used_up.id_for_label }}");
+      var row = document.getElementById("usedUpWhenField");
+      if (!cb || !row) return;
+      function sync() { if (cb.checked) row.removeAttribute("hidden"); else row.setAttribute("hidden", ""); }
+      cb.addEventListener("change", sync);
+      sync();
+    })();
+  </script>
+
+  <div class="field">
+    <label for="id_moi_url">Mountain of Ink link</label>
+    <input type="url" name="moi_url" id="id_moi_url" value="{{ form.instance.moi_url|default:'' }}" placeholder="https://mountainofink.com/blog/…">
+    <span style="display: block; font-size: 0.75rem; color: var(--muted); font-style: italic; margin-top: 0.1rem;">Auto-matched from sitemap on import; paste or correct if needed.</span>
+  </div>
+
+  {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors|join:" · " }}</div>{% endif %}
+
+  <div class="actions">
+    <button type="submit" class="btn primary">{{ submit_label }}</button>
+    <a href="{% url 'inks_list' %}" class="btn">Cancel</a>
+  </div>
+</form>
+
+{% if ink %}
+<section style="margin-top: 3rem;">
+  <div class="section-head">
+    <h2>Ink <em>swatches</em></h2>
+    <span class="aside">{{ swatches|length }}</span>
+  </div>
+  <style>
+    .sw-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .sw-cell {
+      position: relative;
+      aspect-ratio: 1/1;
+      overflow: hidden;
+      border-radius: 5px;
+      border: 1px solid var(--ink-line);
+      background: #f6efda;
+    }
+    .sw-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sw-cell.clean img { object-fit: contain; padding: 0.5rem; }
+    .sw-cell .sw-actions {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      display: flex; gap: 0.3rem; padding: 0.5rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .sw-cell:hover .sw-actions { opacity: 1; }
+    .sw-actions button {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px; border: none;
+      background: rgba(255,255,255,0.9); color: var(--ink);
+      font-family: "Inter", sans-serif; font-size: 0.62rem;
+      letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;
+    }
+    .sw-actions button:hover { background: var(--accent); color: #fff; }
+    .sw-cell.clean::before {
+      content: "CLEANED";
+      position: absolute; top: 0.4rem; right: 0.4rem;
+      font-family: "Inter", sans-serif; font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      padding: 0.2rem 0.5rem;
+      background: rgba(255,255,255,0.85); color: var(--accent);
+      border-radius: 999px; z-index: 2;
+    }
+  </style>
+  {% if swatches %}
+  <div class="sw-grid">
+    {% for s in swatches %}
+    <div class="sw-cell{% if s.image_clean %} clean{% endif %}">
+      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener">
+        <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Ink swatch" loading="lazy">
+      </a>
+      <div class="sw-actions">
+        {% if not s.image_clean %}
+        <form method="post" action="{% url 'swatches_extract' s.pk %}">{% csrf_token %}<button type="submit">✨ Extract</button></form>
+        {% endif %}
+        <form method="post" action="{% url 'swatches_delete' s.pk %}" onsubmit="return confirm('Delete swatch?');">{% csrf_token %}<button type="submit">Delete</button></form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'inks_swatch_add' ink.pk %}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border: 1px dashed var(--ink-line); border-radius: 5px;">
+    {% csrf_token %}
+    <label style="position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.1rem; background: linear-gradient(180deg, var(--plate-top), var(--paper-dark)); border: 1px solid var(--ink-line); border-radius: 999px; font-family: 'Inter', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; overflow: hidden;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Snap a swatch</span>
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()" style="position: absolute; inset: 0; opacity: 0; cursor: pointer;">
+    </label>
+    <span style="font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; text-align: center;">photograph your swatch — ✨ Extract to clean it up.</span>
+  </form>
+</section>
+{% endif %}
+
+{% endblock %}

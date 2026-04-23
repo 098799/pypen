@@ -1,0 +1,570 @@
+{% extends "items/_shell.html" %}
+{% block title %}{{ pen }} · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.pen-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 1fr;
+  gap: 2rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
+@media (max-width: 760px) {
+  .pen-hero { grid-template-columns: 1fr; }
+}
+.pen-back {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  border: none;
+  display: inline-block;
+  padding: 0.6rem 0.8rem 0.6rem 0;
+  min-height: 40px;
+  line-height: 1.4;
+}
+.pen-back:hover { color: var(--accent); border: none; }
+
+.pen-photo-main {
+  position: relative;
+  aspect-ratio: 1/1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  background: linear-gradient(160deg, var(--plate-top), var(--paper-dark));
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pen-photo-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pen-photo-main img.styled { object-fit: contain; padding: 0.75rem; }
+.pen-photo-main .no-photo {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+.pen-photo-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.pen-photo-thumbs a {
+  flex-shrink: 0;
+  display: block;
+  width: 70px; height: 70px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+}
+.pen-photo-thumbs a.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.pen-photo-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pen-photo-thumbs img.styled { object-fit: contain; padding: 0.3rem; }
+
+.pen-title-block .overline { margin-bottom: 0.6rem; }
+.pen-title-block h1 {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+}
+.pen-title-block .finish {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-soft);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  display: block;
+  line-height: 1.1;
+}
+
+.pen-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin: 1.5rem 0;
+}
+.pen-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+.meta-m {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: 0.9rem 1.1rem 0.8rem;
+  min-width: 88px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink-line) 70%, transparent);
+  color: var(--ink-soft);
+  transition: border-color 0.2s;
+}
+@media (max-width: 560px) {
+  .pen-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+  .meta-m {
+    min-width: 0;
+    padding: 0.55rem 0.15rem 0.5rem;
+    gap: 0.35rem;
+  }
+  .meta-m svg.ic { width: 22px; height: 22px; }
+  .meta-m .cap { font-size: 0.78rem; }
+  .meta-m .rot-ic { max-width: 100%; height: auto; }
+}
+.meta-m:hover { border-color: var(--accent); }
+.meta-m svg.ic {
+  width: 30px; height: 30px;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.meta-m svg.ic .fill { fill: currentColor; stroke: none; }
+.meta-m .cap {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.meta-m.defunct { color: var(--muted); }
+.meta-m.p0 { color: var(--accent); }
+
+.owner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.9rem 0.2rem;
+  border-bottom: 1px dashed var(--ink-line);
+  font-size: 0.95rem;
+}
+.history-row .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  box-shadow: inset -2px -2px 3px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.25);
+}
+.history-row .ink-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+}
+.history-row .range {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.history-row .days {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: 0.05em;
+}
+.history-row.current {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 4px;
+}
+
+{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'pens_list' %}" class="pen-back">&larr; All pens</a>
+
+<div class="pen-hero">
+  <div>
+    <div class="pen-photo-main" id="photoMain">
+      {% if photos %}
+        <img id="photoImg" src="{% if photos.0.image_styled %}{{ photos.0.image_styled.url }}{% else %}{{ photos.0.image.url }}{% endif %}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}>
+      {% else %}
+        <div class="no-photo">no photograph yet</div>
+      {% endif %}
+    </div>
+    {% if photos|length > 1 %}
+    <div class="pen-photo-thumbs">
+      {% for ph in photos %}
+      <a href="#" data-img="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.image.url }}{% endif %}" class="{% if forloop.first %}active{% endif %}">
+        <img src="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.thumbnail.url|default:ph.image.url }}{% endif %}" alt="{{ pen }}" loading="lazy"{% if ph.image_styled %} class="styled"{% endif %}>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="pen-title-block">
+    <span class="overline">{{ pen.brand.name }}</span>
+    <h1>{{ pen.model }}</h1>
+    {% if pen.finish %}<span class="finish">{{ pen.finish }}</span>{% endif %}
+
+    <div class="pen-meta">
+      <div class="meta-m" title="Filling · {{ pen.filling }}">
+        <svg class="ic" viewBox="0 0 32 32">
+          {% if pen.filling == "Piston" %}<rect x="3" y="11" width="15" height="10" rx="1"/><rect x="18" y="9" width="6" height="14" rx="1"/><path d="M24 16h5M10 15v2M6 15v2M14 15v2"/>
+          {% elif pen.filling == "c/c" %}<rect x="3" y="12" width="16" height="8" rx="2"/><path d="M19 14h6v4h-6M25 16h3"/>
+          {% elif pen.filling == "Eyedropper" %}<path d="M22 3l7 7-5 5-7-7zM17 8l-9 9a3 3 0 0 0 0 4l2 2a3 3 0 0 0 4 0l9-9"/>
+          {% elif pen.filling == "Lever" %}<rect x="3" y="12" width="20" height="8" rx="2"/><path d="M10 12V5l-4-2M23 16h5"/>
+          {% elif pen.filling == "Bulkfiller" %}<rect x="3" y="10" width="18" height="12" rx="1"/><path d="M21 13h6v6h-6"/><path d="M7 14v4M11 14v4M15 14v4"/>
+          {% elif pen.filling == "Plunger" %}<rect x="3" y="12" width="14" height="8" rx="1"/><path d="M17 16h4M21 12l4 4-4 4"/>
+          {% elif pen.filling == "Shutoff valve" %}<rect x="3" y="12" width="16" height="8" rx="1"/><circle cx="24" cy="16" r="4"/><path d="M24 12v8M20 16h8"/>
+          {% elif pen.filling == "Squeeze" %}<path d="M4 12c4-3 14-3 18 0v8c-4 3-14 3-18 0z"/><path d="M22 16h6"/>
+          {% else %}<rect x="4" y="12" width="14" height="8" rx="1"/><path d="M18 16h8"/>
+          {% endif %}
+        </svg>
+        <span class="cap">{{ pen.filling|lower }}</span>
+      </div>
+
+      <div class="meta-m{% if pen.rotation.priority == 0 %} p0{% endif %}{% if not pen.rotation.in_use %} defunct{% endif %}" title="{% if not pen.rotation.in_use %}Defunct rotation{% elif pen.rotation.priority is not None %}Rotation priority {{ pen.rotation.priority }}{% else %}Rotation — {{ pen.rotation.whos }}{% endif %}">
+        {% if not pen.rotation.in_use %}
+          <svg class="ic" viewBox="0 0 32 32">
+            <rect x="5" y="6" width="22" height="6" rx="1"/>
+            <rect x="5" y="12" width="22" height="15" rx="1"/>
+            <path d="M13 19h6"/>
+          </svg>
+          <span class="cap">defunct</span>
+        {% elif pen.rotation.priority is not None %}
+          <svg class="ic rot-ic" viewBox="0 0 28 22" width="34" height="26">
+            {% with p=pen.rotation.priority %}
+            <rect x="1"  y="16" width="4" height="5"  rx="0.5" class="{% if p <= 3 %}fill{% endif %}"/>
+            <rect x="8"  y="12" width="4" height="9"  rx="0.5" class="{% if p <= 2 %}fill{% endif %}"/>
+            <rect x="15" y="7"  width="4" height="14" rx="0.5" class="{% if p <= 1 %}fill{% endif %}"/>
+            <rect x="22" y="1"  width="4" height="20" rx="0.5" class="{% if p <= 0 %}fill{% endif %}"/>
+            {% endwith %}
+          </svg>
+        {% else %}
+          <svg class="ic" viewBox="0 0 32 32">
+            <circle cx="16" cy="11" r="5"/>
+            <path d="M5 27c0-6 5-9 11-9s11 3 11 9"/>
+          </svg>
+          <span class="cap">{{ pen.rotation.whos|lower }}</span>
+        {% endif %}
+      </div>
+
+      <div class="meta-m" title="{% if pen.how == 'Present' %}Gifted{% else %}Bought{% endif %} · {{ pen.obtained|date:'F Y' }}">
+        <svg class="ic" viewBox="0 0 32 32">
+          {% if pen.how == "Present" %}
+            <path d="M4 14h24v13H4zM16 14v13M10 14a3 3 0 1 1 6-3 3 3 0 1 1 6 3M4 9h24v5H4z"/>
+          {% else %}
+            <path d="M4 18l14-14h9v9L13 27z"/><circle cx="22" cy="10" r="1.8" class="fill"/>
+          {% endif %}
+        </svg>
+        <span class="cap">{{ pen.obtained|date:"M Y" }}</span>
+      </div>
+
+      <div class="meta-m" title="{{ pen.age }} era">
+        {% if pen.age == "Vintage" %}
+          <svg class="ic" viewBox="0 0 26 34" width="26" height="34">
+            <path d="M4 2h18M4 32h18M6 2c0 7 14 7 14 15S6 24 6 32M20 2c0 7-14 7-14 15s14 9 14 17"/>
+            <path d="M7 10q6 4 12 0" opacity="0.55"/>
+            <path d="M11 24q2 -1 4 0" stroke-width="1"/>
+          </svg>
+        {% else %}
+          <svg class="ic" viewBox="0 0 40 32" width="40" height="32">
+            <path d="M4 16h28"/>
+            <path d="M26 8l8 8-8 8"/>
+            <path d="M4 11h3M4 21h3" opacity="0.5"/>
+          </svg>
+        {% endif %}
+        <span class="cap">{{ pen.age|lower }}</span>
+      </div>
+    </div>
+
+    {% if can_edit %}
+    <div class="owner-actions">
+      <a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn primary">+ Ink this pen</a>
+      <a href="{% url 'pens_edit' pen.pk %}" class="btn" data-kbd="edit">Edit</a>
+      <button type="button" class="btn" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">↗ Share</button>
+    </div>
+    <script>
+      (function () {
+        document.querySelectorAll("[data-share-url]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
+            if (navigator.share) {
+              navigator.share({ title: document.title, url: url }).catch(function(){});
+            } else if (navigator.clipboard) {
+              navigator.clipboard.writeText(url);
+              var orig = btn.textContent;
+              btn.textContent = "copied";
+              setTimeout(function () { btn.textContent = orig; }, 1400);
+            } else {
+              prompt("Share link:", url);
+            }
+          });
+        });
+      })();
+    </script>
+    {% endif %}
+  </div>
+</div>
+
+{% if samples %}
+<section>
+  <div class="section-head">
+    <h2>Writing <em>samples</em></h2>
+    <span class="aside">{{ samples|length }}</span>
+  </div>
+  <style>
+    .samples-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.8rem;
+    }
+    .samples-strip .sc {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--ink-line);
+      background: #f6efda;
+    }
+    .samples-strip .sc img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
+    .samples-strip .sc.raw img { object-fit: cover; padding: 0; }
+    .samples-strip .sc .cap {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 0.4rem 0.55rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+      color: #fff;
+      font-family: "Inter", sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  </style>
+  <div class="samples-strip">
+    {% for s in samples %}
+    <a href="{% url 'usages_edit' s.usage_id %}" class="sc{% if not s.image_clean %} raw{% endif %}" style="border-bottom: none;">
+      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample" loading="lazy">
+      <div class="cap">{{ s.usage.ink }}</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if gantt_bars %}
+<section>
+  <div class="section-head">
+    <h2>A <em>timeline</em></h2>
+    {% with last_tick=year_ticks|last %}
+    <span class="aside">{{ year_ticks.0.year }} — {{ last_tick.year }}</span>
+    {% endwith %}
+  </div>
+  <style>
+    .mini-gantt { position: relative; margin: 0.5rem 0 1.5rem; }
+    .mini-gantt-axis {
+      position: relative;
+      height: 22px;
+      border-bottom: 1px solid var(--ink-line);
+      margin-bottom: 0.35rem;
+    }
+    .mini-gantt-tick {
+      position: absolute;
+      bottom: 2px;
+      transform: translateX(-50%);
+      font-family: "Inter", sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .mini-gantt-tick::after {
+      content: ""; display: block; width: 1px; height: 5px;
+      background: var(--ink-line); margin: 0 auto; margin-top: 2px;
+    }
+    .mini-gantt-track {
+      position: relative;
+      height: 28px;
+      background: color-mix(in srgb, var(--paper-dark) 40%, transparent);
+      border-radius: 3px;
+    }
+    .mini-gantt-bar {
+      --c: #333;
+      position: absolute;
+      top: 3px; bottom: 3px;
+      background: var(--cbg, linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 70%, #000)));
+      border-radius: 2px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .mini-gantt-bar:hover { transform: scaleY(1.15); z-index: 2; }
+    .mini-gantt-bar.current::after {
+      content: "";
+      position: absolute;
+      top: -3px; right: -3px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 0 2px var(--c);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+  </style>
+  <div class="mini-gantt">
+    <div class="mini-gantt-axis">
+      {% for t in year_ticks %}
+      <span class="mini-gantt-tick" style="left: {{ t.left }}%">{{ t.year }}</span>
+      {% endfor %}
+    </div>
+    <div class="mini-gantt-track">
+      {% for b in gantt_bars %}
+      <a href="{% url 'inks_detail' b.ink_id %}"
+         class="mini-gantt-bar{% if b.current %} current{% endif %}"
+         style="left: {{ b.left }}%; width: {{ b.width }}%; --c: {{ b.hex }}; --cbg: {{ b.bg }};"
+         data-ink="{{ b.ink|escape }}"
+         data-nib="{{ b.nib|striptags|escape }}"
+         data-range="{{ b.begin|date:'M j, Y' }} – {% if b.end %}{{ b.end|date:'M j, Y' }}{% else %}now{% endif %}"
+         data-days="{{ b.days }}"
+         data-current="{% if b.current %}1{% else %}0{% endif %}"></a>
+      {% endfor %}
+    </div>
+  </div>
+  <div id="mgTip" class="cal-tip" role="tooltip">
+    <div class="tip-date"></div>
+    <div class="tip-ink"></div>
+    <div class="tip-pen"></div>
+  </div>
+  <script>
+  (function () {
+    var tip = document.getElementById("mgTip");
+    if (!tip) return;
+    var dateEl = tip.querySelector(".tip-date");
+    var inkEl = tip.querySelector(".tip-ink");
+    var metaEl = tip.querySelector(".tip-pen");
+    document.querySelectorAll(".mini-gantt-bar").forEach(function (bar) {
+      function show(e) {
+        var r = bar.getBoundingClientRect();
+        dateEl.textContent = bar.getAttribute("data-range");
+        inkEl.textContent = bar.getAttribute("data-ink");
+        var days = bar.getAttribute("data-days");
+        var nib = bar.getAttribute("data-nib");
+        var current = bar.getAttribute("data-current") === "1";
+        metaEl.innerHTML = nib + " · " + days + " day" + (days === "1" ? "" : "s") + (current ? " · <em style='color: var(--accent);'>on the page</em>" : "");
+        var left = r.left + r.width / 2 - 130;
+        left = Math.max(8, Math.min(window.innerWidth - 270, left));
+        tip.style.left = left + "px";
+        tip.style.top = (r.bottom + 8) + "px";
+        tip.classList.add("open");
+      }
+      bar.addEventListener("mouseenter", show);
+      bar.addEventListener("focus", show);
+      bar.addEventListener("mouseleave", function () { tip.classList.remove("open"); });
+      bar.addEventListener("blur", function () { tip.classList.remove("open"); });
+    });
+  })();
+  </script>
+</section>
+{% endif %}
+
+{% if current %}
+<section>
+  <div class="section-head">
+    <h2>Currently <em>inked</em></h2>
+    <span class="aside">on duty</span>
+  </div>
+  <article class="inked" style="--c: {{ current.ink_hex }}; --cbg: {{ current.ink_bg }}; max-width: 520px;">
+    <span class="ribbon">inked</span>
+    <div class="brand">{{ current.ink.brand.name }}</div>
+    <div class="model">{{ current.ink }}</div>
+    <div class="nib">{{ current.nib|safe }}</div>
+    <div class="divider"></div>
+    <div class="ink"><em>since {{ current.begin|date:"M j, Y" }}</em></div>
+    <div class="days">
+      {% if current.days == 0 %}freshly inked today{% elif current.days == 1 %}1 day on the page{% else %}{{ current.days }} days on the page{% endif %}
+    </div>
+    <div class="blot"></div>
+    {% if can_edit %}
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; position: relative; z-index: 2;">
+      <form method="post" action="{% url 'usages_end' current.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn small">Mark ended</button>
+      </form>
+      <a href="{% url 'usages_edit' current.pk %}" class="btn small">Edit</a>
+    </div>
+    {% endif %}
+  </article>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head">
+    <h2>A <em>history</em></h2>
+    <span class="aside">{{ total_usages }} inking{{ total_usages|pluralize }} · {{ distinct_inks }} ink{{ distinct_inks|pluralize }} · {{ total_days }} days</span>
+  </div>
+
+  {% if past or current %}
+  <div>
+    {% if current %}
+    <div class="history-row current">
+      <span class="dot" style="background: {{ current.ink_bg }}"></span>
+      <div>
+        <a href="{% url 'inks_detail' current.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ current.ink }}</div></a>
+        <div class="range">{{ current.begin|date:"M j, Y" }} — still inked · {{ current.nib|safe }}</div>
+      </div>
+      <div class="days">{{ current.days }}d</div>
+    </div>
+    {% endif %}
+    {% for u in past %}
+    <div class="history-row">
+      <span class="dot" style="background: {{ u.ink_bg }}"></span>
+      <div>
+        <a href="{% url 'inks_detail' u.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ u.ink }}</div></a>
+        <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib|safe }}</div>
+      </div>
+      <div class="days">{{ u.days }}d</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">No inkings recorded for this pen yet.</div>
+  {% endif %}
+</section>
+
+{% if photos %}
+<script>
+(function () {
+  var main = document.getElementById("photoImg");
+  if (!main) return;
+  document.querySelectorAll(".pen-photo-thumbs a").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      main.src = a.getAttribute("data-img");
+      document.querySelectorAll(".pen-photo-thumbs a").forEach(function (x) { x.classList.remove("active"); });
+      a.classList.add("active");
+    });
+  });
+})();
+</script>
+{% endif %}
+
+{% endblock %}

@@ -39,7 +39,7 @@ class PenAdmin(admin.ModelAdmin):
         "brand",
         "model",
         "finish",
-        "bought",
+        "obtained",
         "filling",
         # 'age',
         "obtained_from",
@@ -83,7 +83,7 @@ class InkAdmin(admin.ModelAdmin):
 
     list_display = (
         "__str__",
-        "bought",
+        "obtained",
         "brand",
         "line",
         "name",
@@ -116,6 +116,45 @@ class InkAdmin(admin.ModelAdmin):
     )
 
     ordering = ("-rotation__in_use", "brand__name", "line", "name")
+
+
+@admin.register(models.PenPhoto)
+class PenPhotoAdmin(admin.ModelAdmin):
+    list_display = ("pen", "position", "uploaded_at")
+    ordering = ("pen", "position", "-uploaded_at")
+
+
+@admin.register(models.InviteCode)
+class InviteCodeAdmin(admin.ModelAdmin):
+    list_display = ("label", "token", "created_at", "expires_at", "revoked_at", "visits", "last_seen_at", "_link")
+    readonly_fields = ("token", "created_at", "last_seen_at", "visits", "_link")
+    search_fields = ("label", "token")
+    ordering = ("-created_at",)
+    fieldsets = (
+        (None, {"fields": ("label", "expires_at", "revoked_at")}),
+        ("Generated", {"fields": ("token", "_link", "visits", "last_seen_at", "created_at")}),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not obj.token:
+            obj.token = models.InviteCode.generate_token()
+        super().save_model(request, obj, form, change)
+
+    def _link(self, obj):
+        if not obj.token:
+            return "(save first)"
+        return mark_safe(
+            f'<a href="/i/{obj.token}/" target="_blank">https://pen.grining.eu/i/{obj.token}/</a>'
+        )
+    _link.short_description = "Invite link"
+
+
+@admin.register(models.WritingSample)
+class WritingSampleAdmin(admin.ModelAdmin):
+    list_display = ("usage", "uploaded_at", "has_clean")
+    ordering = ("-uploaded_at",)
+    def has_clean(self, obj): return bool(obj.image_clean)
+    has_clean.boolean = True
 
 
 @admin.register(models.Usage)

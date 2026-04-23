@@ -1,0 +1,137 @@
+{% extends "items/_shell.html" %}
+{% block title %}Review extracted inkings · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.review-row {
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(180deg, var(--chip-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+.review-row.low-confidence { border-left-color: #d4a52c; }
+.review-row.poor-match { border-left-color: #b32c2c; }
+
+.raw {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+.raw strong { color: var(--ink); font-weight: 500; }
+.conf {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  margin-left: 0.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 640px) {
+  .grid-3, .grid-2 { grid-template-columns: 1fr; }
+}
+.skip-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>Review <em>extractions</em></h1>
+  <div class="actions">
+    <a href="{% url 'notebook_upload' %}" class="btn">Start over</a>
+  </div>
+</div>
+
+<p style="color: var(--muted); font-style: italic; margin-top: -0.5rem;">
+Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-confidence rows are amber, poor matches are red. Skip any that are wrong.
+</p>
+
+<form method="post" class="form" style="max-width: none;">
+  {% csrf_token %}
+
+  {% for row in rows %}
+  {% with idx=forloop.counter0 %}
+  <div class="review-row{% if row.confidence < 0.5 %} poor-match{% elif row.confidence < 0.8 %} low-confidence{% endif %}">
+    <div class="raw">
+      as written: <strong>{{ row.pen_raw }}</strong> · <strong>{{ row.ink_raw }}</strong>{% if row.nib_raw %} · <strong>{{ row.nib_raw }}</strong>{% endif %}
+      <span class="conf">{{ row.confidence|floatformat:2 }} conf</span>
+    </div>
+    {% if row.notes %}
+    <div style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">note: {{ row.notes }}</div>
+    {% endif %}
+
+    <div class="grid-3">
+      <div class="field">
+        <label>Pen</label>
+        <select name="pen_{{ idx }}">
+          <option value="0">— choose —</option>
+          {% for p in pens %}
+          <option value="{{ p.pk }}"{% if p.pk == row.pen_id %} selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Ink</label>
+        <select name="ink_{{ idx }}">
+          <option value="0">— choose —</option>
+          {% for i in inks %}
+          <option value="{{ i.pk }}"{% if i.pk == row.ink_id %} selected{% endif %}>{{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Nib</label>
+        <select name="nib_{{ idx }}">
+          <option value="0">— choose —</option>
+          {% for n in nibs %}
+          <option value="{{ n.pk }}"{% if n.pk == row.nib_id %} selected{% endif %}>{{ n|safe }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 0.75rem;">
+      <div class="field">
+        <label>Begin</label>
+        <input type="date" name="begin_{{ idx }}" value="{{ row.begin|default:today }}">
+      </div>
+      <div class="field">
+        <label>End</label>
+        <input type="date" name="end_{{ idx }}" value="{{ row.end|default:'' }}">
+      </div>
+    </div>
+
+    <label class="skip-row">
+      <input type="checkbox" name="skip_{{ idx }}"> Skip this row
+    </label>
+  </div>
+  {% endwith %}
+  {% endfor %}
+
+  <div class="actions">
+    <button type="submit" class="btn primary">Save all</button>
+    <a href="{% url 'notebook_upload' %}" class="btn">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}

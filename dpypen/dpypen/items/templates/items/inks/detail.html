@@ -1,0 +1,267 @@
+{% extends "items/_shell.html" %}
+{% block title %}{{ ink }} · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.ink-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 2rem;
+  align-items: center;
+  padding: 2.5rem 2rem;
+  margin-bottom: 3rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(80% 120% at 0% 0%, color-mix(in srgb, var(--ic) 38%, transparent) 0%, transparent 70%),
+    radial-gradient(80% 120% at 100% 100%, color-mix(in srgb, var(--ic) 22%, transparent) 0%, transparent 70%),
+    linear-gradient(160deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--card-shadow);
+}
+@media (max-width: 640px) {
+  .ink-hero { grid-template-columns: 110px 1fr; padding: 1.75rem 1.25rem; gap: 1.25rem; }
+}
+.ink-dot-big {
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: var(--idot, var(--ic));
+  box-shadow:
+    inset -10px -10px 24px rgba(0,0,0,0.45),
+    inset 6px 6px 12px rgba(255,255,255,0.18),
+    0 4px 14px rgba(0,0,0,0.3);
+}
+@media (max-width: 640px) {
+  .ink-dot-big { width: 110px; height: 110px; }
+}
+.ink-title .overline { margin-bottom: 0.5rem; }
+.ink-title h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35rem;
+}
+.ink-title .sub {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+}
+.ink-title .chips {
+  display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1rem;
+}
+.ink-title .chip {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.7rem;
+  background: color-mix(in srgb, var(--paper) 75%, transparent);
+  color: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+}
+
+.ink-back {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  border: none;
+  display: inline-block;
+}
+.ink-back:hover { color: var(--accent); border: none; }
+
+.history-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.9rem 0.2rem;
+  border-bottom: 1px dashed var(--ink-line);
+  font-size: 0.95rem;
+}
+.history-row .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cbg, var(--c));
+  box-shadow: inset -2px -2px 3px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.25);
+}
+.history-row a.pen-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: inherit;
+  border: none;
+}
+.history-row a.pen-name:hover { color: var(--accent); border: none; }
+.history-row .range {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.history-row .days {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: 0.05em;
+}
+.history-row.current {
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 4px;
+}
+{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'inks_list' %}" class="ink-back">&larr; All inks</a>
+
+<div class="ink-hero" style="--ic: {{ ink_hex }}; --idot: {{ ink.swatch_bg }};">
+  <div class="ink-dot-big"></div>
+  <div class="ink-title">
+    <span class="overline">{{ ink.brand.name }}{% if ink.line %} · {{ ink.line }}{% endif %}</span>
+    <h1>{{ ink.name }}</h1>
+    <span class="sub">{{ ink.color }}</span>
+    <div class="chips">
+      <span class="chip">{{ ink.volume }} ml</span>
+      {% if ink.obtained %}<span class="chip">obtained {{ ink.obtained|date:"Y" }}</span>{% endif %}
+      {% if ink.used_up %}<span class="chip" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line));">used up</span>{% endif %}
+      {% if ink.how %}<span class="chip">{{ ink.how }}</span>{% endif %}
+    </div>
+    <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap;">
+      {% if can_edit %}
+      <a href="{% url 'usages_create' %}?ink={{ ink.pk }}" class="btn primary">+ Use this ink</a>
+      <a href="{% url 'inks_edit' ink.pk %}" class="btn" data-kbd="edit">Edit</a>
+      <button type="button" class="btn" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">↗ Share</button>
+      {% endif %}
+      {% if ink.moi_url %}
+      <a href="{{ ink.moi_url }}" target="_blank" rel="noopener" class="btn" title="Open review on Mountain of Ink">✎ Mountain of Ink review ↗</a>
+      {% endif %}
+    </div>
+    <script>
+      (function () {
+        document.querySelectorAll("[data-share-url]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
+            if (navigator.share) {
+              navigator.share({ title: document.title, url: url }).catch(function(){});
+            } else if (navigator.clipboard) {
+              navigator.clipboard.writeText(url);
+              var orig = btn.textContent;
+              btn.textContent = "copied";
+              setTimeout(function () { btn.textContent = orig; }, 1400);
+            } else {
+              prompt("Share link:", url);
+            }
+          });
+        });
+      })();
+    </script>
+  </div>
+</div>
+
+{% if swatches %}
+<section>
+  <div class="section-head">
+    <h2>Swatches</h2>
+    <span class="aside">{{ swatches|length }}</span>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.8rem;">
+    {% for s in swatches %}
+    <div style="aspect-ratio: 1/1; border-radius: 5px; overflow: hidden; border: 1px solid var(--ink-line); background: #f6efda;">
+      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Swatch of {{ ink }}" loading="lazy" style="width: 100%; height: 100%; object-fit: {% if s.image_clean %}contain{% else %}cover{% endif %}; padding: {% if s.image_clean %}0.4rem{% else %}0{% endif %};">
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if samples %}
+<section>
+  <div class="section-head">
+    <h2>Writing <em>samples</em></h2>
+    <span class="aside">{{ samples|length }}</span>
+  </div>
+  <style>
+    .samples-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.8rem;
+    }
+    .samples-strip .sc {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--ink-line);
+      background: #f6efda;
+    }
+    .samples-strip .sc img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
+    .samples-strip .sc.raw img { object-fit: cover; padding: 0; }
+    .samples-strip .sc .cap {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 0.4rem 0.55rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+      color: #fff;
+      font-family: "Inter", sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  </style>
+  <div class="samples-strip">
+    {% for s in samples %}
+    <a href="{% url 'usages_edit' s.usage_id %}" class="sc{% if not s.image_clean %} raw{% endif %}" style="border-bottom: none;">
+      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample" loading="lazy">
+      <div class="cap">{{ s.usage.pen }}</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head">
+    <h2>Used in <em>{{ distinct_pens }}</em> pen{{ distinct_pens|pluralize }}</h2>
+    <span class="aside">{{ total_usages }} fill{{ total_usages|pluralize }} · {{ total_days }} days on the page</span>
+  </div>
+
+  {% if current or past %}
+  <div>
+    {% for u in current %}
+    <div class="history-row current" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
+      <span class="dot"></span>
+      <div>
+        <a href="{% url 'pens_detail' u.pen.pk %}" class="pen-name">{{ u.pen }}</a>
+        <div class="range">{{ u.begin|date:"M j, Y" }} — still inked · {{ u.nib|safe }}</div>
+      </div>
+      <div class="days">{{ u.days }}d</div>
+    </div>
+    {% endfor %}
+    {% for u in past %}
+    <div class="history-row" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
+      <span class="dot"></span>
+      <div>
+        <a href="{% url 'pens_detail' u.pen.pk %}" class="pen-name">{{ u.pen }}</a>
+        <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib|safe }}</div>
+      </div>
+      <div class="days">{{ u.days }}d</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">This ink has never been assigned to a pen yet.</div>
+  {% endif %}
+</section>
+
+{% endblock %}

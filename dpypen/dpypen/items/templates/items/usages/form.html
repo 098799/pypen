@@ -1,0 +1,152 @@
+{% extends "items/_shell.html" %}
+{% block title %}{{ title }} · Grining Fountain Pens{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>{{ title }}</h1>
+</div>
+
+<form method="post" class="form" autocomplete="off">
+  {% csrf_token %}
+
+  <div class="field">
+    <label for="{{ form.pen.id_for_label }}">Pen</label>
+    {{ form.pen }}
+    {% if form.pen.errors %}<div class="errors">{{ form.pen.errors|join:" · " }}</div>{% endif %}
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.nib.id_for_label }}">Nib</label>
+      {{ form.nib }}
+      {% if form.nib.errors %}<div class="errors">{{ form.nib.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.ink.id_for_label }}">Ink</label>
+      {{ form.ink }}
+      {% if form.ink.errors %}<div class="errors">{{ form.ink.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.begin.id_for_label }}">Begin</label>
+      {{ form.begin }}
+      {% if form.begin.errors %}<div class="errors">{{ form.begin.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.end.id_for_label }}">End <span style="font-weight: normal; text-transform: none; letter-spacing: 0; color: var(--muted); font-size: 0.75rem;">(optional — leave blank if still inked)</span></label>
+      {{ form.end }}
+      {% if form.end.errors %}<div class="errors">{{ form.end.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors|join:" · " }}</div>{% endif %}
+
+  <div class="actions">
+    <button type="submit" class="btn primary">{{ submit_label }}</button>
+    <a href="{% url 'usages_list' %}" class="btn">Cancel</a>
+  </div>
+</form>
+
+{% if usage %}
+<section style="margin-top: 3rem;">
+  <div class="section-head">
+    <h2>Writing <em>samples</em></h2>
+    <span class="aside">{{ samples|length }}</span>
+  </div>
+  <style>
+    .samples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .sample-cell {
+      position: relative;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      border-radius: 5px;
+      border: 1px solid var(--ink-line);
+      background: linear-gradient(160deg, var(--plate-top), var(--paper-dark));
+    }
+    .sample-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sample-cell.clean img { background: #f6efda; object-fit: contain; padding: 0.5rem; }
+    .sample-actions {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      gap: 0.3rem;
+      padding: 0.5rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .sample-cell:hover .sample-actions { opacity: 1; }
+    .sample-actions form, .sample-actions a { display: inline-flex; }
+    .sample-actions button, .sample-actions a {
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      border: none;
+      background: rgba(255,255,255,0.9);
+      color: var(--ink);
+      font-family: "Inter", sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .sample-actions button:hover, .sample-actions a:hover { background: var(--accent); color: #fff; }
+    .sample-cell.clean::before {
+      content: "CLEANED";
+      position: absolute;
+      top: 0.4rem; right: 0.4rem;
+      font-family: "Inter", sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      padding: 0.2rem 0.5rem;
+      background: rgba(255,255,255,0.85);
+      color: var(--accent);
+      border-radius: 999px;
+      z-index: 2;
+    }
+  </style>
+  {% if samples %}
+  <div class="samples-grid">
+    {% for s in samples %}
+    <div class="sample-cell{% if s.image_clean %} clean{% endif %}">
+      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener">
+        <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample" loading="lazy">
+      </a>
+      <div class="sample-actions">
+        {% if not s.image_clean %}
+        <form method="post" action="{% url 'samples_extract' s.pk %}">
+          {% csrf_token %}
+          <button type="submit">✨ Extract</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{% url 'samples_delete' s.pk %}" onsubmit="return confirm('Delete this sample?');">
+          {% csrf_token %}
+          <button type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" action="{% url 'usages_sample_add' usage.pk %}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border: 1px dashed var(--ink-line); border-radius: 5px;">
+    {% csrf_token %}
+    <label style="position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.1rem; background: linear-gradient(180deg, var(--plate-top), var(--paper-dark)); border: 1px solid var(--ink-line); border-radius: 999px; font-family: 'Inter', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; overflow: hidden;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Snap a writing sample</span>
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()" style="position: absolute; inset: 0; opacity: 0; cursor: pointer;">
+    </label>
+    <span style="font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; text-align: center;">photograph the written page — auto-uploads. Tap ✨ Extract to lift the ink.</span>
+  </form>
+</section>
+{% endif %}
+
+{% endblock %}

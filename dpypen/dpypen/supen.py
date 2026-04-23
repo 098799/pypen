@@ -38,9 +38,9 @@ def parse_rotation(item_type, rotation):
 def colorize(value: int, max_value: int):
     if max_value <= 0:
         color = "grey"
-    elif value <= max_value / 2:
-        color = "green"
     elif value <= max_value * 3 / 4:
+        color = "green"
+    elif value <= max_value * 5 / 4:
         color = "yellow"
     else:
         color = "red"
@@ -101,7 +101,7 @@ def interface(rotation, order, item_type, to_colorize=True):
     df = pd.DataFrame(data, columns=[item_type.__name__, *columns])
 
     if order is not None:
-        df = df.sort_values(columns[order], key=filter_column)
+        df = df.sort_values(columns[order], key=filter_column).reset_index(drop=True)
 
     return tabulate(df, headers="keys", tablefmt="psql")
 

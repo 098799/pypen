@@ -1,0 +1,95 @@
+{% extends "items/_shell.html" %}
+{% block title %}Inkings · Grining Fountain Pens{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1><em>Inkings</em></h1>
+  {% if can_edit %}
+  <div class="actions">
+    <a href="{% url 'usages_create' %}" class="btn primary">+ New inking</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if active %}
+<section>
+  <div class="section-head">
+    <h2>On the <em>desk</em></h2>
+    <span class="aside">{{ active|length }} on duty</span>
+  </div>
+  <div class="active-usages">
+    {% for u in active %}
+    <article class="inked" style="--c: {{ u.ink_hex }}; --cbg: {{ u.ink_bg|default:u.ink_hex }};">
+      {% if u.photo_url %}<div class="pen-bg" style="background-image: url('{{ u.photo_url }}')"></div>{% endif %}
+      <span class="ribbon">inked</span>
+      <div class="brand">{{ u.pen.brand.name }}</div>
+      <div class="model"><a href="{% url 'pens_detail' u.pen.pk %}" style="color: inherit; border: none;">{{ u.pen.model }}{% if u.pen.finish %} {{ u.pen.finish }}{% endif %}</a></div>
+      <div class="nib">{{ u.nib|safe }}</div>
+      <div class="divider"></div>
+      <div class="ink">{{ u.ink }}</div>
+      <div class="days">
+        {% if u.days == 0 %}freshly inked today{% elif u.days == 1 %}1 day on the page{% else %}{{ u.days }} days on the page{% endif %}
+      </div>
+      <div class="blot"></div>
+      {% if can_edit %}
+      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; position: relative; z-index: 2;">
+        <form method="post" action="{% url 'usages_end' u.pk %}" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn small">Mark ended</button>
+        </form>
+        <a href="{% url 'usages_edit' u.pk %}" class="btn small">Edit</a>
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head">
+    <h2>Past <em>inkings</em></h2>
+    <span class="aside">{{ paginator.count }} total · page {{ page.number }} / {{ paginator.num_pages }}</span>
+  </div>
+  {% if past %}
+  <div class="list">
+    {% for u in past %}
+    <div class="list-row">
+      <span class="swatch" style="background: {{ u.ink_bg }}"></span>
+      <div>
+        <div class="title">{{ u.pen.brand.name }} {{ u.pen.model }} · <em style="color: var(--ink-soft);">{{ u.ink }}</em></div>
+        <div class="meta">{{ u.begin|date:"M j, Y" }} – {{ u.end|date:"M j, Y" }} · {{ u.days }}d · {{ u.nib|safe }}</div>
+      </div>
+      {% if can_edit %}
+      <div class="row-actions">
+        <a href="{% url 'usages_edit' u.pk %}" class="btn small">Edit</a>
+        <form method="post" action="{% url 'usages_delete' u.pk %}" style="display: inline;" onsubmit="return confirm('Delete this inking?');">
+          {% csrf_token %}
+          <button type="submit" class="btn small danger">Delete</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">No past inkings yet.</div>
+  {% endif %}
+
+  {% if paginator.num_pages > 1 %}
+  <nav style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap;">
+    {% if page.has_previous %}
+    <a href="?page={{ page.previous_page_number }}" class="btn small">← Newer</a>
+    {% endif %}
+    <span style="font-family: 'Inter', sans-serif; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 0 0.75rem;">
+      page {{ page.number }} of {{ paginator.num_pages }}
+    </span>
+    {% if page.has_next %}
+    <a href="?page={{ page.next_page_number }}" class="btn small">Older →</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% load items_extras %}
+{% for g in groups %}
+<div class="group-head">
+  <h3>{{ g.title }}</h3>
+  <span class="gmeta">{{ g.pens|length }} pen{{ g.pens|length|pluralize }}{% if g.subtitle %} · {{ g.subtitle }}{% endif %}</span>
+</div>
+<div class="list">
+  {% for p in g.pens %}
+  <div class="list-row pen-row">
+    <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb" style="border-bottom: none;">
+      {% if p.list_thumb_url %}
+        <img src="{{ p.list_thumb_url }}" alt="{{ p }}" loading="lazy"{% if p.list_thumb_styled %} class="styled"{% endif %}>
+      {% else %}
+        —
+      {% endif %}
+    </a>
+    <div>
+      <a href="{% url 'pens_detail' p.pk %}" style="border: none; color: inherit;">
+        <div class="title">{{ p.brand.name|highlight:terms }} {{ p.model|highlight:terms }}{% if p.finish %} <span style="color: var(--ink-soft); font-style: italic;">{{ p.finish|highlight:terms }}</span>{% endif %}</div>
+      </a>
+      <div class="meta">
+        {{ p.filling|highlight:terms }}
+        {% if p.rotation.priority is not None %} · priority {{ p.rotation.priority }}{% endif %}
+        {% if not p.rotation.in_use %} · defunct{% endif %}
+        {% if p.obtained %} · obtained {{ p.obtained|date:"Y" }}{% endif %}
+      </div>
+    </div>
+    {% if can_edit %}
+    <div class="row-actions">
+      <a href="{% url 'pens_edit' p.pk %}" class="btn small">Edit</a>
+      <form method="post" action="{% url 'pens_delete' p.pk %}" style="display: inline;" onsubmit="return confirm('Delete {{ p|escapejs }}?');">
+        {% csrf_token %}
+        <button type="submit" class="btn small danger">Delete</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% empty %}
+<div class="empty">{% if query %}No pens match “{{ query }}”.{% else %}No pens yet.{% endif %}</div>
+{% endfor %}

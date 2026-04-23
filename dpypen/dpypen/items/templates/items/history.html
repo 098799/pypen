@@ -1,0 +1,905 @@
+{% extends "items/_shell.html" %}
+{% block title %}History · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.year-overview {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 2rem;
+}
+.year-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 140px;
+  gap: 0.8rem;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px dashed var(--ink-line);
+}
+.year-row .year-label {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.year-row.busy .year-label { color: var(--ink); font-weight: 500; }
+.year-row.empty .year-label { color: var(--muted); font-style: italic; }
+.year-bar-track {
+  height: 18px;
+  background: color-mix(in srgb, var(--paper-dark) 50%, transparent);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.year-bar {
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, var(--paper-dark)));
+  border-radius: 2px;
+}
+.year-meta {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 560px) {
+  .year-row { grid-template-columns: 44px 1fr 80px; gap: 0.5rem; font-size: 0.78rem; }
+  .year-row .year-label { font-size: 1rem; }
+  .year-meta { font-size: 0.64rem; letter-spacing: 0.05em; }
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.cal-year {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+.cal-year-label {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.4rem;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 0.3rem;
+  text-align: right;
+  line-height: 1;
+}
+.cal-year-label .sub {
+  font-family: "Inter", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.3rem;
+}
+.cal-grid {
+  --cell-h: 14px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  grid-template-rows: repeat(7, var(--cell-h));
+  gap: 1px;
+  width: 100%;
+  padding: 2px 0;
+}
+@media (max-width: 560px) {
+  .cal-grid { --cell-h: 10px; }
+}
+.cal-cell {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--paper-dark) 55%, transparent);
+  transition: transform 0.12s;
+}
+.cal-cell.inked {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.cal-cell.empty { visibility: hidden; }
+.cal-cell[data-ink]:hover { transform: scale(1.4); z-index: 3; cursor: help; outline: 1px solid var(--accent); }
+
+.cal-tip {
+  position: fixed;
+  z-index: 50;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  box-shadow: var(--card-shadow);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  max-width: 260px;
+}
+.cal-tip.open { opacity: 1; }
+.cal-tip .tip-date {
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+.cal-tip .tip-ink {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin-top: 0.2rem;
+  line-height: 1.1;
+  font-style: italic;
+}
+.cal-tip .tip-pen {
+  color: var(--ink-soft);
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+}
+@media (max-width: 560px) {
+  .cal-year { grid-template-columns: 44px 1fr; gap: 0.4rem; }
+  .cal-year-label { font-size: 1.1rem; }
+  .cal-grid { --cell: 9px; --gap: 2px; }
+}
+
+.yearly-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+@media (min-width: 560px) {
+  .yearly-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1000px) {
+  .yearly-grid { grid-template-columns: repeat(4, 1fr); }
+}
+.chart-box {
+  padding: 1rem 1.1rem;
+  background: linear-gradient(160deg, var(--chip-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+}
+.chart-box h4 {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.2rem;
+}
+.chart-box .chart-sub {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.7rem;
+}
+.chart-box .chart-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 60px;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.12rem 0;
+  font-size: 0.78rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink-line) 60%, transparent);
+}
+.chart-box .chart-row .y {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+}
+.chart-box .chart-row .track {
+  height: 12px;
+  background: color-mix(in srgb, var(--paper-dark) 50%, transparent);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.chart-box .chart-row .fill {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--cbar, var(--accent)), color-mix(in srgb, var(--cbar, var(--accent)) 60%, var(--paper-dark)));
+  border-radius: 2px;
+}
+.chart-box .chart-row .v {
+  text-align: right;
+  color: var(--ink);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.chart-box .chart-row.empty .y,
+.chart-box .chart-row.empty .v { color: var(--muted); opacity: 0.5; }
+
+.matrix-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 0.5rem 0 0.3rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.matrix-wrap::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.pi-matrix {
+  display: grid;
+  grid-template-columns: 180px repeat({{ matrix_cols|length }}, 22px);
+  grid-template-rows: 220px;
+  grid-auto-rows: 22px;
+  gap: 2px;
+}
+.pi-header {
+  display: contents;
+}
+.pi-header .pi-label-empty { grid-row: 1; grid-column: 1; }
+.pi-header .pi-ink-header {
+  position: relative;
+  height: 210px;
+  grid-row: 1;
+  align-self: end;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: visible;
+}
+.pi-header .pi-ink-header a {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+  border: none;
+  padding: 0.25rem 0.1rem;
+  border-radius: 3px;
+  max-height: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pi-header .pi-ink-header a:hover { color: var(--ink); background: color-mix(in srgb, var(--cc) 20%, transparent); }
+.pi-header .pi-ink-header .pi-ink-swatch {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--cc);
+  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.2);
+}
+.pi-row { display: contents; }
+.pi-pen-label {
+  grid-column: 1;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.88rem;
+  padding-right: 0.5rem;
+  text-align: right;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
+}
+.pi-pen-label a { color: inherit; border: none; }
+.pi-pen-label a:hover { color: var(--accent); border: none; }
+.pi-cell {
+  --c: #333;
+  background: color-mix(in srgb, var(--c) calc(var(--a) * 100%), transparent);
+  border: 1px solid color-mix(in srgb, var(--c) calc(var(--a) * 50%), var(--ink-line));
+  border-radius: 2px;
+  transition: transform 0.12s;
+  cursor: default;
+  position: relative;
+}
+.pi-cell[data-days]:not([data-days="0"]) { cursor: help; }
+.pi-cell:hover { transform: scale(1.35); z-index: 2; }
+.pi-cell.empty { background: color-mix(in srgb, var(--paper-dark) 40%, transparent); border-color: color-mix(in srgb, var(--ink-line) 50%, transparent); }
+
+.gantt-controls {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.gantt-controls .fb-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 0.35rem;
+}
+.gantt-controls button {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  background: transparent;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+.gantt-controls button:hover { color: var(--ink); border-color: var(--accent); }
+.gantt-controls button.active {
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
+  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+}
+
+.gantt-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 0.5rem;
+}
+.gantt-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.gantt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 100%;
+  transition: width 0.25s ease;
+}
+.gantt[data-zoom="1"] { width: 100%; }
+.gantt[data-zoom="2"] { width: 200%; }
+.gantt[data-zoom="4"] { width: 400%; }
+.gantt-axis {
+  position: relative;
+  height: 28px;
+  margin-left: 180px;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.gantt-tick {
+  position: absolute;
+  bottom: 2px;
+  transform: translateX(-50%);
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.gantt-tick::after {
+  content: "";
+  display: block;
+  width: 1px; height: 6px;
+  background: var(--ink-line);
+  margin: 0 auto;
+  margin-top: 2px;
+}
+.gantt-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 26px;
+}
+.gantt-label {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.92rem;
+  line-height: 1.1;
+  color: var(--ink-soft);
+  text-align: right;
+  padding-right: 0.35rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gantt-label a { color: inherit; border: none; }
+.gantt-label a:hover { color: var(--accent); border: none; }
+.gantt-track {
+  position: relative;
+  height: 22px;
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--paper-dark) 38%, transparent) 0,
+    color-mix(in srgb, var(--paper-dark) 38%, transparent) 1px,
+    transparent 1px,
+    transparent calc(100% / var(--years))
+  );
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--paper-dark) 40%, transparent);
+}
+.gantt-bar {
+  --c: #333;
+  position: absolute;
+  top: 2px; bottom: 2px;
+  background: var(--cbg, linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 75%, #000)));
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.gantt-bar:hover {
+  transform: scaleY(1.3);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.18);
+  z-index: 2;
+}
+.gantt-bar.current::after {
+  content: "";
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--c);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+/* Popup */
+.gantt-popup {
+  position: fixed;
+  z-index: 50;
+  min-width: 240px;
+  max-width: 320px;
+  padding: 1rem 1.1rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  box-shadow: var(--plate-shadow), var(--card-shadow);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+.gantt-popup.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.gantt-popup::before {
+  content: "";
+  position: absolute;
+  top: -3px; left: var(--arrow-x, 24px);
+  width: 10px; height: 10px;
+  background: inherit;
+  border-top: 1px solid var(--ink-line);
+  border-left: 1px solid var(--ink-line);
+  transform: rotate(45deg);
+}
+.gantt-popup .gp-pen {
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gantt-popup .gp-ink {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.2rem;
+  margin: 0.25rem 0 0.5rem;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.gantt-popup .gp-meta {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.85rem;
+}
+.gantt-popup .gp-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.gantt-popup .gp-actions a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+.gantt-popup .gp-actions a:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 760px) {
+  .gantt-row, .gantt-axis { grid-template-columns: 120px 1fr; }
+  .gantt-axis { margin-left: 120px; }
+  .gantt-label { font-size: 0.82rem; }
+}
+@media (max-width: 500px) {
+  .gantt-row, .gantt-axis { grid-template-columns: 90px 1fr; }
+  .gantt-axis { margin-left: 90px; }
+  .gantt-label { font-size: 0.72rem; }
+  .gantt-tick { font-size: 0.58rem; }
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>The <em>history</em></h1>
+</div>
+
+<nav class="history-sub-nav" aria-label="History sections">
+  {% for tab in sub_nav %}
+  <a href="{{ tab.url }}"{% if tab.active %} class="active"{% endif %}>{{ tab.label }}</a>
+  {% endfor %}
+</nav>
+<style>
+.history-sub-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0 0 2rem;
+  padding: 0.25rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  width: fit-content;
+  max-width: 100%;
+}
+.history-sub-nav a {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  text-decoration: none;
+  border: none;
+  white-space: nowrap;
+}
+.history-sub-nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 15%, transparent); border: none; }
+.history-sub-nav a.active {
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
+  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+}
+</style>
+
+{% if year_list %}
+<section>
+  <div class="section-head">
+    <h2>Year <em>overview</em></h2>
+    <span class="aside">{{ start_year }} — {{ latest_year }}</span>
+  </div>
+  <div class="year-overview">
+    {% for y in year_list %}
+    <div class="year-row {% if y.days == 0 %}empty{% elif y.days > 300 %}busy{% endif %}">
+      <span class="year-label">{{ y.year }}</span>
+      <div class="year-bar-track"><div class="year-bar" style="width: {{ y.bar_pct }}%"></div></div>
+      <span class="year-meta">
+        {% if y.days %}{{ y.days }}d · {{ y.pens }} pen{{ y.pens|pluralize }} · {{ y.inks }} ink{{ y.inks|pluralize }}{% else %}quiet{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if yearly_pen_count %}
+<section>
+  <div class="section-head">
+    <h2>Yearly <em>patterns</em></h2>
+    <span class="aside">acquisitions &amp; spend</span>
+  </div>
+  <div class="yearly-grid">
+    <div class="chart-box">
+      <h4>Pens acquired</h4>
+      <div class="chart-sub">new entries by year</div>
+      {% for r in yearly_pen_count %}
+      <div class="chart-row{% if not r.value %} empty{% endif %}">
+        <span class="y">{{ r.year }}</span>
+        <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
+        <span class="v">{% if r.value %}{{ r.value }}{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-box">
+      <h4>Inks acquired</h4>
+      <div class="chart-sub">bottles &amp; samples</div>
+      {% for r in yearly_ink_count %}
+      <div class="chart-row{% if not r.value %} empty{% endif %}">
+        <span class="y">{{ r.year }}</span>
+        <div class="track"><div class="fill" style="--cbar: #2a5caa; width: {{ r.pct }}%"></div></div>
+        <span class="v">{% if r.value %}{{ r.value }}{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-box">
+      <h4>Pen spend</h4>
+      <div class="chart-sub">PLN, approximate conversion</div>
+      {% for r in yearly_pen_spend %}
+      <div class="chart-row{% if not r.value %} empty{% endif %}">
+        <span class="y">{{ r.year }}</span>
+        <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
+        <span class="v">{% if r.value %}{{ r.value|floatformat:0 }}{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-box">
+      <h4>Ink spend</h4>
+      <div class="chart-sub">PLN, approximate conversion</div>
+      {% for r in yearly_ink_spend %}
+      <div class="chart-row{% if not r.value %} empty{% endif %}">
+        <span class="y">{{ r.year }}</span>
+        <div class="track"><div class="fill" style="--cbar: #2a5caa; width: {{ r.pct }}%"></div></div>
+        <span class="v">{% if r.value %}{{ r.value|floatformat:0 }}{% else %}—{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if matrix_rows %}
+<section>
+  <div class="section-head">
+    <h2>Pen × Ink <em>matrix</em></h2>
+    <span class="aside">top {{ matrix_rows|length }} pens × top {{ matrix_cols|length }} inks · by days together</span>
+  </div>
+  <div class="matrix-wrap">
+    <div class="pi-matrix">
+      <div class="pi-header">
+        <span class="pi-label-empty"></span>
+        {% for c in matrix_cols %}
+        <div class="pi-ink-header" style="--cc: {{ c.hex }};">
+          <span class="pi-ink-swatch"></span>
+          <a href="{% url 'inks_detail' c.ink_id %}" title="{{ c.label }}">{{ c.label }}</a>
+        </div>
+        {% endfor %}
+      </div>
+      {% for row in matrix_rows %}
+      <div class="pi-row">
+        <div class="pi-pen-label">
+          <a href="{% url 'pens_detail' row.pen_id %}" title="{{ row.pen }}">{{ row.pen.brand.name }} {{ row.pen.model }}</a>
+        </div>
+        {% for cell in row.cells %}
+          {% if cell %}
+            <a class="pi-cell {% if not cell.days %}empty{% endif %}"
+               href="{% url 'pens_detail' row.pen_id %}"
+               style="--c: {{ cell.hex }}; --a: {{ cell.opacity }};"
+               data-days="{{ cell.days }}"
+               title="{{ row.pen }} · {{ cell.ink_label }} — {{ cell.days }} day{{ cell.days|pluralize }} · {{ cell.fills }} fill{{ cell.fills|pluralize }}"></a>
+          {% else %}
+            <span class="pi-cell empty"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if calendar_years %}
+<section>
+  <div class="section-head">
+    <h2>A <em>calendar</em></h2>
+    <span class="aside">one cell per day, tinted to the active ink</span>
+  </div>
+  <div class="calendar">
+    {% for y in calendar_years %}
+    <div class="cal-year">
+      <div class="cal-year-label">
+        <span>{{ y.year }}</span>
+        <span class="sub">{{ y.active_days }} days</span>
+      </div>
+      <div class="cal-grid">
+        {% for week in y.weeks %}
+          {% for cell in week %}
+            {% if cell %}
+              {% if cell.bg %}
+              <span class="cal-cell inked" style="background: {{ cell.bg }};"
+                    data-date="{{ cell.label }}"
+                    data-ink="{{ cell.inks_summary }}"
+                    data-pen="{{ cell.pens_summary }}"></span>
+              {% else %}
+              <span class="cal-cell" data-date="{{ cell.label }}"></span>
+              {% endif %}
+            {% else %}
+              <span class="cal-cell empty"></span>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if pen_rows %}
+<section>
+  <div class="section-head">
+    <h2>Per-pen <em>Gantt</em></h2>
+    <span class="aside">{{ total_pens }} pens with inkings</span>
+  </div>
+  <div class="gantt-controls">
+    <span class="fb-label">Zoom</span>
+    <button type="button" data-zoom="1" class="active">Fit</button>
+    <button type="button" data-zoom="2">2×</button>
+    <button type="button" data-zoom="4">4×</button>
+    <span style="width: 1px; height: 22px; background: var(--ink-line); margin: 0 0.3rem;"></span>
+    <span class="fb-label">Rotation</span>
+    <button type="button" data-rot="" class="active rot-filter">All</button>
+    <button type="button" data-rot="p0" class="rot-filter">P0</button>
+    <button type="button" data-rot="p1" class="rot-filter">P1</button>
+    <button type="button" data-rot="p2" class="rot-filter">P2</button>
+    <button type="button" data-rot="p3" class="rot-filter">P3</button>
+    <button type="button" data-rot="other" class="rot-filter">Other</button>
+    <button type="button" data-rot="defunct" class="rot-filter">Defunct</button>
+  </div>
+  <style>.gantt-row.hidden-row { display: none; }</style>
+
+  <div class="gantt-scroll">
+    <div class="gantt" id="ganttInner" data-zoom="1" style="--years: {{ year_ticks|length }};">
+      <div class="gantt-axis">
+        {% for t in year_ticks %}
+        <span class="gantt-tick" style="left: {{ t.left }}%">{{ t.year }}</span>
+        {% endfor %}
+      </div>
+      {% for row in pen_rows %}
+      {% with r=row.pen.rotation %}
+      <div class="gantt-row" data-rot="{% if not r.in_use %}defunct{% elif r.whos == 'Tomek' and r.priority == 0 %}p0{% elif r.whos == 'Tomek' and r.priority == 1 %}p1{% elif r.whos == 'Tomek' and r.priority == 2 %}p2{% elif r.whos == 'Tomek' and r.priority == 3 %}p3{% else %}other{% endif %}">
+        <div class="gantt-label">
+          <a href="{% url 'pens_detail' row.pen.pk %}" title="{{ row.pen }}">{{ row.pen.brand.name }} {{ row.pen.model }}</a>
+        </div>
+        <div class="gantt-track">
+          {% for b in row.bars %}
+          <div class="gantt-bar{% if b.current %} current{% endif %}"
+               style="left: {{ b.left }}%; width: {{ b.width }}%; --c: {{ b.hex }}; --cbg: {{ b.bg }};"
+               data-pen="{{ b.pen|escape }}"
+               data-pen-id="{{ b.pen_id }}"
+               data-ink="{{ b.ink|escape }}"
+               data-ink-id="{{ b.ink_id }}"
+               data-nib="{{ b.nib|striptags|escape }}"
+               data-begin="{{ b.begin|date:'M j, Y' }}"
+               data-end="{% if b.end %}{{ b.end|date:'M j, Y' }}{% else %}now{% endif %}"
+               data-days="{{ b.days }}"
+               data-current="{% if b.current %}1{% else %}0{% endif %}"></div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div class="cal-tip" id="calTip" role="tooltip" aria-hidden="true">
+  <div class="tip-date"></div>
+  <div class="tip-ink"></div>
+  <div class="tip-pen"></div>
+</div>
+<script>
+(function () {
+  var tip = document.getElementById("calTip");
+  if (!tip) return;
+  var dateEl = tip.querySelector(".tip-date");
+  var inkEl = tip.querySelector(".tip-ink");
+  var penEl = tip.querySelector(".tip-pen");
+  document.querySelectorAll(".cal-cell").forEach(function (cell) {
+    if (!cell.hasAttribute("data-date")) return;
+    cell.addEventListener("mouseenter", function () {
+      var r = cell.getBoundingClientRect();
+      dateEl.textContent = cell.getAttribute("data-date");
+      var ink = cell.getAttribute("data-ink") || "";
+      var pen = cell.getAttribute("data-pen") || "";
+      inkEl.textContent = ink;
+      inkEl.style.display = ink ? "block" : "none";
+      penEl.textContent = pen;
+      penEl.style.display = pen ? "block" : "none";
+      var left = r.left + r.width / 2 - 120;
+      left = Math.max(8, Math.min(window.innerWidth - 250, left));
+      var top = r.bottom + 8;
+      tip.style.left = left + "px";
+      tip.style.top = top + "px";
+      tip.classList.add("open");
+    });
+    cell.addEventListener("mouseleave", function () { tip.classList.remove("open"); });
+  });
+})();
+</script>
+
+<div class="gantt-popup" id="ganttPopup" role="dialog" aria-label="Inking details">
+  <div class="gp-pen"></div>
+  <div class="gp-ink"></div>
+  <div class="gp-meta"></div>
+  <div class="gp-actions">
+    <a class="gp-pen-link">See pen</a>
+    <a class="gp-ink-link">See ink</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  var inner = document.getElementById("ganttInner");
+  var popup = document.getElementById("ganttPopup");
+  if (!inner || !popup) return;
+
+  // Zoom
+  document.querySelectorAll(".gantt-controls button[data-zoom]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".gantt-controls button[data-zoom]").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      inner.setAttribute("data-zoom", b.getAttribute("data-zoom"));
+    });
+  });
+
+  // Rotation filter
+  document.querySelectorAll(".gantt-controls button.rot-filter").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".gantt-controls button.rot-filter").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      var want = b.getAttribute("data-rot");
+      inner.querySelectorAll(".gantt-row").forEach(function (row) {
+        if (!want) row.classList.remove("hidden-row");
+        else row.classList.toggle("hidden-row", row.getAttribute("data-rot") !== want);
+      });
+    });
+  });
+
+  // Popup
+  var penUrlTemplate = "/pens/__id__/";
+  var inkUrlTemplate = "/inks/__id__/";
+
+  function openPopup(bar) {
+    var rect = bar.getBoundingClientRect();
+    var pen = bar.getAttribute("data-pen");
+    var ink = bar.getAttribute("data-ink");
+    var nib = bar.getAttribute("data-nib");
+    var begin = bar.getAttribute("data-begin");
+    var end = bar.getAttribute("data-end");
+    var days = bar.getAttribute("data-days");
+    var current = bar.getAttribute("data-current") === "1";
+    popup.querySelector(".gp-pen").textContent = pen;
+    popup.querySelector(".gp-ink").textContent = ink;
+    popup.querySelector(".gp-meta").innerHTML =
+      nib + "<br>" + begin + " — " + end + " · " + days + " day" + (days === "1" ? "" : "s") +
+      (current ? " · <em style='color: var(--accent);'>on the page</em>" : "");
+    popup.querySelector(".gp-pen-link").href = penUrlTemplate.replace("__id__", bar.getAttribute("data-pen-id"));
+    popup.querySelector(".gp-ink-link").href = inkUrlTemplate.replace("__id__", bar.getAttribute("data-ink-id"));
+
+    // Position near bar, keep inside viewport
+    var popupRect = { w: 300, h: 160 };
+    var left = rect.left + Math.max(0, (rect.width - popupRect.w) / 2);
+    left = Math.max(8, Math.min(window.innerWidth - popupRect.w - 8, left));
+    var top = rect.bottom + 10;
+    if (top + popupRect.h > window.innerHeight - 8) {
+      top = rect.top - popupRect.h - 10;
+    }
+    popup.style.left = left + "px";
+    popup.style.top = top + "px";
+    popup.style.setProperty("--arrow-x", Math.max(12, Math.min(popupRect.w - 22, rect.left + rect.width / 2 - left - 5)) + "px");
+    popup.classList.add("open");
+  }
+
+  function closePopup() {
+    popup.classList.remove("open");
+  }
+
+  inner.addEventListener("click", function (e) {
+    var bar = e.target.closest(".gantt-bar");
+    if (!bar) { closePopup(); return; }
+    e.stopPropagation();
+    openPopup(bar);
+  });
+  document.addEventListener("click", function (e) {
+    if (!popup.contains(e.target) && !e.target.closest(".gantt-bar")) closePopup();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closePopup();
+  });
+})();
+</script>
+
+{% endblock %}

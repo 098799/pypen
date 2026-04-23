@@ -1,0 +1,74 @@
+{% extends "items/_shell.html" %}
+{% block title %}Pens · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 0.5rem;
+  padding: 0.35rem 0.1rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.group-head h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.group-head h3 em { font-style: italic; color: var(--accent); font-weight: 400; }
+.group-head .gmeta {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pen-row { grid-template-columns: 64px 1fr auto !important; }
+.pen-thumb {
+  width: 56px; height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.pen-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 4px; }
+.pen-thumb img.styled { object-fit: contain; padding: 2px; }
+@media (max-width: 560px) {
+  .pen-row { grid-template-columns: 56px 1fr !important; }
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1><em>Pens</em> <span style="font-size: 0.5em; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase;">&nbsp;{{ pens|length }} total</span></h1>
+</div>
+
+<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+  <form id="penFilterForm" onsubmit="return false;"
+        hx-get="{% url 'pens_list' %}"
+        hx-trigger="keyup changed delay:200ms from:#penQ"
+        hx-target="#pen-content"
+        hx-swap="innerHTML"
+        hx-push-url="true"
+        style="flex: 1 1 auto; min-width: 200px; max-width: 500px;">
+    <input type="search" id="penQ" name="q" placeholder="Search pens…" value="{{ query }}"
+           style="width: 100%; padding: 0.7rem 1rem; font-family: 'EB Garamond', Georgia, serif; font-size: 1rem; background: var(--chip-top); color: var(--ink); border: 1px solid var(--ink-line); border-radius: 999px; min-height: 46px;" autocomplete="off">
+  </form>
+  {% if can_edit %}
+  <a href="{% url 'pens_create' %}" class="btn primary" data-kbd="new" style="flex: 0 0 auto;">+ Add pen</a>
+  {% endif %}
+</div>
+
+<div id="pen-content">
+  {% include "items/pens/_list_content.html" %}
+</div>
+
+{% endblock %}

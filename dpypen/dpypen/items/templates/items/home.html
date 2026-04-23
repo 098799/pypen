@@ -1,0 +1,243 @@
+{% extends "items/_shell.html" %}
+{% block title %}Dashboard · Grining Fountain Pens{% endblock %}
+{% block description %}{{ total_pens }} fountain pens, {{ total_inks }} inks, {{ total_usages }} inkings.{% endblock %}
+
+{% block extra_css %}
+.dash-hero {
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid var(--ink-line);
+  margin-bottom: 2.5rem;
+}
+.dash-hero h1 {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0.25rem 0 0.5rem;
+}
+.dash-hero h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+.dash-hero .lede {
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+  margin: 0.4rem 0 1.5rem;
+  max-width: 42rem;
+}
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.7rem;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.2rem 1.1rem 1rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  box-shadow: var(--plate-shadow);
+  text-decoration: none;
+  color: var(--ink);
+  min-height: 110px;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  border-bottom: 1px solid var(--ink-line);
+  overflow: hidden;
+}
+.tile:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: var(--plate-shadow), var(--card-shadow);
+  color: var(--ink);
+}
+.tile .tile-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tile .tile-number {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--ink);
+  font-weight: 500;
+}
+.tile .tile-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.4rem;
+  line-height: 1.05;
+  font-style: italic;
+  color: var(--ink);
+}
+.tile .tile-hint {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: auto;
+}
+.tile.primary {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 85%, #000) 0%, color-mix(in srgb, var(--accent) 60%, #200) 100%);
+  color: #fff;
+  border: none;
+}
+.tile.primary .tile-label, .tile.primary .tile-hint { color: rgba(255,255,255,0.7); }
+.tile.primary .tile-number, .tile.primary .tile-name { color: #fff; }
+.tile.primary:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+.ytd {
+  padding: 1.3rem 1.4rem;
+  background: linear-gradient(160deg, var(--chip-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  box-shadow: var(--plate-shadow);
+  margin-bottom: 2rem;
+}
+.ytd .ytd-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ytd .ytd-line {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  margin-top: 0.4rem;
+}
+.ytd .ytd-line strong { color: var(--accent); font-weight: 500; }
+{% endblock %}
+
+{% block content %}
+
+<header class="dash-hero">
+  <span class="overline">Tomek Grining &nbsp;·&nbsp; Fountain Pen Bureau</span>
+  <h1>A small, unreasonable <em>collection</em>.</h1>
+  <p class="lede">Where pens live and inks flow. {{ days_tracked }} days of keeping track, {{ total_days_inked }} of them with a pen on duty.</p>
+  <div class="dash-stats">
+    <div class="plate"><div class="num">{{ total_pens }}</div><div class="lbl">pens</div></div>
+    <div class="plate"><div class="num">{{ total_inks }}</div><div class="lbl">inks</div></div>
+    <div class="plate"><div class="num">{{ total_usages }}</div><div class="lbl">inkings</div></div>
+    <div class="plate"><div class="num">{{ total_brands }}</div><div class="lbl">makers</div></div>
+    <div class="plate"><div class="num">{{ current|length }}</div><div class="lbl">on duty</div></div>
+  </div>
+</header>
+
+{% if current %}
+<section id="inked">
+  <div class="section-head">
+    <h2>On the <em>desk</em></h2>
+    <span class="aside">{{ current|length }} currently inked</span>
+  </div>
+  <div class="inked-grid">
+    {% for c in current %}
+    <article class="inked" style="--c: {{ c.ink_hex }}; --cbg: {{ c.ink_bg|default:c.ink_hex }};">
+      {% if c.photo_url %}<div class="pen-bg" style="background-image: url('{{ c.photo_url }}')"></div>{% endif %}
+      <span class="ribbon">inked</span>
+      <div class="brand">{{ c.pen_brand }}</div>
+      <div class="model"><a href="{% url 'pens_detail' c.pen_id %}" style="color: inherit; border: none;">{{ c.pen_model }}</a></div>
+      <div class="nib">{{ c.nib_html|safe }}</div>
+      <div class="divider"></div>
+      <div class="ink">{{ c.ink }}</div>
+      <div class="days">
+        {% if c.days_inked == 0 %}freshly inked today{% elif c.days_inked == 1 %}1 day on the page{% else %}{{ c.days_inked }} days on the page{% endif %}
+      </div>
+      <div class="blot"></div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section>
+  <div class="section-head">
+    <h2>Wander the <em>bureau</em></h2>
+    <span class="aside">quick access</span>
+  </div>
+  <div class="tiles">
+    {% if can_edit %}
+    <a href="{% url 'usages_create' %}" class="tile primary">
+      <span class="tile-label">Log</span>
+      <span class="tile-name">+ New inking</span>
+      <span class="tile-hint">pen · ink · today</span>
+    </a>
+    {% endif %}
+    <a href="{% url 'pens_list' %}" class="tile">
+      <span class="tile-label">Pens</span>
+      <span class="tile-number">{{ total_pens }}</span>
+      <span class="tile-hint">grouped by rotation</span>
+    </a>
+    <a href="{% url 'inks_list' %}" class="tile">
+      <span class="tile-label">Inks</span>
+      <span class="tile-number">{{ active_ink_count }}</span>
+      <span class="tile-hint">{{ total_inks }} total · filter by colour</span>
+    </a>
+    <a href="{% url 'usages_list' %}" class="tile">
+      <span class="tile-label">Inkings</span>
+      <span class="tile-number">{{ total_usages }}</span>
+      <span class="tile-hint">history &amp; active fills</span>
+    </a>
+    <a href="{% url 'history' %}" class="tile">
+      <span class="tile-label">History</span>
+      <span class="tile-name">Gantt &amp; years</span>
+      <span class="tile-hint">{{ days_tracked }} days plotted</span>
+    </a>
+    {% if can_edit %}
+    <a href="{% url 'notebook_upload' %}" class="tile">
+      <span class="tile-label">Import</span>
+      <span class="tile-name">From notebook</span>
+      <span class="tile-hint">Claude vision OCR</span>
+    </a>
+    {% endif %}
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <h2><em>{{ year }}</em> so far</h2>
+  </div>
+  <div class="ytd">
+    <div class="ytd-label">This year</div>
+    <div class="ytd-line">
+      <strong>{{ ytd_inkings }}</strong> inking{{ ytd_inkings|pluralize }} across <strong>{{ ytd_pens }}</strong> pen{{ ytd_pens|pluralize }} and <strong>{{ ytd_inks }}</strong> ink{{ ytd_inks|pluralize }}, <strong>{{ ytd_days }}</strong> day{{ ytd_days|pluralize }} inked.
+    </div>
+  </div>
+</section>
+
+<section id="trophies">
+  <div class="section-head">
+    <h2>Hall of <em>fame</em></h2>
+  </div>
+  <div class="trophies">
+    {% if workhorse %}
+    <div class="trophy">
+      <div class="cat">Workhorse pen</div>
+      <div class="winner">{{ workhorse.pen }}</div>
+      <div class="stat"><b>{{ workhorse.days }}</b> days inked across <b>{{ workhorse.inkings }}</b> fills</div>
+    </div>
+    {% endif %}
+    {% if beloved_ink %}
+    <div class="trophy" style="border-top-color: {{ beloved_ink.hex }};">
+      <div class="cat">Beloved ink</div>
+      <div class="winner">{{ beloved_ink.ink }}</div>
+      <div class="stat"><b>{{ beloved_ink.days }}</b> days on the page across <b>{{ beloved_ink.inkings }}</b> fills</div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<footer>
+  <p><em>"I can&#39;t go back to yesterday, because I was a different person then."</em> &nbsp;—&nbsp; L. Carroll, <em>Alice</em></p>
+</footer>
+
+{% endblock %}

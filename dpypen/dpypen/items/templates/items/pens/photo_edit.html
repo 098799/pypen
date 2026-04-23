@@ -1,0 +1,209 @@
+{% extends "items/_shell.html" %}
+{% block title %}Edit photo · {{ pen }} · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 760px) {
+  .compare { grid-template-columns: 1fr; }
+}
+.frame {
+  position: relative;
+  aspect-ratio: 1/1;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  background: linear-gradient(160deg, var(--plate-top), var(--paper-dark));
+  box-shadow: var(--card-shadow);
+}
+.frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.frame .label {
+  position: absolute;
+  top: 0.6rem; left: 0.6rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border-radius: 999px;
+  z-index: 2;
+}
+.frame.primary { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), var(--card-shadow); }
+.frame .label.primary { background: var(--accent); }
+.frame.empty {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-style: italic;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.1rem;
+  padding: 1rem;
+  text-align: center;
+}
+.frame.busy::after {
+  content: "polishing…";
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prompt-area {
+  width: 100%;
+  min-height: 180px;
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 1rem;
+  background: var(--chip-top);
+  color: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  resize: vertical;
+}
+.prompt-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.action-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+.prompt-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+.prompt-label .l {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prompt-label a {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: none;
+}
+.prompt-label a:hover { color: var(--accent); border: none; }
+{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'pens_edit' pen.pk %}" class="pen-back">&larr; Back to {{ pen }}</a>
+
+<div class="page-head">
+  <h1>Edit <em>photo</em></h1>
+</div>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+  {% for m in messages %}
+  <div style="padding: 0.7rem 1rem; border-radius: 4px; background: color-mix(in srgb, {% if m.tags == 'error' %}var(--accent){% else %}var(--ink){% endif %} 15%, transparent); margin-bottom: 0.4rem; font-size: 0.9rem;">{{ m }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="compare">
+  <div class="frame">
+    <span class="label">Original</span>
+    <img src="{{ photo.image.url }}" alt="Original">
+  </div>
+
+  {% if photo.image_styled %}
+  <div class="frame">
+    <span class="label" style="background: linear-gradient(135deg, #d4a52c, var(--accent));">Catalog shot · AI</span>
+    <img src="{{ photo.image_styled.url }}" alt="AI catalog">
+  </div>
+  {% else %}
+  <div class="frame empty" id="styledFrame">
+    Not yet enhanced.<br>
+    Tap <strong>Polish with AI</strong> below.
+  </div>
+  {% endif %}
+</div>
+
+<div class="action-bar">
+  <form method="post" action="{% url 'pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" style="display: inline;">
+    {% csrf_token %}
+    <input type="hidden" name="prompt" id="promptInput" value="">
+    <button type="submit" class="btn primary">
+      {% if photo.image_styled %}✨ Regenerate{% else %}✨ Polish with AI{% endif %}
+    </button>
+  </form>
+
+  {% if photo.image_styled %}
+  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" style="display: inline;" onsubmit="return confirm('Discard the AI catalog shot and go back to the original?');">
+    {% csrf_token %}
+    <button type="submit" class="btn">↩ Revert to original</button>
+  </form>
+  {% endif %}
+
+  <form method="post" action="{% url 'pens_photo_rotate' pen.pk photo.pk %}" style="display: inline;">
+    {% csrf_token %}
+    <input type="hidden" name="degrees" value="90">
+    <button type="submit" class="btn">↻ Rotate 90°</button>
+  </form>
+
+  {% if photo != photo.pen.photos.first %}
+  <form method="post" action="{% url 'pens_photo_primary' pen.pk photo.pk %}" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn">★ Make primary</button>
+  </form>
+  {% endif %}
+
+  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" style="display: inline;" onsubmit="return confirm('Delete this photo entirely?');">
+    {% csrf_token %}
+    <button type="submit" class="btn danger">Delete photo</button>
+  </form>
+</div>
+
+<div class="prompt-label">
+  <span class="l">Prompt sent to Gemini</span>
+  <a href="#" id="resetPrompt">reset to default</a>
+</div>
+<textarea class="prompt-area" id="promptEditor" spellcheck="false">{{ prompt_value }}</textarea>
+<p style="color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.4rem;">
+  The default prompt includes the pen's brand, model, finish, filling and era so Gemini has a fighting chance to preserve the right pen. Tweak above if results drift — then hit ✨ Regenerate.
+</p>
+
+<script>
+(function () {
+  var promptEditor = document.getElementById("promptEditor");
+  var promptInput = document.getElementById("promptInput");
+  var form = document.getElementById("enhanceForm");
+  var reset = document.getElementById("resetPrompt");
+  var defaultPrompt = "{{ default_prompt|escapejs }}";
+
+  form.addEventListener("submit", function () {
+    promptInput.value = promptEditor.value;
+    document.querySelectorAll(".compare .frame").forEach(function (f) {
+      if (f.classList.contains("empty")) f.classList.add("busy");
+    });
+    var styled = document.querySelector(".compare .frame:nth-child(2)");
+    if (styled && !styled.classList.contains("empty")) styled.classList.add("busy");
+  });
+
+  reset.addEventListener("click", function (e) {
+    e.preventDefault();
+    promptEditor.value = defaultPrompt;
+  });
+})();
+</script>
+
+{% endblock %}

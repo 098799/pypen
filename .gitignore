@@ -10,4 +10,6 @@ __pycache__
 *.egg-info
 secrets
 db.sqlite3
+db.sqlite3.bak*
 _bckp
+staticfiles/

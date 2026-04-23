@@ -15,7 +15,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_DIR = BASE_DIR
@@ -25,72 +24,115 @@ PROJECT_DIR = BASE_DIR
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-load_dotenv(BASE_DIR.parent / 'secrets')
-SECRET_KEY = os.getenv('SECRET_KEY')
+load_dotenv(BASE_DIR.parent / "secrets")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.getenv('DEBUG') == "True" else False
+DEBUG = True if os.getenv("DEBUG") == "True" else False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "135.181.197.232", "grining.eu", "pen.grining.eu"]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+ALLOWED_EMAILS = {
+    e.strip().lower()
+    for e in os.getenv("ALLOWED_EMAILS", "").split(",")
+    if e.strip()
+}
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'jet',
-    'jet.dashboard',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'whitenoise.runserver_nostatic',
-    'rest_framework',
-    'djmoney',
-    'dpypen.items',
-    'django_extensions',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",
+    "whitenoise.runserver_nostatic",
+    "rest_framework",
+    "djmoney",
+    "dpypen.items",
+    "django_extensions",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
-ROOT_URLCONF = 'dpypen.urls'
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+LOGIN_URL = "/accounts/google/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_ON_GET = True
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*"]
+SOCIALACCOUNT_ADAPTER = "dpypen.items.auth.AllowlistAdapter"
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "APP": {
+            "client_id": os.getenv("GOOGLE_OAUTH_CLIENT_ID", ""),
+            "secret": os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", ""),
+            "key": "",
+        },
+    },
+}
+SOCIALACCOUNT_ONLY = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+ROOT_URLCONF = "dpypen.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                # 'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "dpypen.items.auth.visitor_context",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'dpypen.wsgi.application'
+WSGI_APPLICATION = "dpypen.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -100,16 +142,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -117,9 +159,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -131,14 +173,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = "/data/static"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.getenv("MEDIA_ROOT") or str(BASE_DIR / "media")
 
 # Whitenoise settings
 WSGI_APPLICATION = "dpypen.wsgi.application"
 ASGI_APPLICATION = "dpypen.asgi.application"
 
-JET_DEFAULT_THEME = 'light-violet'
-JET_SIDE_MENU_COMPACT = True
-JET_CHANGE_FORM_SIBLING_LINKS = True
-JET_INDEX_DASHBOARD = "jet.dashboard.dashboard.Dashboard"
+# JET_DEFAULT_THEME = "light-violet"
+# JET_SIDE_MENU_COMPACT = True
+# JET_CHANGE_FORM_SIBLING_LINKS = True
+# JET_INDEX_DASHBOARD = "jet.dashboard.dashboard.Dashboard"

@@ -1,0 +1,215 @@
+{% extends "items/_shell.html" %}
+{% block title %}Inks · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0 0 1.5rem;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+}
+.filter-bar .fb-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 0.35rem;
+}
+.filter-bar .fb-toggle {
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+.filter-bar .fb-toggle:hover { color: var(--ink); border-color: var(--accent); }
+.filter-bar .fb-toggle.on {
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
+  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+}
+.filter-bar .fb-sep {
+  width: 1px; height: 22px;
+  background: var(--ink-line);
+  margin: 0 0.2rem;
+}
+.filter-bar .fb-clear {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  border: none;
+}
+.filter-bar .fb-clear:hover { color: var(--accent); border: none; }
+@media (max-width: 560px) {
+  .filter-bar { border-radius: 18px; padding: 0.6rem; }
+}
+
+/* -------- Colour cards -------- */
+.color-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.55rem;
+  margin: 0 0 2rem;
+}
+.color-cards a {
+  --cc: #666;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 0.4rem 0.7rem;
+  border-radius: 6px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--cc) 25%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--plate-shadow);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink-line);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  min-height: 110px;
+}
+.color-cards a:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--cc) 50%, var(--ink-line));
+  box-shadow: var(--card-shadow);
+}
+.color-cards a .cc-dot {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--cc);
+  box-shadow:
+    inset -4px -4px 8px rgba(0,0,0,0.38),
+    inset 3px 3px 5px rgba(255,255,255,0.22),
+    0 2px 4px rgba(0,0,0,0.22);
+}
+.color-cards a .cc-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.1;
+}
+.color-cards a .cc-count {
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  opacity: 0.8;
+}
+.color-cards a.on {
+  border: 2px solid var(--cc);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc) 25%, transparent), var(--card-shadow);
+  background:
+    radial-gradient(120% 110% at 50% 0%, color-mix(in srgb, var(--cc) 40%, transparent) 0%, transparent 80%),
+    linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+}
+.color-cards a.on .cc-label { color: var(--ink); font-weight: 500; }
+@media (max-width: 560px) {
+  .color-cards { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.45rem; }
+  .color-cards a { min-height: 96px; padding: 0.7rem 0.3rem 0.6rem; }
+  .color-cards a .cc-dot { width: 34px; height: 34px; }
+}
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 2rem 0 0.5rem;
+  padding: 0.5rem 0.1rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.group-head .dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.35), inset 2px 2px 3px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.2);
+}
+.group-head h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
+}
+.group-head .gmeta {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1><em>Inks</em> <span style="font-size: 0.5em; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase;">&nbsp;{{ inks|length }} total</span></h1>
+</div>
+
+{% if public %}
+<p style="color: var(--muted); font-style: italic; margin-top: -0.8rem; margin-bottom: 1.5rem;">
+A peek at the ink cupboard. Browse by colour.
+</p>
+{% endif %}
+
+<div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+  <form id="inkFilterForm" onsubmit="return false;"
+        hx-get="{% url 'inks_list' %}"
+        hx-trigger="keyup changed delay:200ms from:#inkQ, change from:#inkFilterForm"
+        hx-target="#ink-content"
+        hx-swap="innerHTML"
+        hx-push-url="true"
+        style="flex: 1 1 auto; min-width: 200px; max-width: 500px;">
+    <input type="search" id="inkQ" name="q" placeholder="Search inks…" value="{{ filters.q }}"
+           style="width: 100%; padding: 0.7rem 1rem; font-family: 'EB Garamond', Georgia, serif; font-size: 1rem; background: var(--chip-top); color: var(--ink); border: 1px solid var(--ink-line); border-radius: 999px; min-height: 46px;" autocomplete="off">
+    {% if filters.include_samples %}<input type="hidden" name="samples" value="1">{% endif %}
+    {% if filters.include_used %}<input type="hidden" name="used" value="1">{% endif %}
+    {% if filters.color %}<input type="hidden" name="color" value="{{ filters.color }}">{% endif %}
+  </form>
+  {% if can_edit %}
+  <a href="{% url 'inks_create' %}" class="btn primary" data-kbd="new" style="flex: 0 0 auto;">+ Add ink</a>
+  <button type="button" class="btn" data-share-url="{% url 'share_inks_gallery' %}" data-share-label="Inks gallery" style="flex: 0 0 auto;">↗ Share</button>
+  <script>
+    (function () {
+      document.querySelectorAll("[data-share-url]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
+          if (navigator.share) {
+            navigator.share({ title: document.title, url: url }).catch(function(){});
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url);
+            var orig = btn.textContent;
+            btn.textContent = "copied";
+            setTimeout(function () { btn.textContent = orig; }, 1400);
+          } else {
+            prompt("Share link:", url);
+          }
+        });
+      });
+    })();
+  </script>
+  {% endif %}
+</div>
+
+<div id="ink-content">
+  {% include "items/inks/_content.html" %}
+</div>
+
+{% endblock %}
