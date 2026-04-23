@@ -1476,7 +1476,7 @@ html[data-theme="dark"] .switch {
   <a href="{% url 'notebook_upload' %}"{% if nav == 'import' %} class="active"{% endif %}>Import</a>
   {% else %}
   <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 0.9rem;">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
-  <a href="{% url 'invite_deactivate' %}" style="color: var(--accent);">Leave</a>
+  <form method="post" action="{% url 'invite_deactivate' %}" style="display: inline; margin: 0;">{% csrf_token %}<button type="submit" style="background: none; border: none; padding: 0.55rem 0.9rem; color: var(--accent); font-family: 'Inter', sans-serif; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;">Leave</button></form>
   {% endif %}
   <button class="menu-btn menu-in-nav" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">

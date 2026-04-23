@@ -12,6 +12,11 @@ PHOTO_MAX_SIZE = 1800
 THUMB_MAX_SIZE = 600
 JPEG_QUALITY = 85
 
+# Cap Pillow's decoder at 50MP — protects against decompression bombs
+# from uploads or external AI responses. Default Pillow warns at 89MP
+# and errors at ~178MP; single-threaded runserver OOMs on either.
+Image.MAX_IMAGE_PIXELS = 50_000_000
+
 
 def _process_image(source_file, max_size: int):
     img = Image.open(source_file)

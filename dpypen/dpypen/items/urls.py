@@ -17,8 +17,8 @@ urlpatterns = [
     path('sw.js', pwa.service_worker, name='pwa_sw'),
     path('icon.svg', pwa.icon, name='pwa_icon'),
     path('icon-maskable.svg', pwa.icon_maskable, name='pwa_icon_maskable'),
-    path('i/<str:token>/', invite.activate, name='invite_activate'),
     path('i/leave/', invite.deactivate, name='invite_deactivate'),
+    path('i/<str:token>/', invite.activate, name='invite_activate'),
 
     path('p/<str:token>/', share.pen_by_token, name='share_pen'),
     path('k/<str:token>/', share.ink_by_token, name='share_ink'),

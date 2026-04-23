@@ -1,0 +1,21 @@
+{% extends "items/_shell.html" %}
+{% block title %}Invitation · Grining Fountain Pens{% endblock %}
+
+{% block content %}
+<div style="max-width: 560px; margin: 4rem auto 0; text-align: center;">
+  <h1 style="font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: 2.4rem; margin-bottom: 0.4rem;">You're <em>invited</em></h1>
+  <p style="color: var(--muted); font-style: italic; margin-bottom: 2rem;">
+    {% if code.label %}{{ code.label }} · {% endif %}read-only guest access to Tomek's fountain pen bureau.
+  </p>
+
+  <form method="post" style="margin: 0;">
+    {% csrf_token %}
+    <button type="submit" class="btn primary" style="min-width: 180px;">Accept &amp; enter</button>
+  </form>
+
+  <p style="color: var(--muted); font-size: 0.8rem; margin-top: 2rem;">
+    Accepting this invite stores a read-only session cookie in this browser for 30 days.
+    You can end it any time with the <em>Leave</em> button in the top menu.
+  </p>
+</div>
+{% endblock %}
