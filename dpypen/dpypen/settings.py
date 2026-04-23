@@ -33,6 +33,9 @@ DEBUG = True if os.getenv("DEBUG") == "True" else False
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "135.181.197.232", "grining.eu", "pen.grining.eu"]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["https://pen.grining.eu", "https://grining.eu"]
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 ALLOWED_EMAILS = {
     e.strip().lower()
