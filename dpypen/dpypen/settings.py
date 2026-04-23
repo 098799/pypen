@@ -30,10 +30,10 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if os.getenv("DEBUG") == "True" else False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "116.203.133.96", "135.181.197.232", "grining.eu", "pen.grining.eu"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "pen.grining.eu"]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = ["https://pen.grining.eu", "https://grining.eu"]
+CSRF_TRUSTED_ORIGINS = ["https://pen.grining.eu"]
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
