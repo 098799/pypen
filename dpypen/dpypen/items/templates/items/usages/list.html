@@ -25,7 +25,7 @@
       <span class="ribbon">inked</span>
       <div class="brand">{{ u.pen.brand.name }}</div>
       <div class="model"><a href="{% url 'pens_detail' u.pen.pk %}" style="color: inherit; border: none;">{{ u.pen.model }}{% if u.pen.finish %} {{ u.pen.finish }}{% endif %}</a></div>
-      <div class="nib">{{ u.nib|safe }}</div>
+      <div class="nib">{{ u.nib }}</div>
       <div class="divider"></div>
       <div class="ink">{{ u.ink }}</div>
       <div class="days">
@@ -59,7 +59,7 @@
       <span class="swatch" style="background: {{ u.ink_bg }}"></span>
       <div>
         <div class="title">{{ u.pen.brand.name }} {{ u.pen.model }} · <em style="color: var(--ink-soft);">{{ u.ink }}</em></div>
-        <div class="meta">{{ u.begin|date:"M j, Y" }} – {{ u.end|date:"M j, Y" }} · {{ u.days }}d · {{ u.nib|safe }}</div>
+        <div class="meta">{{ u.begin|date:"M j, Y" }} – {{ u.end|date:"M j, Y" }} · {{ u.days }}d · {{ u.nib }}</div>
       </div>
       {% if can_edit %}
       <div class="row-actions">

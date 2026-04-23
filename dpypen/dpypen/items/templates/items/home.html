@@ -146,7 +146,7 @@
       <span class="ribbon">inked</span>
       <div class="brand">{{ c.pen_brand }}</div>
       <div class="model"><a href="{% url 'pens_detail' c.pen_id %}" style="color: inherit; border: none;">{{ c.pen_model }}</a></div>
-      <div class="nib">{{ c.nib_html|safe }}</div>
+      <div class="nib">{{ c.nib_html }}</div>
       <div class="divider"></div>
       <div class="ink">{{ c.ink }}</div>
       <div class="days">

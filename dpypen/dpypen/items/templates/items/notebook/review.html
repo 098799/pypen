@@ -104,7 +104,7 @@ Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-conf
         <select name="nib_{{ idx }}">
           <option value="0">— choose —</option>
           {% for n in nibs %}
-          <option value="{{ n.pk }}"{% if n.pk == row.nib_id %} selected{% endif %}>{{ n|safe }}</option>
+          <option value="{{ n.pk }}"{% if n.pk == row.nib_id %} selected{% endif %}>{{ n }}</option>
           {% endfor %}
         </select>
       </div>

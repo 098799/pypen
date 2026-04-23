@@ -496,7 +496,7 @@
     <span class="ribbon">inked</span>
     <div class="brand">{{ current.ink.brand.name }}</div>
     <div class="model">{{ current.ink }}</div>
-    <div class="nib">{{ current.nib|safe }}</div>
+    <div class="nib">{{ current.nib }}</div>
     <div class="divider"></div>
     <div class="ink"><em>since {{ current.begin|date:"M j, Y" }}</em></div>
     <div class="days">
@@ -529,7 +529,7 @@
       <span class="dot" style="background: {{ current.ink_bg }}"></span>
       <div>
         <a href="{% url 'inks_detail' current.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ current.ink }}</div></a>
-        <div class="range">{{ current.begin|date:"M j, Y" }} — still inked · {{ current.nib|safe }}</div>
+        <div class="range">{{ current.begin|date:"M j, Y" }} — still inked · {{ current.nib }}</div>
       </div>
       <div class="days">{{ current.days }}d</div>
     </div>
@@ -539,7 +539,7 @@
       <span class="dot" style="background: {{ u.ink_bg }}"></span>
       <div>
         <a href="{% url 'inks_detail' u.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ u.ink }}</div></a>
-        <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib|safe }}</div>
+        <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>
     </div>

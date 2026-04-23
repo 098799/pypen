@@ -3,7 +3,6 @@ from datetime import date
 
 from django.core.files.base import ContentFile
 from django.db import models
-from django.utils.safestring import mark_safe
 from djmoney.models.fields import MoneyField
 from PIL import Image, ImageOps
 
@@ -35,8 +34,10 @@ class Brand(models.Model):
 
 class Rotation(models.Model):
     def __str__(self):
-        return mark_safe(
-            (f"Rotation <b>{self.priority}</b>, " if self.priority is not None else "") + f"{self.whos}, " + ("in use" if self.in_use else "defunct")
+        return (
+            (f"Rotation {self.priority}, " if self.priority is not None else "")
+            + f"{self.whos}, "
+            + ("in use" if self.in_use else "defunct")
         )
 
     priority = models.IntegerField(blank=True, null=True)
@@ -75,7 +76,7 @@ class Pen(models.Model):
 
 class Nib(models.Model):
     def __str__(self):
-        return mark_safe(f"{self.material} <b>{self.width}</b> {self.cut}")
+        return f"{self.material} {self.width} {self.cut}"
 
     width = models.CharField(max_length=64, blank=False, null=False)
     cut = models.CharField(max_length=64, choices=constants.NIB_CUTS, blank=False, null=False)
@@ -228,7 +229,7 @@ class InviteCode(models.Model):
 
 class Usage(models.Model):
     def __str__(self):
-        return mark_safe(f"<b>{self.pen.brand.name} {self.pen.model}</b> inked with <b>{self.ink.brand.name} {self.ink.name}</b> on {self.begin}")
+        return f"{self.pen.brand.name} {self.pen.model} inked with {self.ink.brand.name} {self.ink.name} on {self.begin}"
 
     pen = models.ForeignKey(Pen, on_delete=models.CASCADE, blank=False, null=False)
     nib = models.ForeignKey(Nib, on_delete=models.CASCADE, blank=False, null=False)

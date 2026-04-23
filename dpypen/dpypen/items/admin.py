@@ -189,4 +189,4 @@ class UsageAdmin(admin.ModelAdmin):
     ordering = ("-begin", "-end")
 
     def _nib(self, usage):
-        return mark_safe(usage.nib)
+        return str(usage.nib)
