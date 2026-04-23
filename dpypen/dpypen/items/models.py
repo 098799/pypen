@@ -1,4 +1,5 @@
 import io
+import secrets as _secrets
 from datetime import date
 
 from django.core.files.base import ContentFile
@@ -7,6 +8,13 @@ from djmoney.models.fields import MoneyField
 from PIL import Image, ImageOps
 
 from dpypen.items import constants
+
+
+def _random_media_path(prefix: str) -> str:
+    # Random 16-byte URL-safe token -> ~22 chars. Keeps the filename
+    # free of any pen/ink/usage id so the owner/guest authz on detail
+    # pages isn't trivially bypassed by guessing the media URL.
+    return f"{prefix}/{_secrets.token_urlsafe(16)}.jpg"
 
 PHOTO_MAX_SIZE = 1800
 THUMB_MAX_SIZE = 600
@@ -122,7 +130,7 @@ class Ink(models.Model):
 
 
 def pen_photo_path(instance, filename):
-    return f"pen_photos/{instance.pen_id}/{filename}"
+    return _random_media_path("pen_photos")
 
 
 class PenPhoto(models.Model):
@@ -140,25 +148,23 @@ class PenPhoto(models.Model):
         return f"Photo of {self.pen} #{self.position}"
 
     def save(self, *args, **kwargs):
-        if self.image and not self.image.name.lower().endswith(".jpg"):
-            pass
         if self.image and not self.pk:
             source = self.image
             large = _process_image(source, PHOTO_MAX_SIZE)
             thumb = _process_image(source, THUMB_MAX_SIZE)
-            base_name = self.image.name.rsplit("/", 1)[-1]
-            stem = base_name.rsplit(".", 1)[0]
-            self.image = ContentFile(large, name=f"{stem}.jpg")
-            self.thumbnail = ContentFile(thumb, name=f"{stem}_thumb.jpg")
+            # Placeholder names — pen_photo_path() ignores them and assigns
+            # a random filename, so the stored URL doesn't leak pen_id.
+            self.image = ContentFile(large, name="photo.jpg")
+            self.thumbnail = ContentFile(thumb, name="thumb.jpg")
         super().save(*args, **kwargs)
 
 
 def writing_sample_path(instance, filename):
-    return f"writing_samples/{instance.usage_id}/{filename}"
+    return _random_media_path("writing_samples")
 
 
 def ink_swatch_path(instance, filename):
-    return f"ink_swatches/{instance.ink_id}/{filename}"
+    return _random_media_path("ink_swatches")
 
 
 class InkSwatch(models.Model):
@@ -178,8 +184,7 @@ class InkSwatch(models.Model):
         if self.image and not self.pk:
             source = self.image
             processed = _process_image(source, PHOTO_MAX_SIZE)
-            base = self.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-            self.image = ContentFile(processed, name=f"{base}.jpg")
+            self.image = ContentFile(processed, name="swatch.jpg")
         super().save(*args, **kwargs)
 
 
@@ -200,8 +205,7 @@ class WritingSample(models.Model):
         if self.image and not self.pk:
             source = self.image
             processed = _process_image(source, PHOTO_MAX_SIZE)
-            base = self.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-            self.image = ContentFile(processed, name=f"{base}.jpg")
+            self.image = ContentFile(processed, name="sample.jpg")
         super().save(*args, **kwargs)
 
 
