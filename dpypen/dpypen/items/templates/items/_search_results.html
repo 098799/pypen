@@ -1,11 +1,15 @@
 {% load items_extras %}
+<div id="searchResultsBody" data-listnav>
+{% if not query %}
+<p style="color: var(--muted); font-style: italic;">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance.</p>
+{% endif %}
 {% if query %}
   {% if pens %}
-  <section>
+  <section data-listnav-group>
     <div class="sr-count">{{ pens|length }} pen{{ pens|length|pluralize }}</div>
     <div class="list">
       {% for p in pens %}
-      <div class="list-row pen-row" style="grid-template-columns: 56px 1fr auto;">
+      <div class="list-row pen-row" data-listnav-item style="grid-template-columns: 56px 1fr auto;">
         <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb" style="border-bottom: none; width: 56px; height: 56px; border-radius: 4px; overflow: hidden; background: var(--paper-dark); border: 1px solid var(--ink-line); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.7rem;">
           {% if p.thumb_url %}
             <img src="{{ p.thumb_url }}" alt="{{ p }}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -25,11 +29,11 @@
   {% endif %}
 
   {% if inks %}
-  <section style="margin-top: 2.5rem;">
+  <section data-listnav-group style="margin-top: 2.5rem;">
     <div class="sr-count">{{ inks|length }} ink{{ inks|length|pluralize }}</div>
     <div class="list">
       {% for i in inks %}
-      <div class="list-row">
+      <div class="list-row" data-listnav-item>
         <span class="swatch" style="background: {{ i.hex }}"></span>
         <div>
           <a href="{% url 'inks_detail' i.pk %}" style="border: none; color: inherit;">
@@ -51,3 +55,5 @@
   <div class="sr-empty">No pen or ink matches <em>“{{ query }}”</em>.</div>
   {% endif %}
 {% endif %}
+</div>
+

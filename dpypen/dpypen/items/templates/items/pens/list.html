@@ -55,8 +55,9 @@
   <form id="penFilterForm" onsubmit="return false;"
         hx-get="{% url 'pens_list' %}"
         hx-trigger="keyup changed delay:200ms from:#penQ"
-        hx-target="#pen-content"
-        hx-swap="innerHTML"
+        hx-target="#penContentBody"
+        hx-swap="outerHTML"
+        hx-select="#penContentBody"
         hx-push-url="true"
         style="flex: 1 1 auto; min-width: 200px; max-width: 500px;">
     <input type="search" id="penQ" name="q" placeholder="Search pens…" value="{{ query }}"

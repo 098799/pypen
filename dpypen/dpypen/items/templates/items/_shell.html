@@ -1355,6 +1355,13 @@ html[data-theme="dark"] .switch {
   .list-row { grid-template-columns: auto 1fr; row-gap: 0.5rem; }
   .list-row .row-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
+[data-listnav-item].kbd-focused {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+    transparent 70%);
+  box-shadow: inset 3px 0 0 var(--accent);
+  border-radius: 4px;
+}
 
 /* -------- Active inking big cards on usages page -------- */
 .active-usages {
@@ -1491,10 +1498,11 @@ html[data-theme="dark"] .switch {
     {label: "Close modal / back", keys: ["Esc"]},
     {label: "Top of page", keys: ["g", "g"], run: function () { window.scrollTo({top: 0, behavior: "smooth"}); }},
     {label: "Bottom of page", keys: ["G"], run: function () { window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"}); }},
-    {label: "Scroll down (paragraph)", keys: ["k"]},
-    {label: "Scroll up (paragraph)", keys: ["l"]},
-    {label: "Scroll down (line)", keys: ["i"]},
-    {label: "Scroll up (line)", keys: ["o"]},
+    {label: "Scroll down (paragraph) / next category in list", keys: ["k"]},
+    {label: "Scroll up (paragraph) / previous category in list", keys: ["l"]},
+    {label: "Scroll down (line) / next item in list", keys: ["i"]},
+    {label: "Scroll up (line) / previous item in list", keys: ["o"]},
+    {label: "Open focused list item", keys: ["Enter"]},
     {label: "Previous item in context", keys: ["j"]},
     {label: "Next item in context", keys: [";"]},
     {label: "Previous nav page", keys: ["a"], run: function () { navApp(-1); }},
@@ -1645,6 +1653,10 @@ html[data-theme="dark"] .switch {
     }
     lastKey = null;
 
+    // List navigation: when a [data-listnav] container is on the page,
+    // i/o move between items, k/l jump between groups, Enter opens.
+    if (tryListNav(e.key)) { e.preventDefault(); return; }
+
     // Right-hand vertical scroll (k/l paragraph, i/o line).
     // j/; dispatch prev/next context events (pages can handle).
     var scrollPara = Math.max(600, Math.round(window.innerHeight * 0.8)), scrollLine = 120;
@@ -1675,6 +1687,81 @@ html[data-theme="dark"] .switch {
     } else {
       el.click();
     }
+  }
+
+  function listNavRoot() {
+    var roots = Array.from(document.querySelectorAll("[data-listnav]"));
+    return roots.find(function (r) { return r.offsetParent !== null; }) || null;
+  }
+  function listNavItems(root) {
+    return Array.from(root.querySelectorAll("[data-listnav-item]"));
+  }
+  function listNavGroups(root) {
+    return Array.from(root.querySelectorAll("[data-listnav-group]"));
+  }
+  function clearListFocus(root) {
+    listNavItems(root).forEach(function (n) { n.classList.remove("kbd-focused"); });
+  }
+  function focusListItem(root, item) {
+    if (!item) return;
+    clearListFocus(root);
+    item.classList.add("kbd-focused");
+    var rect = item.getBoundingClientRect();
+    var pad = 80;
+    if (rect.top < pad || rect.bottom > window.innerHeight - pad) {
+      item.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }
+  function tryListNav(key) {
+    if (key !== "i" && key !== "o" && key !== "k" && key !== "l" && key !== "Enter") return false;
+    var root = listNavRoot();
+    if (!root) return false;
+    var items = listNavItems(root);
+    if (!items.length) return false;
+    var groups = listNavGroups(root);
+    var focused = root.querySelector("[data-listnav-item].kbd-focused");
+    var idx = focused ? items.indexOf(focused) : -1;
+
+    if (key === "Enter") {
+      if (!focused) { focusListItem(root, items[0]); return true; }
+      var link = focused.querySelector("a[href]:not([data-kbd])");
+      if (link) link.click();
+      return true;
+    }
+    if (key === "i") {
+      focusListItem(root, idx < 0 ? items[0] : items[Math.min(items.length - 1, idx + 1)]);
+      return true;
+    }
+    if (key === "o") {
+      focusListItem(root, idx <= 0 ? items[0] : items[idx - 1]);
+      return true;
+    }
+    // Group jumps
+    if (!groups.length) return false;
+    var currentGroupIdx = -1;
+    if (focused) {
+      currentGroupIdx = groups.findIndex(function (g) { return g.contains(focused); });
+    }
+    if (key === "k") {
+      var nextG = groups[Math.min(groups.length - 1, currentGroupIdx + 1)];
+      if (nextG) {
+        var first = nextG.querySelector("[data-listnav-item]");
+        if (first) focusListItem(root, first);
+      }
+      return true;
+    }
+    if (key === "l") {
+      if (currentGroupIdx <= 0) {
+        var first0 = groups[0] && groups[0].querySelector("[data-listnav-item]");
+        if (first0) focusListItem(root, first0);
+        return true;
+      }
+      var prevG = groups[currentGroupIdx - 1];
+      var firstP = prevG && prevG.querySelector("[data-listnav-item]");
+      if (firstP) focusListItem(root, firstP);
+      return true;
+    }
+    return false;
   }
 
   function toggleTheme() {

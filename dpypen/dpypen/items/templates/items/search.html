@@ -148,8 +148,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <form method="get" action="{% url 'search' %}" id="searchForm" onsubmit="return false;"
       hx-get="{% url 'search' %}"
       hx-trigger="keyup changed delay:200ms from:#searchQ, change from:#searchForm"
-      hx-target="#searchResults"
-      hx-swap="innerHTML"
+      hx-target="#searchResultsBody"
+      hx-swap="outerHTML"
+      hx-select="#searchResultsBody"
       hx-push-url="true">
   <div class="search-form">
     <input type="search" name="q" class="search-input" id="searchQ"
@@ -189,12 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
   </nav>
 </form>
 
-<div id="searchResults">
-  {% if query %}
-    {% include "items/_search_results.html" %}
-  {% else %}
-  <p style="color: var(--muted); font-style: italic;">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance.</p>
-  {% endif %}
-</div>
+{% include "items/_search_results.html" %}
 
 {% endblock %}

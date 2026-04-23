@@ -173,8 +173,9 @@ A peek at the ink cupboard. Browse by colour.
   <form id="inkFilterForm" onsubmit="return false;"
         hx-get="{% url 'inks_list' %}"
         hx-trigger="keyup changed delay:200ms from:#inkQ, change from:#inkFilterForm"
-        hx-target="#ink-content"
-        hx-swap="innerHTML"
+        hx-target="#inkContentBody"
+        hx-swap="outerHTML"
+        hx-select="#inkContentBody"
         hx-push-url="true"
         style="flex: 1 1 auto; min-width: 200px; max-width: 500px;">
     <input type="search" id="inkQ" name="q" placeholder="Search inks…" value="{{ filters.q }}"
