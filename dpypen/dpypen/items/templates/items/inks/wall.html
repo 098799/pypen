@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ total }} inks · Tomek Grining's bureau</title>
+<meta name="description" content="A wall of {{ total }} fountain-pen inks, sorted by hue, from Tomek Grining's collection.">
+<meta name="theme-color" content="#0a0907">
+<meta property="og:title" content="A wall of {{ total }} fountain-pen inks">
+<meta property="og:description" content="{{ total }} bottles from {{ brand_count }} makers, sorted by hue.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<style>
+:root {
+  --bg: #0a0907;
+  --paper: #f4ecd8;
+  --text: #f4ecd8;
+  --muted: #8b815f;
+  --accent: #e08a94;
+  /* Default tile size: dense by default, scales up only on big screens. */
+  --tile: clamp(70px, 16vw, 140px);
+  --gap: 2px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "EB Garamond", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+body { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Header — sticky, fades on scroll */
+.wall-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg, rgba(10, 9, 7, 0.92) 0%, rgba(10, 9, 7, 0.55) 70%, transparent 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+.wall-head > * { pointer-events: auto; }
+.wall-title {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-size: clamp(1.1rem, 3.4vw, 1.6rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  font-style: italic;
+}
+.wall-title strong {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--accent);
+}
+.wall-meta {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The wall itself */
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
+  gap: var(--gap);
+  padding: var(--gap);
+}
+.tile {
+  position: relative;
+  aspect-ratio: 1;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  background: var(--swatch, #333);
+  /* GPU-friendly hover transform */
+  transform: translateZ(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), z-index 0s 0.25s;
+  cursor: pointer;
+  outline: none;
+}
+.tile:hover, .tile:focus-visible {
+  transform: scale(1.06);
+  z-index: 2;
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), z-index 0s 0s;
+  box-shadow: 0 18px 30px -8px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,236,216,0.2);
+}
+.tile:active { transform: scale(0.98); transition-duration: 0.08s; }
+
+.tile-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.55rem 0.7rem 0.5rem;
+  background: linear-gradient(180deg,
+    rgba(10, 9, 7, 0) 0%,
+    rgba(10, 9, 7, 0.3) 30%,
+    rgba(10, 9, 7, 0.85) 90%);
+  color: #f4ecd8;
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  line-height: 1.12;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+  /* Hidden by default on hover-capable devices; revealed on hover/focus */
+  opacity: 0;
+  transform: translateY(20%);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.tile:hover .tile-label,
+.tile:focus-visible .tile-label,
+.tile.tap-shown .tile-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Touch devices: tap-shown class (set by JS) drives reveal — keeps the wall
+   uncluttered, lets a curious tap probe a tile, second tap opens. */
+.tile-brand { font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.02em; }
+.tile-name  { font-size: 0.95rem; }
+.tile-line  { font-style: italic; opacity: 0.9; margin-right: 0.15em; }
+
+/* Footer credit */
+.wall-foot {
+  padding: 1.4rem 1rem 1.6rem;
+  text-align: center;
+  color: var(--muted);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.wall-foot a { color: var(--paper); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+.wall-foot a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Phones — keep 4 columns on a typical 360-414px width */
+@media (max-width: 480px) {
+  :root { --tile: clamp(72px, 23vw, 100px); --gap: 1px; }
+  .wall-head { padding: 0.7rem 0.8rem; }
+  .tile-name { font-size: 0.85rem; }
+  .tile-brand { font-size: 0.65rem; }
+}
+/* Big screens — denser wall, more columns */
+@media (min-width: 1400px) {
+  :root { --tile: clamp(110px, 8vw, 140px); }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="wall-head">
+  <div class="wall-title">a <em>wall</em> of <strong>{{ total }}</strong> inks</div>
+  <div class="wall-meta">tomek grining · {{ brand_count }} makers</div>
+</header>
+
+<div class="wall" role="list">
+  {% for i in inks %}
+  <a class="tile" role="listitem"
+     href="/k/{{ i.share_token }}/" target="_blank" rel="noopener"
+     style="--swatch: {{ i.swatch_bg }};"
+     aria-label="{{ i.brand.name }} {% if i.line %}{{ i.line }} {% endif %}{{ i.name }}">
+    <div class="tile-label">
+      <div class="tile-brand">{{ i.brand.name }}</div>
+      <div class="tile-name">{% if i.line %}<span class="tile-line">{{ i.line }}</span>{% endif %}{{ i.name }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<footer class="wall-foot">
+  Sorted by hue · <a href="/">pen.grining.eu</a>
+</footer>
+
+<script>
+// Touch: tap a tile to "preview" the label without immediately following the link.
+// First tap shows the label; second tap follows it.
+(function () {
+  if (!matchMedia('(hover: none)').matches) return; // only for touch
+  let lastTapped = null;
+  document.addEventListener('click', function (e) {
+    var tile = e.target.closest('.tile');
+    if (!tile) return;
+    if (lastTapped !== tile) {
+      e.preventDefault();
+      document.querySelectorAll('.tile.tap-shown').forEach(function (t) { t.classList.remove('tap-shown'); });
+      tile.classList.add('tap-shown');
+      lastTapped = tile;
+      // Auto-clear after a moment so it's not sticky forever
+      setTimeout(function () {
+        if (lastTapped === tile) { tile.classList.remove('tap-shown'); lastTapped = null; }
+      }, 4000);
+    }
+  });
+})();
+</script>
+</body>
+</html>

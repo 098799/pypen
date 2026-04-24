@@ -1,3 +1,4 @@
+import colorsys
 from datetime import date
 
 from django.db.models import Count
@@ -5,6 +6,48 @@ from django.shortcuts import get_object_or_404, render
 
 from dpypen.items.models import Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
+
+
+def _hex_to_hls(hex_str: str) -> tuple[float, float, float]:
+    h = (hex_str or "").lstrip("#")
+    if len(h) != 6:
+        return (0.0, 0.5, 0.0)
+    try:
+        r = int(h[0:2], 16) / 255
+        g = int(h[2:4], 16) / 255
+        b = int(h[4:6], 16) / 255
+    except ValueError:
+        return (0.0, 0.5, 0.0)
+    return colorsys.rgb_to_hls(r, g, b)
+
+
+def _spectrum_key(ink) -> tuple:
+    """Sort key: chromatic colors by hue (warm → cool → back), greys/blacks at the end."""
+    sample = ink.sampled_hex[0] if ink.sampled_hex else INK_COLOR_HEX.get(ink.color, "#333")
+    h, l, s = _hex_to_hls(sample)
+    if s < 0.18:
+        # Achromatic: cluster together at the end, ordered light → dark
+        return (1, -l)
+    return (0, h, -l)
+
+
+def inks_wall(request):
+    """Full-bleed colour-spectrum wall of every bottle. Standalone — no app shell."""
+    inks = list(
+        Ink.objects.select_related("brand")
+        .filter(volume__gt=5)
+        .exclude(used_up=True)
+    )
+    inks.sort(key=_spectrum_key)
+    for i in inks:
+        i.hex = INK_COLOR_HEX.get(i.color, "#333")
+        i.bg = i.swatch_bg
+
+    return render(request, "items/inks/wall.html", {
+        "inks": inks,
+        "total": len(inks),
+        "brand_count": len({i.brand_id for i in inks}),
+    })
 
 
 def inks_gallery(request):
