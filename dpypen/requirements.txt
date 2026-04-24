@@ -1,4 +1,4 @@
-Django==5.1.15
+Django==6.0.4
 django-admin-sortable2==2.2.3
 django-allauth==65.16.1
 django-extensions==3.2.3
