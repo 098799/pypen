@@ -24,6 +24,7 @@ urlpatterns = [
     path('k/<str:token>/', share.ink_by_token, name='share_ink'),
     path('pub/inks/', share.inks_gallery, name='share_inks_gallery'),
     path('pub/inks/wall/', share.inks_wall, name='share_inks_wall'),
+    path('pub/pens/wall/', share.pens_wall, name='share_pens_wall'),
 
     path('import/', notebook.upload, name='notebook_upload'),
     path('import/review/', notebook.review, name='notebook_review'),

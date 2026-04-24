@@ -3,16 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{{ total }} inks · Tomek Grining's bureau</title>
-<meta name="description" content="A wall of {{ total }} fountain-pen inks, sorted by hue, from Tomek Grining's collection.">
+<title>{{ total }} pens · Tomek Grining's bureau</title>
+<meta name="description" content="A wall of {{ total }} fountain pens, {{ photo_count }} photographed, from Tomek Grining's collection.">
 <meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f4ecd8" media="(prefers-color-scheme: light)">
-<meta property="og:title" content="A wall of {{ total }} fountain-pen inks">
-<meta property="og:description" content="{{ total }} bottles from {{ brand_count }} makers, sorted by hue.">
+<meta property="og:title" content="A wall of {{ total }} fountain pens">
+<meta property="og:description" content="{{ total }} pens from {{ brand_count }} makers.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <script>
-// Set the theme before paint to avoid a flash.
 (function () {
   var saved;
   try { saved = localStorage.getItem("wallTheme"); } catch (e) {}
@@ -25,8 +24,8 @@
 </script>
 <style>
 :root {
-  --tile: clamp(70px, 16vw, 140px);
-  --gap: 2px;
+  --tile: clamp(150px, 24vw, 260px);
+  --gap: 4px;
 }
 html[data-wall-theme="dark"] {
   --bg: #0a0907;
@@ -34,6 +33,7 @@ html[data-wall-theme="dark"] {
   --text: #f4ecd8;
   --muted: #8b815f;
   --accent: #e08a94;
+  --tile-bg: #181513;
   --label-grad-from: rgba(10, 9, 7, 0);
   --label-grad-to: rgba(10, 9, 7, 0.85);
   --label-color: #f4ecd8;
@@ -44,6 +44,7 @@ html[data-wall-theme="light"] {
   --text: #1b2a4a;
   --muted: #5a4b2e;
   --accent: #7a1f2b;
+  --tile-bg: #e9dfc5;
   --label-grad-from: rgba(244, 236, 216, 0);
   --label-grad-to: rgba(244, 236, 216, 0.92);
   --label-color: #1b2a4a;
@@ -82,14 +83,9 @@ body { padding-bottom: env(safe-area-inset-bottom); }
   font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
   font-size: clamp(1.1rem, 3.4vw, 1.6rem);
   font-weight: 400;
-  letter-spacing: 0.01em;
   font-style: italic;
 }
-.wall-title strong {
-  font-style: normal;
-  font-weight: 500;
-  color: var(--accent);
-}
+.wall-title strong { font-style: normal; font-weight: 500; color: var(--accent); }
 .wall-meta {
   font-family: "Inter", system-ui, sans-serif;
   font-size: 0.65rem;
@@ -106,7 +102,6 @@ body { padding-bottom: env(safe-area-inset-bottom); }
   text-decoration: none;
   border-bottom: 1px dotted transparent;
   padding-bottom: 1px;
-  transition: color 0.15s, border-color 0.15s;
 }
 .wall-meta a:hover { color: var(--text); border-bottom-color: var(--text); }
 .wall-meta a.on    { color: var(--text); border-bottom-color: var(--accent); }
@@ -123,8 +118,6 @@ body { padding-bottom: env(safe-area-inset-bottom); }
   color: var(--muted);
   cursor: pointer;
   padding: 0;
-  flex: 0 0 auto;
-  transition: color 0.15s, border-color 0.15s;
 }
 .theme-btn:hover { color: var(--text); border-color: var(--text); }
 .theme-btn svg { width: 14px; height: 14px; }
@@ -141,35 +134,56 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 }
 .tile {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 4/3;
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  background: var(--swatch, #333);
-  transform: translateZ(0);
-  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), z-index 0s 0.25s;
+  background: var(--tile-bg);
   cursor: pointer;
   outline: none;
+  transform: translateZ(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), z-index 0s 0.25s;
 }
 .tile:hover, .tile:focus-visible {
-  transform: scale(1.06);
+  transform: scale(1.03);
   z-index: 2;
   transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), z-index 0s 0s;
-  box-shadow: 0 18px 30px -8px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,236,216,0.2);
+  box-shadow: 0 22px 40px -12px rgba(0,0,0,0.65), 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
 }
-.tile:active { transform: scale(0.98); transition-duration: 0.08s; }
-.tile.used-up { filter: saturate(0.55) brightness(0.85); }
-.tile.used-up::after {
-  content: "";
-  position: absolute; left: 8%; right: 8%; top: 50%;
-  border-top: 1.5px solid rgba(0,0,0,0.6); transform: rotate(-12deg);
-  pointer-events: none;
+.tile:active { transform: scale(0.99); transition-duration: 0.08s; }
+.tile.defunct { filter: saturate(0.4) brightness(0.85); }
+
+.tile img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
 }
+.tile img.styled { object-fit: contain; padding: 6px; }
+
+.tile-no-img {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 1rem;
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  background:
+    repeating-linear-gradient(45deg,
+      transparent 0, transparent 10px,
+      color-mix(in srgb, var(--text) 4%, transparent) 10px,
+      color-mix(in srgb, var(--text) 4%, transparent) 11px);
+}
+.tile-no-img .brand { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; font-family: "Inter", system-ui, sans-serif; }
+.tile-no-img .model { font-size: 1.2rem; font-style: italic; }
 
 .tile-label {
   position: absolute;
   inset: auto 0 0 0;
-  padding: 0.55rem 0.7rem 0.5rem;
+  padding: 0.6rem 0.75rem 0.55rem;
   background: linear-gradient(180deg,
     var(--label-grad-from) 0%,
     color-mix(in srgb, var(--label-grad-to) 35%, transparent) 30%,
@@ -189,20 +203,20 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
   opacity: 1;
   transform: translateY(0);
 }
-.tile-brand { font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.02em; }
-.tile-name  { font-size: 0.95rem; }
-.tile-line  { font-style: italic; opacity: 0.9; margin-right: 0.15em; }
+.tile-brand { font-size: 0.74rem; opacity: 0.85; }
+.tile-model { font-size: 1.05rem; }
+.tile-finish { opacity: 0.78; font-style: italic; }
 .tile-pip {
   position: absolute;
-  top: 0.4rem; left: 0.4rem;
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  top: 0.5rem; right: 0.5rem;
+  min-width: 26px; height: 26px;
+  padding: 0 0.5rem;
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
   color: var(--text);
-  padding: 0.16rem 0.4rem;
   border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
   backdrop-filter: blur(4px);
   opacity: 0;
   transition: opacity 0.2s;
@@ -224,13 +238,13 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 .wall-foot a:hover { color: var(--accent); border-color: var(--accent); }
 
 @media (max-width: 480px) {
-  :root { --tile: clamp(72px, 23vw, 100px); --gap: 1px; }
+  :root { --tile: clamp(140px, 44vw, 200px); --gap: 2px; }
   .wall-head { padding: 0.7rem 0.8rem; }
-  .tile-name  { font-size: 0.85rem; }
+  .tile-model { font-size: 0.95rem; }
   .tile-brand { font-size: 0.65rem; }
 }
 @media (min-width: 1400px) {
-  :root { --tile: clamp(110px, 8vw, 140px); }
+  :root { --tile: clamp(200px, 16vw, 240px); }
 }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -240,12 +254,11 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 <body>
 
 <header class="wall-head">
-  <div class="wall-title">a <em>wall</em> of <strong>{{ total }}</strong> inks</div>
+  <div class="wall-title">a <em>wall</em> of <strong>{{ total }}</strong> pens</div>
   <div class="wall-meta">
     <span>tomek grining · {{ brand_count }} makers</span>
     <span class="sep">·</span>
-    <a href="{{ toggle_samples_url }}" class="{% if not hide_samples %}on{% endif %}" title="{% if hide_samples %}include samples{% else %}hide samples{% endif %}">samples</a>
-    <a href="{{ toggle_used_url }}" class="{% if not hide_used %}on{% endif %}" title="{% if hide_used %}include used-up{% else %}hide used-up{% endif %}">used-up</a>
+    <a href="{{ toggle_defunct_url }}" class="{% if show_defunct %}on{% endif %}" title="{% if show_defunct %}hide defunct{% else %}include defunct{% endif %}">defunct</a>
     <button type="button" class="theme-btn" id="themeBtn" aria-label="Toggle light/dark">
       <svg class="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
       <svg class="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
@@ -254,29 +267,37 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 </header>
 
 <div class="wall" role="list">
-  {% for i in inks %}
-  <a class="tile{% if i.used_up %} used-up{% endif %}" role="listitem"
-     href="/k/{{ i.share_token }}/" target="_blank" rel="noopener"
-     style="--swatch: {{ i.swatch_bg }};"
-     aria-label="{{ i.brand.name }} {% if i.line %}{{ i.line }} {% endif %}{{ i.name }}{% if i.used_up %} (used up){% endif %}{% if i.volume <= 5 %} (sample){% endif %}">
-    {% if i.volume <= 5 %}<span class="tile-pip">sample</span>{% endif %}
-    {% if i.used_up %}<span class="tile-pip" style="left: auto; right: 0.4rem;">used up</span>{% endif %}
+  {% for p in pens %}
+  <a class="tile{% if not p.rotation.in_use %} defunct{% endif %}" role="listitem"
+     href="/p/{{ p.share_token }}/" target="_blank" rel="noopener"
+     aria-label="{{ p.brand.name }} {{ p.model }}{% if p.finish %} {{ p.finish }}{% endif %}">
+    {% if p.tile_url %}
+      <img class="{% if p.tile_styled %}styled{% endif %}" src="{{ p.tile_url }}" alt="{{ p }}" loading="lazy">
+    {% else %}
+      <div class="tile-no-img">
+        <div class="brand">{{ p.brand.name }}</div>
+        <div class="model">{{ p.model }}{% if p.finish %} <em>{{ p.finish }}</em>{% endif %}</div>
+      </div>
+    {% endif %}
+    {% if not p.rotation.in_use %}
+      <span class="tile-pip">defunct</span>
+    {% elif p.rotation.priority is not None %}
+      <span class="tile-pip">P{{ p.rotation.priority }}</span>
+    {% endif %}
     <div class="tile-label">
-      <div class="tile-brand">{{ i.brand.name }}</div>
-      <div class="tile-name">{% if i.line %}<span class="tile-line">{{ i.line }}</span>{% endif %}{{ i.name }}</div>
+      <div class="tile-brand">{{ p.brand.name }}</div>
+      <div class="tile-model">{{ p.model }}{% if p.finish %} <span class="tile-finish">{{ p.finish }}</span>{% endif %}</div>
     </div>
   </a>
   {% endfor %}
 </div>
 
 <footer class="wall-foot">
-  Sorted by hue · <a href="/pub/pens/wall/">pens →</a> · <a href="/">pen.grining.eu</a>
+  {{ photo_count }} photographed · <a href="/pub/inks/wall/">inks →</a> · <a href="/">pen.grining.eu</a>
 </footer>
 
 <script>
-// Touch tap-then-tap pattern + theme toggle.
 (function () {
-  // Theme toggle
   document.getElementById('themeBtn').addEventListener('click', function () {
     var cur = document.documentElement.getAttribute('data-wall-theme') || 'dark';
     var next = cur === 'dark' ? 'light' : 'dark';
@@ -284,7 +305,6 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
     try { localStorage.setItem('wallTheme', next); } catch (e) {}
   });
 
-  // Touch reveal-then-follow
   if (!matchMedia('(hover: none)').matches) return;
   var lastTapped = null;
   document.addEventListener('click', function (e) {

@@ -32,21 +32,85 @@ def _spectrum_key(ink) -> tuple:
 
 
 def inks_wall(request):
-    """Full-bleed colour-spectrum wall of every bottle. Standalone — no app shell."""
-    inks = list(
-        Ink.objects.select_related("brand")
-        .filter(volume__gt=5)
-        .exclude(used_up=True)
-    )
+    """Full-bleed colour-spectrum wall of every ink in the collection.
+    Standalone — no app shell. Includes samples and used-up bottles by default;
+    each can be hidden via ?samples=0 / ?used_up=0."""
+    hide_samples = request.GET.get("samples") == "0"
+    hide_used = request.GET.get("used_up") == "0"
+    qs = Ink.objects.select_related("brand")
+    if hide_samples:
+        qs = qs.filter(volume__gt=5)
+    if hide_used:
+        qs = qs.exclude(used_up=True)
+    inks = list(qs)
     inks.sort(key=_spectrum_key)
     for i in inks:
         i.hex = INK_COLOR_HEX.get(i.color, "#333")
         i.bg = i.swatch_bg
 
+    def _toggle(key, on):
+        params = request.GET.copy()
+        if on:
+            params.pop(key, None)
+        else:
+            params[key] = "0"
+        qs_ = params.urlencode()
+        return request.path + (("?" + qs_) if qs_ else "")
+
     return render(request, "items/inks/wall.html", {
         "inks": inks,
         "total": len(inks),
         "brand_count": len({i.brand_id for i in inks}),
+        "hide_samples": hide_samples,
+        "hide_used": hide_used,
+        "toggle_samples_url": _toggle("samples", hide_samples),
+        "toggle_used_url": _toggle("used_up", hide_used),
+    })
+
+
+def pens_wall(request):
+    """Full-bleed mosaic of every pen with a photo. Standalone — no app shell.
+    Defunct pens hidden by default; ?defunct=1 to include them."""
+    show_defunct = request.GET.get("defunct") == "1"
+    qs = Pen.objects.select_related("brand", "rotation").prefetch_related("photos")
+    if not show_defunct:
+        qs = qs.filter(rotation__in_use=True)
+    pens = list(qs.order_by(
+        "-rotation__in_use", "rotation__priority", "brand__name", "model"
+    ))
+
+    photographed = []
+    text_only = []
+    for p in pens:
+        photos = list(p.photos.all()[:1])
+        ph = photos[0] if photos else None
+        if ph:
+            p.tile_url = ph.image_styled.url if ph.image_styled else (ph.thumbnail.url if ph.thumbnail else ph.image.url)
+            p.tile_styled = bool(ph.image_styled)
+            photographed.append(p)
+        else:
+            p.tile_url = None
+            p.tile_styled = False
+            text_only.append(p)
+
+    ordered = photographed + text_only
+
+    def _toggle(key, on):
+        params = request.GET.copy()
+        if on:
+            params.pop(key, None)
+        else:
+            params[key] = "1"
+        qs_ = params.urlencode()
+        return request.path + (("?" + qs_) if qs_ else "")
+
+    return render(request, "items/pens/wall.html", {
+        "pens": ordered,
+        "total": len(ordered),
+        "photo_count": len(photographed),
+        "brand_count": len({p.brand_id for p in ordered}),
+        "show_defunct": show_defunct,
+        "toggle_defunct_url": _toggle("defunct", not show_defunct),
     })
 
 
