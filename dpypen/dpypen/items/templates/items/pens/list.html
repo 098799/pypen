@@ -62,14 +62,53 @@
         style="flex: 1 1 auto; min-width: 200px; max-width: 500px;">
     <input type="search" id="penQ" name="q" placeholder="Search pens…" value="{{ query }}"
            style="width: 100%; padding: 0.7rem 1rem; font-family: 'EB Garamond', Georgia, serif; font-size: 1rem; background: var(--chip-top); color: var(--ink); border: 1px solid var(--ink-line); border-radius: 999px; min-height: 46px;" autocomplete="off">
+    {% if view == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
   </form>
+  <div class="view-toggle" role="tablist" aria-label="View">
+    <a href="{{ list_url }}"
+       hx-get="{{ list_url }}"
+       hx-target="#penContentBody" hx-swap="outerHTML" hx-select="#penContentBody" hx-push-url="true"
+       class="vt-btn{% if view == 'list' %} on{% endif %}"
+       role="tab" aria-selected="{% if view == 'list' %}true{% else %}false{% endif %}"
+       data-view="list">List</a>
+    <a href="{{ grid_url }}"
+       hx-get="{{ grid_url }}"
+       hx-target="#penContentBody" hx-swap="outerHTML" hx-select="#penContentBody" hx-push-url="true"
+       class="vt-btn{% if view == 'grid' %} on{% endif %}"
+       role="tab" aria-selected="{% if view == 'grid' %}true{% else %}false{% endif %}"
+       data-view="grid">Grid</a>
+  </div>
+  <script>
+    (function () {
+      try {
+        document.querySelectorAll('.view-toggle .vt-btn').forEach(function (a) {
+          a.addEventListener('click', function () {
+            try { localStorage.setItem('pensView', a.getAttribute('data-view')); } catch (e) {}
+          });
+        });
+        if (!new URLSearchParams(location.search).has('view')) {
+          var saved = null;
+          try { saved = localStorage.getItem('pensView'); } catch (e) {}
+          if (saved === 'grid') {
+            var u = new URL(location);
+            u.searchParams.set('view', 'grid');
+            location.replace(u);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
   {% if can_edit %}
   <a href="{% url 'pens_create' %}" class="btn primary" data-kbd="new" style="flex: 0 0 auto;">+ Add pen</a>
   {% endif %}
 </div>
 
 <div id="pen-content">
-  {% include "items/pens/_list_content.html" %}
+  {% if view == 'grid' %}
+    {% include "items/pens/_grid_content.html" %}
+  {% else %}
+    {% include "items/pens/_list_content.html" %}
+  {% endif %}
 </div>
 
 {% endblock %}

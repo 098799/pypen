@@ -286,15 +286,32 @@ def pens_list(request):
         if k in groups:
             ordered.append(groups[k])
 
+    view = "grid" if request.GET.get("view") == "grid" else "list"
+
+    def _view_url(target_view):
+        params = request.GET.copy()
+        if target_view == "list":
+            params.pop("view", None)
+        else:
+            params["view"] = target_view
+        qs_str = params.urlencode()
+        return request.path + (("?" + qs_str) if qs_str else "")
+
     context = {
         "pens": pens,
         "groups": ordered,
         "query": q,
         "terms": q.split(),
         "nav": "pens",
+        "view": view,
+        "list_url": _view_url("list"),
+        "grid_url": _view_url("grid"),
     }
     partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
-    template = "items/pens/_list_content.html" if partial else "items/pens/list.html"
+    if partial:
+        template = "items/pens/_grid_content.html" if view == "grid" else "items/pens/_list_content.html"
+    else:
+        template = "items/pens/list.html"
     return render(request, template, context)
 
 
@@ -556,6 +573,17 @@ def inks_list(request):
         q = params.urlencode()
         return request.path + (("?" + q) if q else "")
 
+    view = "grid" if request.GET.get("view") == "grid" else "list"
+
+    def _view_url(target_view):
+        params = request.GET.copy()
+        if target_view == "list":
+            params.pop("view", None)
+        else:
+            params["view"] = target_view
+        qs_str = params.urlencode()
+        return request.path + (("?" + qs_str) if qs_str else "")
+
     filters = {
         "include_samples": include_samples,
         "include_used": include_used,
@@ -565,6 +593,9 @@ def inks_list(request):
         "color_chips": color_chips,
         "toggle_samples_url": _toggle_url("samples", "1" if not include_samples else ""),
         "toggle_used_url": _toggle_url("used", "1" if not include_used else ""),
+        "view": view,
+        "list_url": _view_url("list"),
+        "grid_url": _view_url("grid"),
     }
 
     context = {
@@ -574,7 +605,10 @@ def inks_list(request):
         "nav": "inks",
     }
     partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
-    template = "items/inks/_content.html" if partial else "items/inks/list.html"
+    if partial:
+        template = "items/inks/_grid.html" if view == "grid" else "items/inks/_content.html"
+    else:
+        template = "items/inks/list.html"
     return render(request, template, context)
 
 

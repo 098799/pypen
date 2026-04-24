@@ -1,0 +1,39 @@
+{% load items_extras %}
+<div id="penContentBody" data-listnav>
+{% for g in groups %}
+<section data-listnav-group>
+  <div class="grid-section-head">
+    <span>{{ g.title }}</span>
+    {% if g.subtitle %}<span style="opacity: 0.6;">·</span><span>{{ g.subtitle }}</span>{% endif %}
+    <span style="opacity: 0.6;">·</span>
+    <span>{{ g.pens|length }} pen{{ g.pens|length|pluralize }}</span>
+  </div>
+  <div class="pen-grid">
+    {% for p in g.pens %}
+    <a href="{% url 'pens_detail' p.pk %}"
+       class="pen-tile{% if not p.rotation.in_use %} defunct{% endif %}"
+       data-listnav-item
+       title="{{ p.brand.name }} {{ p.model }}{% if p.finish %} · {{ p.finish }}{% endif %}">
+      {% if p.list_thumb_url %}
+        <img class="pen-tile-img{% if p.list_thumb_styled %} styled{% endif %}"
+             src="{{ p.list_thumb_url }}" alt="{{ p }}" loading="lazy">
+      {% else %}
+        <div class="pen-tile-no-img">{{ p.brand.name }}<br>{{ p.model }}</div>
+      {% endif %}
+      {% if p.rotation.priority is not None and p.rotation.in_use %}
+        <span class="pen-tile-pip">P{{ p.rotation.priority }}</span>
+      {% elif not p.rotation.in_use %}
+        <span class="pen-tile-pip">defunct</span>
+      {% endif %}
+      <div class="pen-tile-label">
+        <div class="pen-tile-brand">{{ p.brand.name }}</div>
+        <div class="pen-tile-model">{{ p.model }}{% if p.finish %} <span style="opacity: 0.78;">{{ p.finish }}</span>{% endif %}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% empty %}
+<div class="empty">{% if query %}No pens match “{{ query }}”.{% else %}No pens yet.{% endif %}</div>
+{% endfor %}
+</div>

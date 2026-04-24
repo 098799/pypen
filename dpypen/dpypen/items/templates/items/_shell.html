@@ -1369,6 +1369,187 @@ html[data-theme="dark"] .switch {
   border-radius: 4px;
 }
 
+/* -------- Grid view (alternative ink/pen list) -------- */
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip-top) 80%, transparent);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.view-toggle .vt-btn {
+  padding: 0.45rem 0.95rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: none;
+  cursor: pointer;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+.view-toggle .vt-btn.on {
+  color: var(--ink);
+  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
+  box-shadow: 0 0 0 1px var(--ink-line);
+}
+.view-toggle .vt-btn:hover { color: var(--ink); }
+
+/* Ink grid */
+.ink-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin: 0.5rem 0 2rem;
+}
+.ink-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--card-shadow);
+  display: block;
+  border-bottom: none !important;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.ink-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -16px #00000077;
+  border-bottom: none !important;
+}
+.ink-tile-swatch {
+  position: absolute;
+  inset: 0;
+  background: var(--ink-bg, #333);
+}
+.ink-tile-label {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 0.5rem 0.65rem 0.45rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(20,16,8,0.78) 70%);
+  color: #f4ecd8;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+  line-height: 1.15;
+}
+.ink-tile-brand { font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.02em; }
+.ink-tile-name  { font-size: 1.0rem; }
+.ink-tile-pip {
+  position: absolute;
+  top: 0.4rem; left: 0.4rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(20,16,8,0.65);
+  color: #f4ecd8;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+.ink-tile.used-up { opacity: 0.55; }
+.ink-tile.used-up::after {
+  content: ""; position: absolute; left: 8%; right: 8%; top: 50%;
+  border-top: 2px solid rgba(20,16,8,0.85); transform: rotate(-12deg);
+}
+[data-listnav-item].ink-tile.kbd-focused {
+  background: none;
+  box-shadow: 0 0 0 3px var(--accent), var(--card-shadow);
+}
+
+/* Pen grid */
+.pen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 0.5rem 0 2rem;
+}
+.pen-tile {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--paper-dark);
+  border: 1px solid var(--ink-line);
+  box-shadow: var(--card-shadow);
+  display: block;
+  border-bottom: none !important;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.pen-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -16px #00000077;
+  border-bottom: none !important;
+}
+.pen-tile-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.pen-tile-img.styled { object-fit: contain; padding: 6px; }
+.pen-tile-no-img {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 1rem;
+  background:
+    repeating-linear-gradient(45deg, transparent 0, transparent 8px, rgba(0,0,0,0.04) 8px, rgba(0,0,0,0.04) 9px),
+    var(--paper-dark);
+}
+.pen-tile-label {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 0.55rem 0.7rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(20,16,8,0.82) 70%);
+  color: #f4ecd8;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.75);
+  line-height: 1.15;
+}
+.pen-tile-brand { font-size: 0.74rem; opacity: 0.85; }
+.pen-tile-model { font-size: 1.1rem; }
+.pen-tile-pip {
+  position: absolute; top: 0.5rem; right: 0.5rem;
+  min-width: 28px; height: 28px;
+  padding: 0 0.5rem;
+  background: rgba(20,16,8,0.78);
+  color: #f4ecd8;
+  border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+.pen-tile.defunct { opacity: 0.5; filter: grayscale(0.5); }
+[data-listnav-item].pen-tile.kbd-focused {
+  background: none;
+  box-shadow: 0 0 0 3px var(--accent), var(--card-shadow);
+}
+
+.grid-section-head {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 1.6rem 0 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.grid-section-head .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block;
+}
+
 /* -------- Active inking big cards on usages page -------- */
 .active-usages {
   display: grid;

@@ -183,7 +183,44 @@ A peek at the ink cupboard. Browse by colour.
     {% if filters.include_samples %}<input type="hidden" name="samples" value="1">{% endif %}
     {% if filters.include_used %}<input type="hidden" name="used" value="1">{% endif %}
     {% if filters.color %}<input type="hidden" name="color" value="{{ filters.color }}">{% endif %}
+    {% if filters.view == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
   </form>
+  <div class="view-toggle" role="tablist" aria-label="View">
+    <a href="{{ filters.list_url }}"
+       hx-get="{{ filters.list_url }}"
+       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
+       class="vt-btn{% if filters.view == 'list' %} on{% endif %}"
+       role="tab" aria-selected="{% if filters.view == 'list' %}true{% else %}false{% endif %}"
+       data-view="list">List</a>
+    <a href="{{ filters.grid_url }}"
+       hx-get="{{ filters.grid_url }}"
+       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
+       class="vt-btn{% if filters.view == 'grid' %} on{% endif %}"
+       role="tab" aria-selected="{% if filters.view == 'grid' %}true{% else %}false{% endif %}"
+       data-view="grid">Grid</a>
+  </div>
+  <script>
+    (function () {
+      try {
+        // Persist view choice across visits.
+        document.querySelectorAll('.view-toggle .vt-btn').forEach(function (a) {
+          a.addEventListener('click', function () {
+            try { localStorage.setItem('inksView', a.getAttribute('data-view')); } catch (e) {}
+          });
+        });
+        // On initial load, redirect to saved preference if URL doesn't pin one.
+        if (!new URLSearchParams(location.search).has('view')) {
+          var saved = null;
+          try { saved = localStorage.getItem('inksView'); } catch (e) {}
+          if (saved === 'grid') {
+            var u = new URL(location);
+            u.searchParams.set('view', 'grid');
+            location.replace(u);
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
   {% if can_edit %}
   <a href="{% url 'inks_create' %}" class="btn primary" data-kbd="new" style="flex: 0 0 auto;">+ Add ink</a>
   <button type="button" class="btn" data-share-url="{% url 'share_inks_gallery' %}" data-share-label="Inks gallery" style="flex: 0 0 auto;">↗ Share</button>
@@ -210,7 +247,11 @@ A peek at the ink cupboard. Browse by colour.
 </div>
 
 <div id="ink-content">
-  {% include "items/inks/_content.html" %}
+  {% if filters.view == 'grid' %}
+    {% include "items/inks/_grid.html" %}
+  {% else %}
+    {% include "items/inks/_content.html" %}
+  {% endif %}
 </div>
 
 {% endblock %}

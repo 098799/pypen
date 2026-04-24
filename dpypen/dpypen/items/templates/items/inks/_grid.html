@@ -1,0 +1,77 @@
+{% load items_extras %}
+<div id="inkContentBody" data-listnav>
+<nav class="filter-bar" aria-label="Ink filters">
+  <span class="fb-label">Show</span>
+  <a href="{{ filters.toggle_samples_url }}"
+     class="fb-toggle{% if filters.include_samples %} on{% endif %}"
+     hx-get="{{ filters.toggle_samples_url }}"
+     hx-target="#inkContentBody"
+     hx-swap="outerHTML"
+     hx-select="#inkContentBody"
+     hx-push-url="true">Samples</a>
+  <a href="{{ filters.toggle_used_url }}"
+     class="fb-toggle{% if filters.include_used %} on{% endif %}"
+     hx-get="{{ filters.toggle_used_url }}"
+     hx-target="#inkContentBody"
+     hx-swap="outerHTML"
+     hx-select="#inkContentBody"
+     hx-push-url="true">Used-up</a>
+  {% if filters.include_samples or filters.include_used or filters.color %}
+  <a href="?{% if filters.view == 'grid' %}view=grid{% endif %}" class="fb-clear"
+     hx-get="?{% if filters.view == 'grid' %}view=grid{% endif %}"
+     hx-target="#inkContentBody"
+     hx-swap="outerHTML"
+     hx-select="#inkContentBody"
+     hx-push-url="true">clear all</a>
+  {% endif %}
+</nav>
+
+{% if filters.color_chips %}
+<div class="color-cards">
+  {% for c in filters.color_chips %}
+  <a href="?color={% if filters.color == c.color %}{% else %}{{ c.color }}{% endif %}{% if filters.include_samples %}&samples=1{% endif %}{% if filters.include_used %}&used=1{% endif %}{% if filters.view == 'grid' %}&view=grid{% endif %}"
+     class="{% if filters.color == c.color %}on{% endif %}"
+     style="--cc: {{ c.hex }};"
+     hx-get="?color={% if filters.color == c.color %}{% else %}{{ c.color }}{% endif %}{% if filters.include_samples %}&samples=1{% endif %}{% if filters.include_used %}&used=1{% endif %}{% if filters.view == 'grid' %}&view=grid{% endif %}"
+     hx-target="#inkContentBody"
+     hx-swap="outerHTML"
+     hx-select="#inkContentBody"
+     hx-push-url="true">
+    <span class="cc-dot"></span>
+    <span class="cc-label">{{ c.color }}</span>
+    <span class="cc-count">{{ c.count }}</span>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if not groups %}
+<div class="empty">No inks match this filter.</div>
+{% endif %}
+
+{% for g in groups %}
+<section data-listnav-group>
+  <div class="grid-section-head">
+    <span class="dot" style="background: {{ g.hex }};"></span>
+    <span>{{ g.color }}</span>
+    <span style="opacity: 0.6;">·</span>
+    <span>{{ g.inks|length }} bottle{{ g.inks|length|pluralize }}</span>
+  </div>
+  <div class="ink-grid">
+    {% for i in g.inks %}
+    <a href="{% url 'inks_detail' i.pk %}"
+       class="ink-tile{% if i.used_up %} used-up{% endif %}"
+       data-listnav-item
+       title="{{ i.brand.name }} {% if i.line %}{{ i.line }} {% endif %}{{ i.name }}">
+      <div class="ink-tile-swatch" style="--ink-bg: {{ i.swatch_bg }}; background: {{ i.swatch_bg }};"></div>
+      {% if i.volume <= 5 %}<span class="ink-tile-pip">sample</span>{% endif %}
+      <div class="ink-tile-label">
+        <div class="ink-tile-brand">{{ i.brand.name }}</div>
+        <div class="ink-tile-name">{% if i.line %}<em style="opacity: 0.85;">{{ i.line }}</em> {% endif %}{{ i.name }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+</div>
