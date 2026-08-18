@@ -11,3 +11,8 @@ __pycache__
 secrets
 db.sqlite3
 _bckp
+staticfiles/
+*.~undo-tree~
+.mypy_cache
+media/
+.venv

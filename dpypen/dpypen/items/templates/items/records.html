@@ -1,0 +1,85 @@
+{% extends "items/_shell.html" %}
+{% block title %}Records · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.rec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.rec {
+  --c: var(--accent);
+  position: relative;
+  padding: 1.4rem 1.3rem 1.3rem;
+  background: linear-gradient(160deg, var(--chip-top) 0%, var(--paper-dark) 100%);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  border-top: 3px solid var(--c);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 150px;
+}
+.rec.ink {
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--c) 25%, transparent) 0%, transparent 60%),
+    linear-gradient(160deg, var(--chip-top) 0%, var(--paper-dark) 100%);
+}
+.rec .rec-title {
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rec .rec-sub {
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.rec .rec-primary {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 0.4rem 0 0.15rem;
+}
+.rec .rec-primary a { color: inherit; border: none; }
+.rec .rec-primary a:hover { color: var(--accent); border: none; }
+.rec .rec-extra {
+  font-family: "Inter", sans-serif;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+  margin-top: auto;
+}
+.rec .rec-extra b { color: var(--ink); font-weight: 500; }
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>Hall of <em>records</em></h1>
+</div>
+
+<p style="color: var(--muted); font-style: italic; max-width: 42rem; margin: -0.5rem 0 1.5rem;">
+Superlatives lifted from {{ cards|length }} angles of the collection. Click the headliners to jump to their page.
+</p>
+
+<div class="rec-grid">
+  {% for c in cards %}
+  <div class="rec {% if c.link.0 == 'ink' %}ink{% endif %}" style="{% if c.color %}--c: {{ c.color }};{% endif %}">
+    <div class="rec-title">{{ c.title }}</div>
+    <div class="rec-sub">{{ c.subtitle }}</div>
+    <div class="rec-primary">
+      {% if c.link.0 == 'pen' %}<a href="{% url 'pens_detail' c.link.1 %}">{{ c.primary }}</a>
+      {% elif c.link.0 == 'ink' %}<a href="{% url 'inks_detail' c.link.1 %}">{{ c.primary }}</a>
+      {% else %}{{ c.primary }}{% endif %}
+    </div>
+    {% if c.extra %}<div class="rec-extra">{{ c.extra }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

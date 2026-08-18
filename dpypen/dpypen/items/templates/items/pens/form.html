@@ -1,0 +1,287 @@
+{% extends "items/_shell.html" %}
+{% block title %}{{ title }} · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.photo-cell {
+  position: relative;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--ink-line);
+  background: var(--paper-dark);
+}
+.photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-cell .ph-btn {
+  position: absolute;
+  width: 30px; height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0.85;
+  transition: opacity 0.15s, background 0.15s;
+}
+.photo-cell .ph-btn:hover { opacity: 1; background: var(--accent); }
+.photo-cell .ph-btn.del { top: 0.3rem; right: 0.3rem; }
+.photo-cell .ph-btn.star { top: 0.3rem; left: 0.3rem; }
+.photo-cell .ph-btn.rot { bottom: 0.3rem; right: 0.3rem; }
+.photo-cell .ph-btn.sparkle { bottom: 0.3rem; left: 0.3rem; }
+.photo-cell .ph-btn.sparkle.on {
+  background: linear-gradient(135deg, #d4a52c, var(--accent));
+  opacity: 1;
+}
+.photo-cell .busy {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  display: none;
+  align-items: center; justify-content: center;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  z-index: 3;
+}
+.photo-cell.busy .busy { display: flex; }
+.ph-spinner {
+  width: 30px; height: 30px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 999px;
+  animation: phSpin 0.8s linear infinite;
+  margin-bottom: 0.5rem;
+}
+@keyframes phSpin { to { transform: rotate(360deg); } }
+.photo-cell .busy-text { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.photo-cell.primary {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.photo-cell.primary::after {
+  content: "PRIMARY";
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 0.3rem 0.5rem;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.7));
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-align: center;
+}
+
+.camera-upload {
+  display: flex; flex-direction: column; gap: 0.6rem;
+  padding: 1rem;
+  border: 1px dashed var(--ink-line);
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+.camera-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem 1.2rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  box-shadow: var(--plate-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+}
+.camera-btn input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+}
+.camera-btn svg { width: 20px; height: 20px; }
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>{{ title }}</h1>
+</div>
+
+<form method="post" class="form" autocomplete="off">
+  {% csrf_token %}
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.brand.id_for_label }}">Brand</label>
+      {{ form.brand }}
+      {% if form.brand.errors %}<div class="errors">{{ form.brand.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.obtained.id_for_label }}">Obtained</label>
+      {{ form.obtained }}
+      {% if form.obtained.errors %}<div class="errors">{{ form.obtained.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.model.id_for_label }}">Model</label>
+      {{ form.model }}
+      {% if form.model.errors %}<div class="errors">{{ form.model.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.finish.id_for_label }}">Finish</label>
+      {{ form.finish }}
+      {% if form.finish.errors %}<div class="errors">{{ form.finish.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.filling.id_for_label }}">Filling</label>
+      {{ form.filling }}
+      {% if form.filling.errors %}<div class="errors">{{ form.filling.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label>Age</label>
+      <div class="segmented">{{ form.age }}</div>
+      {% if form.age.errors %}<div class="errors">{{ form.age.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="row-pair">
+    <div class="field">
+      <label for="{{ form.rotation.id_for_label }}">Rotation</label>
+      {{ form.rotation }}
+      {% if form.rotation.errors %}<div class="errors">{{ form.rotation.errors|join:" · " }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <label for="{{ form.obtained_from.id_for_label }}">Obtained from</label>
+      {{ form.obtained_from }}
+      {% if form.obtained_from.errors %}<div class="errors">{{ form.obtained_from.errors|join:" · " }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="{{ form.price.id_for_label }}">Price</label>
+    <div class="money-field" style="max-width: 420px;">{{ form.price }}</div>
+    {% if form.price.errors %}<div class="errors">{{ form.price.errors|join:" · " }}</div>{% endif %}
+  </div>
+
+  <div class="field">
+    <label>Status</label>
+    <label class="switch">
+      {{ form.out }}
+      <span class="track"><span class="thumb"></span></span>
+      <span>Sold / given away</span>
+    </label>
+  </div>
+
+  <div class="field" id="soldPriceField"{% if not form.instance.out %} hidden{% endif %}>
+    <label for="{{ form.price_out.id_for_label }}">Sold-for price</label>
+    <div class="money-field" style="max-width: 420px;">{{ form.price_out }}</div>
+    {% if form.price_out.errors %}<div class="errors">{{ form.price_out.errors|join:" · " }}</div>{% endif %}
+  </div>
+
+  <script>
+    (function () {
+      var cb = document.getElementById("{{ form.out.id_for_label }}");
+      var row = document.getElementById("soldPriceField");
+      if (!cb || !row) return;
+      function sync() { if (cb.checked) row.removeAttribute("hidden"); else row.setAttribute("hidden", ""); }
+      cb.addEventListener("change", sync);
+      sync();
+    })();
+  </script>
+
+  {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors|join:" · " }}</div>{% endif %}
+
+  <div class="actions">
+    <button type="submit" class="btn primary">{{ submit_label }}</button>
+    <a href="{% url 'pens_list' %}" class="btn">Cancel</a>
+  </div>
+</form>
+
+{% if pen %}
+<section style="margin-top: 3rem;">
+  <div class="section-head">
+    <h2><em>Photos</em></h2>
+    <span class="aside">{{ photos|length }}</span>
+  </div>
+
+  {% if photos %}
+  <div class="photos-grid">
+    {% for ph in photos %}
+    <div class="photo-cell{% if forloop.first %} primary{% endif %}">
+      <a href="{% url 'pens_photo_edit' pen.pk ph.pk %}">
+        <img src="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.thumbnail.url|default:ph.image.url }}{% endif %}" alt="Photo of {{ pen }}" loading="lazy">
+      </a>
+      {% if not forloop.first %}
+      <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="ph-btn star" title="Make primary" aria-label="Make primary">★</button>
+      </form>
+      {% endif %}
+      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" style="display: inline;" onsubmit="return confirm('Delete this photo?');">
+        {% csrf_token %}
+        <button type="submit" class="ph-btn del" title="Delete photo" aria-label="Delete photo">&times;</button>
+      </form>
+      <form method="post" action="{% url 'pens_photo_rotate' pen.pk ph.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <input type="hidden" name="degrees" value="90">
+        <button type="submit" class="ph-btn rot" title="Rotate 90°" aria-label="Rotate 90°">↻</button>
+      </form>
+      {% if ph.image_styled %}
+      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" style="display: inline;" onsubmit="return confirm('Revert to original photo? The catalog shot will be discarded.');">
+        {% csrf_token %}
+        <button type="submit" class="ph-btn sparkle on" title="Revert to original" aria-label="Revert to original">✨</button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'pens_photo_enhance' pen.pk ph.pk %}" style="display: inline;" class="enhance-form">
+        {% csrf_token %}
+        <button type="submit" class="ph-btn sparkle" title="Make catalog shot (AI)" aria-label="Make catalog shot">✨</button>
+      </form>
+      {% endif %}
+      <div class="busy"><div class="busy-text"><div class="ph-spinner"></div><span>polishing…</span></div></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <script>
+    (function () {
+      document.querySelectorAll("form.enhance-form").forEach(function (f) {
+        f.addEventListener("submit", function () {
+          var cell = f.closest(".photo-cell");
+          if (cell) cell.classList.add("busy");
+        });
+      });
+    })();
+  </script>
+
+  <form method="post" action="{% url 'pens_photo_add' pen.pk %}" enctype="multipart/form-data" class="camera-upload">
+    {% csrf_token %}
+    <label class="camera-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>Take a photo / choose</span>
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()">
+    </label>
+    <span style="font-size: 0.78rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; align-self: center;">auto-uploads on select</span>
+  </form>
+</section>
+{% endif %}
+
+{% endblock %}
