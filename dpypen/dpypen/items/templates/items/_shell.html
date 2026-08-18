@@ -1,4 +1,4 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -14,15 +14,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pens">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="https://unpkg.com/htmx.org@2.0.4"
-        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
-        crossorigin="anonymous" defer></script>
-<link rel="stylesheet" href="https://unpkg.com/tom-select@2.4.3/dist/css/tom-select.default.min.css"
-      integrity="sha384-9WZVlhSSWFURxa6PKH4XvmAFEXGmxb7RSnTJAppGXULTEWfQ2O/Ot/UU2ak0cAKX"
-      crossorigin="anonymous">
-<script src="https://unpkg.com/tom-select@2.4.3/dist/js/tom-select.complete.min.js"
-        integrity="sha384-A4TlP4zHVPP9oVIQ8pTVaV6MhvBkDx1sRpmEUfAlO5e7xpodrdr6uNmUV7alXAWW"
-        crossorigin="anonymous" defer></script>
+{% comment %}
+Vendored, not fetched from unpkg. A private collection should not tell a CDN
+which pages get opened, and the site should not go half-dead when unpkg does.
+The files under items/static/items/vendor/ were checked byte-for-byte against
+the SRI hashes this tag used to carry, so they are the same builds.
+{% endcomment %}
+<script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
+<link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
+<script src="{% static 'items/vendor/tom-select-2.4.3.complete.min.js' %}" defer></script>
 <script>
 (function () {
   if ("serviceWorker" in navigator) {
@@ -1704,17 +1704,15 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
     grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
     column-gap: 2.25rem;
     align-content: start;
+    align-items: stretch;
   }
+  /* Titles wrap to two lines unevenly; without this the hairline under a
+     one-line row sits above its neighbours' and the grid looks ragged. */
+  .list > .list-row { align-self: stretch; }
   /* Each column needs its own hairline, so the eye can find the column edge. */
   .list-row { padding-right: 0.6rem; }
 
-  /* Detail pages: photo and facts side by side rather than stacked. */
-  .detail-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 2.5rem;
-    align-items: start;
-  }
+  /* (detail pages already ship their own .pen-hero grid) */
 }
 
 @media (min-width: 1200px) {
@@ -1778,6 +1776,19 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
   .list-row .title { font-size: 1.1rem; }
   .pen-thumb { width: 44px; height: 44px; }
   .pen-row { grid-template-columns: 48px 1fr !important; }
+}
+
+/* --- 5. Dashboard composition ------------------------------------------ */
+/* "<year> so far" and "Hall of fame" are each a couple of lines tall. Stacked,
+   they cost two full screens of scroll on a desk for almost no content. */
+@media (min-width: 900px) {
+  .dash-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 3rem;
+    align-items: start;
+  }
+  .dash-pair > section { margin-bottom: 0; }
 }
 </style>
 </head>
