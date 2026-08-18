@@ -22,6 +22,14 @@
   --bg-grad-1: radial-gradient(ellipse at 15% 10%, #ede2c4 0%, transparent 55%);
   --bg-grad-2: radial-gradient(ellipse at 85% 90%, #f7efd9 0%, transparent 50%);
   --card-shadow: 0 10px 30px -18px #00000055;
+  /* The "raised plate" ring used by every active chip, tab and toggle. It was
+     written out verbatim in five files; pure black reads as a smudge on the
+     dark theme, so it is a token with a value per theme. */
+  --plate-active: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  /* An ink whose colour name has no hex mapping. #333 was 1.43:1 on the dark
+     paper — effectively invisible. Unreachable with today's data (all 16
+     colours map), but it is what a newly-named colour would fall to. */
+  --ink-unknown: #6b6257;
   --plate-shadow: 0 1px 0 #fff inset, 0 4px 14px -8px #00000033;
 }
 html[data-theme="dark"] {
@@ -38,6 +46,8 @@ html[data-theme="dark"] {
   --bg-grad-1: radial-gradient(ellipse at 15% 10%, #1f2430 0%, transparent 55%);
   --bg-grad-2: radial-gradient(ellipse at 85% 90%, #181c25 0%, transparent 50%);
   --card-shadow: 0 12px 32px -16px #000000aa;
+  --plate-active: 0 0 0 1px var(--ink-line), 0 2px 8px -2px #00000099;
+  --ink-unknown: #9a8f7e;
   --plate-shadow: 0 1px 0 #ffffff0d inset, 0 4px 16px -6px #00000088;
   --noise-opacity: 0.35;
   --noise-mix: overlay;
@@ -262,7 +272,7 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 .theme-choices button.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  box-shadow: var(--plate-active);
 }
 /* Floating tooltip (used by calendar heatmap and pen-detail mini-gantt) */
 .cal-tip {
@@ -851,7 +861,7 @@ footer em { color: var(--ink-soft); }
 .app-nav a.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%);
-  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  box-shadow: var(--plate-active);
 }
 
 /* -------- Page head -------- */
@@ -1147,7 +1157,7 @@ html[data-theme="dark"] .segmented {
 .segmented label:has(input:checked) {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%);
-  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  box-shadow: var(--plate-active);
 }
 .segmented label:has(input:checked) { font-weight: 500; }
 /* Django RadioSelect wraps each choice in a <div>; tame it */

@@ -307,7 +307,7 @@
 .pi-pen-label a { color: inherit; border: none; }
 .pi-pen-label a:hover { color: var(--accent); border: none; }
 .pi-cell {
-  --c: #333;
+  --c: var(--ink-unknown);
   background: color-mix(in srgb, var(--c) calc(var(--a) * 100%), transparent);
   border: 1px solid color-mix(in srgb, var(--c) calc(var(--a) * 50%), var(--ink-line));
   border-radius: 2px;
@@ -349,7 +349,7 @@
 .gantt-controls button.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  box-shadow: var(--plate-active);
 }
 
 .gantt-scroll {
@@ -429,7 +429,7 @@
   background-color: color-mix(in srgb, var(--paper-dark) 40%, transparent);
 }
 .gantt-bar {
-  --c: #333;
+  --c: var(--ink-unknown);
   position: absolute;
   top: 2px; bottom: 2px;
   background: var(--cbg, linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 75%, #000)));
@@ -572,7 +572,7 @@
 .history-sub-nav a.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
+  box-shadow: var(--plate-active);
 }
 </style>
 
