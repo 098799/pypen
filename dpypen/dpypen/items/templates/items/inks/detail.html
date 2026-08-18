@@ -260,7 +260,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty">This ink has never been assigned to a pen yet.</div>
+  <div class="empty">This ink has never been in a pen on the record.{% if can_edit %} <a href="{% url 'usages_create' %}">Put it in one</a>.{% endif %}</div>
   {% endif %}
 </section>
 

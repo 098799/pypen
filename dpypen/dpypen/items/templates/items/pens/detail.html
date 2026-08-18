@@ -546,7 +546,7 @@
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty">No inkings recorded for this pen yet.</div>
+  <div class="empty">This pen has never been inked on the record.{% if can_edit %} <a href="{% url 'usages_create' %}">Ink it up</a>.{% endif %}</div>
   {% endif %}
 </section>
 

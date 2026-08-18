@@ -41,7 +41,7 @@
 </div>
 </section>
 {% empty %}
-<div class="empty">{% if query %}No pens match “{{ query }}”.{% else %}No pens yet.{% endif %}</div>
+<div class="empty">{% if query %}Nothing here matches “{{ query }}”. <a href="{% url 'pens_list' %}">Show every pen</a>.{% else %}No pens in the bureau yet.{% if can_edit %} <a href="{% url 'pens_create' %}">Add the first one</a>.{% endif %}{% endif %}</div>
 {% endfor %}
 </div>
 
