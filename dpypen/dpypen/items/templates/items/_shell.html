@@ -233,9 +233,10 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   color: var(--muted);
 }
 .menu-btn.menu-in-nav:hover {
+  /* An icon has no baseline to underline, so it just gains ink. */
   transform: none;
   color: var(--ink);
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: none;
   border: none;
 }
 .menu-btn.menu-in-nav svg { width: 20px; height: 20px; }
@@ -875,7 +876,20 @@ footer em { color: var(--ink-soft); }
 @media (max-width: 560px) {
   .app-nav a { padding: 0.5rem 0.75rem; font-size: 0.7rem; letter-spacing: 0.1em; }
 }
-.app-nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+/* Hover used to drop a translucent red rounded rectangle behind the label,
+   which read as a highlighter swipe in a design that otherwise speaks only in
+   hairlines and plates. It also sat awkwardly next to the active state, which
+   is a raised plate — two different colour washes, one meaning each.
+   Now: the label darkens and a rule is drawn under it, inset to the text.
+   Active stays the plate, so the two are never confused, and neither depends
+   on colour alone. */
+.app-nav a:hover {
+  color: var(--ink);
+  background:
+    linear-gradient(var(--accent), var(--accent)) no-repeat
+    50% calc(100% - 0.42rem) / calc(100% - 1.7rem) 1.5px;
+}
+.app-nav a.active:hover { background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%); }
 .app-nav a.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%);
@@ -2010,16 +2024,26 @@ live behind More.
 (function () {
   var panel = document.getElementById("menuPanel");
   var topbar = document.getElementById("topbar");
-  var menuBtns = document.querySelectorAll("[data-menu-btn]");
-  if (!panel || !menuBtns.length) return;
+  if (!panel) return;
+
+  /* Two of the four menu buttons — the corner one and the one inside the nav
+     pill — live inside #main, which hx-boost replaces wholesale on every soft
+     navigation. Holding a NodeList from page load therefore bound the buttons
+     exactly once: the desktop menu opened on a fresh load and was dead after
+     the first navigation, because .menu-in-nav (the only one a desktop user
+     can actually press) had come back as a new element with no listener.
+     So: query at use time, and delegate the click. */
+  function btns() {
+    return Array.prototype.slice.call(document.querySelectorAll("[data-menu-btn]"));
+  }
 
   function closeMenu() {
     panel.classList.remove("open");
-    menuBtns.forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
+    btns().forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
   }
   function openMenu(anchor) {
     panel.classList.add("open");
-    menuBtns.forEach(function (b) { b.setAttribute("aria-expanded", "true"); });
+    btns().forEach(function (b) { b.setAttribute("aria-expanded", "true"); });
     // Anchor panel's right edge to the anchor button's right edge,
     // and top to the anchor's bottom + 8px.
     if (anchor) {
@@ -2030,22 +2054,24 @@ live behind More.
     }
   }
 
-  menuBtns.forEach(function (menuBtn) {
-    menuBtn.addEventListener("click", function (e) {
+  /* One delegated listener on the document survives every swap. */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-menu-btn]");
+    if (btn) {
       e.stopPropagation();
-      if (panel.classList.contains("open")) closeMenu(); else openMenu(menuBtn);
-    });
+      if (panel.classList.contains("open")) closeMenu(); else openMenu(btn);
+      return;
+    }
+    if (!panel.contains(e.target)) closeMenu();
   });
   window.addEventListener("resize", function () {
     if (panel.classList.contains("open")) {
-      var visibleBtn = Array.from(menuBtns).find(function (b) {
-        return b.offsetParent !== null;
+      var visibleBtn = btns().find(function (b) {
+        var st = getComputedStyle(b);
+        return b.offsetParent !== null && +st.opacity > 0 && st.pointerEvents !== "none";
       });
       if (visibleBtn) openMenu(visibleBtn);
     }
-  });
-  document.addEventListener("click", function (e) {
-    if (!panel.contains(e.target) && !e.target.closest("[data-menu-btn]")) closeMenu();
   });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") closeMenu();
