@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}Grining Fountain Pens{% endblock %}</title>
 <meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="{% static 'items/fonts/eb-garamond-normal.woff2' %}">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="{% static 'items/fonts/cormorant-garamond-normal.woff2' %}">
+<link rel="stylesheet" href="{% static 'items/css/fonts.css' %}">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -83,8 +88,15 @@ html[data-theme="dark"] {
 html, body { margin: 0; padding: 0; }
 body {
   font-family: "EB Garamond", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
-  font-size: 19px;
-  line-height: 1.55;
+  /* EB Garamond has a markedly smaller x-height than the Georgia/Liberation
+     fallbacks this used to render in, so the old 19px now reads a size down.
+     20.5px restores the apparent size and keeps the measure honest. */
+  font-size: 20.5px;
+  line-height: 1.58;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   color: var(--ink);
   background: var(--bg-grad-1), var(--bg-grad-2), var(--paper);
   background-attachment: fixed;
@@ -1818,6 +1830,28 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
 @media (min-width: 720px) { .keys-toast { bottom: 2rem; } }
 @media (prefers-reduced-motion: reduce) {
   .keys-toast { transition: none; }
+}
+
+/* --- 7. Numerals -------------------------------------------------------- */
+/* EB Garamond ships oldstyle figures by default — the ones that hang below the
+   baseline. Beautiful in a sentence, wrong in a catalogue whose subjects are
+   called P135, M805, 149 and 823: a model number set in oldstyle reads as a
+   typesetting mistake. So the app defaults to lining figures, and opts back
+   into oldstyle only where the text is genuinely prose. */
+body {
+  font-variant-numeric: lining-nums proportional-nums;
+}
+
+/* Anything that stacks into a column aligns on tabular figures. */
+.stat .num, .tile-number, .days, .gmeta, .year-meta, .year-label,
+.list-row .meta, .cal-cell, .gantt-label, .kp-k,
+table, td, th, time, .price, .meta-m {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Running prose gets the figures the face was cut for. */
+.lede, .dash-hero p, blockquote, .quote, footer em, .empty {
+  font-variant-numeric: oldstyle-nums proportional-nums;
 }
 </style>
 </head>

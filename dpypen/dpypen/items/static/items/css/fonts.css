@@ -1,0 +1,46 @@
+/* ==========================================================================
+   Typefaces — added 2026-08-18.
+
+   Every stylesheet in this app already asked for EB Garamond, Cormorant
+   Garamond and Inter, and none of them had ever been loaded. The whole design
+   was rendering in the first fallback: Liberation Serif on Linux, Palatino or
+   Georgia elsewhere. These are the faces it was drawn for.
+
+   Variable woff2, latin subset, self-hosted (no CDN, and no telling Google
+   which pen pages get opened). 224KB for all five files, cached immutably.
+   ========================================================================== */
+@font-face {
+  font-family: "EB Garamond";
+  src: url("../fonts/eb-garamond-normal.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("../fonts/eb-garamond-italic.woff2") format("woff2-variations");
+  font-weight: 400 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../fonts/cormorant-garamond-normal.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("../fonts/cormorant-garamond-italic.woff2") format("woff2-variations");
+  font-weight: 300 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-normal.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
