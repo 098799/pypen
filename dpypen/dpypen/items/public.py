@@ -150,7 +150,7 @@ def dashboard(request):
 
     total_pens = Pen.objects.count()
     total_inks = Ink.objects.count()
-    total_usages = Usage.objects.count()
+    total_usages = len(usages)   # already materialised above
     total_brands = Brand.objects.count()
 
     first_usage = min((u.begin for u in usages), default=None)
@@ -252,17 +252,6 @@ def dashboard(request):
             "hex": INK_COLOR_HEX.get(ink.color, "#333"),
             "bg": ink.swatch_bg,
         }
-
-    most_inked_pen = None
-    if pen_counts:
-        pid, count = max(pen_counts.items(), key=lambda kv: kv[1])
-        pen = Pen.objects.select_related("brand").get(pk=pid)
-        most_inked_pen = {"pen": str(pen), "inkings": count}
-
-    brand_counts = {}
-    for p in Pen.objects.select_related("brand"):
-        brand_counts[p.brand.name] = brand_counts.get(p.brand.name, 0) + 1
-    top_brands = sorted(brand_counts.items(), key=lambda kv: kv[1], reverse=True)[:5]
 
     year_usages = [u for u in usages if (u.end or today).year == year or u.begin.year == year]
     ytd_inkings = len(year_usages)
