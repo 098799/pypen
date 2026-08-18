@@ -1748,9 +1748,85 @@ table, td, th, time, .price, .meta-m {
 .lede, .dash-hero p, blockquote, .quote, footer em, .empty {
   font-variant-numeric: oldstyle-nums proportional-nums;
 }
+
+/* --- 8. Selection ------------------------------------------------------- */
+/* Dragging over text on a site about fountain pens should look like ink
+   sitting in paper, not like a browser default highlight. A wash of the
+   accent, not a block of it, so the letterforms stay readable through it. */
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-theme="dark"] ::selection {
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+/* --- 9. Focus ----------------------------------------------------------- */
+/* The app now ships link hints and a full keyboard layer, so where the focus
+   sits has to be legible at a glance. One treatment everywhere, only for
+   keyboard users, and it follows each element's own corner radius rather than
+   drawing a rectangle around a pill. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+:where(.app-nav a, .tabbar a, .tabbar button, .jumpbar a, .menu-btn,
+       .user-nav a, .btn, .fb-toggle, .vt-btn):focus-visible {
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+.list-row:focus-within {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 70%);
+}
+/* Never leave someone stranded with no visible focus because a rule above
+   removed it. */
+:focus-visible { outline-color: var(--accent); }
+
+/* Skip link: the first tab stop on every page, invisible until it is wanted. */
+.skip-link {
+  position: fixed;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 90;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  box-shadow: var(--card-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  transform: translateY(-150%);
+  opacity: 0;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* --- 10. Reduced motion ------------------------------------------------- */
+/* Smooth scrolling, the card lifts, the HUD and the toast all animate. Someone
+   who has asked their system to stop that should get a still page, not a
+   slower one. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto; }
+}
 </style>
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
+<a class="skip-link" href="#main">Skip to content</a>
+
 
 <div class="topbar tucked" id="topbar">
   <span></span>
