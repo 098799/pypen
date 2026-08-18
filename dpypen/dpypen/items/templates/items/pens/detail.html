@@ -29,7 +29,11 @@
 
 .pen-photo-main {
   position: relative;
-  aspect-ratio: 1/1;
+  /* A fountain pen is a long horizontal object and every photograph here is
+     landscape, so a square frame padded it top and bottom with empty plate —
+     615px of panel for 435px of photograph — and left the facts column beside
+     it looking half-finished. Frame the subject in the shape the subject is. */
+  aspect-ratio: 4/3;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--ink-line);
