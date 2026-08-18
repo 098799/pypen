@@ -109,7 +109,10 @@ def _overview_data():
 
 def _calendar_data():
     today, start_year, latest_year = _bounds()
-    usages = list(Usage.objects.select_related("ink", "pen__brand").only(
+    # ink__brand, not just ink: str(usage.ink) reads self.brand.name, so
+    # selecting the ink without its brand fired one query per usage row — 563
+    # of them on every cold render of this page.
+    usages = list(Usage.objects.select_related("ink__brand", "pen__brand").only(
         "begin", "end", "ink__color", "ink__brand__name", "ink__name", "ink__line", "ink__volume",
         "pen__model", "pen__brand__name", "pen__finish"
     ))
@@ -173,7 +176,9 @@ def _gantt_data():
     today, start_year, latest_year = _bounds()
     pens = list(Pen.objects.select_related("brand", "rotation")
                 .order_by("-rotation__in_use", "rotation__priority", "brand__name", "model"))
-    usages = list(Usage.objects.select_related("pen", "ink__brand", "nib"))
+    # pen__brand for the same reason as the calendar above: str(usage.pen)
+    # reads self.brand.name.
+    usages = list(Usage.objects.select_related("pen__brand", "ink__brand", "nib"))
     by_pen: dict[int, list[Usage]] = defaultdict(list)
     for u in usages: by_pen[u.pen_id].append(u)
 
