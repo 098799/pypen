@@ -343,86 +343,8 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 }
 
 /* Shortcut help modal */
-.kbd-overlay {
-  position: fixed; inset: 0; z-index: 60;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(3px);
-  display: none;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 4rem 1rem 1rem;
-  overflow-y: auto;
-}
-.kbd-overlay.open { display: flex; }
-.kbd-modal {
-  width: 100%;
-  max-width: 640px;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 8px;
-  box-shadow: 0 30px 80px -10px rgba(0,0,0,0.5);
-  padding: 1.5rem;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-.kbd-modal h2 {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.8rem;
-  font-weight: 500;
-  margin: 0 0 0.4rem;
-  color: var(--ink);
-}
-.kbd-modal h2 em { font-style: italic; color: var(--accent); font-weight: 400; }
-.kbd-modal input.kbd-filter {
-  width: 100%;
-  padding: 0.65rem 0.9rem;
-  background: var(--chip-top);
-  color: var(--ink);
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  font-family: "EB Garamond", Georgia, serif;
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
-  min-height: 42px;
-}
-.kbd-modal .kbd-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  padding-right: 0.2rem;
-}
-.kbd-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.4rem 0.5rem;
-  border-bottom: 1px dashed color-mix(in srgb, var(--ink-line) 50%, transparent);
-  font-size: 0.92rem;
-  cursor: pointer;
-  border-radius: 3px;
-}
-.kbd-row:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.kbd-row.kbd-active {
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-}
-.kbd-row.kbd-active .label { color: var(--ink); }
-.kbd-row .label { color: var(--ink-soft); }
-.kbd-row .keys { display: inline-flex; gap: 0.25rem; flex-wrap: wrap; }
-.kbd-row kbd {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 0.72rem;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid var(--ink-line);
-  border-bottom-width: 2px;
-  border-radius: 4px;
-  background: var(--chip-top);
-  color: var(--ink);
-  min-width: 20px;
-  text-align: center;
-  line-height: 1;
-}
+
+
 
 .menu-item {
   display: inline-flex;
@@ -1804,33 +1726,6 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
 }
 
 /* --- 6. Key-mode toast -------------------------------------------------- */
-.keys-toast {
-  position: fixed;
-  left: 50%;
-  bottom: calc(84px + env(safe-area-inset-bottom));
-  transform: translate(-50%, 8px);
-  z-index: 40;
-  padding: 0.5rem 0.95rem;
-  border-radius: 999px;
-  border: 1px solid var(--ink-line);
-  background: color-mix(in srgb, var(--paper) 94%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: var(--card-shadow);
-  font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-.keys-toast.show { opacity: 1; transform: translate(-50%, 0); }
-@media (min-width: 720px) { .keys-toast { bottom: 2rem; } }
-@media (prefers-reduced-motion: reduce) {
-  .keys-toast { transition: none; }
-}
 
 /* --- 7. Numerals -------------------------------------------------------- */
 /* EB Garamond ships oldstyle figures by default — the ones that hang below the
@@ -2006,366 +1901,8 @@ live behind More.
 </nav>
 {% endif %}
 
-<div class="kbd-overlay" id="kbdOverlay" role="dialog" aria-modal="true" aria-labelledby="kbdTitle">
-  <div class="kbd-modal">
-    <h2 id="kbdTitle">Keyboard <em>shortcuts</em></h2>
-    <input type="search" class="kbd-filter" id="kbdFilter" placeholder="Filter shortcuts…" autocomplete="off">
-    <div class="kbd-list" id="kbdList"></div>
-  </div>
 </div>
 
-<script>
-(function () {
-  /* Bindings follow ~/dotfiles/vimium-options.json rather than inventing a
-     second dialect. Bare a / e / f / d used to be app commands here, but
-     Vimium maps all of them (a and e to bookmarks and link hints, f to
-     hints), so they never reached the page when the extension was running —
-     and stole keys from it when it was not. Everything app-specific now
-     hangs off `m`, the one key his config unmaps. */
-  var SHORTCUTS = [
-    {label: "Focus search", keys: ["/"], run: function () { triggerKey("/"); }},
-    {label: "This help menu", keys: ["?"]},
-    {label: "Close modal / back", keys: ["Esc"]},
-    {label: "Top of page", keys: ["g", "g"], run: function () { window.scrollTo({top: 0, behavior: "smooth"}); }},
-    {label: "Bottom of page", keys: ["G"], run: function () { window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"}); }},
-    {label: "Scroll down (paragraph) / next category in list", keys: ["k"]},
-    {label: "Scroll up (paragraph) / previous category in list", keys: ["l"]},
-    {label: "Scroll down (line) / next item in list", keys: ["i"]},
-    {label: "Scroll up (line) / previous item in list", keys: ["o"]},
-    {label: "Open focused list item", keys: ["Enter"]},
-    {label: "Previous item in context", keys: ["j"]},
-    {label: "Next item in context", keys: [";"]},
-    {label: "Dashboard", keys: ["m", "d"], href: "/dashboard/"},
-    {label: "History", keys: ["m", "h"], href: "/history/"},
-    {label: "Records", keys: ["m", "r"], href: "/records/"},
-    {label: "Inkings", keys: ["m", "u"], href: "/usages/"},
-    {label: "Pens", keys: ["m", "p"], href: "/pens/"},
-    {label: "Inks", keys: ["m", "i"], href: "/inks/"},
-    {label: "Import", keys: ["m", "n"], href: "/import/"},
-    {label: "Previous nav page", keys: ["m", "["], run: function () { navApp(-1); }},
-    {label: "Next nav page", keys: ["m", "]"], run: function () { navApp(1); }},
-    {label: "Edit current item", keys: ["m", "e"], run: function () { clickKbd("edit"); }},
-    {label: "New item (context)", keys: ["m", "a"], run: function () { clickKbd("new"); }},
-    {label: "Delete current item", keys: ["m", "x"], run: function () { clickKbd("delete"); }},
-    {label: "Toggle theme", keys: ["m", "t"], run: function () { toggleTheme(); }},
-    {label: "Cycle key mode (full / leader / off)", keys: ["m", "m"], run: function () { window.__keysCycleMode(); }},
-  ];
-
-  var overlay = document.getElementById("kbdOverlay");
-  var list = document.getElementById("kbdList");
-  var filter = document.getElementById("kbdFilter");
-  var filtered = SHORTCUTS.slice();
-
-  function renderList(q) {
-    q = (q || "").trim().toLowerCase();
-    filtered = SHORTCUTS.filter(function (s) {
-      return !q || s.label.toLowerCase().indexOf(q) !== -1 || s.keys.join("").toLowerCase().indexOf(q) !== -1;
-    });
-    list.innerHTML = filtered.map(function (s, i) {
-      return '<div class="kbd-row' + (i === 0 ? ' kbd-active' : '') + '" data-idx="' + i + '"><span class="label">' + s.label + '</span><span class="keys">' +
-        s.keys.map(function (k) { return '<kbd>' + k + '</kbd>'; }).join('') + '</span></div>';
-    }).join('');
-  }
-  renderList("");
-  filter && filter.addEventListener("input", function () { renderList(filter.value); });
-
-  function runShortcut(s) {
-    if (!s) return;
-    closeHelp();
-    if (s.href) { window.location.href = s.href; return; }
-    if (s.run) { setTimeout(s.run, 20); return; }
-  }
-
-  filter && filter.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      runShortcut(filtered[0]);
-    }
-  });
-  list.addEventListener("click", function (e) {
-    var row = e.target.closest(".kbd-row");
-    if (!row) return;
-    var idx = parseInt(row.getAttribute("data-idx"), 10);
-    runShortcut(filtered[idx]);
-  });
-
-  function openHelp() {
-    overlay.classList.add("open");
-    renderList("");
-    filter.value = "";
-    setTimeout(function () { filter.focus(); }, 50);
-  }
-  function closeHelp() {
-    overlay.classList.remove("open");
-  }
-  overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) closeHelp();
-  });
-
-  function triggerKey(key) {
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true }));
-  }
-
-  function isTyping(el) {
-    if (!el) return false;
-    var tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
-  }
-
-  var lastKey = null;
-  var lastKeyTime = 0;
-
-  /* Three modes, remembered per browser:
-       full   — the whole layer (browser with no Vimium)
-       leader — only m-…, so Vimium keeps every other key
-       off    — nothing
-     Vimium cannot be detected reliably, so this is a stored choice. */
-  var MODE_KEY = "pypenKeys";
-  var MODES = ["full", "leader", "off"];
-  window.__keysMode = function () {
-    try { return localStorage.getItem(MODE_KEY) || "full"; }
-    catch (e) { return "full"; }
-  };
-  window.__keysCycleMode = function () {
-    var cur = window.__keysMode();
-    var next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
-    try { localStorage.setItem(MODE_KEY, next); } catch (e) {}
-    var t = document.getElementById("keysToast") || (function () {
-      var d = document.createElement("div");
-      d.id = "keysToast"; d.className = "keys-toast";
-      document.body.appendChild(d); return d;
-    })();
-    t.textContent = "keys: " + next;
-    t.classList.add("show");
-    clearTimeout(t._h);
-    t._h = setTimeout(function () { t.classList.remove("show"); }, 1400);
-    return next;
-  };
-
-  /* Pages with their own key handling (the walls, any future quiz) stand down
-     while the app layer owns the keyboard. */
-  window.__keysBusy = function () {
-    var ov = document.getElementById("kbdOverlay");
-    var panel = document.getElementById("menuPanel");
-    return !!((ov && ov.classList.contains("open")) ||
-              (panel && panel.classList.contains("open")) ||
-              (lastKey === "m"));
-  };
-
-  document.addEventListener("keydown", function (e) {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    var active = document.activeElement;
-
-    // Esc: close help → blur input → history.back (if safe)
-    if (e.key === "Escape") {
-      if (overlay.classList.contains("open")) { closeHelp(); e.preventDefault(); return; }
-      if (isTyping(active) && active.blur) { active.blur(); e.preventDefault(); return; }
-      // Last resort: go back if we have history from same origin
-      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
-        e.preventDefault();
-        history.back();
-      }
-      return;
-    }
-
-    if (isTyping(active)) return;
-
-    // Modes: full (everything), leader (only m-…, for the browser where
-    // Vimium already drives), off. Vimium is not reliably detectable, so this
-    // is a choice, not a guess. `m m` cycles it.
-    var MODE = window.__keysMode();
-    if (MODE === "off") return;
-
-    var now = Date.now();
-    var inLeader = (lastKey === "m" && now - lastKeyTime < 900);
-
-    // `m` opens the app's own command space and can never collide with the
-    // extension, because his config unmaps it.
-    if (!inLeader && e.key === "m") {
-      lastKey = "m"; lastKeyTime = now;
-      e.preventDefault();
-      return;
-    }
-    if (inLeader) {
-      lastKey = null;
-      e.preventDefault();
-      if (e.key === "m") { window.__keysCycleMode(); return; }
-      if (e.key === "?") { openHelp(); return; }
-      if (e.key === "t") { toggleTheme(); return; }
-      if (e.key === "e") { clickKbd("edit"); return; }
-      if (e.key === "a") { clickKbd("new"); return; }
-      if (e.key === "x") { clickKbd("delete"); return; }
-      if (e.key === "[") { navApp(-1); return; }
-      if (e.key === "]") { navApp(1); return; }
-      var navMap = { d: "/dashboard/", h: "/history/", r: "/records/",
-                     u: "/usages/", p: "/pens/", i: "/inks/", n: "/import/" };
-      var href = navMap[e.key];
-      if (href) {
-        var links = Array.prototype.slice.call(document.querySelectorAll(".app-nav a[href], .tabbar a[href]"));
-        var hit = links.find(function (a) { return a.getAttribute("href") === href; });
-        if (hit) hit.click(); else window.location.href = href;
-      }
-      return;
-    }
-
-    // Below here is the uniform layer, and it stays out of Vimium's way.
-    if (MODE === "leader") return;
-
-    // Slash focuses search: prefer an in-page search input (inks/pens list),
-    // otherwise jump to /search/ page.
-    if (e.key === "/") {
-      e.preventDefault();
-      var inPage = document.getElementById("inkQ") || document.getElementById("penQ") || document.getElementById("searchQ");
-      if (inPage && inPage.offsetParent !== null) {
-        inPage.focus();
-        inPage.select && inPage.select();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } else {
-        window.location.href = "/search/";
-      }
-      return;
-    }
-
-    if (e.key === "?") { e.preventDefault(); openHelp(); return; }
-    if (e.key === "G") { e.preventDefault(); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); return; }
-
-    // gg = top. Vimium's own binding, kept identical.
-    if (e.key === "g") {
-      if (lastKey === "g" && now - lastKeyTime < 700) {
-        e.preventDefault();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        lastKey = null; return;
-      }
-      lastKey = "g"; lastKeyTime = now;
-      e.preventDefault();
-      return;
-    }
-    lastKey = null;
-
-    // List navigation: when a [data-listnav] container is on the page,
-    // i/o move between items, k/l jump between groups, Enter opens.
-    if (tryListNav(e.key)) { e.preventDefault(); return; }
-
-    // Right-hand vertical scroll (k/l paragraph, i/o line) — his scroll keys.
-    var scrollPara = Math.max(600, Math.round(window.innerHeight * 0.8)), scrollLine = 120;
-    var handled = true;
-    switch (e.key) {
-      case "k": window.scrollBy({ top: scrollPara, behavior: "smooth" }); break;
-      case "l": window.scrollBy({ top: -scrollPara, behavior: "smooth" }); break;
-      case "i": window.scrollBy({ top: scrollLine, behavior: "smooth" }); break;
-      case "o": window.scrollBy({ top: -scrollLine, behavior: "smooth" }); break;
-      case "j": document.dispatchEvent(new CustomEvent("pypen:prev")); break;
-      case ";": document.dispatchEvent(new CustomEvent("pypen:next")); break;
-      default: handled = false;
-    }
-    if (handled) e.preventDefault();
-  });
-
-  function clickKbd(kind) {
-    var el = document.querySelector('[data-kbd="' + kind + '"]');
-    if (!el) return;
-    if (el.tagName === "BUTTON" && el.closest("form")) {
-      el.click();
-    } else {
-      el.click();
-    }
-  }
-
-  function listNavRoot() {
-    var roots = Array.from(document.querySelectorAll("[data-listnav]"));
-    return roots.find(function (r) { return r.offsetParent !== null; }) || null;
-  }
-  function listNavItems(root) {
-    return Array.from(root.querySelectorAll("[data-listnav-item]"));
-  }
-  function listNavGroups(root) {
-    return Array.from(root.querySelectorAll("[data-listnav-group]"));
-  }
-  function clearListFocus(root) {
-    listNavItems(root).forEach(function (n) { n.classList.remove("kbd-focused"); });
-  }
-  function focusListItem(root, item) {
-    if (!item) return;
-    clearListFocus(root);
-    item.classList.add("kbd-focused");
-    var rect = item.getBoundingClientRect();
-    var pad = 80;
-    if (rect.top < pad || rect.bottom > window.innerHeight - pad) {
-      item.scrollIntoView({ block: "center", behavior: "smooth" });
-    }
-  }
-  function tryListNav(key) {
-    if (key !== "i" && key !== "o" && key !== "k" && key !== "l" && key !== "Enter") return false;
-    var root = listNavRoot();
-    if (!root) return false;
-    var items = listNavItems(root);
-    if (!items.length) return false;
-    var groups = listNavGroups(root);
-    var focused = root.querySelector("[data-listnav-item].kbd-focused");
-    var idx = focused ? items.indexOf(focused) : -1;
-
-    if (key === "Enter") {
-      if (!focused) { focusListItem(root, items[0]); return true; }
-      var link = focused.querySelector("a[href]:not([data-kbd])");
-      if (link) link.click();
-      return true;
-    }
-    if (key === "i") {
-      focusListItem(root, idx < 0 ? items[0] : items[Math.min(items.length - 1, idx + 1)]);
-      return true;
-    }
-    if (key === "o") {
-      focusListItem(root, idx <= 0 ? items[0] : items[idx - 1]);
-      return true;
-    }
-    // Group jumps
-    if (!groups.length) return false;
-    var currentGroupIdx = -1;
-    if (focused) {
-      currentGroupIdx = groups.findIndex(function (g) { return g.contains(focused); });
-    }
-    if (key === "k") {
-      var nextG = groups[Math.min(groups.length - 1, currentGroupIdx + 1)];
-      if (nextG) {
-        var first = nextG.querySelector("[data-listnav-item]");
-        if (first) focusListItem(root, first);
-      }
-      return true;
-    }
-    if (key === "l") {
-      if (currentGroupIdx <= 0) {
-        var first0 = groups[0] && groups[0].querySelector("[data-listnav-item]");
-        if (first0) focusListItem(root, first0);
-        return true;
-      }
-      var prevG = groups[currentGroupIdx - 1];
-      var firstP = prevG && prevG.querySelector("[data-listnav-item]");
-      if (firstP) focusListItem(root, firstP);
-      return true;
-    }
-    return false;
-  }
-
-  function toggleTheme() {
-    var current = document.documentElement.getAttribute("data-theme") || "light";
-    var next = current === "light" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", next);
-    try { localStorage.setItem("theme", next); } catch (e) {}
-  }
-
-  function navLinks() {
-    return Array.from(document.querySelectorAll(".app-nav a[href]"));
-  }
-  function navApp(dir) {
-    var links = navLinks();
-    if (!links.length) return;
-    var idx = links.findIndex(function (a) { return a.classList.contains("active"); });
-    if (idx === -1) idx = 0;
-    var next = Math.max(0, Math.min(links.length - 1, idx + dir));
-    if (next !== idx) links[next].click();
-  }
-})();
-</script>
 
 <script>
 (function () {
@@ -2572,6 +2109,24 @@ live behind More.
 })();
 </script>
 <script>
+/* The keyboard layer navigates through this rather than location.href, so a
+   jump keeps hx-boost's swap (and with it the scroll position and the tab
+   state) instead of doing a full page load. */
+window.__go = function (url, push) {
+  if (window.htmx && typeof htmx.ajax === "function") {
+    htmx.ajax("GET", url, {target: "#main", select: "#main", swap: "outerHTML"})
+      .then(function () {
+        if (push !== false && location.pathname !== url) history.pushState(null, "", url);
+        document.body.dispatchEvent(new CustomEvent("htmx:afterSettle"));
+      })
+      .catch(function () { location.href = url; });
+    return;
+  }
+  location.href = url;
+};
+</script>
+{% include "items/_keys.html" %}
+<script>
 /* Keyboard-mode chooser. "m only" is the setting for a browser where Vimium is
    already driving: the app keeps its own m-… commands and hands back every
    other key. Vimium is not detectable, so this has to be a choice. */
@@ -2589,7 +2144,7 @@ live behind More.
   }
   btns.forEach(function (b) {
     b.addEventListener("click", function () {
-      try { localStorage.setItem("pypenKeys", b.getAttribute("data-keys")); } catch (e) {}
+      if (window.__keysSetMode) window.__keysSetMode(b.getAttribute("data-keys"));
       paint();
     });
   });
