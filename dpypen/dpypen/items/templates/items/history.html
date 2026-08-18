@@ -9,7 +9,7 @@
 }
 .year-row {
   display: grid;
-  grid-template-columns: 54px 1fr 140px;
+  grid-template-columns: 54px 1fr minmax(190px, auto);
   gap: 0.8rem;
   align-items: center;
   font-size: 0.85rem;
@@ -46,10 +46,25 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 560px) {
-  .year-row { grid-template-columns: 44px 1fr 80px; gap: 0.5rem; font-size: 0.78rem; }
-  .year-row .year-label { font-size: 1rem; }
-  .year-meta { font-size: 0.64rem; letter-spacing: 0.05em; }
+@media (max-width: 719px) {
+  /* Squeezed into an 80px column, "3010d · 64 pens · 64 inks" wrapped to three
+     lines and crushed the bar it was describing. Give the meta its own line. */
+  .year-row {
+    grid-template-columns: 44px 1fr;
+    grid-template-areas: "label bar" "meta meta";
+    gap: 0.15rem 0.6rem;
+    font-size: 0.78rem;
+    padding: 0.45rem 0;
+  }
+  .year-row .year-label { grid-area: label; font-size: 1rem; }
+  .year-row .year-bar-track { grid-area: bar; }
+  .year-meta {
+    grid-area: meta;
+    text-align: left;
+    padding-left: calc(44px + 0.6rem);
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+  }
 }
 
 .calendar {

@@ -32,7 +32,15 @@ if [[ -n "$DRY" ]]; then
   exit 0
 fi
 
-ssh "$REMOTE" 'systemctl restart pypen && sleep 2 && systemctl is-active pypen'
+# Vendored JS/CSS lives in the app's static dir, so it has to be collected
+# into STATIC_ROOT (whitenoise serves from there) before the restart.
+# Vendored JS/CSS lives in the app's static dir, so it has to be collected
+# into STATIC_ROOT (whitenoise serves from there) before the restart.
+# settings.py load_dotenv()s /root/pypen/secrets itself, so no sourcing here —
+# and that file is not shell-safe anyway (unquoted $ and parens in the key).
+ssh "$REMOTE" 'cd /root/pypen/dpypen \
+  && /root/pypen/.venv/bin/python manage.py collectstatic --noinput | tail -1 \
+  && systemctl restart pypen && sleep 2 && systemctl is-active pypen'
 code=$(curl -s -o /dev/null -w '%{http_code}' -m 15 https://pen.grining.eu/)
 echo "pen.grining.eu -> $code"
 [[ "$code" == "200" ]] || { echo "DEPLOY LOOKS BROKEN"; exit 1; }
