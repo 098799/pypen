@@ -177,7 +177,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# Served straight off disk by nginx in production (see the pen.grining.eu
+# vhost). It has to live outside /root, which is 0700 and which www-data
+# therefore cannot traverse. Falls back to the in-tree path for local work.
+STATIC_ROOT = os.getenv("PYPEN_STATIC_ROOT") or str(BASE_DIR / "staticfiles")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT") or str(BASE_DIR / "media")
