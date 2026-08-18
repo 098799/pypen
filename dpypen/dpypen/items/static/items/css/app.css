@@ -1246,6 +1246,11 @@ html[data-theme="dark"] .switch {
   border-bottom: 1px solid var(--ink-line);
 }
 .list-row .swatch {
+  /* Centred in the row, the dot drifted to the middle of a two-line entry and
+     read as belonging to the meta line rather than the title. Pin it to the
+     first line, where the ink's name is. */
+  align-self: start;
+  margin-top: 0.42em;
   width: 14px; height: 14px; border-radius: 50%;
   box-shadow: inset -2px -2px 4px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.2);
 }
@@ -1495,12 +1500,17 @@ html, body { overflow-x: clip; }
 /* Long prose is unreadable at 1300px. Cap the measure, not the container. */
 .lede, .prose, .empty, .dash-hero p { max-width: 74ch; }
 
-/* Device-specific wording: "tap" must never appear on a desktop. */
-.t-touch { display: inline; }
-.t-desk  { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  .t-touch { display: none; }
-  .t-desk  { display: inline; }
+/* Device-specific wording: "tap" must never appear on a desktop.
+   Inverted from the kit's (hover:hover) and (pointer:fine) test, which fails
+   open: anything reporting pointer:none — headless browsers, some assistive
+   setups, TV browsers — falls to the default, and the default was "Tap". Ask
+   for a coarse pointer instead, so only something that really is a touchscreen
+   gets touch wording and everything unknown gets the desktop word. */
+.t-touch { display: none; }
+.t-desk  { display: inline; }
+@media (pointer: coarse) {
+  .t-touch { display: inline; }
+  .t-desk  { display: none; }
 }
 
 /* Vertical rhythm scaled to the viewport rather than fixed at phone size. */
