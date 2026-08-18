@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}Grining Fountain Pens{% endblock %}</title>
 <meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
 <link rel="manifest" href="/manifest.json">
@@ -1568,9 +1568,220 @@ html[data-theme="dark"] .switch {
   border-radius: 4px;
 }
 
+
+/* ==========================================================================
+   Responsive layer — added 2026-08-18.
+
+   Before this, one layout served every screen: /pens/ was 12403px tall at
+   1440px and 12519px at 390px, i.e. 3.7x the horizontal room bought nothing.
+   The rules below give each end of the range its own shape — a bottom tab bar
+   and single-column reading on the phone, multi-column density on the desk.
+   Conventions follow ~/dotfiles/webkit/README.md section 3.
+   ========================================================================== */
+
+/* --- 0. Trapdoors the playbook names explicitly ------------------------- */
+
+/* A fixed-content flex header caused body-wide horizontal scroll on the
+   phone; clip it at the root and let headings shrink instead. */
+html, body { overflow-x: clip; }
+.page-head h1, .section-head h1, .section-head h2 { min-width: 0; overflow-wrap: break-word; }
+
+/* Long prose is unreadable at 1300px. Cap the measure, not the container. */
+.lede, .prose, .empty, .dash-hero p { max-width: 74ch; }
+
+/* Device-specific wording: "tap" must never appear on a desktop. */
+.t-touch { display: inline; }
+.t-desk  { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .t-touch { display: none; }
+  .t-desk  { display: inline; }
+}
+
+/* Vertical rhythm scaled to the viewport rather than fixed at phone size. */
+section { margin-bottom: clamp(2.25rem, 5.5vw, 4.5rem); }
+main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
+
+/* --- 1. Phone: bottom tab bar ------------------------------------------- */
+
+.tabbar { display: none; }
+
+@media (max-width: 719px) {
+  /* The pill nav overflowed its own container here — "Inkings" onwards sat
+     off-screen with no affordance saying so. Replaced by the tab bar. */
+  .app-nav { display: none; }
+
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--ink-line);
+    box-shadow: 0 -6px 24px -18px #00000066;
+  }
+  .tabbar a, .tabbar button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    min-height: 54px;
+    padding: 0.45rem 0.2rem 0.5rem;
+    border: none;
+    background: none;
+    color: var(--muted);
+    font-family: "Inter", sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tabbar svg { width: 21px; height: 21px; display: block; }
+  .tabbar a.active { color: var(--accent); }
+  .tabbar a.active svg { stroke-width: 2.1; }
+  /* Colour is never the sole carrier: the active tab also gets a rule. */
+  .tabbar a.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 26px; height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--accent);
+  }
+  .tabbar a { position: relative; }
+
+  /* Clear the bar so the last row is never trapped under it. */
+  main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+  /* The floating corner menu duplicated the tab bar's More button. */
+  .menu-corner { display: none; }
+
+  /* Horizontal strips scroll inside themselves, never the page. */
+  .filter-bar, .view-toggle, .chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
+  .filter-bar > * { flex-shrink: 0; }
+
+  /* Group headings stay visible while scrolling a long list. */
+  .group-head {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin-top: 1.5rem;
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* --- 2. Desk: use the width -------------------------------------------- */
+
+@media (min-width: 720px) {
+  /* Nav follows the page instead of scrolling away at the top. */
+  .app-nav {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 12;
+  }
+}
+
+@media (min-width: 900px) {
+  /* The single change that collapses those 12000px pages: rows flow into
+     columns. auto-fill (not auto-fit) keeps a short list left-aligned
+     instead of stretching two entries across the whole window. */
+  .list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    column-gap: 2.25rem;
+    align-content: start;
+  }
+  /* Each column needs its own hairline, so the eye can find the column edge. */
+  .list-row { padding-right: 0.6rem; }
+
+  /* Detail pages: photo and facts side by side rather than stacked. */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+}
+
+@media (min-width: 1200px) {
+  .list { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+}
+
+/* Guests see no Edit/Delete column, so their rows pack tighter. */
+@media (min-width: 900px) {
+  body:not(.can-edit) .list {
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  }
+}
+
+/* --- 3. Contrast ------------------------------------------------------- */
+/* #4d5d77-class greys fail AA on these panels; --muted is checked. Anything
+   dimmer than --ink-soft on --paper-dark needs re-checking before use. */
+
+/* --- 4. Group jump strip ------------------------------------------------ */
+.jumpbar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 1.25rem;
+  padding: 0.5rem 0.15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--ink-line);
+}
+.jumpbar::-webkit-scrollbar { display: none; }
+.jumpbar a {
+  flex: 0 0 auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--chip-top) 70%, transparent);
+}
+.jumpbar a:hover { color: var(--ink); border-color: var(--accent); }
+/* Active chip carries weight and a ring, not colour alone. */
+.jumpbar a.on {
+  color: var(--ink);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* On a phone the strip sits under the sticky group heads, so give them room. */
+@media (max-width: 719px) {
+  .group-head { top: 46px; }
+  /* 99px per pen was mostly padding. */
+  .list-row { padding: 0.7rem 0.2rem; gap: 0.75rem; }
+  .list-row .title { font-size: 1.1rem; }
+  .pen-thumb { width: 44px; height: 44px; }
+  .pen-row { grid-template-columns: 48px 1fr !important; }
+}
 </style>
 </head>
-<body hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
+<body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
 
 <div class="topbar tucked" id="topbar">
   <span></span>
@@ -1668,6 +1879,49 @@ html[data-theme="dark"] .switch {
 {% endif %}
 {% block content %}{% endblock %}
 </main>
+
+{% if is_owner or is_guest %}
+{% comment %}
+Phone navigation. The pill nav above overflows below ~720px, so this
+replaces it there (see the responsive layer in the stylesheet). Five
+destinations is the ceiling for a thumb; History, Records and Import
+live behind More.
+{% endcomment %}
+<nav class="tabbar" aria-label="Primary">
+  <a href="{% url 'dashboard' %}"{% if nav == 'dashboard' %} class="active" aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path>
+    </svg>
+    <span>Desk</span>
+  </a>
+  <a href="{% url 'usages_list' %}"{% if nav == 'usages' %} class="active" aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3c3.5 4 5.5 6.8 5.5 9.5a5.5 5.5 0 0 1-11 0C6.5 9.8 8.5 7 12 3z"></path>
+    </svg>
+    <span>Inkings</span>
+  </a>
+  <a href="{% url 'pens_list' %}"{% if nav == 'pens' %} class="active" aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path>
+      <path d="M14.5 6.5l3 3"></path>
+    </svg>
+    <span>Pens</span>
+  </a>
+  <a href="{% url 'inks_list' %}"{% if nav == 'inks' %} class="active" aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7 3h10v3.2a2 2 0 0 0 .5 1.3l1.2 1.4A4 4 0 0 1 19.7 12v6a3 3 0 0 1-3 3H7.3a3 3 0 0 1-3-3v-6a4 4 0 0 1 1-2.1l1.2-1.4A2 2 0 0 0 7 6.2z"></path>
+      <path d="M4.4 13.5h15.2"></path>
+    </svg>
+    <span>Inks</span>
+  </a>
+  <button type="button" aria-label="More" aria-controls="menuPanel" data-menu-btn>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+    <span>More</span>
+  </button>
+</nav>
+{% endif %}
 
 <div class="kbd-overlay" id="kbdOverlay" role="dialog" aria-modal="true" aria-labelledby="kbdTitle">
   <div class="kbd-modal">
@@ -2073,6 +2327,107 @@ html[data-theme="dark"] .switch {
     });
   });
   refreshTheme();
+})();
+</script>
+<script>
+/* The tab bar lives outside #main, which hx-boost swaps, so its active state
+   does not come back with the new document the way .app-nav's does. Re-derive
+   it from the URL after every swap. */
+(function () {
+  var bar = document.querySelector(".tabbar");
+  if (!bar) return;
+  var links = Array.prototype.slice.call(bar.querySelectorAll("a[href]"));
+
+  function sync() {
+    var here = location.pathname;
+    var best = null;
+    links.forEach(function (a) {
+      var href = a.getAttribute("href");
+      // Longest matching prefix wins, so /pens/189/ lights up Pens and the
+      // dashboard's "/" never claims every page.
+      if (here === href || (href !== "/" && here.indexOf(href) === 0)) {
+        if (!best || href.length > best.getAttribute("href").length) best = a;
+      }
+    });
+    links.forEach(function (a) {
+      var on = a === best;
+      a.classList.toggle("active", on);
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+  }
+
+  sync();
+  document.body.addEventListener("htmx:afterSettle", sync);
+  window.addEventListener("popstate", sync);
+})();
+</script>
+<script>
+/* Group jump strip.
+   /pens/ is 126 entries and /inks/ 136; even three columns deep that is metres
+   of scroll with no way back to "Priority 1". Both list templates already mark
+   their sections with [data-listnav-group] and head them with .group-head h3,
+   so the strip can be derived rather than hand-maintained per page. */
+(function () {
+  var BUILT = "data-jumpbar-built";
+
+  function build() {
+    var host = document.querySelector("[data-listnav]");
+    if (!host) return;
+    var old = document.querySelector(".jumpbar");
+    if (old) old.remove();
+
+    var groups = Array.prototype.slice.call(
+      host.querySelectorAll("[data-listnav-group]"));
+    if (groups.length < 3) return;   // not worth the chrome
+
+    var bar = document.createElement("nav");
+    bar.className = "jumpbar";
+    bar.setAttribute("aria-label", "Jump to group");
+    bar.setAttribute(BUILT, "1");
+
+    groups.forEach(function (g, i) {
+      var h = g.querySelector(".group-head h3, .group-head h2");
+      if (!h) return;
+      if (!g.id) g.id = "grp-" + i;
+      var a = document.createElement("a");
+      a.href = "#" + g.id;
+      a.textContent = h.textContent.trim();
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        g.scrollIntoView({ behavior: "smooth", block: "start" });
+        history.replaceState(null, "", "#" + g.id);
+      });
+      bar.appendChild(a);
+    });
+    if (!bar.children.length) return;
+    host.parentNode.insertBefore(bar, host);
+
+    /* Light up whichever group owns the top of the viewport, and keep that
+       chip scrolled into view inside the strip itself. */
+    var chips = Array.prototype.slice.call(bar.children);
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var idx = groups.indexOf(en.target);
+        if (idx < 0) return;
+        chips.forEach(function (c, ci) { c.classList.toggle("on", ci === idx); });
+        var chip = chips[idx];
+        if (chip) {
+          var l = chip.offsetLeft, r = l + chip.offsetWidth;
+          if (l < bar.scrollLeft || r > bar.scrollLeft + bar.clientWidth) {
+            bar.scrollTo({ left: l - 16, behavior: "smooth" });
+          }
+        }
+      });
+    }, { rootMargin: "-10% 0px -80% 0px", threshold: 0 });
+    groups.forEach(function (g) { obs.observe(g); });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", build);
+  } else { build(); }
+  document.body.addEventListener("htmx:afterSettle", build);
 })();
 </script>
 </body>
