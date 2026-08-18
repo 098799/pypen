@@ -1,0 +1,119 @@
+{% extends "items/_shell.html" %}
+{% block title %}Needs a photograph · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.shot-progress {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  margin: 0 0 2rem;
+}
+.shot-bar {
+  flex: 1 1 auto;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper-dark) 65%, transparent);
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+}
+.shot-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent),
+              color-mix(in srgb, var(--accent) 55%, var(--paper-dark)));
+}
+.shot-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  padding: 0.85rem 0.2rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.shot-row .who { min-width: 0; }
+.shot-row .title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.2rem; line-height: 1.2; }
+.shot-row .meta {
+  font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--muted); margin-top: 0.2rem;
+}
+.shot-row form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+/* The file input is the primary action on this page, so it gets to look like
+   a button rather than a browser default. */
+.shot-row input[type="file"] { display: none; }
+.shot-pick {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 0.95rem; min-height: 40px;
+  border: 1px solid var(--ink-line); border-radius: 999px;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  box-shadow: var(--plate-shadow);
+  font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink); cursor: pointer;
+}
+.shot-pick:hover { border-color: var(--accent); }
+.shot-row .polish {
+  font-family: "Inter", sans-serif; font-size: 0.66rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;
+}
+@media (min-width: 900px) {
+  .shot-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); column-gap: 2.25rem; }
+}
+@media (max-width: 719px) {
+  .shot-row { grid-template-columns: 1fr; }
+  .shot-row form { justify-content: flex-start; }
+}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>Needs a <em>photograph</em></h1>
+</div>
+
+<div class="shot-progress">
+  <span class="gmeta">{{ done }} of {{ total }} photographed</span>
+  <span class="shot-bar"><i style="width: {% widthratio done total 100 %}%"></i></span>
+  <span class="gmeta">{{ missing_count }} to go</span>
+</div>
+
+<p class="lede">
+  Pick a pen, photograph it against a plain surface, and choose the file here.
+  Leave <em>polish</em> ticked and it goes through the same clean-up as the rest
+  of the collection — background removed, paper backdrop, soft shadow — so the
+  new shots sit alongside the existing ones rather than beside them.
+</p>
+
+{% for g in groups %}
+<section data-listnav-group>
+  <div class="group-head">
+    <h3>{{ g.label }}</h3>
+    <span class="gmeta">{{ g.pens|length }} pen{{ g.pens|length|pluralize }}</span>
+  </div>
+  <div class="shot-list">
+    {% for p in g.pens %}
+    <div class="shot-row">
+      <div class="who">
+        <a href="{% url 'pens_detail' p.pk %}" style="border: none; color: inherit;">
+          <div class="title">{{ p.brand.name }} {{ p.model }}{% if p.finish %} <span style="color: var(--ink-soft); font-style: italic;">{{ p.finish }}</span>{% endif %}</div>
+        </a>
+        <div class="meta">{{ p.filling }}{% if p.obtained %} · obtained {{ p.obtained|date:"Y" }}{% endif %}</div>
+      </div>
+      <form method="post" action="{% url 'pens_photo_add' p.pk %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="queue">
+        <label class="polish"><input type="checkbox" name="enhance" value="1" checked> polish</label>
+        <label class="shot-pick">
+          Choose a photograph
+          <input type="file" name="image" accept="image/*" capture="environment"
+                 onchange="this.form.submit()">
+        </label>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% empty %}
+<div class="empty">Every pen in the collection has a photograph.</div>
+{% endfor %}
+
+{% endblock %}

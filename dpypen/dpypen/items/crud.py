@@ -358,9 +358,67 @@ def pens_delete(request, pk):
 def pens_photo_add(request, pk):
     pen = get_object_or_404(Pen, pk=pk)
     uploaded = request.FILES.getlist("image")
-    for f in uploaded:
-        PenPhoto.objects.create(pen=pen, image=f)
+    made = [PenPhoto.objects.create(pen=pen, image=f) for f in uploaded]
+
+    # Uploading from the capture queue polishes straight away, so a session of
+    # photographing pens does not leave a second pass of "Polish with AI"
+    # clicks behind it. A failure here must not lose the photograph.
+    if made and request.POST.get("enhance") == "1":
+        from dpypen.items.enhance import build_prompt, generate_catalog_shot
+        for photo in made:
+            try:
+                photo.image.open("rb")
+                src = photo.image.read()
+                photo.image.close()
+                styled = generate_catalog_shot(src, prompt=build_prompt(pen),
+                                               mime_type="image/jpeg")
+                photo.image_styled.save(f"styled-{photo.pk}.jpg",
+                                        ContentFile(styled), save=True)
+            except Exception:
+                pass   # the original is already saved; polish is a nicety
+
+    nxt = request.POST.get("next")
+    if nxt == "queue":
+        return redirect("pens_needs_photos")
     return redirect("pens_edit", pk=pk)
+
+
+@login_required
+def pens_needs_photos(request):
+    """The pens with no photograph, most-used rotations first.
+
+    Photographing the collection is the one job the app cannot do for itself,
+    so it should at least be a single page rather than a hunt: every pen still
+    missing a picture, in the order they are actually used, each with its own
+    upload."""
+    missing = (
+        Pen.objects.filter(photos__isnull=True)
+        .select_related("brand", "rotation")
+        .order_by("rotation__priority", "brand__name", "model")
+    )
+    groups = {}
+    for pen in missing:
+        r = pen.rotation
+        key = r.priority if r and r.in_use else None
+        groups.setdefault(key, []).append(pen)
+
+    ordered = []
+    for key in sorted(groups, key=lambda k: (k is None, k)):
+        ordered.append({
+            "priority": key,
+            "label": ("Not in rotation" if key is None else f"Priority {key}"),
+            "pens": groups[key],
+        })
+
+    done = Pen.objects.filter(photos__isnull=False).distinct().count()
+    total = Pen.objects.count()
+    return render(request, "items/pens/needs_photos.html", {
+        "groups": ordered,
+        "done": done,
+        "total": total,
+        "missing_count": total - done,
+        "nav": "pens",
+    })
 
 
 @login_required

@@ -99,6 +99,7 @@
     })();
   </script>
   {% if can_edit %}
+  <a href="{% url 'pens_needs_photos' %}" class="btn" style="flex: 0 0 auto;">Needs a photograph</a>
   <a href="{% url 'pens_create' %}" class="btn primary" data-kbd="new" style="flex: 0 0 auto;">+ Add pen</a>
   {% endif %}
 </div>

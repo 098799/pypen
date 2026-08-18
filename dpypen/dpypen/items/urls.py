@@ -41,6 +41,7 @@ urlpatterns = [
 
     path('pens/', crud.pens_list, name='pens_list'),
     path('pens/add/', crud.pens_create, name='pens_create'),
+    path('pens/needs-photos/', crud.pens_needs_photos, name='pens_needs_photos'),
     path('pens/<int:pk>/', crud.pens_detail, name='pens_detail'),
     path('pens/<int:pk>/edit/', crud.pens_edit, name='pens_edit'),
     path('pens/<int:pk>/delete/', crud.pens_delete, name='pens_delete'),
