@@ -1790,6 +1790,35 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
   }
   .dash-pair > section { margin-bottom: 0; }
 }
+
+/* --- 6. Key-mode toast -------------------------------------------------- */
+.keys-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  transform: translate(-50%, 8px);
+  z-index: 40;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--card-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.keys-toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 720px) { .keys-toast { bottom: 2rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .keys-toast { transition: none; }
+}
 </style>
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
@@ -1849,6 +1878,15 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
         </svg>
         <span>Dark</span>
       </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="menu-label">Keys</div>
+    <div class="theme-choices keys-choices" role="radiogroup" aria-label="Keyboard layer">
+      <button type="button" data-keys="full" aria-label="Full keyboard layer"><span>Full</span></button>
+      <button type="button" data-keys="leader" aria-label="Leader only"><span>m&nbsp;only</span></button>
+      <button type="button" data-keys="off" aria-label="Keyboard layer off"><span>Off</span></button>
     </div>
   </div>
 
@@ -1944,6 +1982,12 @@ live behind More.
 
 <script>
 (function () {
+  /* Bindings follow ~/dotfiles/vimium-options.json rather than inventing a
+     second dialect. Bare a / e / f / d used to be app commands here, but
+     Vimium maps all of them (a and e to bookmarks and link hints, f to
+     hints), so they never reached the page when the extension was running —
+     and stole keys from it when it was not. Everything app-specific now
+     hangs off `m`, the one key his config unmaps. */
   var SHORTCUTS = [
     {label: "Focus search", keys: ["/"], run: function () { triggerKey("/"); }},
     {label: "This help menu", keys: ["?"]},
@@ -1957,19 +2001,20 @@ live behind More.
     {label: "Open focused list item", keys: ["Enter"]},
     {label: "Previous item in context", keys: ["j"]},
     {label: "Next item in context", keys: [";"]},
-    {label: "Previous nav page", keys: ["a"], run: function () { navApp(-1); }},
-    {label: "Next nav page", keys: ["f"], run: function () { navApp(1); }},
-    {label: "Dashboard", keys: ["g", "d"], href: "/"},
-    {label: "History", keys: ["g", "h"], href: "/history/"},
-    {label: "Records", keys: ["g", "r"], href: "/records/"},
-    {label: "Inkings", keys: ["g", "u"], href: "/usages/"},
-    {label: "Pens", keys: ["g", "p"], href: "/pens/"},
-    {label: "Inks", keys: ["g", "i"], href: "/inks/"},
-    {label: "Import", keys: ["g", "m"], href: "/import/"},
-    {label: "Edit current item", keys: ["e"], run: function () { clickKbd("edit"); }},
-    {label: "New item (context)", keys: ["n"], run: function () { clickKbd("new"); }},
-    {label: "Delete current item", keys: ["d"], run: function () { clickKbd("delete"); }},
-    {label: "Toggle theme", keys: ["t"], run: function () { toggleTheme(); }},
+    {label: "Dashboard", keys: ["m", "d"], href: "/dashboard/"},
+    {label: "History", keys: ["m", "h"], href: "/history/"},
+    {label: "Records", keys: ["m", "r"], href: "/records/"},
+    {label: "Inkings", keys: ["m", "u"], href: "/usages/"},
+    {label: "Pens", keys: ["m", "p"], href: "/pens/"},
+    {label: "Inks", keys: ["m", "i"], href: "/inks/"},
+    {label: "Import", keys: ["m", "n"], href: "/import/"},
+    {label: "Previous nav page", keys: ["m", "["], run: function () { navApp(-1); }},
+    {label: "Next nav page", keys: ["m", "]"], run: function () { navApp(1); }},
+    {label: "Edit current item", keys: ["m", "e"], run: function () { clickKbd("edit"); }},
+    {label: "New item (context)", keys: ["m", "a"], run: function () { clickKbd("new"); }},
+    {label: "Delete current item", keys: ["m", "x"], run: function () { clickKbd("delete"); }},
+    {label: "Toggle theme", keys: ["m", "t"], run: function () { toggleTheme(); }},
+    {label: "Cycle key mode (full / leader / off)", keys: ["m", "m"], run: function () { window.__keysCycleMode(); }},
   ];
 
   var overlay = document.getElementById("kbdOverlay");
@@ -2036,6 +2081,43 @@ live behind More.
   var lastKey = null;
   var lastKeyTime = 0;
 
+  /* Three modes, remembered per browser:
+       full   — the whole layer (browser with no Vimium)
+       leader — only m-…, so Vimium keeps every other key
+       off    — nothing
+     Vimium cannot be detected reliably, so this is a stored choice. */
+  var MODE_KEY = "pypenKeys";
+  var MODES = ["full", "leader", "off"];
+  window.__keysMode = function () {
+    try { return localStorage.getItem(MODE_KEY) || "full"; }
+    catch (e) { return "full"; }
+  };
+  window.__keysCycleMode = function () {
+    var cur = window.__keysMode();
+    var next = MODES[(MODES.indexOf(cur) + 1) % MODES.length];
+    try { localStorage.setItem(MODE_KEY, next); } catch (e) {}
+    var t = document.getElementById("keysToast") || (function () {
+      var d = document.createElement("div");
+      d.id = "keysToast"; d.className = "keys-toast";
+      document.body.appendChild(d); return d;
+    })();
+    t.textContent = "keys: " + next;
+    t.classList.add("show");
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove("show"); }, 1400);
+    return next;
+  };
+
+  /* Pages with their own key handling (the walls, any future quiz) stand down
+     while the app layer owns the keyboard. */
+  window.__keysBusy = function () {
+    var ov = document.getElementById("kbdOverlay");
+    var panel = document.getElementById("menuPanel");
+    return !!((ov && ov.classList.contains("open")) ||
+              (panel && panel.classList.contains("open")) ||
+              (lastKey === "m"));
+  };
+
   document.addEventListener("keydown", function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     var active = document.activeElement;
@@ -2054,6 +2136,47 @@ live behind More.
 
     if (isTyping(active)) return;
 
+    // Modes: full (everything), leader (only m-…, for the browser where
+    // Vimium already drives), off. Vimium is not reliably detectable, so this
+    // is a choice, not a guess. `m m` cycles it.
+    var MODE = window.__keysMode();
+    if (MODE === "off") return;
+
+    var now = Date.now();
+    var inLeader = (lastKey === "m" && now - lastKeyTime < 900);
+
+    // `m` opens the app's own command space and can never collide with the
+    // extension, because his config unmaps it.
+    if (!inLeader && e.key === "m") {
+      lastKey = "m"; lastKeyTime = now;
+      e.preventDefault();
+      return;
+    }
+    if (inLeader) {
+      lastKey = null;
+      e.preventDefault();
+      if (e.key === "m") { window.__keysCycleMode(); return; }
+      if (e.key === "?") { openHelp(); return; }
+      if (e.key === "t") { toggleTheme(); return; }
+      if (e.key === "e") { clickKbd("edit"); return; }
+      if (e.key === "a") { clickKbd("new"); return; }
+      if (e.key === "x") { clickKbd("delete"); return; }
+      if (e.key === "[") { navApp(-1); return; }
+      if (e.key === "]") { navApp(1); return; }
+      var navMap = { d: "/dashboard/", h: "/history/", r: "/records/",
+                     u: "/usages/", p: "/pens/", i: "/inks/", n: "/import/" };
+      var href = navMap[e.key];
+      if (href) {
+        var links = Array.prototype.slice.call(document.querySelectorAll(".app-nav a[href], .tabbar a[href]"));
+        var hit = links.find(function (a) { return a.getAttribute("href") === href; });
+        if (hit) hit.click(); else window.location.href = href;
+      }
+      return;
+    }
+
+    // Below here is the uniform layer, and it stays out of Vimium's way.
+    if (MODE === "leader") return;
+
     // Slash focuses search: prefer an in-page search input (inks/pens list),
     // otherwise jump to /search/ page.
     if (e.key === "/") {
@@ -2069,15 +2192,11 @@ live behind More.
       return;
     }
 
-    // ? help
     if (e.key === "?") { e.preventDefault(); openHelp(); return; }
-
-    // G = bottom
     if (e.key === "G") { e.preventDefault(); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); return; }
 
-    // `g` is a leader: gg = top, g+{d,h,r,u,p,i,m} = nav.
+    // gg = top. Vimium's own binding, kept identical.
     if (e.key === "g") {
-      var now = Date.now();
       if (lastKey === "g" && now - lastKeyTime < 700) {
         e.preventDefault();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2087,30 +2206,13 @@ live behind More.
       e.preventDefault();
       return;
     }
-    if (lastKey === "g" && Date.now() - lastKeyTime < 700) {
-      lastKey = null;
-      var navMap = { d: "dashboard", h: "history", r: "records", u: "usages", p: "pens", i: "inks", m: "import" };
-      var target = navMap[e.key];
-      if (target) {
-        e.preventDefault();
-        var link = document.querySelector(".app-nav a[href]." + "active, .app-nav a[href]");
-        var links = Array.from(document.querySelectorAll(".app-nav a[href]"));
-        // Match against nav dataset if we have it; fallback to URL substring.
-        var urlHints = { dashboard: "/", history: "/history", records: "/records", usages: "/usages", pens: "/pens", inks: "/inks", import: "/import" };
-        var hint = urlHints[target];
-        var hit = links.find(function (a) { return a.getAttribute("href") === hint || a.getAttribute("href").indexOf(hint + "/") === 0; });
-        if (hit) hit.click();
-        return;
-      }
-    }
     lastKey = null;
 
     // List navigation: when a [data-listnav] container is on the page,
     // i/o move between items, k/l jump between groups, Enter opens.
     if (tryListNav(e.key)) { e.preventDefault(); return; }
 
-    // Right-hand vertical scroll (k/l paragraph, i/o line).
-    // j/; dispatch prev/next context events (pages can handle).
+    // Right-hand vertical scroll (k/l paragraph, i/o line) — his scroll keys.
     var scrollPara = Math.max(600, Math.round(window.innerHeight * 0.8)), scrollLine = 120;
     var handled = true;
     switch (e.key) {
@@ -2120,12 +2222,6 @@ live behind More.
       case "o": window.scrollBy({ top: -scrollLine, behavior: "smooth" }); break;
       case "j": document.dispatchEvent(new CustomEvent("pypen:prev")); break;
       case ";": document.dispatchEvent(new CustomEvent("pypen:next")); break;
-      case "a": navApp(-1); break;
-      case "f": navApp(1); break;
-      case "e": clickKbd("edit"); break;
-      case "n": clickKbd("new"); break;
-      case "d": clickKbd("delete"); break;
-      case "t": toggleTheme(); break;
       default: handled = false;
     }
     if (handled) e.preventDefault();
@@ -2439,6 +2535,31 @@ live behind More.
     document.addEventListener("DOMContentLoaded", build);
   } else { build(); }
   document.body.addEventListener("htmx:afterSettle", build);
+})();
+</script>
+<script>
+/* Keyboard-mode chooser. "m only" is the setting for a browser where Vimium is
+   already driving: the app keeps its own m-… commands and hands back every
+   other key. Vimium is not detectable, so this has to be a choice. */
+(function () {
+  var box = document.querySelector(".keys-choices");
+  if (!box || !window.__keysMode) return;
+  var btns = Array.prototype.slice.call(box.querySelectorAll("button[data-keys]"));
+  function paint() {
+    var cur = window.__keysMode();
+    btns.forEach(function (b) {
+      var on = b.getAttribute("data-keys") === cur;
+      b.classList.toggle("active", on);   /* matches .theme-choices button.active */
+      b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+  }
+  btns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      try { localStorage.setItem("pypenKeys", b.getAttribute("data-keys")); } catch (e) {}
+      paint();
+    });
+  });
+  paint();
 })();
 </script>
 </body>
