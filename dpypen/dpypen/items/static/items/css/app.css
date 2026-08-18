@@ -7,6 +7,8 @@
    a file. Page-specific rules still arrive via {% block extra_css %}.
 */
 :root, html[data-theme="light"] {
+  --on-accent: #fff;
+  --accent-deep: color-mix(in srgb, var(--accent) 75%, #000);
   --paper: #f4ecd8;
   --paper-dark: #e9dfc5;
   --paper-shadow: #d6c9a5;
@@ -33,6 +35,11 @@
   --plate-shadow: 0 1px 0 #fff inset, 0 4px 14px -8px #00000033;
 }
 html[data-theme="dark"] {
+  /* White on the accent gradient is 2.55:1 at the top stop — the primary
+     call to action failed AA in dark only. Dark ink on a shallower gradient
+     is 7.10:1 at the top and 4.67:1 at the bottom. */
+  --on-accent: #13161c;
+  --accent-deep: color-mix(in srgb, var(--accent) 80%, #000);
   --paper: #13161c;
   --paper-dark: #1b1f28;
   --paper-shadow: #0b0d12;
@@ -40,7 +47,9 @@ html[data-theme="dark"] {
   --ink-soft: #b9ad92;
   --ink-line: #ece2c824;
   --accent: #e08a94;
-  --muted: #8b815f;
+  /* was #8b815f: 3.70:1 on --plate-top, below AA on every raised
+     surface it is used on (nav pills, chips, meta lines). 4.63:1 now. */
+  --muted: #9c9270;
   --plate-top: #252a35;
   --chip-top: #222735;
   --bg-grad-1: radial-gradient(ellipse at 15% 10%, #1f2430 0%, transparent 55%);
@@ -165,12 +174,11 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   transform: translateY(-1px);
 }
 .user-nav .signin {
-  color: var(--ink);
-  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 75%, #000));
-  color: #fff;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: var(--on-accent);
   border-color: transparent;
 }
-.user-nav .signin:hover { color: #fff; }
+.user-nav .signin:hover { color: var(--on-accent); }
 
 .menu-btn {
   display: inline-flex;
@@ -333,11 +341,11 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 }
 .menu-item:hover { color: var(--accent); border-color: var(--accent); }
 .menu-item.signin {
-  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 75%, #000));
-  color: #fff;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: var(--on-accent);
   border-color: transparent;
 }
-.menu-item.signin:hover { color: #fff; }
+.menu-item.signin:hover { color: var(--on-accent); }
 
 /* -------- Hero -------- */
 .hero {
@@ -473,7 +481,7 @@ html[data-theme="dark"] .inked {
 .inked .ribbon {
   position: absolute; top: 0; right: 0;
   background: var(--cbg, var(--c));
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.65rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
@@ -675,7 +683,7 @@ html[data-theme="dark"] .inked:hover .pen-bg { opacity: 0.3; }
   display: flex;
   align-items: center;
   padding: 0 0.6rem;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.75rem;
   font-family: "Inter", sans-serif;
   letter-spacing: 0.02em;
@@ -907,11 +915,11 @@ footer em { color: var(--ink-soft); }
 }
 .btn:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--ink); }
 .btn.primary {
-  background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 75%, #000));
-  color: #fff;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: var(--on-accent);
   border-color: transparent;
 }
-.btn.primary:hover { color: #fff; }
+.btn.primary:hover { color: var(--on-accent); }
 .btn.danger {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line));
@@ -942,6 +950,8 @@ footer em { color: var(--ink-soft); }
 .form input[type="text"],
 .form input[type="number"],
 .form input[type="date"],
+.form input[type="url"],
+.form input[type="search"],
 .form input[type="email"],
 .form select,
 .form textarea {
@@ -1246,6 +1256,48 @@ html[data-theme="dark"] .switch {
   flex-direction: column;
 }
 .list:first-child, .list:not(.group-head + .list + .list) { }
+/* Base rules for the group heading. These lived only inside pens/list.html
+   and inks/list.html, in two slightly different versions, so any other page
+   using the class — pens/needs_photos.html did — rendered an unstyled block
+   that the phone stylesheet then made sticky. */
+.group-head {
+  display: flex;
+  /* Not space-between: the ink list puts a colour bead, the title and the
+     count in here, and space-between flung all three to separate corners.
+     Pack from the left and push only the count away. */
+  align-items: center;
+  gap: 0.7rem;
+  margin: 2rem 0 0.5rem;
+  padding: 0.35rem 0.1rem;
+  border-bottom: 1px solid var(--ink-line);
+}
+.group-head h3 {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.group-head h3 em { font-style: italic; color: var(--accent); font-weight: 400; }
+/* The colour bead beside an ink group's heading. Lived in inks/list.html
+   alongside that file's copy of .group-head; it is the ink's own colour, so
+   it is deliberately not a token. */
+.group-head .dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: inset -3px -3px 6px rgba(0,0,0,0.35),
+              inset 2px 2px 3px rgba(255,255,255,0.2),
+              0 1px 2px rgba(0,0,0,0.2);
+}
+.gmeta {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 .group-head + .list { border-top: none; }
 .list-row {
   display: grid;
@@ -1422,7 +1474,7 @@ html[data-theme="dark"] .switch {
   text-align: center;
   padding: 1rem;
   background:
-    repeating-linear-gradient(45deg, transparent 0, transparent 8px, rgba(0,0,0,0.04) 8px, rgba(0,0,0,0.04) 9px),
+    repeating-linear-gradient(45deg, transparent 0, transparent 8px, color-mix(in srgb, var(--ink) 4%, transparent) 8px, color-mix(in srgb, var(--ink) 4%, transparent) 9px),
     var(--paper-dark);
 }
 .pen-tile-label {

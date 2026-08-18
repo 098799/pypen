@@ -568,7 +568,14 @@
   border: none;
   white-space: nowrap;
 }
-.history-sub-nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 15%, transparent); border: none; }
+/* The same translucent wash that was removed from .app-nav — this was its
+   last remaining use, and it reads stronger against the dark theme. */
+.history-sub-nav a:hover {
+  color: var(--ink);
+  border: none;
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat
+              50% calc(100% - 0.36rem) / calc(100% - 1.5rem) 1.5px;
+}
 .history-sub-nav a.active {
   color: var(--ink);
   background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
@@ -621,7 +628,7 @@
       {% for r in yearly_ink_count %}
       <div class="chart-row{% if not r.value %} empty{% endif %}">
         <span class="y">{{ r.year }}</span>
-        <div class="track"><div class="fill" style="--cbar: #2a5caa; width: {{ r.pct }}%"></div></div>
+        <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value }}{% else %}—{% endif %}</span>
       </div>
       {% endfor %}
@@ -645,7 +652,7 @@
       {% for r in yearly_ink_spend %}
       <div class="chart-row{% if not r.value %} empty{% endif %}">
         <span class="y">{{ r.year }}</span>
-        <div class="track"><div class="fill" style="--cbar: #2a5caa; width: {{ r.pct }}%"></div></div>
+        <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value|floatformat:0 }}{% else %}—{% endif %}</span>
       </div>
       {% endfor %}

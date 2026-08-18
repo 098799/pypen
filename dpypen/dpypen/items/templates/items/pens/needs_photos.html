@@ -39,7 +39,16 @@
 .shot-row form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 /* The file input is the primary action on this page, so it gets to look like
    a button rather than a browser default. */
-.shot-row input[type="file"] { display: none; }
+/* Visually hidden, NOT display:none — that would take the input out of the
+   tab order and the accessibility tree, and the wrapping label is not a tab
+   stop, so the only action on this page would be mouse-only. Same pattern as
+   the four older file inputs in the forms. */
+.shot-pick input[type="file"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+.shot-pick { position: relative; }
+.shot-pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shot-pick {
   display: inline-flex; align-items: center; gap: 0.4rem;
   padding: 0.5rem 0.95rem; min-height: 40px;
