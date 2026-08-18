@@ -1,4 +1,6 @@
 from datetime import date
+from collections import defaultdict
+
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -155,13 +157,26 @@ def dashboard(request):
     days_tracked = (today - first_usage).days if first_usage else 0
     total_days_inked = sum(_days(u.begin, u.end, today) for u in usages)
 
+    # One query for every pen in the shown rotations, grouped in Python, rather
+    # than one query per rotation. Same for inks below, which cost one query per
+    # colour in INK_COLOR_HEX — 17 of them. Together those were 24 of the
+    # dashboard's 34 queries, for 126 pens and 136 inks that fit in memory
+    # several times over.
+    rots = list(
+        Rotation.objects.filter(in_use=True, whos="Tomek", priority__in=[0, 1, 2, 3])
+        .order_by("priority")
+    )
+    pens_by_rotation = defaultdict(list)
+    for pen in (
+        Pen.objects.filter(rotation__in=rots)
+        .select_related("brand")
+        .order_by("brand__name", "model")
+    ):
+        pens_by_rotation[pen.rotation_id].append(pen)
+
     rotations = []
-    for r in Rotation.objects.filter(in_use=True, whos="Tomek", priority__in=[0, 1, 2, 3]).order_by("priority"):
-        pens = list(
-            Pen.objects.filter(rotation=r)
-            .select_related("brand")
-            .order_by("brand__name", "model")
-        )
+    for r in rots:
+        pens = pens_by_rotation.get(r.pk, [])
         rotations.append({
             "priority": r.priority,
             "how_often": r.how_often,
@@ -169,13 +184,17 @@ def dashboard(request):
             "count": len(pens),
         })
 
+    inks_by_color = defaultdict(list)
+    for ink in (
+        Ink.objects.filter(color__in=list(INK_COLOR_HEX), used_up=False, volume__gt=5)
+        .select_related("brand")
+        .order_by("brand__name", "name")
+    ):
+        inks_by_color[ink.color].append(ink)
+
     ink_groups = []
     for color in INK_COLOR_HEX:
-        inks = list(
-            Ink.objects.filter(color=color, used_up=False, volume__gt=5)
-            .select_related("brand")
-            .order_by("brand__name", "name")
-        )
+        inks = inks_by_color.get(color, [])
         if inks:
             ink_groups.append({
                 "color": color,
