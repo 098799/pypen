@@ -270,19 +270,24 @@ def pens_list(request):
             p.list_thumb_styled = False
 
     groups: dict[str, dict] = {}
-    def bucket(key, title, subtitle=""):
+    # `chip` is the filter-bar label, `title` the section heading. The bar is
+    # horizontal and lives on a 390px phone, where "Priority 0" spent ten
+    # characters saying what one says.
+    def bucket(key, title, subtitle="", chip=None):
         if key not in groups:
-            groups[key] = {"key": key, "title": title, "subtitle": subtitle, "pens": []}
+            groups[key] = {"key": key, "title": title, "subtitle": subtitle,
+                           "chip": chip or title, "pens": []}
         return groups[key]
 
     for p in pens:
         r = p.rotation
         if not r.in_use:
-            bucket("defunct", "Defunct / sold")["pens"].append(p)
+            bucket("defunct", "Defunct / sold", chip="Defunct")["pens"].append(p)
         elif r.whos == "Tomek" and r.priority in (0, 1, 2, 3):
-            bucket(f"p{r.priority}", f"Priority {r.priority}", f"~every {r.how_often} days")["pens"].append(p)
+            bucket(f"p{r.priority}", f"Priority {r.priority}",
+                   f"~every {r.how_often} days", chip=str(r.priority))["pens"].append(p)
         else:
-            bucket("other", "Other active", r.whos)["pens"].append(p)
+            bucket("other", "Other active", r.whos, chip="Other")["pens"].append(p)
 
     ordered = []
     for k in ("p0", "p1", "p2", "p3", "other", "defunct"):
@@ -315,20 +320,26 @@ def pens_list(request):
     def _view_url(target_view):
         return _url_with(view=None if target_view == "list" else target_view)
 
+    # `rot` is only honoured when it names a real group, so a stale ?rot= from a
+    # bookmark falls back to showing everything — "All" has to light up on the
+    # same condition the filtering uses, not merely on rot being empty.
+    active_rot = rot if rot in rot_counts else ""
     rot_filters = [{
         "key": "",
         "label": "All",
+        "title": "All pens",
         "count": len(pens),
         "url": _url_with(rot=None),
-        "on": not rot,
+        "on": not active_rot,
     }]
     for g in groups_ordered_all:
         rot_filters.append({
             "key": g["key"],
-            "label": g["title"],
+            "label": g["chip"],
+            "title": g["title"],
             "count": len(g["pens"]),
             "url": _url_with(rot=g["key"]),
-            "on": rot == g["key"],
+            "on": active_rot == g["key"],
         })
 
     context = {

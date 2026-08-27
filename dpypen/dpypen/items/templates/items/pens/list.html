@@ -42,13 +42,14 @@ screen before a single pen. One scrolling bar now carries all of it.
         hx-target="#penContentBody"
         hx-swap="outerHTML"
         hx-select="#penContentBody"
+       
         hx-push-url="true"
         class="toolbar-search">
     <input type="search" id="penQ" name="q" placeholder="Search pens…" value="{{ query }}" autocomplete="off">
     {% if view == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
     {% if rot %}<input type="hidden" name="rot" value="{{ rot }}">{% endif %}
   </form>
-  <div class="view-toggle" role="tablist" aria-label="View">
+  <div class="view-toggle" id="viewToggle" role="tablist" aria-label="View">
     <a href="{{ list_url }}" hx-get="{{ list_url }}" hx-target="#penContentBody" hx-swap="outerHTML" hx-select="#penContentBody" hx-push-url="true"
        class="vt-btn{% if view == 'list' %} on{% endif %}" role="tab" aria-selected="{% if view == 'list' %}true{% else %}false{% endif %}" data-view="list">List</a>
     <a href="{{ grid_url }}" hx-get="{{ grid_url }}" hx-target="#penContentBody" hx-swap="outerHTML" hx-select="#penContentBody" hx-push-url="true"
@@ -84,12 +85,48 @@ screen before a single pen. One scrolling bar now carries all of it.
   {% endif %}
 </div>
 
-<div class="rotbar" role="tablist" aria-label="Rotation">
+<div class="rotbar" id="rotbar" role="tablist" aria-label="Rotation">
   {% for f in rot_filters %}
   <a href="{{ f.url }}" hx-get="{{ f.url }}" hx-target="#penContentBody" hx-swap="outerHTML" hx-select="#penContentBody" hx-push-url="true"
-     class="rotchip{% if f.on %} on{% endif %}" role="tab" aria-selected="{% if f.on %}true{% else %}false{% endif %}">{{ f.label }} <b>{{ f.count }}</b></a>
+     class="rotchip{% if f.on %} on{% endif %}" role="tab" aria-selected="{% if f.on %}true{% else %}false{% endif %}"
+     title="{{ f.title }} · {{ f.count }} pens">{{ f.label }} <b>{{ f.count }}</b></a>
   {% endfor %}
 </div>
+
+{% comment %}
+Both bars sit outside #penContentBody, which is the only region these links
+swap, so their pressed state was whatever the first render produced and never
+moved again: picking "1" filtered the list but left "All" lit and lit nothing
+else. Sync from the URL after each swap. In place, rather than re-rendering the
+bars from the response — the rotation bar is wider than a phone, and replacing
+it would throw away the horizontal scroll that got you to the chip you tapped.
+{% endcomment %}
+<script>
+(function () {
+  if (window.__penBarsSync) return;      // hx-boost re-runs this on every swap
+  window.__penBarsSync = true;
+  function set(el, on) {
+    el.classList.toggle('on', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  }
+  function rotOf(a) { return new URL(a.href, location).searchParams.get('rot') || ''; }
+  function sync() {
+    var chips = document.querySelectorAll('.rotchip');
+    if (!chips.length) return;
+    var rot = new URLSearchParams(location.search).get('rot') || '';
+    // A ?rot= naming no real group makes the server show everything, so "All"
+    // lights on that same fallback — otherwise a stale bookmark lights nothing.
+    if (![].some.call(chips, function (a) { return rotOf(a) === rot; })) rot = '';
+    [].forEach.call(chips, function (a) { set(a, rotOf(a) === rot); });
+    var view = new URLSearchParams(location.search).get('view') === 'grid' ? 'grid' : 'list';
+    document.querySelectorAll('.vt-btn').forEach(function (a) {
+      set(a, a.getAttribute('data-view') === view);
+    });
+  }
+  document.body.addEventListener('htmx:afterSwap', sync);
+  window.addEventListener('popstate', function () { setTimeout(sync, 0); });
+})();
+</script>
 
 <div id="pen-content">
   {% if view == 'grid' %}

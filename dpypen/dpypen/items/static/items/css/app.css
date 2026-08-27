@@ -1363,10 +1363,15 @@ html[data-theme="dark"] .switch {
   color: var(--muted);
   margin-top: 0.2rem;
 }
-.list-row .row-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
+/* The phone override here used to drop the row to two columns and give
+   .row-actions a line of its own. Those named per-row action buttons are gone
+   and .row-actions is no longer emitted by any template — but the two-column
+   rule outlived them, and it was orphaning the one remaining 30px icon onto an
+   implicit third row: ~35px of dead height on every past inking, a quarter of
+   the row. Three columns fit a 390px phone comfortably; the gutter just has to
+   come in so the title keeps its width. */
 @media (max-width: 560px) {
-  .list-row { grid-template-columns: auto 1fr; row-gap: 0.5rem; }
-  .list-row .row-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .list-row { gap: 0.7rem; }
 }
 [data-listnav-item].kbd-focused {
   background: linear-gradient(90deg,
