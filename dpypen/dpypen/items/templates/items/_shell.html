@@ -119,9 +119,24 @@ page load, and it also stopped collectstatic hashing the assets at all.
     <a href="{% url 'share_pens_wall' %}" class="menu-link">Pen wall</a>
     <a href="{% url 'share_inks_wall' %}" class="menu-link">Ink wall</a>
   </nav>
+  {% else %}
+  {% comment %}
+  The public menu used to hold one live link (Sign in) and one trap: Settings,
+  which is login-gated and bounced every visitor to Google. A visitor arriving
+  on a shared pen had no way to reach the walls at all — they are only linked
+  from each other. These are the three doors that are actually open.
+  {% endcomment %}
+  <nav class="menu-nav" aria-label="Browse">
+    <a href="{% url 'home' %}" class="menu-link{% if nav == 'home' %} on{% endif %}">Home</a>
+    <a href="{% url 'share_pens_wall' %}" class="menu-link">Pen wall</a>
+    <a href="{% url 'share_inks_wall' %}" class="menu-link">Ink wall</a>
+    <a href="{% url 'share_inks_gallery' %}" class="menu-link{% if nav == 'pub_inks' %} on{% endif %}">Ink cupboard</a>
+  </nav>
   {% endif %}
 
+  {% if is_owner or is_guest %}
   <a href="{% url 'settings' %}" class="menu-item{% if nav == 'settings' %} on{% endif %}">Settings</a>
+  {% endif %}
   {% if not user.is_authenticated and not is_guest %}
   <a href="{% url 'google_login' %}?next={{ request.get_full_path|urlencode }}" class="menu-item signin" hx-boost="false">Sign in with Google</a>
   {% endif %}

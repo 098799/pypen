@@ -198,7 +198,13 @@ was the same door twice. This one belongs to the pen instead: edit, share and
 delete behind it, and the one thing you actually came to do beside it.
 {% endcomment %}
 <div class="detail-bar">
-  <a href="{% url 'pens_list' %}" class="pen-back">&larr; All pens</a>
+{% comment %}
+Public, every one of these used to point at a login-gated /inks/<pk>/ or
+/pens/<pk>/: a share link showed the recipient a complete page in which every
+onward link bounced them to Google. Anonymous, they go to the same page by its
+share token instead — the door that is actually open.
+{% endcomment %}
+  <a href="{% if public %}{% url 'share_pens_wall' %}{% else %}{% url 'pens_list' %}{% endif %}" class="pen-back">&larr; {% if public %}The pen wall{% else %}All pens{% endif %}</a>
   {% if can_edit %}
   <div class="detail-actions">
     <a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn primary">+ Ink this pen</a>
@@ -455,7 +461,7 @@ delete behind it, and the one thing you actually came to do beside it.
     </div>
     <div class="mini-gantt-track">
       {% for b in gantt_bars %}
-      <a href="{% url 'inks_detail' b.ink_id %}"
+      <a href="{% if public %}{% url 'share_ink' b.ink_token %}{% else %}{% url 'inks_detail' b.ink_id %}{% endif %}"
          class="mini-gantt-bar{% if b.current %} current{% endif %}"
          style="left: {{ b.left }}%; width: {{ b.width }}%; --c: {{ b.hex }}; --cbg: {{ b.bg }};"
          data-ink="{{ b.ink|escape }}"
@@ -549,7 +555,7 @@ delete behind it, and the one thing you actually came to do beside it.
     <div class="history-row current">
       <span class="dot" style="background: {{ current.ink_bg }}"></span>
       <div>
-        <a href="{% url 'inks_detail' current.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ current.ink }}</div></a>
+        <a href="{% if public %}{% url 'share_ink' current.ink.share_token %}{% else %}{% url 'inks_detail' current.ink.pk %}{% endif %}" style="border: none; color: inherit;"><div class="ink-name">{{ current.ink }}</div></a>
         <div class="range">{{ current.begin|date:"M j, Y" }} — still inked · {{ current.nib }}</div>
       </div>
       <div class="days">{{ current.days }}d</div>
@@ -559,7 +565,7 @@ delete behind it, and the one thing you actually came to do beside it.
     <div class="history-row">
       <span class="dot" style="background: {{ u.ink_bg }}"></span>
       <div>
-        <a href="{% url 'inks_detail' u.ink.pk %}" style="border: none; color: inherit;"><div class="ink-name">{{ u.ink }}</div></a>
+        <a href="{% if public %}{% url 'share_ink' u.ink.share_token %}{% else %}{% url 'inks_detail' u.ink.pk %}{% endif %}" style="border: none; color: inherit;"><div class="ink-name">{{ u.ink }}</div></a>
         <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>

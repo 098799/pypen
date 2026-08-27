@@ -4,7 +4,7 @@
 {% include "items/inks/_filters.html" %}
 
 {% if not groups %}
-<div class="empty">No inks match this filter. <a href="{% url 'inks_list' %}">Clear it</a> to see all of them.</div>
+<div class="empty">No inks match this filter. <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
 {% endif %}
 
 {% for g in groups %}
@@ -21,19 +21,18 @@
   <div class="list-row no-actions" data-listnav-item>
     <span class="swatch" style="background: {{ i.swatch_bg }}"></span>
     <div>
-      {% if public %}
-        <div class="title">
-          {% if i.volume <= 5 %}<span style="color: var(--muted); font-size: 0.85em;">(sample)</span> {% endif %}
-          {{ i.brand.name|highlight:filters.terms }} {% if i.line %}{{ i.line|highlight:filters.terms }} {% endif %}{{ i.name|highlight:filters.terms }}
-        </div>
-      {% else %}
-      <a href="{% url 'inks_detail' i.pk %}" style="border: none; color: inherit;">
+      {% comment %}
+      Public used to render this row as inert text — nothing in the cupboard
+      was clickable at all — because the only link it knew was the login-gated
+      /inks/<pk>/. The share token opens the same page to anyone.
+      {% endcomment %}
+      <a href="{% if public %}{% url 'share_ink' i.share_token %}{% else %}{% url 'inks_detail' i.pk %}{% endif %}"
+         style="border: none; color: inherit;">
         <div class="title">
           {% if i.volume <= 5 %}<span style="color: var(--muted); font-size: 0.85em;">(sample)</span> {% endif %}
           {{ i.brand.name|highlight:filters.terms }} {% if i.line %}{{ i.line|highlight:filters.terms }} {% endif %}{{ i.name|highlight:filters.terms }}
         </div>
       </a>
-      {% endif %}
       <div class="meta">
         {{ i.color|highlight:filters.terms }}
         · {{ i.volume }}ml

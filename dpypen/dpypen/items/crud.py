@@ -8,7 +8,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from dpypen.items import undo
+from dpypen.items import inkindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -229,6 +229,7 @@ def pens_detail(request, pk):
                 "bg": u.ink_bg,
                 "ink": str(u.ink),
                 "ink_id": u.ink_id,
+                "ink_token": u.ink.share_token,
                 "nib": str(u.nib),
                 "begin": u.begin,
                 "end": u.end,
@@ -257,6 +258,7 @@ def pens_detail(request, pk):
         "gantt_bars": gantt_bars,
         "year_ticks": year_ticks,
         "samples": pen_samples,
+        "public": False,
         "nav": "pens",
     })
 
@@ -644,134 +646,17 @@ def inks_detail(request, pk):
         "distinct_pens": distinct_pens,
         "samples": ink_samples,
         "swatches": swatches,
+        "public": False,
         "nav": "inks",
     })
 
 
 @login_or_guest_required
 def inks_list(request):
-    from django.db.models import Count, F, Q
-    include_samples = request.GET.get("samples") == "1"
-    include_used = request.GET.get("used") == "1"
-    color_filter = request.GET.get("color", "")
-    q = (request.GET.get("q") or "").strip()
-
-    qs = Ink.objects.select_related("brand", "rotation")
-    if not include_samples:
-        qs = qs.filter(volume__gt=5)
-    if not include_used:
-        qs = qs.exclude(used_up=True)
-    if color_filter and color_filter in INK_COLOR_HEX:
-        qs = qs.filter(color=color_filter)
-    for term in q.split():
-        qs = qs.filter(
-            Q(brand__name__icontains=term) | Q(name__icontains=term)
-            | Q(line__icontains=term) | Q(color__icontains=term)
-        )
-
-    # "Colour" keeps the grouped-by-hue page that the colour chips navigate.
-    # Every other order is a flat list: "newest first", split into sixteen
-    # colour sections, is not newest first in any useful sense.
-    SORTS = {
-        "color":  ("Colour",     ("used_up", "brand__name", "name")),
-        "brand":  ("Brand",      ("used_up", "brand__name", "name")),
-        "new":    ("Newest",     ("used_up", F("obtained").desc(nulls_last=True), "brand__name")),
-        "inked":  ("Most inked", ("used_up", "-n_usages", "brand__name")),
-        "volume": ("Volume",     ("used_up", "-volume", "brand__name")),
-    }
-    sort = request.GET.get("sort") or "color"
-    if sort not in SORTS:
-        sort = "color"
-    inks = list(qs.annotate(n_usages=Count("usage")).order_by(*SORTS[sort][1]))
-    for i in inks:
-        i.hex = INK_COLOR_HEX.get(i.color, "#333")
-        i.bg = i.swatch_bg
-
-    if sort == "color":
-        groups: dict[str, dict] = {}
-        for color in INK_COLOR_HEX:
-            groups[color] = {"color": color, "hex": INK_COLOR_HEX[color], "inks": []}
-        for i in inks:
-            if i.color in groups:
-                groups[i.color]["inks"].append(i)
-        ordered = [g for g in groups.values() if g["inks"]]
-    else:
-        ordered = [{"flat": True, "inks": inks}] if inks else []
-
-    color_counts_qs = Ink.objects
-    if not include_samples:
-        color_counts_qs = color_counts_qs.filter(volume__gt=5)
-    if not include_used:
-        color_counts_qs = color_counts_qs.exclude(used_up=True)
-    color_counts = dict(
-        color_counts_qs.values_list("color").annotate(n=Count("pk"))
-    )
-    color_chips = [
-        {"color": c, "hex": INK_COLOR_HEX[c], "count": color_counts.get(c, 0)}
-        for c in INK_COLOR_HEX
-        if color_counts.get(c, 0) > 0
-    ]
-
-    # These URLs were each spelled out by hand, here and in the templates, and
-    # every spelling listed the params it happened to remember — so the colour
-    # chips dropped ?q= and the view toggle dropped anything typed since the
-    # page rendered. Deriving them from the live query string means a control
-    # can only ever set or clear its own key.
-    def _url_with(**changes):
-        params = request.GET.copy()
-        for k, v in changes.items():
-            if v:
-                params[k] = v
-            else:
-                params.pop(k, None)
-        qs_str = params.urlencode()
-        return request.path + (("?" + qs_str) if qs_str else "")
-
-    def _toggle_url(key, new_val):
-        return _url_with(**{key: new_val})
-
-    view = "grid" if request.GET.get("view") == "grid" else "list"
-
-    def _view_url(target_view):
-        return _url_with(view=None if target_view == "list" else target_view)
-
-    for c in color_chips:
-        c["url"] = _url_with(color=None if color_filter == c["color"] else c["color"])
-
-    filters = {
-        "include_samples": include_samples,
-        "include_used": include_used,
-        "color": color_filter,
-        "q": q,
-        "terms": q.split(),
-        "color_chips": color_chips,
-        "toggle_samples_url": _toggle_url("samples", "1" if not include_samples else ""),
-        "toggle_used_url": _toggle_url("used", "1" if not include_used else ""),
-        "clear_url": _url_with(samples=None, used=None, color=None, q=None),
-        "view": view,
-        "list_url": _view_url("list"),
-        "grid_url": _view_url("grid"),
-        "sort": sort,
-        "sort_label": SORTS[sort][0],
-        "sort_options": [
-            {"key": k, "label": v[0], "on": k == sort,
-             "url": _url_with(sort=None if k == "color" else k)}
-            for k, v in SORTS.items()
-        ],
-    }
-
-    context = {
-        "inks": inks,
-        "groups": ordered,
-        "filters": filters,
-        "nav": "inks",
-    }
-    partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
-    if partial:
-        template = "items/inks/_grid.html" if view == "grid" else "items/inks/_content.html"
-    else:
-        template = "items/inks/list.html"
-    return render(request, template, context)
+    """The ink cupboard, signed in. Shares every query and every toolbar URL
+    with the public one at /pub/inks/ — see dpypen.items.inkindex."""
+    context = inkindex.build(request, public=False)
+    return render(request, inkindex.template_for(request, context), context)
 
 
 @login_required

@@ -3,7 +3,7 @@
 {% include "items/inks/_filters.html" %}
 
 {% if not groups %}
-<div class="empty">No inks match this filter. <a href="{% url 'inks_list' %}">Clear it</a> to see all of them.</div>
+<div class="empty">No inks match this filter. <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
 {% endif %}
 
 {% for g in groups %}
@@ -18,7 +18,12 @@
   {% endif %}
   <div class="ink-grid">
     {% for i in g.inks %}
-    <a href="{% url 'inks_detail' i.pk %}"
+    {% comment %}
+    Anonymous, /inks/<pk>/ is login-gated, so this whole grid used to be a wall
+    of links that bounced the visitor to Google. The ink's own share token is
+    the public door — the same one the ink wall's tiles use.
+    {% endcomment %}
+    <a href="{% if public %}{% url 'share_ink' i.share_token %}{% else %}{% url 'inks_detail' i.pk %}{% endif %}"
        class="ink-tile{% if i.used_up %} used-up{% endif %}"
        data-listnav-item
        title="{{ i.brand.name }} {% if i.line %}{{ i.line }} {% endif %}{{ i.name }}">

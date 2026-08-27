@@ -115,7 +115,7 @@ A peek at the ink cupboard. Browse by colour.
 
 <div class="toolbar">
   <form id="inkFilterForm" onsubmit="return false;" data-navform
-        hx-get="{% url 'inks_list' %}"
+        hx-get="{{ filters.search_url }}"
         hx-trigger="input changed delay:200ms from:#inkQ, submit"
         hx-target="#inkContentBody"
         hx-swap="outerHTML"

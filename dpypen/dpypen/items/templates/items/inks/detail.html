@@ -124,7 +124,13 @@ was the same door twice. This one belongs to the ink instead: edit, share and
 delete behind it, and the one thing you actually came to do beside it.
 {% endcomment %}
 <div class="detail-bar">
-  <a href="{% url 'inks_list' %}" class="ink-back">&larr; All inks</a>
+{% comment %}
+Public, every one of these used to point at a login-gated /inks/<pk>/ or
+/pens/<pk>/: a share link showed the recipient a complete page in which every
+onward link bounced them to Google. Anonymous, they go to the same page by its
+share token instead — the door that is actually open.
+{% endcomment %}
+  <a href="{% if public %}{% url 'share_inks_gallery' %}{% else %}{% url 'inks_list' %}{% endif %}" class="ink-back">&larr; {% if public %}The ink cupboard{% else %}All inks{% endif %}</a>
   {% if can_edit %}
   <div class="detail-actions">
     <a href="{% url 'usages_create' %}?ink={{ ink.pk }}" class="btn primary">+ Use this ink</a>
@@ -262,7 +268,7 @@ delete behind it, and the one thing you actually came to do beside it.
     <div class="history-row current" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
       <span class="dot"></span>
       <div>
-        <a href="{% url 'pens_detail' u.pen.pk %}" class="pen-name">{{ u.pen }}</a>
+        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="pen-name">{{ u.pen }}</a>
         <div class="range">{{ u.begin|date:"M j, Y" }} — still inked · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>
@@ -272,7 +278,7 @@ delete behind it, and the one thing you actually came to do beside it.
     <div class="history-row" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
       <span class="dot"></span>
       <div>
-        <a href="{% url 'pens_detail' u.pen.pk %}" class="pen-name">{{ u.pen }}</a>
+        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="pen-name">{{ u.pen }}</a>
         <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>

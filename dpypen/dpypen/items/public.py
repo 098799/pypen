@@ -95,6 +95,7 @@ def tease(request):
         photo = photos[0] if photos else None
         current.append({
             "pen_id": u.pen.pk,
+            "pen_token": u.pen.share_token,
             "pen": str(u.pen),
             "pen_brand": u.pen.brand.name,
             "pen_model": u.pen.model + (f" {u.pen.finish}" if u.pen.finish else ""),
@@ -111,6 +112,7 @@ def tease(request):
         "total_pens": Pen.objects.count(),
         "total_inks": Ink.objects.count(),
         "total_usages": Usage.objects.count(),
+        "nav": "home",
     })
 
 

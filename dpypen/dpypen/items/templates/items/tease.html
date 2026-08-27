@@ -19,8 +19,13 @@
     <span class="aside">{{ current|length }} on duty</span>
   </div>
   <div class="inked-grid">
+    {% comment %}
+    Three pens on the desk, each with a public page of its own, and for a long
+    while none of the cards was clickable — the landing page showed a visitor
+    the collection and then gave them nowhere to go but the sign-in button.
+    {% endcomment %}
     {% for c in current %}
-    <article class="inked" style="--c: {{ c.ink_hex }}; --cbg: {{ c.ink_bg|default:c.ink_hex }};">
+    <a class="inked" href="{% url 'share_pen' c.pen_token %}" style="--c: {{ c.ink_hex }}; --cbg: {{ c.ink_bg|default:c.ink_hex }};">
       {% if c.photo_url %}<div class="pen-bg" style="background-image: url('{{ c.photo_url }}')"></div>{% endif %}
       <span class="ribbon">inked</span>
       <div class="brand">{{ c.pen_brand }}</div>
@@ -32,7 +37,7 @@
         {% if c.days_inked == 0 %}freshly inked today{% elif c.days_inked == 1 %}1 day on the page{% else %}{{ c.days_inked }} days on the page{% endif %}
       </div>
       <div class="blot"></div>
-    </article>
+    </a>
     {% endfor %}
   </div>
 </section>

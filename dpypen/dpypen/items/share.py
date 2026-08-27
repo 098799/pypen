@@ -1,9 +1,9 @@
 import colorsys
 from datetime import date
 
-from django.db.models import Count
 from django.shortcuts import get_object_or_404, render
 
+from dpypen.items import inkindex
 from dpypen.items.models import Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
 
@@ -115,71 +115,11 @@ def pens_wall(request):
 
 
 def inks_gallery(request):
-    include_samples = request.GET.get("samples") == "1"
-    include_used = request.GET.get("used") == "1"
-    color_filter = request.GET.get("color", "")
-
-    qs = Ink.objects.select_related("brand", "rotation")
-    if not include_samples:
-        qs = qs.filter(volume__gt=5)
-    if not include_used:
-        qs = qs.exclude(used_up=True)
-    if color_filter and color_filter in INK_COLOR_HEX:
-        qs = qs.filter(color=color_filter)
-
-    inks = list(qs.order_by("used_up", "brand__name", "name"))
-    for i in inks:
-        i.hex = INK_COLOR_HEX.get(i.color, "#333")
-        i.bg = i.swatch_bg
-
-    groups: dict[str, dict] = {}
-    for color in INK_COLOR_HEX:
-        groups[color] = {"color": color, "hex": INK_COLOR_HEX[color], "inks": []}
-    for i in inks:
-        if i.color in groups:
-            groups[i.color]["inks"].append(i)
-    ordered = [g for g in groups.values() if g["inks"]]
-
-    color_counts_qs = Ink.objects
-    if not include_samples:
-        color_counts_qs = color_counts_qs.filter(volume__gt=5)
-    if not include_used:
-        color_counts_qs = color_counts_qs.exclude(used_up=True)
-    color_counts = dict(color_counts_qs.values_list("color").annotate(n=Count("pk")))
-    color_chips = [
-        {"color": c, "hex": INK_COLOR_HEX[c], "count": color_counts.get(c, 0)}
-        for c in INK_COLOR_HEX if color_counts.get(c, 0) > 0
-    ]
-
-    def _toggle_url(key, new_val):
-        params = request.GET.copy()
-        if new_val: params[key] = new_val
-        else: params.pop(key, None)
-        q = params.urlencode()
-        return request.path + (("?" + q) if q else "")
-
-    filters = {
-        "include_samples": include_samples,
-        "include_used": include_used,
-        "color": color_filter,
-        "color_chips": color_chips,
-        "q": "",
-        "terms": [],
-        "toggle_samples_url": _toggle_url("samples", "1" if not include_samples else ""),
-        "toggle_used_url": _toggle_url("used", "1" if not include_used else ""),
-    }
-
-    context = {
-        "inks": inks,
-        "groups": ordered,
-        "filters": filters,
-        "public": True,
-        "can_edit": False,
-        "nav": None,
-    }
-    partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
-    template = "items/inks/_content.html" if partial else "items/inks/list.html"
-    return render(request, template, context)
+    """The ink cupboard, open to anyone. Same builder as the signed-in
+    /inks/ — the two used to be forks and the public one's toolbar had rotted
+    into dead links. See dpypen.items.inkindex."""
+    context = inkindex.build(request, public=True)
+    return render(request, inkindex.template_for(request, context), context)
 
 
 def pen_by_token(request, token):
@@ -217,6 +157,7 @@ def pen_by_token(request, token):
                 "hex": u.ink_hex,
                 "ink": str(u.ink),
                 "ink_id": u.ink_id,
+                "ink_token": u.ink.share_token,
                 "nib": str(u.nib),
                 "begin": u.begin,
                 "end": u.end,

@@ -551,6 +551,12 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 }
 .inked {
   --c: #333;
+  /* An <a> since the desk cards became clickable. It is a grid item, so it is
+     blockified anyway, but the link defaults still have to be undone. */
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-bottom: none;
   position: relative;
   padding: 1.5rem 1.1rem 1.1rem;
   border-radius: 4px;
