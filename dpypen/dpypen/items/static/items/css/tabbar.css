@@ -1,0 +1,79 @@
+/* Phone bottom navigation, kept out of app.css because it is not only the
+   app's. The wall pages are standalone documents — their own <style>, their own
+   light/dark toggle, none of the shell's chrome — and stranding a signed-in
+   visitor there with no way back was the whole reason this file exists. They
+   link this one stylesheet and get the bar.
+
+   Hence the local --tb-* variables: app.css supplies --paper/--ink-line and the
+   wall supplies --tabbar-paper/--tabbar-line, and each falls back to something
+   printable if neither is there. */
+
+.tabbar {
+  --tb-paper: var(--tabbar-paper, var(--paper, #f4ecd8));
+  --tb-line: var(--tabbar-line, var(--ink-line, rgba(60, 50, 30, 0.18)));
+  --tb-muted: var(--tabbar-muted, var(--muted, #8b815f));
+  --tb-accent: var(--tabbar-accent, var(--accent, #7c1f2c));
+  display: none;
+}
+/* The bar's icons are inline <svg> with a viewBox and no width/height, and the
+   only rule sizing them lives in the phone media query below. If the bar is
+   ever shown outside it, each icon falls back to the SVG default of 300x150.
+   Size them here so that cannot happen. */
+.tabbar svg { width: 21px; height: 21px; display: block; }
+
+@media (max-width: 719px) {
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 20;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--tb-paper) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--tb-line);
+    box-shadow: 0 -6px 24px -18px #00000066;
+  }
+  .tabbar a, .tabbar button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.18rem;
+    min-height: 54px;
+    padding: 0.45rem 0.2rem 0.5rem;
+    border: none;
+    background: none;
+    color: var(--tb-muted);
+    font-family: "Inter", sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    /* The wall pages underline every link they own; these are navigation, not
+       prose, and the icon above the word is affordance enough. */
+    text-decoration: none;
+    border-bottom: none;
+  }
+  .tabbar svg { width: 21px; height: 21px; display: block; }
+  .tabbar a.active { color: var(--tb-accent); }
+  .tabbar a.active svg { stroke-width: 2.1; }
+  /* Colour is never the sole carrier: the active tab also gets a rule. */
+  .tabbar a.active::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 26px; height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--tb-accent);
+  }
+  .tabbar a { position: relative; }
+
+  /* Standalone pages (the walls) opt into the same clearance the app gives
+     <main>, so the last row of tiles is never trapped under the bar. */
+  body.has-tabbar { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+}

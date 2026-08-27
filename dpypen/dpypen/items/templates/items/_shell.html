@@ -51,6 +51,7 @@ page load, and it also stopped collectstatic hashing the assets at all.
 })();
 </script>
 <link rel="stylesheet" href="{% static 'items/css/app.css' %}">
+<link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
 <a class="skip-link" href="#main">Skip to content</a>
@@ -287,48 +288,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
 </script>
 </main>
 
-{% if is_owner or is_guest %}
-{% comment %}
-Phone navigation. The pill nav above overflows below ~720px, so this
-replaces it there (see the responsive layer in the stylesheet). Five
-destinations is the ceiling for a thumb; History, Records and Import
-live behind More.
-{% endcomment %}
-<nav class="tabbar" aria-label="Primary">
-  <a href="{% url 'dashboard' %}"{% if nav == 'dashboard' %} class="active" aria-current="page"{% endif %}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M3 10.5 12 4l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path>
-    </svg>
-    <span>Desk</span>
-  </a>
-  <a href="{% url 'usages_list' %}"{% if nav == 'usages' %} class="active" aria-current="page"{% endif %}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 3c3.5 4 5.5 6.8 5.5 9.5a5.5 5.5 0 0 1-11 0C6.5 9.8 8.5 7 12 3z"></path>
-    </svg>
-    <span>Inkings</span>
-  </a>
-  <a href="{% url 'pens_list' %}"{% if nav == 'pens' %} class="active" aria-current="page"{% endif %}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path>
-      <path d="M14.5 6.5l3 3"></path>
-    </svg>
-    <span>Pens</span>
-  </a>
-  <a href="{% url 'inks_list' %}"{% if nav == 'inks' %} class="active" aria-current="page"{% endif %}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M7 3h10v3.2a2 2 0 0 0 .5 1.3l1.2 1.4A4 4 0 0 1 19.7 12v6a3 3 0 0 1-3 3H7.3a3 3 0 0 1-3-3v-6a4 4 0 0 1 1-2.1l1.2-1.4A2 2 0 0 0 7 6.2z"></path>
-      <path d="M4.4 13.5h15.2"></path>
-    </svg>
-    <span>Inks</span>
-  </a>
-  <button type="button" aria-label="More" aria-controls="menuPanel" data-menu-btn>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-      <path d="M4 7h16M4 12h16M4 17h16"></path>
-    </svg>
-    <span>More</span>
-  </button>
-</nav>
-{% endif %}
+{% include "items/_tabbar.html" %}
 
 </div>
 

@@ -1,4 +1,4 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -48,6 +48,14 @@ html[data-wall-theme="light"] {
   --label-grad-from: rgba(244, 236, 216, 0);
   --label-grad-to: rgba(244, 236, 216, 0.92);
   --label-color: #1b2a4a;
+}
+/* The bar in tabbar.css reads these; both wall themes define --bg and --text,
+   so one rule covers light and dark. */
+html {
+  --tabbar-paper: var(--bg);
+  --tabbar-line: color-mix(in srgb, var(--text) 22%, transparent);
+  --tabbar-muted: var(--muted);
+  --tabbar-accent: var(--accent);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
@@ -250,8 +258,9 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 </head>
-<body>
+<body{% if is_owner or is_guest %} class="has-tabbar"{% endif %}>
 
 <header class="wall-head">
   <div class="wall-title">a <em>wall</em> of <strong>{{ total }}</strong> pens</div>
@@ -322,5 +331,7 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
   });
 })();
 </script>
+{% include "items/_tabbar.html" with no_menu=1 %}
+
 </body>
 </html>

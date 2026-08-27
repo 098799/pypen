@@ -524,7 +524,14 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   text-align: right;
   white-space: nowrap;
 }
-.page-head { padding-right: 90px; }
+/* Room for the floating corner hamburger — but only on the pages that still
+   have one. With the app nav (or the phone tab bar) carrying the menu, this
+   reserved a lane for a button that isn't there and left every page's own
+   actions stopping 90px short of the right margin, reading as centred rather
+   than aligned. */
+@media (min-width: 720px) {
+  body:not(:has(.app-nav)) .page-head { padding-right: 90px; }
+}
 @media (max-width: 560px) {
   .section-head {
     flex-direction: column;
@@ -534,7 +541,6 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   /* Stacked into its own row here, so nowrap only buys an overflow: the
      calendar and matrix asides ran ~16px past the gutter on a 390px phone. */
   .section-head .aside { text-align: left; white-space: normal; }
-  .page-head { padding-right: 100px; }
 }
 
 /* -------- Currently inked -------- */
@@ -984,7 +990,10 @@ footer em { color: var(--ink-soft); }
   letter-spacing: -0.01em;
 }
 .page-head h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
-.page-head .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+/* margin-left:auto, not just space-between: when the title and the actions
+   wrap onto two rows the second row has nothing to be spaced against, and the
+   buttons would fall back to the left edge. */
+.page-head .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto; }
 
 /* -------- Buttons -----------------------------------------------------------
    A 44px-tall maroon lozenge set in 0.82rem caps was the loudest thing on any
@@ -1800,64 +1809,11 @@ main { max-width: 1320px; padding: var(--main-pt) clamp(0.9rem, 3vw, 1.75rem) 3r
 
 /* --- 1. Phone: bottom tab bar ------------------------------------------- */
 
-.tabbar { display: none; }
-/* The bar's icons are inline <svg> with a viewBox and no width/height, and the
-   only rule sizing them lives in the phone media query below. If the bar is
-   ever shown outside it, each icon falls back to the SVG default of 300x150.
-   Size them here so that cannot happen. */
-.tabbar svg { width: 21px; height: 21px; display: block; }
-
 @media (max-width: 719px) {
   /* The pill nav overflowed its own container here — "Inkings" onwards sat
      off-screen with no affordance saying so. Replaced by the tab bar. */
   .app-nav { display: none; }
 
-  .tabbar {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 20;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    align-items: stretch;
-    padding-bottom: env(safe-area-inset-bottom);
-    background: color-mix(in srgb, var(--paper) 92%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid var(--ink-line);
-    box-shadow: 0 -6px 24px -18px #00000066;
-  }
-  .tabbar a, .tabbar button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.18rem;
-    min-height: 54px;
-    padding: 0.45rem 0.2rem 0.5rem;
-    border: none;
-    background: none;
-    color: var(--muted);
-    font-family: "Inter", sans-serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .tabbar svg { width: 21px; height: 21px; display: block; }
-  .tabbar a.active { color: var(--accent); }
-  .tabbar a.active svg { stroke-width: 2.1; }
-  /* Colour is never the sole carrier: the active tab also gets a rule. */
-  .tabbar a.active::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 26px; height: 2px;
-    border-radius: 0 0 2px 2px;
-    background: var(--accent);
-  }
-  .tabbar a { position: relative; }
 
   /* Clear the bar so the last row is never trapped under it. */
   main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
