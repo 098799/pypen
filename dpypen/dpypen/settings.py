@@ -182,6 +182,25 @@ STATIC_URL = "/static/"
 # therefore cannot traverse. Falls back to the in-tree path for local work.
 STATIC_ROOT = os.getenv("PYPEN_STATIC_ROOT") or str(BASE_DIR / "staticfiles")
 
+# nginx serves /static/ with max-age=86400 and the filenames never changed, so
+# for a day after every deploy a returning phone paired the new HTML with the
+# previous deploy's app.css. The visible symptom was page-filling icons: the
+# inline <svg> icons carry a viewBox and no width/height, so markup that had
+# just gained an icon button met a stylesheet with no rule to size it and each
+# one rendered at the SVG default of 300x150. Hashing the name makes a changed
+# file a different URL, so the two can no longer be paired wrongly.
+# Local work has no manifest to read from, hence the DEBUG branch.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT") or str(BASE_DIR / "media")
 

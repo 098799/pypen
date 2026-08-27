@@ -117,6 +117,14 @@ html[data-theme="dark"] body::before {
 }
 main, header, footer, .topbar { position: relative; z-index: 1; }
 
+/* Every icon in the app is an inline <svg viewBox> with no width or height, so
+   that each context can size it. Miss one rule and the icon does not come out
+   slightly wrong, it comes out at the SVG default of 300x150 and swallows the
+   page. This is the floor under that. :where() holds it at zero specificity,
+   so every sizing rule below still wins, and the [width] guard leaves the few
+   icons that carry their own dimensions alone. */
+svg:where(:not([width])) { width: 1em; height: 1em; }
+
 /* -------- Top bar (theme toggle + user nav) -------- */
 .topbar {
   position: fixed;

@@ -23,7 +23,10 @@
 Vendored, not fetched from unpkg. A private collection should not tell a CDN
 which pages get opened, and the site should not go half-dead when unpkg does.
 The files under items/static/items/vendor/ were checked byte-for-byte against
-the SRI hashes this tag used to carry, so they are the same builds.
+the SRI hashes this tag used to carry, so they are the same builds, save for
+one edit: the trailing sourceMappingURL comment was cut from both tom-select
+files. The .map files were never vendored, so the reference was a 404 on every
+page load, and it also stopped collectstatic hashing the assets at all.
 {% endcomment %}
 <script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
 <link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
