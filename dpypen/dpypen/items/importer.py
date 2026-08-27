@@ -10,7 +10,7 @@ import anthropic
 from dpypen.items.models import Ink, Nib, Pen
 
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 MAX_TOKENS = 4096
 
 

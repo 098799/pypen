@@ -445,35 +445,55 @@ live behind More.
 })();
 </script>
 <script>
-/* The tab bar lives outside #main, which hx-boost swaps, so its active state
-   does not come back with the new document the way .app-nav's does. Re-derive
-   it from the URL after every swap. */
+/* The tab bar and the hamburger panel both live outside #main, which hx-boost
+   swaps, so neither gets its active state back the way .app-nav does — the
+   panel was still lighting "Pens" after you had used it to navigate to
+   Records. Re-derive both from the URL after every swap.
+
+   The panel also disagreed with the server on hard loads: /pens/needs-photos/
+   renders with nav="pens", so it lit "Pens" while sitting on the page its own
+   entry names. Longest-prefix wins here, which resolves that too — and being
+   derived rather than declared, it stays right for any route added later. */
 (function () {
-  var bar = document.querySelector(".tabbar");
-  if (!bar) return;
-  var links = Array.prototype.slice.call(bar.querySelectorAll("a[href]"));
+  var GROUPS = [
+    { root: ".tabbar",     sel: "a[href]",              cls: "active", current: true  },
+    { root: ".menu-panel", sel: ".menu-link, .menu-item", cls: "on",   current: false },
+  ];
+
+  var groups = GROUPS.map(function (g) {
+    var root = document.querySelector(g.root);
+    return root ? { cfg: g, links: Array.prototype.slice.call(root.querySelectorAll(g.sel)) } : null;
+  }).filter(Boolean);
+  if (!groups.length) return;
 
   function sync() {
     var here = location.pathname;
-    var best = null;
-    links.forEach(function (a) {
-      var href = a.getAttribute("href");
-      // Longest matching prefix wins, so /pens/189/ lights up Pens and the
-      // dashboard's "/" never claims every page.
-      if (here === href || (href !== "/" && here.indexOf(href) === 0)) {
-        if (!best || href.length > best.getAttribute("href").length) best = a;
-      }
-    });
-    links.forEach(function (a) {
-      var on = a === best;
-      a.classList.toggle("active", on);
-      if (on) a.setAttribute("aria-current", "page");
-      else a.removeAttribute("aria-current");
+    groups.forEach(function (group) {
+      var best = null;
+      group.links.forEach(function (a) {
+        var href = (a.getAttribute("href") || "").split("?")[0];
+        if (!href) return;
+        // Longest matching prefix wins, so /pens/189/ lights Pens,
+        // /pens/needs-photos/ lights its own entry rather than Pens, and the
+        // dashboard's "/" never claims every page.
+        if (here === href || (href !== "/" && here.indexOf(href) === 0)) {
+          if (!best || href.length > best.__href.length) { best = a; a.__href = href; }
+        }
+      });
+      group.links.forEach(function (a) {
+        var on = a === best;
+        a.classList.toggle(group.cfg.cls, on);
+        if (group.cfg.current) {
+          if (on) a.setAttribute("aria-current", "page");
+          else a.removeAttribute("aria-current");
+        }
+      });
     });
   }
 
   sync();
   document.body.addEventListener("htmx:afterSettle", sync);
+  document.body.addEventListener("htmx:pushedIntoHistory", sync);
   window.addEventListener("popstate", sync);
 })();
 </script>
