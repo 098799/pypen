@@ -12,6 +12,7 @@ urlpatterns = [
     path('history/matrix/', history.matrix, name='history_matrix'),
     path('records/', records.records, name='records'),
     path('search/', search.search, name='search'),
+    path('settings/', public.settings_page, name='settings'),
     path('api/palette', palette.palette, name='api_palette'),
 
     path('manifest.json', pwa.manifest, name='pwa_manifest'),

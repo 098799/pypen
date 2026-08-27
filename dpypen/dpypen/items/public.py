@@ -327,3 +327,15 @@ def dashboard(request):
         "beloved_ink": beloved_ink,
         "nav": "dashboard",
     })
+
+
+@login_or_guest_required
+def settings_page(request):
+    """Theme, keyboard layer and the account actions.
+
+    These lived in the hamburger panel, where they pushed the routes that have
+    nowhere else to live — history, records, import — off the bottom of the
+    screen. They are settings: visited rarely, changed rarely, and fine on a
+    page of their own.
+    """
+    return render(request, "items/settings.html", {"nav": "settings"})

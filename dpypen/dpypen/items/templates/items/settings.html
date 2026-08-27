@@ -1,0 +1,137 @@
+{% extends "items/_shell.html" %}
+{% block title %}Settings · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+.settings-group { margin-bottom: 2rem; }
+.settings-group .menu-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+.settings-group .note {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+}
+.settings-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+{% endblock %}
+
+{% block content %}
+
+<div class="detail-bar">
+  <a href="{% url 'dashboard' %}" class="pen-back">&larr; Back</a>
+  <button class="menu-btn detail-menu" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+  </button>
+</div>
+
+<div class="page-head compact">
+  <h1><em>Settings</em></h1>
+</div>
+
+<div class="settings-group">
+  <div class="menu-label">Theme</div>
+  <div class="theme-choices" role="radiogroup" aria-label="Theme">
+    <button type="button" data-theme="light" aria-label="Light theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+      </svg>
+      <span>Light</span>
+    </button>
+    <button type="button" data-theme="dark" aria-label="Dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+      </svg>
+      <span>Dark</span>
+    </button>
+  </div>
+</div>
+
+<div class="settings-group">
+  <div class="menu-label">Keys</div>
+  <div class="theme-choices keys-choices" role="radiogroup" aria-label="Keyboard layer">
+    <button type="button" data-keys="full" aria-label="Full keyboard layer"><span>Full</span></button>
+    <button type="button" data-keys="leader" aria-label="Leader only"><span>m&nbsp;only</span></button>
+    <button type="button" data-keys="off" aria-label="Keyboard layer off"><span>Off</span></button>
+  </div>
+  <p class="note">“m only” is for a browser where Vimium is already driving: the app keeps its own m-… commands and hands back every other key.</p>
+</div>
+
+{% if user.is_authenticated %}
+<div class="settings-group">
+  <div class="menu-label">Account</div>
+  {% comment %}
+  hx-boost="false" because these leave the app — boosted, hx-select pulls the
+  target page's #main into this shell and Django admin arrives wearing the pen
+  site's chrome.
+  {% endcomment %}
+  <div class="settings-actions">
+    <a href="/admin/" class="btn" hx-boost="false">Admin</a>
+    <a href="{% url 'account_logout' %}" class="btn" hx-boost="false">Sign out</a>
+  </div>
+</div>
+{% elif is_guest %}
+<div class="settings-group">
+  <div class="menu-label">Visiting</div>
+  <p class="note">You are here on an invitation{% if invite_label %} — {{ invite_label }}{% endif %}.</p>
+  <div class="settings-actions">
+    <form method="post" action="{% url 'invite_deactivate' %}">{% csrf_token %}<button type="submit" class="btn">Leave</button></form>
+  </div>
+</div>
+{% endif %}
+
+{% comment %}
+Bound here rather than in the shell: the shell's copy is scoped to the menu
+panel these controls used to live in, and its scripts sit outside #main, so
+they do not re-run when hx-boost swaps a new page in underneath them.
+{% endcomment %}
+<script>
+(function () {
+  var themeBtns = document.querySelectorAll('.theme-choices:not(.keys-choices) button[data-theme]');
+  function paintTheme() {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    themeBtns.forEach(function (b) {
+      var on = b.getAttribute('data-theme') === cur;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  themeBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var next = b.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+      paintTheme();
+    });
+  });
+  paintTheme();
+
+  var keyBtns = document.querySelectorAll('.keys-choices button[data-keys]');
+  function paintKeys() {
+    if (!window.__keysMode) return;
+    var cur = window.__keysMode();
+    keyBtns.forEach(function (b) {
+      var on = b.getAttribute('data-keys') === cur;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  keyBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (window.__keysSetMode) window.__keysSetMode(b.getAttribute('data-keys'));
+      paintKeys();
+    });
+  });
+  paintKeys();
+})();
+</script>
+
+{% endblock %}
