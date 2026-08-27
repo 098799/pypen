@@ -32,7 +32,12 @@
      paper — effectively invisible. Unreachable with today's data (all 16
      colours map), but it is what a newly-named colour would fall to. */
   --ink-unknown: #6b6257;
-  --plate-shadow: 0 1px 0 #fff inset, 0 4px 14px -8px #00000033;
+  /* Was `0 1px 0 #fff inset, ...`. That inset drew a hard white hairline along
+     the top edge of every surface carrying this token — a moulded-plastic
+     bevel, and on the maroon primary button a bright line across the top that
+     read as a rendering fault. The ambient shadow is the honest half; the
+     bevel is gone everywhere the token is used. */
+  --plate-shadow: 0 4px 14px -8px #00000033;
 }
 /* Only .form inputs declared a colour scheme, so native controls outside a
    form — the search filter checkboxes, the needs-photos picker — rendered in
@@ -64,7 +69,7 @@ html[data-theme="dark"] {
   --card-shadow: 0 12px 32px -16px #000000aa;
   --plate-active: 0 0 0 1px var(--ink-line), 0 2px 8px -2px #00000099;
   --ink-unknown: #9a8f7e;
-  --plate-shadow: 0 1px 0 #ffffff0d inset, 0 4px 16px -6px #00000088;
+  --plate-shadow: 0 4px 16px -6px #00000088;
   --noise-opacity: 0.35;
   --noise-mix: overlay;
 }
@@ -948,12 +953,26 @@ footer em { color: var(--ink-soft); }
   transition: transform 0.15s, border-color 0.15s, background 0.15s;
 }
 .btn:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--ink); }
+/* Solid ink, not moulded plastic. The vertical gradient was mostly there to
+   sell the bevel, and it cost contrast to do it: the dark theme's bottom stop
+   was 4.67:1, scraping AA, where a flat --accent holds 7.10:1 across the whole
+   face (10.2:1 for white on maroon in light). The lift on hover is carried by
+   a real shadow tinted with the accent — the button's own shadow on warm
+   paper, rather than a grey smudge under it. */
 .btn.primary {
-  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  background: var(--accent);
   color: var(--on-accent);
   border-color: transparent;
+  box-shadow: 0 1px 3px -1px color-mix(in srgb, var(--accent) 45%, transparent);
 }
-.btn.primary:hover { color: var(--on-accent); }
+.btn.primary:hover {
+  color: var(--on-accent);
+  box-shadow: 0 5px 14px -5px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+.btn.primary:active {
+  transform: none;
+  box-shadow: 0 1px 2px -1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
 .btn.danger {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line));
