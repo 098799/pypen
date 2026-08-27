@@ -137,10 +137,23 @@ class PenPhoto(models.Model):
     class Meta:
         ordering = ["position", "-uploaded_at"]
 
+    # Three shots make an entry: the pen uncapped, the nib close, the pen
+    # capped. Everything uploaded before this existed is "other" — position
+    # alone could not say which of a pen's photos was which.
+    KINDS = [
+        ("main", "Uncapped"),
+        ("nib", "Nib close-up"),
+        ("capped", "Capped"),
+        ("other", "Other"),
+    ]
+
     pen = models.ForeignKey(Pen, on_delete=models.CASCADE, related_name="photos")
     image = models.ImageField(upload_to=pen_photo_path)
     thumbnail = models.ImageField(upload_to=pen_photo_path, blank=True, null=True)
     image_styled = models.ImageField(upload_to=pen_photo_path, blank=True, null=True)
+    kind = models.CharField(max_length=8, choices=KINDS, default="other")
+    # Where the base image came from, when it was not the owner's own camera.
+    source_note = models.CharField(max_length=200, blank=True, default="")
     position = models.IntegerField(default=0)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

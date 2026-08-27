@@ -43,7 +43,14 @@ fi
 # survivable while filenames were unhashed. It no longer is — every page now
 # resolves its assets through staticfiles.json, so restarting without a good
 # manifest takes the whole site down rather than just serving stale CSS.
+#
+# Migrations run here too. They did not until 2026-08-27, which meant any
+# change adding a model field shipped code to the server that referenced a
+# column the database did not have — every page touching it 500s until someone
+# remembers to migrate by hand. Ordered before the restart so the schema is
+# ready when the new process comes up.
 ssh "$REMOTE" 'set -euo pipefail; cd /root/pypen/dpypen \
+  && /root/pypen/.venv/bin/python manage.py migrate --noinput | tail -3 \
   && /root/pypen/.venv/bin/python manage.py collectstatic --noinput | tail -1 \
   && systemctl restart pypen && sleep 2 && systemctl is-active pypen'
 code=$(curl -s -o /dev/null -w '%{http_code}' -m 15 https://pen.grining.eu/)

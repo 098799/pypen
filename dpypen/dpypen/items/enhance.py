@@ -13,8 +13,15 @@ from PIL import Image
 # what you ask for, which is less than the 1800px original we feed them. At 2K
 # (2400x1792) the nib keeps its engraved outline and the section keeps its
 # threading — compared side by side, flash smooths both away.
-MODEL = "gemini-3-pro-image"
-IMAGE_SIZE = "2K"
+#
+# Re-measured 2026-08-27 against gemini-3.1-flash-lite-image: it rejects
+# image_size="2K" outright (400 INVALID_ARGUMENT) and returns 1200x896 without
+# it, so on a 1350x1800 source it is a downscale. It is ~7x faster (3.7s vs
+# 24.7s) and far cheaper, which is the trade PYPEN_IMAGE_MODEL exists to let
+# you make; the default stays on quality because these are catalogue shots.
+MODEL = os.getenv("PYPEN_IMAGE_MODEL") or "gemini-3-pro-image"
+# Only the pro model accepts a size; asking flash-lite for one is a hard error.
+IMAGE_SIZE = os.getenv("PYPEN_IMAGE_SIZE") or ("2K" if "pro" in MODEL else None)
 
 _PROMPT_TEMPLATE = """You are EDITING the input photograph, not generating a new image.
 
@@ -46,6 +53,76 @@ WHAT TO CHANGE
 
 If you cannot isolate the pen from the background with confidence, return the
 original image unchanged rather than guessing."""
+
+
+# ---- Variants ---------------------------------------------------------------
+# Three shots per pen, all derived from the same source photograph. Two of them
+# ask for a view the source may not contain, so both prompts end with an
+# explicit refusal clause: a catalogue entry that invents a cap the owner has
+# never seen is worse than a missing photo. The nib crop is the safe one — the
+# nib is in the frame by definition on an uncapped shot.
+_COMMON_RULES = """
+WHAT TO PRESERVE (non-negotiable — this is an edit, not a redesign)
+  • Keep every part of the pen pixel-faithful: cap, barrel, section, clip, finial,
+    threading, nib, breather hole, tipping.
+  • Preserve the body colour, finish (matte/gloss/striated/demo), material texture,
+    any imprinted branding, and any imperfections, scratches or wear.
+  • Do not add, remove, or reposition any hardware (bands, rings, filler knob).
+  • Background: remove the original entirely and replace with a warm off-white
+    paper backdrop (#f2ead4), soft natural gradient, subtle grain, and a
+    realistic soft drop shadow as if the pen rests on a desk.
+"""
+
+VARIANT_PROMPTS = {
+    "main": _PROMPT_TEMPLATE,
+
+    "nib": """You are EDITING the input photograph, not generating a new image.
+
+The subject is a real fountain pen owned by the user: {title} ({era}, {filling}).
+
+TASK: produce a CLOSE-UP of the nib and section that are already visible in this
+photograph. Crop in on them and enlarge; do not redraw them.
+""" + _COMMON_RULES + """
+  • The nib must keep its exact shape, size, imprint, tipping and material colour.
+    Do NOT re-engrave it, add a maker's logo, or invent a breather hole.
+  • Frame the nib and the front of the section filling most of the frame,
+    three-quarter view, sharp focus on the tipping.
+
+If the nib is not clearly visible in the input, return the input image unchanged
+rather than inventing one.""",
+
+    "capped": """You are EDITING the input photograph, not generating a new image.
+
+The subject is a real fountain pen owned by the user: {title} ({era}, {filling}).
+
+TASK: show this pen CAPPED — cap seated on the barrel, posted nowhere, laid
+horizontally. Use only the cap and barrel that appear in this photograph.
+""" + _COMMON_RULES + """
+  • The cap's clip, finial and any cap band must match the ones in the input
+    exactly, in the same proportions.
+
+If the cap is not visible in the input photograph, return the input image
+unchanged. Do NOT invent a cap, a clip or a finial — an imagined cap is worse
+than no photograph at all.""",
+}
+
+VARIANT_ORDER = ["main", "nib", "capped"]
+
+
+def variant_prompt(pen, kind: str) -> str:
+    return VARIANT_PROMPTS[kind].format(
+        title=_pen_title(pen),
+        filling=pen.filling or "unknown",
+        era=pen.age or "unknown",
+    )
+
+
+def _image_config_kwargs(aspect_ratio: str = "4:3") -> dict:
+    """Only the pro model accepts image_size; flash-lite 400s on it."""
+    kw = {"aspect_ratio": aspect_ratio}
+    if IMAGE_SIZE:
+        kw["image_size"] = IMAGE_SIZE
+    return kw
 
 
 def _pen_title(pen) -> str:
@@ -104,7 +181,7 @@ def generate_ink_swatch(image_bytes: bytes, mime_type: str = "image/jpeg") -> by
 
 
 def generate_catalog_shot(image_bytes: bytes, prompt: str, mime_type: str = "image/jpeg",
-                          attempts: int = 2) -> bytes:
+                          attempts: int = 2, aspect_ratio: str = "4:3") -> bytes:
     """Render one catalog shot, retrying a refusal once.
 
     The model intermittently answers with prose instead of an image — "due to
@@ -125,7 +202,7 @@ def generate_catalog_shot(image_bytes: bytes, prompt: str, mime_type: str = "ima
                 prompt,
             ],
             config=types.GenerateContentConfig(
-                image_config=types.ImageConfig(image_size=IMAGE_SIZE, aspect_ratio="4:3"),
+                image_config=types.ImageConfig(**_image_config_kwargs(aspect_ratio)),
             ),
         )
 
