@@ -23,7 +23,7 @@
   font-variant-numeric: tabular-nums;
 }
 .year-row.busy .year-label { color: var(--ink); font-weight: 500; }
-.year-row.empty .year-label { color: var(--muted); font-style: italic; }
+.year-row.is-blank .year-label { color: var(--muted); font-style: italic; }
 .year-bar-track {
   height: 18px;
   background: color-mix(in srgb, var(--paper-dark) 50%, transparent);
@@ -102,7 +102,7 @@
   --cell-h: 14px;
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-auto-columns: minmax(0, 1fr);
   grid-template-rows: repeat(7, var(--cell-h));
   gap: 1px;
   width: 100%;
@@ -116,10 +116,10 @@
   background: color-mix(in srgb, var(--paper-dark) 55%, transparent);
   transition: transform 0.12s;
 }
-.cal-cell.inked {
+.cal-cell.is-inked {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
 }
-.cal-cell.empty { visibility: hidden; }
+.cal-cell.is-blank { visibility: hidden; }
 .cal-cell[data-ink]:hover { transform: scale(1.4); z-index: 3; cursor: help; outline: 1px solid var(--accent); }
 
 .cal-tip {
@@ -232,8 +232,8 @@
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
 }
-.chart-box .chart-row.empty .y,
-.chart-box .chart-row.empty .v { color: var(--muted); opacity: 0.5; }
+.chart-box .chart-row.is-blank .y,
+.chart-box .chart-row.is-blank .v { color: var(--muted); opacity: 0.5; }
 
 .matrix-wrap {
   overflow-x: auto;
@@ -317,7 +317,7 @@
 }
 .pi-cell[data-days]:not([data-days="0"]) { cursor: help; }
 .pi-cell:hover { transform: scale(1.35); z-index: 2; }
-.pi-cell.empty { background: color-mix(in srgb, var(--paper-dark) 40%, transparent); border-color: color-mix(in srgb, var(--ink-line) 50%, transparent); }
+.pi-cell.is-blank { background: color-mix(in srgb, var(--paper-dark) 40%, transparent); border-color: color-mix(in srgb, var(--ink-line) 50%, transparent); }
 
 .gantt-controls {
   display: flex;
@@ -591,7 +591,7 @@
   </div>
   <div class="year-overview">
     {% for y in year_list %}
-    <div class="year-row {% if y.days == 0 %}empty{% elif y.days > 300 %}busy{% endif %}">
+    <div class="year-row {% if y.days == 0 %}is-blank{% elif y.days > 300 %}busy{% endif %}">
       <span class="year-label">{{ y.year }}</span>
       <div class="year-bar-track"><div class="year-bar" style="width: {{ y.bar_pct }}%"></div></div>
       <span class="year-meta">
@@ -614,7 +614,7 @@
       <h4>Pens acquired</h4>
       <div class="chart-sub">new entries by year</div>
       {% for r in yearly_pen_count %}
-      <div class="chart-row{% if not r.value %} empty{% endif %}">
+      <div class="chart-row{% if not r.value %} is-blank{% endif %}">
         <span class="y">{{ r.year }}</span>
         <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value }}{% else %}—{% endif %}</span>
@@ -626,7 +626,7 @@
       <h4>Inks acquired</h4>
       <div class="chart-sub">bottles &amp; samples</div>
       {% for r in yearly_ink_count %}
-      <div class="chart-row{% if not r.value %} empty{% endif %}">
+      <div class="chart-row{% if not r.value %} is-blank{% endif %}">
         <span class="y">{{ r.year }}</span>
         <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value }}{% else %}—{% endif %}</span>
@@ -638,7 +638,7 @@
       <h4>Pen spend</h4>
       <div class="chart-sub">PLN, approximate conversion</div>
       {% for r in yearly_pen_spend %}
-      <div class="chart-row{% if not r.value %} empty{% endif %}">
+      <div class="chart-row{% if not r.value %} is-blank{% endif %}">
         <span class="y">{{ r.year }}</span>
         <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value|floatformat:0 }}{% else %}—{% endif %}</span>
@@ -650,7 +650,7 @@
       <h4>Ink spend</h4>
       <div class="chart-sub">PLN, approximate conversion</div>
       {% for r in yearly_ink_spend %}
-      <div class="chart-row{% if not r.value %} empty{% endif %}">
+      <div class="chart-row{% if not r.value %} is-blank{% endif %}">
         <span class="y">{{ r.year }}</span>
         <div class="track"><div class="fill" style="--cbar: var(--accent); width: {{ r.pct }}%"></div></div>
         <span class="v">{% if r.value %}{{ r.value|floatformat:0 }}{% else %}—{% endif %}</span>
@@ -685,13 +685,13 @@
         </div>
         {% for cell in row.cells %}
           {% if cell %}
-            <a class="pi-cell {% if not cell.days %}empty{% endif %}"
+            <a class="pi-cell {% if not cell.days %}is-blank{% endif %}"
                href="{% url 'pens_detail' row.pen_id %}"
                style="--c: {{ cell.hex }}; --a: {{ cell.opacity }};"
                data-days="{{ cell.days }}"
                title="{{ row.pen }} · {{ cell.ink_label }} — {{ cell.days }} day{{ cell.days|pluralize }} · {{ cell.fills }} fill{{ cell.fills|pluralize }}"></a>
           {% else %}
-            <span class="pi-cell empty"></span>
+            <span class="pi-cell is-blank"></span>
           {% endif %}
         {% endfor %}
       </div>
@@ -719,7 +719,7 @@
           {% for cell in week %}
             {% if cell %}
               {% if cell.bg %}
-              <span class="cal-cell inked" style="background: {{ cell.bg }};"
+              <span class="cal-cell is-inked" style="background: {{ cell.bg }};"
                     data-date="{{ cell.label }}"
                     data-ink="{{ cell.inks_summary }}"
                     data-pen="{{ cell.pens_summary }}"></span>
@@ -727,7 +727,7 @@
               <span class="cal-cell" data-date="{{ cell.label }}"></span>
               {% endif %}
             {% else %}
-              <span class="cal-cell empty"></span>
+              <span class="cal-cell is-blank"></span>
             {% endif %}
           {% endfor %}
         {% endfor %}

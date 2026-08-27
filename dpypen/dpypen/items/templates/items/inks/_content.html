@@ -59,7 +59,7 @@
 </div>
 <div class="list">
   {% for i in g.inks %}
-  <div class="list-row" data-listnav-item>
+  <div class="list-row no-actions" data-listnav-item>
     <span class="swatch" style="background: {{ i.swatch_bg }}"></span>
     <div>
       {% if public %}
@@ -83,15 +83,6 @@
         {% if i.moi_url %} · <a href="{{ i.moi_url }}" target="_blank" rel="noopener" style="border: none; color: var(--accent); letter-spacing: 0.05em;">MoI ↗</a>{% endif %}
       </div>
     </div>
-    {% if can_edit %}
-    <div class="row-actions">
-      <a href="{% url 'inks_edit' i.pk %}" class="btn small">Edit</a>
-      <form method="post" action="{% url 'inks_delete' i.pk %}" style="display: inline;" onsubmit="return confirm('Delete {{ i|escapejs }}?');">
-        {% csrf_token %}
-        <button type="submit" class="btn small danger">Delete</button>
-      </form>
-    </div>
-    {% endif %}
   </div>
   {% endfor %}
 </div>

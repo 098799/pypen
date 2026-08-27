@@ -50,6 +50,20 @@
   </div>
 </form>
 
+{% if usage and can_edit %}
+{% comment %}
+Delete used to sit on every past-inking row in the listing. It is a rare,
+irreversible act and does not belong next to 130 rows you are only reading;
+this form is the one place you have already decided to change this inking.
+{% endcomment %}
+<form method="post" action="{% url 'usages_delete' usage.pk %}"
+      onsubmit="return confirm('Delete this inking? This cannot be undone.');"
+      style="margin-top: 1.5rem;">
+  {% csrf_token %}
+  <button type="submit" class="btn small danger">Delete this inking</button>
+</form>
+{% endif %}
+
 {% if usage %}
 <section style="margin-top: 3rem;">
   <div class="section-head">

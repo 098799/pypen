@@ -34,6 +34,13 @@
   --ink-unknown: #6b6257;
   --plate-shadow: 0 1px 0 #fff inset, 0 4px 14px -8px #00000033;
 }
+/* Only .form inputs declared a colour scheme, so native controls outside a
+   form — the search filter checkboxes, the needs-photos picker — rendered in
+   the OS light scheme: white boxes on the dark paper. Declaring it on the
+   root covers checkboxes, scrollbars and the date picker in both themes. */
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
 html[data-theme="dark"] {
   /* White on the accent gradient is 2.55:1 at the top stop — the primary
      call to action failed AA in dark only. Dark ink on a shallower gradient
@@ -226,7 +233,8 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   position: fixed;
   top: 3.6rem;
   right: 0.9rem;
-  z-index: 11;
+  /* Above the phone tab bar (z-index 20), which the panel opens upwards from. */
+  z-index: 30;
   min-width: 240px;
   max-width: calc(100vw - 1.8rem);
   padding: 1rem;
@@ -260,7 +268,7 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   gap: 0.2rem;
 }
 .theme-choices button {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   font-family: "Inter", sans-serif;
   font-size: 0.72rem;
@@ -278,9 +286,13 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 .theme-choices button svg { width: 14px; height: 14px; }
 .theme-choices button:hover { color: var(--ink); }
 .theme-choices button.active {
+  /* Same flattening as the nav chips: the radial-gradient-plus-plate-shadow
+     "pressed plastic" read is the one being removed across the app. Selection
+     is carried by the accent outline and ink-coloured label instead. */
   color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: var(--plate-active);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: none;
+  border: 1px solid var(--accent);
 }
 /* Floating tooltip (used by calendar heatmap and pen-detail mini-gantt) */
 .cal-tip {
@@ -447,7 +459,9 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
     align-items: flex-start;
     gap: 0.35rem;
   }
-  .section-head .aside { text-align: left; }
+  /* Stacked into its own row here, so nowrap only buys an overflow: the
+     calendar and matrix asides ran ~16px past the gutter on a 390px phone. */
+  .section-head .aside { text-align: left; white-space: normal; }
   .page-head { padding-right: 100px; }
 }
 
@@ -546,6 +560,18 @@ html[data-theme="dark"] .inked {
 html[data-theme="dark"] .inked .pen-bg { opacity: 0.2; }
 .inked:hover .pen-bg { opacity: 0.38; filter: blur(2px) saturate(1.05); }
 html[data-theme="dark"] .inked:hover .pen-bg { opacity: 0.3; }
+/* A dark pen photographed against a light backdrop lands directly behind the
+   model name — on the Edison card the title was reading over the barrel. The
+   photograph is decoration; the name is the content, so a paper-toned scrim
+   sits between them, strongest at the top-left where the text block starts. */
+.inked .pen-bg::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--paper) 78%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 45%, transparent) 45%,
+    transparent 78%);
+}
 .inked .ribbon, .inked .brand, .inked .model, .inked .nib, .inked .divider, .inked .ink, .inked .days {
   position: relative; z-index: 1;
 }
@@ -1402,14 +1428,20 @@ html[data-theme="dark"] .switch {
 .ink-tile-label {
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  padding: 0.5rem 0.65rem 0.45rem;
-  background: linear-gradient(180deg, transparent 0%, rgba(20,16,8,0.78) 70%);
+  /* Same fade-too-late problem as .pen-tile-label — a pale ink swatch left
+     the brand line sitting on almost no wash. */
+  padding: 1.5rem 0.65rem 0.45rem;
+  background: linear-gradient(180deg,
+    rgba(20,16,8,0) 0%,
+    rgba(20,16,8,0.35) 22%,
+    rgba(20,16,8,0.8) 45%,
+    rgba(20,16,8,0.92) 100%);
   color: #f4ecd8;
   font-family: "Cormorant Garamond", Georgia, serif;
   text-shadow: 0 1px 3px rgba(0,0,0,0.7);
   line-height: 1.15;
 }
-.ink-tile-brand { font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.02em; }
+.ink-tile-brand { font-size: 0.72rem; color: #ded2b6; letter-spacing: 0.02em; }
 .ink-tile-name  { font-size: 1.0rem; }
 .ink-tile-pip {
   position: absolute;
@@ -1480,14 +1512,22 @@ html[data-theme="dark"] .switch {
 .pen-tile-label {
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  padding: 0.55rem 0.7rem;
-  background: linear-gradient(180deg, transparent 0%, rgba(20,16,8,0.82) 70%);
+  /* The scrim only reached full strength at 70%, which is below the brand
+     line — over a pen shot against a cream backdrop the brand read as cream
+     on cream. The extra top padding gives the fade somewhere to happen, and
+     the text now starts where the wash is already carrying it. */
+  padding: 1.7rem 0.7rem 0.55rem;
+  background: linear-gradient(180deg,
+    rgba(20,16,8,0) 0%,
+    rgba(20,16,8,0.35) 22%,
+    rgba(20,16,8,0.82) 45%,
+    rgba(20,16,8,0.93) 100%);
   color: #f4ecd8;
   font-family: "Cormorant Garamond", Georgia, serif;
   text-shadow: 0 1px 3px rgba(0,0,0,0.75);
   line-height: 1.15;
 }
-.pen-tile-brand { font-size: 0.74rem; opacity: 0.85; }
+.pen-tile-brand { font-size: 0.74rem; color: #ded2b6; }
 .pen-tile-model { font-size: 1.1rem; }
 .pen-tile-pip {
   position: absolute; top: 0.5rem; right: 0.5rem;
@@ -1582,6 +1622,11 @@ main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
 /* --- 1. Phone: bottom tab bar ------------------------------------------- */
 
 .tabbar { display: none; }
+/* The bar's icons are inline <svg> with a viewBox and no width/height, and the
+   only rule sizing them lives in the phone media query below. If the bar is
+   ever shown outside it, each icon falls back to the SVG default of 300x150.
+   Size them here so that cannot happen. */
+.tabbar svg { width: 21px; height: 21px; display: block; }
 
 @media (max-width: 719px) {
   /* The pill nav overflowed its own container here — "Inkings" onwards sat
@@ -1865,4 +1910,160 @@ html[data-theme="dark"] ::selection {
     scroll-behavior: auto !important;
   }
   html { scroll-behavior: auto; }
+}
+
+/* ---- Icon actions -------------------------------------------------------
+   Edit and delete are rare, deliberate acts. They were being rendered as
+   full-width named buttons on every row of every list, which made the
+   listings read as forms rather than as a collection. Lists now carry no
+   actions at all — they live behind the overflow menu on the detail page —
+   and the few in-place actions that remain (ending an inking, editing one)
+   are icons tucked into a card corner. */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  padding: 0;
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.icon-btn svg { width: 15px; height: 15px; }
+.icon-btn:hover { color: var(--ink); border-color: var(--accent); background: var(--chip-top); }
+.icon-btn.danger:hover { color: #c0392b; border-color: #c0392b; }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.card-actions {
+  position: absolute;
+  top: 0.6rem; right: 0.6rem;
+  display: flex;
+  gap: 0.3rem;
+  z-index: 3;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.card-actions:hover, .inked:hover .card-actions, .card-actions:focus-within { opacity: 1; }
+/* Touch has no hover, so never hide the affordance behind one. */
+@media (hover: none) { .card-actions { opacity: 1; } }
+
+/* ---- Overflow menu on detail pages -------------------------------------- */
+.overflow { position: relative; display: inline-block; }
+.overflow-panel {
+  position: absolute;
+  right: 0; top: calc(100% + 6px);
+  min-width: 170px;
+  padding: 0.3rem;
+  background: var(--plate-top);
+  border: 1px solid var(--ink-line);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  display: none;
+  z-index: 40;
+}
+.overflow-panel.open { display: block; }
+.overflow-panel a,
+.overflow-panel button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border: none;
+  background: none;
+  border-radius: 5px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.overflow-panel a:hover,
+.overflow-panel button:hover { background: var(--chip-top); color: var(--ink); }
+.overflow-panel button.danger { color: #c0392b; }
+
+/* ---- Compact toolbars ---------------------------------------------------
+   The listings opened with a page-head, then a filter row, then group
+   headings — roughly 260px of chrome before the first pen on a phone. The
+   toolbar folds search, view and actions onto one line; the rotation bar
+   scrolls horizontally instead of stacking. */
+.page-head.compact { margin-bottom: 0.6rem; padding-bottom: 0; border-bottom: none; }
+.page-head.compact h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin: 0; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+.toolbar-search { flex: 1 1 auto; min-width: 0; }
+.toolbar-search input[type="search"] {
+  width: 100%;
+  padding: 0.5rem 0.9rem;
+  min-height: 38px;
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 0.95rem;
+  background: var(--chip-top);
+  color: var(--ink);
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+}
+.toolbar .icon-btn { flex: 0 0 auto; }
+
+.rotbar {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 1rem;
+  padding-bottom: 0.15rem;
+}
+.rotbar::-webkit-scrollbar { display: none; }
+.rotchip {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.rotchip b { font-family: "Cormorant Garamond", Georgia, serif; font-size: 0.9rem; font-weight: 500; }
+.rotchip:hover { color: var(--ink); border-color: var(--accent); }
+.rotchip.on { color: var(--ink); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* Rows that carry no trailing action. The base .list-row reserves a third
+   track for one; without a child in it the track collapses but its 1rem gap
+   does not, leaving the row visibly short of the right edge. */
+.list-row.no-actions { grid-template-columns: auto 1fr; }
+
+/* ---- Phone vertical budget -------------------------------------------------
+   At 390px the dashboard spent ~500px before the first inked card: a wrapping
+   0.3em-tracked overline, a 2.8rem section title and a 1.75rem rule beneath
+   it. The type scale is the character of the thing and stays on desktop; the
+   phone just cannot afford it at full size. */
+@media (max-width: 560px) {
+  .overline {
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    padding-bottom: 0.35rem;
+  }
+  .section-head {
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.45rem;
+    gap: 0.5rem;
+  }
+  .section-head h2 { font-size: 1.5rem; }
+  .dash-head { padding-bottom: 0.6rem; margin-bottom: 1rem; }
+  .inked { padding: 1.4rem 1rem 1rem; }
+  .inked .model { font-size: 1.35rem; }
 }

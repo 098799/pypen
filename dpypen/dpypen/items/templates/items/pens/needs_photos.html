@@ -62,8 +62,11 @@
 .shot-row .polish {
   font-family: "Inter", sans-serif; font-size: 0.66rem; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--muted);
-  display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
+  /* Same story as the search filters: the label carries the tap target. */
+  padding: 0.55rem 0.25rem; min-height: 44px;
 }
+.shot-row .polish input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 @media (min-width: 900px) {
   .shot-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); column-gap: 2.25rem; }
 }

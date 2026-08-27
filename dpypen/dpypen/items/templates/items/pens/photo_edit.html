@@ -36,7 +36,7 @@
 }
 .frame.primary { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), var(--card-shadow); }
 .frame .label.primary { background: var(--accent); }
-.frame.empty {
+.frame.is-blank {
   display: flex; align-items: center; justify-content: center;
   color: var(--muted); font-style: italic;
   font-family: "Cormorant Garamond", Georgia, serif;
@@ -131,7 +131,7 @@
     <img src="{{ photo.image_styled.url }}" alt="AI catalog">
   </div>
   {% else %}
-  <div class="frame empty" id="styledFrame">
+  <div class="frame is-blank" id="styledFrame">
     Not yet enhanced.<br>
     <span class="t-touch">Tap</span><span class="t-desk">Click</span> <strong>Polish with AI</strong> below.
   </div>
@@ -193,10 +193,10 @@
   form.addEventListener("submit", function () {
     promptInput.value = promptEditor.value;
     document.querySelectorAll(".compare .frame").forEach(function (f) {
-      if (f.classList.contains("empty")) f.classList.add("busy");
+      if (f.classList.contains("is-blank")) f.classList.add("busy");
     });
     var styled = document.querySelector(".compare .frame:nth-child(2)");
-    if (styled && !styled.classList.contains("empty")) styled.classList.add("busy");
+    if (styled && !styled.classList.contains("is-blank")) styled.classList.add("busy");
   });
 
   reset.addEventListener("click", function (e) {

@@ -1,6 +1,8 @@
+import logging
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -9,6 +11,8 @@ from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
+
+logger = logging.getLogger(__name__)
 
 
 # ----- Usages -----
@@ -123,7 +127,6 @@ def usages_sample_add(request, pk):
 @require_POST
 def samples_extract(request, pk):
     from django.contrib import messages
-    from django.core.files.base import ContentFile
 
     from dpypen.items.enhance import generate_writing_sample
 
@@ -285,21 +288,54 @@ def pens_list(request):
     for k in ("p0", "p1", "p2", "p3", "other", "defunct"):
         if k in groups:
             ordered.append(groups[k])
+    groups_ordered_all = list(ordered)
 
     view = "grid" if request.GET.get("view") == "grid" else "list"
 
-    def _view_url(target_view):
+    # Rotation used to be six stacked sections you scrolled past to reach the
+    # one you wanted. It reads far better as a filter: pick a priority and the
+    # list is only that priority, with the group headings dropped entirely.
+    rot = (request.GET.get("rot") or "").strip()
+    rot_counts = {g["key"]: len(g["pens"]) for g in ordered}
+    if rot and rot in rot_counts:
+        ordered = [g for g in ordered if g["key"] == rot]
+        for g in ordered:
+            g["headless"] = True
+
+    def _url_with(**changes):
         params = request.GET.copy()
-        if target_view == "list":
-            params.pop("view", None)
-        else:
-            params["view"] = target_view
+        for k, v in changes.items():
+            if v is None:
+                params.pop(k, None)
+            else:
+                params[k] = v
         qs_str = params.urlencode()
         return request.path + (("?" + qs_str) if qs_str else "")
+
+    def _view_url(target_view):
+        return _url_with(view=None if target_view == "list" else target_view)
+
+    rot_filters = [{
+        "key": "",
+        "label": "All",
+        "count": len(pens),
+        "url": _url_with(rot=None),
+        "on": not rot,
+    }]
+    for g in groups_ordered_all:
+        rot_filters.append({
+            "key": g["key"],
+            "label": g["title"],
+            "count": len(g["pens"]),
+            "url": _url_with(rot=g["key"]),
+            "on": rot == g["key"],
+        })
 
     context = {
         "pens": pens,
         "groups": ordered,
+        "rot_filters": rot_filters,
+        "rot": rot,
         "query": q,
         "terms": q.split(),
         "nav": "pens",
@@ -375,7 +411,11 @@ def pens_photo_add(request, pk):
                 photo.image_styled.save(f"styled-{photo.pk}.jpg",
                                         ContentFile(styled), save=True)
             except Exception:
-                pass   # the original is already saved; polish is a nicety
+                # The original is already saved; polish is a nicety, so the
+                # upload must still succeed. But swallow it *loudly* — a silent
+                # pass here once hid a NameError for every upload in the queue.
+                logger.exception("Auto-polish failed for photo %s (pen %s)",
+                                 photo.pk, pen.pk)
 
     nxt = request.POST.get("next")
     if nxt == "queue":
@@ -462,7 +502,6 @@ def pens_photo_edit(request, pk, photo_pk):
 @require_POST
 def pens_photo_enhance(request, pk, photo_pk):
     from django.contrib import messages
-    from django.core.files.base import ContentFile
 
     from dpypen.items.enhance import build_prompt, generate_catalog_shot
 
@@ -507,7 +546,6 @@ def pens_photo_unstyle(request, pk, photo_pk):
 @require_POST
 def pens_photo_rotate(request, pk, photo_pk):
     import io
-    from django.core.files.base import ContentFile
     from PIL import Image
     from dpypen.items.models import PHOTO_MAX_SIZE, THUMB_MAX_SIZE, JPEG_QUALITY
 
@@ -714,7 +752,6 @@ def inks_swatch_add(request, pk):
 @require_POST
 def swatches_extract(request, pk):
     from django.contrib import messages
-    from django.core.files.base import ContentFile
 
     from dpypen.items.enhance import generate_ink_swatch
 

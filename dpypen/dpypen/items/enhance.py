@@ -8,7 +8,13 @@ from google.genai import types
 from PIL import Image
 
 
-MODEL = "gemini-3.1-flash-image-preview"
+# gemini-3-pro-image is the only family member that renders above 1K, and the
+# resolution is the whole point: the flash models hand back 1200x896 no matter
+# what you ask for, which is less than the 1800px original we feed them. At 2K
+# (2400x1792) the nib keeps its engraved outline and the section keeps its
+# threading — compared side by side, flash smooths both away.
+MODEL = "gemini-3-pro-image"
+IMAGE_SIZE = "2K"
 
 _PROMPT_TEMPLATE = """You are EDITING the input photograph, not generating a new image.
 
@@ -97,36 +103,49 @@ def generate_ink_swatch(image_bytes: bytes, mime_type: str = "image/jpeg") -> by
     return generate_catalog_shot(image_bytes, prompt=SWATCH_PROMPT, mime_type=mime_type)
 
 
-def generate_catalog_shot(image_bytes: bytes, prompt: str, mime_type: str = "image/jpeg") -> bytes:
+def generate_catalog_shot(image_bytes: bytes, prompt: str, mime_type: str = "image/jpeg",
+                          attempts: int = 2) -> bytes:
+    """Render one catalog shot, retrying a refusal once.
+
+    The model intermittently answers with prose instead of an image — "due to
+    system limitations, I cannot isolate a specific object within a photo" —
+    and the identical request then succeeds on the next try. One retry turns
+    that from a lost photograph into ten wasted seconds."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY not configured")
 
     client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-            prompt,
-        ],
-    )
+    last_error = None
+    for _ in range(attempts):
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                prompt,
+            ],
+            config=types.GenerateContentConfig(
+                image_config=types.ImageConfig(image_size=IMAGE_SIZE, aspect_ratio="4:3"),
+            ),
+        )
 
-    for candidate in (response.candidates or []):
-        if not candidate.content or not candidate.content.parts:
-            continue
-        for part in candidate.content.parts:
-            if getattr(part, "inline_data", None) and part.inline_data.data:
-                return _normalise(part.inline_data.data)
+        for candidate in (response.candidates or []):
+            if not candidate.content or not candidate.content.parts:
+                continue
+            for part in candidate.content.parts:
+                if getattr(part, "inline_data", None) and part.inline_data.data:
+                    return _normalise(part.inline_data.data)
 
-    text_parts = []
-    for candidate in (response.candidates or []):
-        for part in (candidate.content.parts or []):
-            if getattr(part, "text", None):
-                text_parts.append(part.text)
-    raise RuntimeError("Gemini returned no image. " + " ".join(text_parts)[:400])
+        text_parts = []
+        for candidate in (response.candidates or []):
+            for part in (candidate.content.parts or []):
+                if getattr(part, "text", None):
+                    text_parts.append(part.text)
+        last_error = "Gemini returned no image. " + " ".join(text_parts)[:400]
+    raise RuntimeError(last_error)
 
 
-def _normalise(raw: bytes, max_size: int = 1800, quality: int = 88) -> bytes:
+def _normalise(raw: bytes, max_size: int = 2400, quality: int = 88) -> bytes:
     img = Image.open(io.BytesIO(raw))
     if img.mode not in ("RGB", "L"):
         img = img.convert("RGB")

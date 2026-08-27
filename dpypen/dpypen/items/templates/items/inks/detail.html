@@ -141,8 +141,20 @@
     <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap;">
       {% if can_edit %}
       <a href="{% url 'usages_create' %}?ink={{ ink.pk }}" class="btn primary">+ Use this ink</a>
-      <a href="{% url 'inks_edit' ink.pk %}" class="btn" data-kbd="edit">Edit</a>
-      <button type="button" class="btn" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">↗ Share</button>
+      <span class="overflow" data-overflow>
+        <button type="button" class="icon-btn" aria-label="More actions" aria-haspopup="true" aria-expanded="false" data-overflow-btn>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+        </button>
+        <div class="overflow-panel" role="menu">
+          <a href="{% url 'inks_edit' ink.pk %}" data-kbd="edit" role="menuitem">Edit ink</a>
+          <button type="button" role="menuitem" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">Share ink</button>
+          <form method="post" action="{% url 'inks_delete' ink.pk %}" style="margin: 0;"
+                onsubmit="return confirm('Delete {{ ink|escapejs }}? This cannot be undone.');">
+            {% csrf_token %}
+            <button type="submit" class="danger" role="menuitem">Delete ink</button>
+          </form>
+        </div>
+      </span>
       {% endif %}
       {% if ink.moi_url %}
       <a href="{{ ink.moi_url }}" target="_blank" rel="noopener" class="btn" title="Open review on Mountain of Ink">✎ Mountain of Ink review ↗</a>

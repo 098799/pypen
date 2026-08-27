@@ -3,134 +3,136 @@
 {% block description %}{{ total_pens }} fountain pens, {{ total_inks }} inks, {{ total_usages }} inkings.{% endblock %}
 
 {% block extra_css %}
-.dash-hero {
-  padding-bottom: 2.5rem;
+/* The dashboard used to open with a 3.8rem headline, a lede and five stat
+   plates — about a full phone screen before the first useful pixel. The
+   collection size is not news to its owner; what is inked and what is due is.
+   So: one status line, then the desk, then what is resting past its turn. */
+.dash-head {
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--ink-line);
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
-.dash-hero h1 {
-  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
-  font-weight: 500;
-  font-size: clamp(2.4rem, 5vw, 3.8rem);
-  line-height: 1;
-  letter-spacing: -0.01em;
-  margin: 0.25rem 0 0.5rem;
-}
-.dash-hero h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
-.dash-hero .lede {
-  font-size: 1.05rem;
+.dash-line {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.15rem;
   color: var(--ink-soft);
-  margin: 0.4rem 0 1.5rem;
-  max-width: 42rem;
+  margin: 0.3rem 0 0;
 }
-.dash-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.7rem;
-}
+.dash-line strong { color: var(--accent); font-weight: 500; }
 
-.tiles {
+.due-list { display: flex; flex-direction: column; gap: 1px; }
+.due {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.75rem;
-}
-.tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 1.2rem 1.1rem 1rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 6px;
-  box-shadow: var(--plate-shadow);
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid transparent;
+  border-bottom: 1px solid var(--ink-line);
   text-decoration: none;
   color: var(--ink);
-  min-height: 110px;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
-  border-bottom: 1px solid var(--ink-line);
-  overflow: hidden;
 }
-.tile:hover {
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  box-shadow: var(--plate-shadow), var(--card-shadow);
-  color: var(--ink);
-}
-.tile .tile-label {
+.due:hover { background: var(--chip-top); border-color: var(--ink-line); border-radius: 6px; color: var(--ink); }
+.due-pri {
   font-family: "Inter", sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--ink-line);
+  color: var(--muted);
+}
+.due-pri[data-p="0"], .due-pri[data-p="1"] { color: var(--accent); border-color: var(--accent); }
+.due-pen { font-size: 1rem; }
+.due-when {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+  text-align: right;
 }
-.tile .tile-number {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 2.2rem;
-  line-height: 1;
-  color: var(--ink);
-  font-weight: 500;
-}
-.tile .tile-name {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.4rem;
-  line-height: 1.05;
-  font-style: italic;
-  color: var(--ink);
-}
-.tile .tile-hint {
+.due-go {
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin-top: auto;
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
 }
-.tile.primary {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 85%, #000) 0%, color-mix(in srgb, var(--accent) 60%, #200) 100%);
-  color: #fff;
-  border: none;
+.due:hover .due-go { opacity: 1; }
+/* At 390px the four-column row squeezed the pen name into a ~90px column and
+   "Delta Dolcevita Federico Media Red Devil" came out five lines tall. Below
+   560 the name takes the full width and the meta drops beneath it. */
+@media (max-width: 560px) {
+  .due {
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.6rem;
+    padding: 0.55rem 0.5rem;
+  }
+  .due-pen { grid-column: 2; }
+  .due-when { grid-column: 2; text-align: left; }
+  .due-go { display: none; }
 }
-.tile.primary .tile-label, .tile.primary .tile-hint { color: rgba(255,255,255,0.7); }
-.tile.primary .tile-number, .tile.primary .tile-name { color: #fff; }
-.tile.primary:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 30px -12px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* Quick access was six 110px slabs with a gradient and an inset white
+   highlight — the "plate" treatment the rest of the app uses for real
+   content. Navigation is not content: flat chips, one row, no shading. */
+.navchips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.navchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.navchip:hover { color: var(--ink); border-color: var(--accent); }
+.navchip b { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1rem; color: var(--ink); font-weight: 500; }
+.navchip.primary { border-color: var(--accent); color: var(--accent); }
+.navchip.primary:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 
 .ytd {
-  padding: 1.3rem 1.4rem;
-  background: linear-gradient(160deg, var(--chip-top), var(--paper-dark));
+  padding: 0.7rem 0.9rem;
   border: 1px solid var(--ink-line);
   border-radius: 6px;
-  box-shadow: var(--plate-shadow);
-  margin-bottom: 2rem;
+  background: none;
+  box-shadow: none;
+  margin-bottom: 1.5rem;
 }
 .ytd .ytd-label {
   font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.25em;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--muted);
 }
 .ytd .ytd-line {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   line-height: 1.3;
-  margin-top: 0.4rem;
+  margin-top: 0.2rem;
 }
 .ytd .ytd-line strong { color: var(--accent); font-weight: 500; }
 {% endblock %}
 
 {% block content %}
 
-<header class="dash-hero">
+<header class="dash-head">
   <span class="overline">Tomek Grining &nbsp;·&nbsp; Fountain Pen Bureau</span>
-  <h1>A small, unreasonable <em>collection</em>.</h1>
-  <p class="lede">Where pens live and inks flow. {{ days_tracked }} days of keeping track, {{ total_days_inked }} of them with a pen on duty.</p>
-  <div class="dash-stats">
-    <div class="plate"><div class="num">{{ total_pens }}</div><div class="lbl">pens</div></div>
-    <div class="plate"><div class="num">{{ total_inks }}</div><div class="lbl">inks</div></div>
-    <div class="plate"><div class="num">{{ total_usages }}</div><div class="lbl">inkings</div></div>
-    <div class="plate"><div class="num">{{ total_brands }}</div><div class="lbl">makers</div></div>
-    <div class="plate"><div class="num">{{ current|length }}</div><div class="lbl">on duty</div></div>
-  </div>
+  <p class="dash-line">
+    <strong>{{ current|length }}</strong> inked &middot; <strong>{{ due_count }}</strong> due
+    {% if can_edit and pens_without_photos %}&middot; <a href="{% url 'pens_needs_photos' %}">{{ pens_without_photos }} unphotographed</a>{% endif %}
+  </p>
 </header>
 
 {% if current %}
@@ -159,50 +161,44 @@
 </section>
 {% endif %}
 
+{% if next_up %}
+<section id="next-up">
+  <div class="section-head">
+    <h2>Next <em>up</em></h2>
+    <span class="aside">{{ due_count }} past their turn</span>
+  </div>
+  <div class="due-list">
+    {% for d in next_up %}
+    <a class="due" href="{% url 'pens_detail' d.pen_id %}">
+      <span class="due-pri" data-p="{{ d.priority }}">P{{ d.priority }}</span>
+      <span class="due-pen">{{ d.pen }}</span>
+      <span class="due-when">
+        {% if d.never %}never inked{% else %}rested {{ d.rested }}d{% endif %}
+      </span>
+      {% if can_edit %}
+      <span class="due-go" aria-hidden="true">ink</span>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section>
   <div class="section-head">
     <h2>Wander the <em>bureau</em></h2>
-    <span class="aside">quick access</span>
   </div>
-  <div class="tiles">
-    {% if can_edit %}
-    <a href="{% url 'usages_create' %}" class="tile primary">
-      <span class="tile-label">Log</span>
-      <span class="tile-name">+ New inking</span>
-      <span class="tile-hint">pen · ink · today</span>
-    </a>
-    {% endif %}
-    <a href="{% url 'pens_list' %}" class="tile">
-      <span class="tile-label">Pens</span>
-      <span class="tile-number">{{ total_pens }}</span>
-      <span class="tile-hint">grouped by rotation</span>
-    </a>
-    <a href="{% url 'inks_list' %}" class="tile">
-      <span class="tile-label">Inks</span>
-      <span class="tile-number">{{ active_ink_count }}</span>
-      <span class="tile-hint">{{ total_inks }} total · filter by colour</span>
-    </a>
-    <a href="{% url 'usages_list' %}" class="tile">
-      <span class="tile-label">Inkings</span>
-      <span class="tile-number">{{ total_usages }}</span>
-      <span class="tile-hint">history &amp; active fills</span>
-    </a>
-    <a href="{% url 'history' %}" class="tile">
-      <span class="tile-label">History</span>
-      <span class="tile-name">Gantt &amp; years</span>
-      <span class="tile-hint">{{ days_tracked }} days plotted</span>
-    </a>
-    {% if can_edit %}
-    <a href="{% url 'notebook_upload' %}" class="tile">
-      <span class="tile-label">Import</span>
-      <span class="tile-name">From notebook</span>
-      <span class="tile-hint">Claude vision OCR</span>
-    </a>
-    {% endif %}
+  <div class="navchips">
+    {% if can_edit %}<a href="{% url 'usages_create' %}" class="navchip primary">+ New inking</a>{% endif %}
+    <a href="{% url 'pens_list' %}" class="navchip">Pens <b>{{ total_pens }}</b></a>
+    <a href="{% url 'inks_list' %}" class="navchip">Inks <b>{{ active_ink_count }}</b></a>
+    <a href="{% url 'usages_list' %}" class="navchip">Inkings <b>{{ total_usages }}</b></a>
+    <a href="{% url 'history' %}" class="navchip">History</a>
+    <a href="{% url 'records' %}" class="navchip">Records</a>
+    {% if can_edit %}<a href="{% url 'notebook_upload' %}" class="navchip">Import</a>{% endif %}
   </div>
 </section>
 
-<div class="dash-pair">
 <section>
   <div class="section-head">
     <h2><em>{{ year }}</em> so far</h2>
@@ -215,27 +211,7 @@
   </div>
 </section>
 
-<section id="trophies">
-  <div class="section-head">
-    <h2>Hall of <em>fame</em></h2>
-  </div>
-  <div class="trophies">
-    {% if workhorse %}
-    <div class="trophy">
-      <div class="cat">Workhorse pen</div>
-      <div class="winner">{{ workhorse.pen }}</div>
-      <div class="stat"><b>{{ workhorse.days }}</b> days inked across <b>{{ workhorse.inkings }}</b> fills</div>
-    </div>
-    {% endif %}
-    {% if beloved_ink %}
-    <div class="trophy" style="border-top-color: {{ beloved_ink.hex }};">
-      <div class="cat">Beloved ink</div>
-      <div class="winner">{{ beloved_ink.ink }}</div>
-      <div class="stat"><b>{{ beloved_ink.days }}</b> days on the page across <b>{{ beloved_ink.inkings }}</b> fills</div>
-    </div>
-    {% endif %}
-  </div>
-</section>
+
 </div>
 
 

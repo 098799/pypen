@@ -259,9 +259,20 @@ live behind More.
     // and top to the anchor's bottom + 8px.
     if (anchor) {
       var r = anchor.getBoundingClientRect();
-      panel.style.top = (r.bottom + 8) + "px";
       var rightPx = Math.max(8, window.innerWidth - r.right);
       panel.style.right = rightPx + "px";
+      /* The phone tab bar is fixed to the bottom of the screen, so anchoring
+         the panel's top to the button's bottom edge put the whole panel below
+         the viewport — "More" looked like a dead button. Anything sitting in
+         the lower half of the screen gets bottom-anchored instead, opening
+         upwards off the button. */
+      if (r.top > window.innerHeight / 2) {
+        panel.style.top = "auto";
+        panel.style.bottom = (window.innerHeight - r.top + 8) + "px";
+      } else {
+        panel.style.bottom = "auto";
+        panel.style.top = (r.bottom + 8) + "px";
+      }
     }
   }
 
@@ -286,6 +297,35 @@ live behind More.
   });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") closeMenu();
+  });
+
+  /* Detail-page overflow menus ("⋯"). Delegated for the same reason the main
+     menu is: these live inside #main, which hx-boost replaces wholesale on
+     every soft navigation, so anything bound at load time is dead after the
+     first one. */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-overflow-btn]");
+    var panels = document.querySelectorAll(".overflow-panel.open");
+    if (btn) {
+      e.stopPropagation();
+      var mine = btn.parentNode.querySelector(".overflow-panel");
+      panels.forEach(function (p) { if (p !== mine) p.classList.remove("open"); });
+      var open = mine.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      return;
+    }
+    if (!e.target.closest(".overflow-panel")) {
+      panels.forEach(function (p) { p.classList.remove("open"); });
+      document.querySelectorAll("[data-overflow-btn]").forEach(function (b) {
+        b.setAttribute("aria-expanded", "false");
+      });
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll(".overflow-panel.open").forEach(function (p) {
+      p.classList.remove("open");
+    });
   });
 
   // Auto-hide topbar at top of page; reveal when user scrolls
@@ -367,6 +407,12 @@ live behind More.
     if (!host) return;
     var old = document.querySelector(".jumpbar");
     if (old) old.remove();
+
+    /* Pens now carry a rotation filter bar and inks a colour swatch row, both
+       of which name the same groups this strip would. Three stacked copies of
+       one navigation was most of the first screen on a phone; where the page
+       already navigates itself, the derived strip is pure duplication. */
+    if (document.querySelector(".rotbar, .color-cards")) return;
 
     var groups = Array.prototype.slice.call(
       host.querySelectorAll("[data-listnav-group]"));
