@@ -105,7 +105,7 @@ mark {
 html[data-theme="dark"] mark {
   background: color-mix(in srgb, var(--accent) 32%, transparent);
 }
-main { max-width: 1180px; margin: 0 auto; padding: 1.2rem 1.5rem 3rem; }
+main { --main-pt: 1.2rem; max-width: 1180px; margin: 0 auto; padding: var(--main-pt) 1.5rem 3rem; }
 section { margin-bottom: 5.5rem; }
 
 body::before {
@@ -159,9 +159,32 @@ svg:where(:not([width])) { width: 1em; height: 1em; }
 .topbar.tucked > * { pointer-events: none; }
 
 /* Corner menu button, absolute, doesn't push content */
+/* Back link on the left, menu on the right, one line. */
+.detail-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+.detail-bar .menu-btn.detail-menu {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0.4rem;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.detail-bar .menu-btn.detail-menu:hover { transform: none; color: var(--ink); background: none; }
+/* Wide screens already carry a menu in the app nav; this one would be a third. */
+@media (min-width: 720px) { .detail-bar .menu-btn.detail-menu { display: none; } }
+
+/* An absolutely positioned box hangs off main's *padding* box, so top:0 put
+   the hamburger a whole padding-height above the first line of content — on a
+   detail page it floated above the back link instead of sitting beside it. */
 .menu-corner {
   position: absolute;
-  top: 0;
+  top: var(--main-pt);
   right: 0;
   z-index: 5;
 }
@@ -845,7 +868,7 @@ footer em { color: var(--ink-soft); }
 /* Mobile */
 @media (max-width: 560px) {
   body { font-size: 17px; }
-  main { padding: 0.8rem 1rem 2rem; }
+  main { --main-pt: 0.8rem; padding: var(--main-pt) 1rem 2rem; }
   section { margin-bottom: 3rem; }
   .tl-row { grid-template-columns: 1fr; gap: 0.3rem; }
   .tl-meta { text-align: left; }
@@ -1663,7 +1686,7 @@ html, body { overflow-x: clip; }
 
 /* Vertical rhythm scaled to the viewport rather than fixed at phone size. */
 section { margin-bottom: clamp(2.25rem, 5.5vw, 4.5rem); }
-main { max-width: 1320px; padding: 1.2rem clamp(0.9rem, 3vw, 1.75rem) 3rem; }
+main { max-width: 1320px; padding: var(--main-pt) clamp(0.9rem, 3vw, 1.75rem) 3rem; }
 
 /* --- 1. Phone: bottom tab bar ------------------------------------------- */
 

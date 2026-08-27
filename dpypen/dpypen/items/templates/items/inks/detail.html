@@ -70,7 +70,7 @@
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 1rem;
+  margin: 0;
   border: none;
   display: inline-block;
 }
@@ -124,7 +124,20 @@
 
 {% block content %}
 
-<a href="{% url 'inks_list' %}" class="ink-back">&larr; All inks</a>
+{% comment %}
+The back link had this line to itself while the only hamburger within reach sat
+at the bottom of the screen in the tab bar — the corner one is hidden on phones
+as a duplicate of it, and the floating top bar only appears once you scroll.
+A half-empty row and no menu at rest; the row carries both now.
+{% endcomment %}
+<div class="detail-bar">
+  <a href="{% url 'inks_list' %}" class="ink-back">&larr; All inks</a>
+  <button class="menu-btn detail-menu" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+  </button>
+</div>
 
 <div class="ink-hero" style="--ic: {{ ink_hex }}; --idot: {{ ink.swatch_bg }};">
   <div class="ink-dot-big"></div>
