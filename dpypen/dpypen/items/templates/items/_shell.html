@@ -371,7 +371,17 @@ live behind More.
       return;
     }
     if (!panel.contains(e.target)) closeMenu();
+    /* A link inside the panel is the one click the rule above deliberately
+       ignores, so following one left the menu sitting open over the page it
+       had just navigated to. Close on the way out. */
+    else if (e.target.closest("a[href]")) closeMenu();
   });
+  /* And on the navigation itself, which also covers the back button and any
+     boosted swap that did not start with a click in the panel. hx-boost
+     replaces #main without a page load, so nothing else resets it. */
+  document.body.addEventListener("htmx:pushedIntoHistory", closeMenu);
+  document.body.addEventListener("htmx:replacedInHistory", closeMenu);
+  window.addEventListener("popstate", closeMenu);
   window.addEventListener("resize", function () {
     if (panel.classList.contains("open")) {
       var visibleBtn = btns().find(function (b) {

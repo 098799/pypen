@@ -1015,6 +1015,53 @@ footer em { color: var(--ink-soft); }
 }
 .btn.small { padding: 0.35rem 0.65rem; font-size: 0.64rem; min-height: 32px; }
 
+/* One action with two ways to perform it — the common one filled, the
+   alternative alongside it rather than hidden somewhere else on the site.
+   Segments carry their own corner radii so nothing has to clip, which is what
+   sheared the view toggle's ring when its track did the rounding. */
+.split-action {
+  display: inline-flex;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.split-action .sa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.7rem;
+  min-height: 40px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  white-space: nowrap;
+  color: var(--accent);
+  transition: background 0.15s, color 0.15s;
+}
+.split-action .sa-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.split-action .sa-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-right: 1px solid var(--accent);
+}
+.split-action .sa-primary:hover { background: var(--accent-deep); color: var(--on-accent); }
+.split-action .sa-btn:not(.sa-primary):hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+/* On a phone the label competes with the page title for the row; the icon
+   already says "photograph". */
+@media (max-width: 460px) {
+  .split-action .sa-btn { padding: 0.5rem 0.6rem; letter-spacing: 0.08em; }
+  .split-action .sa-btn:not(.sa-primary) { font-size: 0; gap: 0; }
+  .split-action .sa-btn:not(.sa-primary) svg { width: 17px; height: 17px; }
+}
+
 /* The "add a swatch"/"add a sample" picker, which was the same 25-property
    inline style written out twice, on a plate gradient, in a pill. */
 .file-pick {
@@ -1465,26 +1512,34 @@ html[data-theme="dark"] .switch {
 }
 
 /* -------- Grid view (alternative ink/pen list) -------- */
+/* The track is a pill that clips its contents, so a square ring on the active
+   segment came out sheared: straight corners cut by the curve on the outside,
+   a hard vertical edge on the inside. The segments carry the radius themselves
+   and the track just holds them — which is what .seg-pill on the search page
+   already does, so the two segmented controls now match. */
 .view-toggle {
   display: inline-flex;
+  gap: 0.1rem;
+  padding: 0.15rem;
   border: 1px solid var(--ink-line);
   border-radius: 999px;
   background: color-mix(in srgb, var(--chip-top) 80%, transparent);
-  overflow: hidden;
   flex: 0 0 auto;
 }
 .view-toggle .vt-btn {
-  padding: 0.45rem 0.95rem;
+  padding: 0.35rem 0.8rem;
   font-family: "Inter", sans-serif;
   font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--muted);
   border-bottom: none;
+  border-radius: 999px;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 .view-toggle .vt-btn.on {
   color: var(--ink);
