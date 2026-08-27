@@ -914,7 +914,7 @@ footer em { color: var(--ink-soft); }
 /* -------- Page head -------- */
 .page-head {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
@@ -932,27 +932,33 @@ footer em { color: var(--ink-soft); }
 .page-head h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
 .page-head .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-/* -------- Buttons -------- */
+/* -------- Buttons -----------------------------------------------------------
+   A 44px-tall maroon lozenge set in 0.82rem caps was the loudest thing on any
+   page it appeared on — "+ NEW INKING" outweighed the "Inkings" title it sat
+   next to, which is backwards. The app already has an idiom for emphasis and
+   it is not the pill: the "inked" ribbon, a small squared block of flat colour
+   under uppercase Inter. Buttons follow it now — squared off, a size down, and
+   subordinate to the serif titles they sit beside. */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.65rem 1rem;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
   font-family: "Inter", sans-serif;
-  font-size: 0.82rem;
-  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--ink);
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  color: var(--ink-soft);
+  background: transparent;
   border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  box-shadow: var(--plate-shadow);
+  border-radius: 3px;
+  box-shadow: none;
   cursor: pointer;
   text-decoration: none;
-  min-height: 44px;
-  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  min-height: 40px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.btn:hover { transform: translateY(-1px); border-color: var(--accent); color: var(--ink); }
+.btn:hover { border-color: var(--accent); color: var(--ink); background: var(--chip-top); }
 /* Solid ink, not moulded plastic. The vertical gradient was mostly there to
    sell the bevel, and it cost contrast to do it: the dark theme's bottom stop
    was 4.67:1, scraping AA, where a flat --accent holds 7.10:1 across the whole
@@ -962,17 +968,14 @@ footer em { color: var(--ink-soft); }
 .btn.primary {
   background: var(--accent);
   color: var(--on-accent);
-  border-color: transparent;
-  box-shadow: 0 1px 3px -1px color-mix(in srgb, var(--accent) 45%, transparent);
+  border-color: var(--accent);
 }
 .btn.primary:hover {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
   color: var(--on-accent);
-  box-shadow: 0 5px 14px -5px color-mix(in srgb, var(--accent) 65%, transparent);
 }
-.btn.primary:active {
-  transform: none;
-  box-shadow: 0 1px 2px -1px color-mix(in srgb, var(--accent) 45%, transparent);
-}
+.btn.small { padding: 0.35rem 0.65rem; font-size: 0.64rem; min-height: 32px; }
 .btn.danger {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line));
@@ -983,7 +986,6 @@ footer em { color: var(--ink-soft); }
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent);
 }
-.btn.small { padding: 0.4rem 0.75rem; font-size: 0.72rem; min-height: 36px; }
 
 /* -------- Form -------- */
 .form {
@@ -2058,6 +2060,11 @@ html[data-theme="dark"] ::selection {
   border-radius: 999px;
 }
 .toolbar .icon-btn { flex: 0 0 auto; }
+.toolbar-search input[type="search"] { min-width: 0; }
+@media (max-width: 620px) {
+  .toolbar { flex-wrap: wrap; row-gap: 0.4rem; }
+  .toolbar-search { flex: 1 1 100%; order: -1; }
+}
 .sort-select {
   flex: 0 0 auto;
   padding: 0.4rem 1.6rem 0.4rem 0.7rem;

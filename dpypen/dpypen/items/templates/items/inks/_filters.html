@@ -4,8 +4,7 @@ copy. Every URL here comes from the view, derived from the live query string —
 the hand-written ones this replaces spelled out the params they remembered and
 so dropped ?q=, losing the search the moment you picked a colour.
 {% endcomment %}
-<nav class="filter-bar" aria-label="Ink filters">
-  <span class="fb-label">Show</span>
+<nav class="filter-row" aria-label="Ink filters">
   <a href="{{ filters.toggle_samples_url }}"
      class="fb-toggle{% if filters.include_samples %} on{% endif %}"
      hx-get="{{ filters.toggle_samples_url }}"
@@ -16,19 +15,9 @@ so dropped ?q=, losing the search the moment you picked a colour.
      hx-get="{{ filters.toggle_used_url }}"
      hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody"
      hx-push-url="true">Used-up</a>
-  {% if filters.include_samples or filters.include_used or filters.color or filters.q %}
-  <a href="{{ filters.clear_url }}" class="fb-clear"
-     hx-get="{{ filters.clear_url }}"
-     hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody"
-     hx-push-url="true">clear all</a>
-  {% endif %}
-</nav>
-
-{% if filters.color_chips %}
-<div class="color-cards">
+  {% if filters.color_chips %}<span class="fb-sep"></span>{% endif %}
   {% for c in filters.color_chips %}
-  <a href="{{ c.url }}"
-     class="{% if filters.color == c.color %}on{% endif %}"
+  <a href="{{ c.url }}" class="cc{% if filters.color == c.color %} on{% endif %}"
      style="--cc: {{ c.hex }};"
      hx-get="{{ c.url }}"
      hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody"
@@ -38,5 +27,10 @@ so dropped ?q=, losing the search the moment you picked a colour.
     <span class="cc-count">{{ c.count }}</span>
   </a>
   {% endfor %}
-</div>
-{% endif %}
+  {% if filters.include_samples or filters.include_used or filters.color or filters.q %}
+  <a href="{{ filters.clear_url }}" class="fb-clear"
+     hx-get="{{ filters.clear_url }}"
+     hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody"
+     hx-push-url="true">clear</a>
+  {% endif %}
+</nav>

@@ -2,123 +2,102 @@
 {% block title %}Inks · Grining Fountain Pens{% endblock %}
 
 {% block extra_css %}
-.filter-bar {
+/* -------- Filter row --------------------------------------------------------
+   Show/samples/used-up used to be its own rounded plate on its own line, and
+   the colours another line under it: two rows of chrome, ~150px, before the
+   first ink on a phone. They are all the same kind of thing — one filter each
+   — so they are one scrolling row now, and the plate is gone with the rest of
+   the raised-plastic look. */
+.filter-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin: 0 0 1rem;
-  padding: 0.35rem 0.5rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-}
-.filter-bar .fb-label {
-  font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 0.35rem;
-}
-.filter-bar .fb-toggle {
-  padding: 0.28rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid var(--ink-line);
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-}
-.filter-bar .fb-toggle:hover { color: var(--ink); border-color: var(--accent); }
-.filter-bar .fb-toggle.on {
-  color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: var(--plate-active);
-}
-.filter-bar .fb-sep {
-  width: 1px; height: 22px;
-  background: var(--ink-line);
-  margin: 0 0.2rem;
-}
-.filter-bar .fb-clear {
-  margin-left: auto;
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  border: none;
-}
-.filter-bar .fb-clear:hover { color: var(--accent); border: none; }
-@media (max-width: 560px) {
-  .filter-bar { border-radius: 18px; padding: 0.6rem; }
-}
-
-/* -------- Colour cards -------- */
-/* Was a 4-across grid of 110px plate-shadowed cards — four rows of colour
-   navigation, roughly 460px, before the first ink. The same 16 colours read
-   fine as one scrolling row of flat swatches. The dot kept its inset
-   highlight-and-shade too, which is the plastic look being removed elsewhere. */
-.color-cards {
-  display: flex;
   gap: 0.35rem;
   overflow-x: auto;
   scrollbar-width: none;
-  margin: 0 0 1rem;
+  margin: 0 0 0.8rem;
   padding-bottom: 0.15rem;
 }
-.color-cards::-webkit-scrollbar { display: none; }
-/* The scrollbar is hidden, which is right on a phone and a trap with a mouse:
-   at 1440px five of the sixteen colours sat 486px past the right edge with no
-   affordance at all. Where there is room for a second row, wrap instead. */
+.filter-row::-webkit-scrollbar { display: none; }
+/* Hiding the scrollbar is right on a phone and a trap with a mouse: at 1440px
+   the last colours sat well past the right edge with no affordance at all.
+   Where there is room to wrap, wrap. */
 @media (min-width: 900px) {
-  .color-cards { flex-wrap: wrap; overflow-x: visible; }
+  .filter-row { flex-wrap: wrap; overflow-x: visible; }
 }
-.color-cards a {
-  --cc: var(--ink-unknown);
+.filter-row .fb-toggle,
+.filter-row .cc {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
   border: 1px solid var(--ink-line);
   border-radius: 999px;
   background: none;
   box-shadow: none;
   text-decoration: none;
   white-space: nowrap;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
-.color-cards a:hover { border-color: color-mix(in srgb, var(--cc) 55%, var(--ink-line)); }
-.color-cards a .cc-dot {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: var(--cc);
-  box-shadow: none;
-  border: 1px solid color-mix(in srgb, #000 18%, transparent);
-}
-.color-cards a .cc-label {
+.filter-row .fb-toggle {
+  padding: 0.3rem 0.7rem;
   font-family: "Inter", sans-serif;
   font-size: 0.66rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.color-cards a .cc-count {
+.filter-row .fb-toggle:hover { color: var(--ink); border-color: var(--accent); }
+.filter-row .fb-toggle.on {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.filter-row .fb-sep {
+  flex: 0 0 auto;
+  width: 1px; height: 20px;
+  background: var(--ink-line);
+  margin: 0 0.25rem;
+}
+.filter-row .cc {
+  --cc: var(--ink-unknown);
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+}
+.filter-row .cc:hover { border-color: color-mix(in srgb, var(--cc) 55%, var(--ink-line)); }
+.filter-row .cc .cc-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--cc);
+  border: 1px solid color-mix(in srgb, #000 18%, transparent);
+}
+.filter-row .cc .cc-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.filter-row .cc .cc-count {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 0.9rem;
   color: var(--ink);
 }
-.color-cards a.on {
+.filter-row .cc.on {
   border-color: var(--cc);
   background: color-mix(in srgb, var(--cc) 12%, transparent);
 }
-.color-cards a.on .cc-label { color: var(--ink); font-weight: 500; }
+.filter-row .cc.on .cc-label { color: var(--ink); font-weight: 500; }
+.filter-row .fb-clear {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.5rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  border: none;
 }
+.filter-row .fb-clear:hover { color: var(--accent); border: none; }
 
 {% endblock %}
 
