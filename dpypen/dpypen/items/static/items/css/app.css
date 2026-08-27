@@ -1430,10 +1430,13 @@ html[data-theme="dark"] .switch {
 .view-toggle .vt-btn:hover { color: var(--ink); }
 
 /* Ink grid */
+/* 150px put two tiles on a 390px phone, each near 185px square — a swatch
+   that size is a poster, not an index entry. 112px gives three across and
+   still reads the ink's name; the label scales with it. */
 .ink-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 0.5rem;
   margin: 0.5rem 0 2rem;
 }
 .ink-tile {
@@ -1462,7 +1465,7 @@ html[data-theme="dark"] .switch {
   left: 0; right: 0; bottom: 0;
   /* Same fade-too-late problem as .pen-tile-label — a pale ink swatch left
      the brand line sitting on almost no wash. */
-  padding: 1.5rem 0.65rem 0.45rem;
+  padding: 1.1rem 0.5rem 0.4rem;
   background: linear-gradient(180deg,
     rgba(20,16,8,0) 0%,
     rgba(20,16,8,0.35) 22%,
@@ -1473,8 +1476,8 @@ html[data-theme="dark"] .switch {
   text-shadow: 0 1px 3px rgba(0,0,0,0.7);
   line-height: 1.15;
 }
-.ink-tile-brand { font-size: 0.72rem; color: #ded2b6; letter-spacing: 0.02em; }
-.ink-tile-name  { font-size: 1.0rem; }
+.ink-tile-brand { font-size: 0.62rem; color: #ded2b6; letter-spacing: 0.02em; }
+.ink-tile-name  { font-size: 0.88rem; line-height: 1.1; }
 .ink-tile-pip {
   position: absolute;
   top: 0.4rem; left: 0.4rem;
@@ -1504,6 +1507,15 @@ html[data-theme="dark"] .switch {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
   margin: 0.5rem 0 2rem;
+}
+/* 220px cannot fit two of anything across a 390px phone, so the grid view was
+   a single 361px column — one pen per screen, which is a worse index than the
+   list it is an alternative to. Two up, with the caption scaled to match. */
+@media (max-width: 560px) {
+  .pen-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .pen-tile-label { padding: 1.1rem 0.55rem 0.4rem; }
+  .pen-tile-brand { font-size: 0.62rem; }
+  .pen-tile-model { font-size: 0.92rem; }
 }
 .pen-tile {
   position: relative;
@@ -2046,6 +2058,30 @@ html[data-theme="dark"] ::selection {
   border-radius: 999px;
 }
 .toolbar .icon-btn { flex: 0 0 auto; }
+.sort-select {
+  flex: 0 0 auto;
+  padding: 0.4rem 1.6rem 0.4rem 0.7rem;
+  min-height: 38px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background-color: var(--chip-top);
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 10px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23394b6a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+html[data-theme="dark"] .sort-select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23b9ad92' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+.sort-select:hover { color: var(--ink); border-color: var(--accent); }
 
 .rotbar {
   display: flex;

@@ -1,50 +1,7 @@
 {% load items_extras %}
 {# Swappable content: filter bar + colour cards + ink groups. #}
 <div id="inkContentBody" data-listnav>
-<nav class="filter-bar" aria-label="Ink filters">
-  <span class="fb-label">Show</span>
-  <a href="{{ filters.toggle_samples_url }}"
-     class="fb-toggle{% if filters.include_samples %} on{% endif %}"
-     hx-get="{{ filters.toggle_samples_url }}"
-     hx-target="#inkContentBody"
-     hx-swap="outerHTML"
-     hx-select="#inkContentBody"
-     hx-push-url="true">Samples</a>
-  <a href="{{ filters.toggle_used_url }}"
-     class="fb-toggle{% if filters.include_used %} on{% endif %}"
-     hx-get="{{ filters.toggle_used_url }}"
-     hx-target="#inkContentBody"
-     hx-swap="outerHTML"
-     hx-select="#inkContentBody"
-     hx-push-url="true">Used-up</a>
-  {% if filters.include_samples or filters.include_used or filters.color %}
-  <a href="?" class="fb-clear"
-     hx-get="?"
-     hx-target="#inkContentBody"
-     hx-swap="outerHTML"
-     hx-select="#inkContentBody"
-     hx-push-url="true">clear all</a>
-  {% endif %}
-</nav>
-
-{% if filters.color_chips %}
-<div class="color-cards">
-  {% for c in filters.color_chips %}
-  <a href="?color={% if filters.color == c.color %}{% else %}{{ c.color }}{% endif %}{% if filters.include_samples %}&samples=1{% endif %}{% if filters.include_used %}&used=1{% endif %}"
-     class="{% if filters.color == c.color %}on{% endif %}"
-     style="--cc: {{ c.hex }};"
-     hx-get="?color={% if filters.color == c.color %}{% else %}{{ c.color }}{% endif %}{% if filters.include_samples %}&samples=1{% endif %}{% if filters.include_used %}&used=1{% endif %}"
-     hx-target="#inkContentBody"
-     hx-swap="outerHTML"
-     hx-select="#inkContentBody"
-     hx-push-url="true">
-    <span class="cc-dot"></span>
-    <span class="cc-label">{{ c.color }}</span>
-    <span class="cc-count">{{ c.count }}</span>
-  </a>
-  {% endfor %}
-</div>
-{% endif %}
+{% include "items/inks/_filters.html" %}
 
 {% if not groups %}
 <div class="empty">No inks match this filter. <a href="{% url 'inks_list' %}">Clear it</a> to see all of them.</div>
@@ -52,11 +9,13 @@
 
 {% for g in groups %}
 <section data-listnav-group>
+{% if not g.flat %}
 <div class="group-head">
   <span class="dot" style="background: {{ g.hex }};"></span>
   <h3>{{ g.color }}</h3>
   <span class="gmeta">{{ g.inks|length }} bottle{{ g.inks|length|pluralize }}</span>
 </div>
+{% endif %}
 <div class="list">
   {% for i in g.inks %}
   <div class="list-row no-actions" data-listnav-item>

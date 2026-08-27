@@ -135,33 +135,40 @@ A peek at the ink cupboard. Browse by colour.
 {% endif %}
 
 <div class="toolbar">
-  <form id="inkFilterForm" onsubmit="return false;"
+  <form id="inkFilterForm" onsubmit="return false;" data-navform
         hx-get="{% url 'inks_list' %}"
-        hx-trigger="input changed delay:200ms from:#inkQ, change from:#inkFilterForm, submit"
+        hx-trigger="input changed delay:200ms from:#inkQ, submit"
         hx-target="#inkContentBody"
         hx-swap="outerHTML"
         hx-select="#inkContentBody"
         hx-push-url="true"
         class="toolbar-search">
     <input type="search" id="inkQ" name="q" placeholder="Search inks…" value="{{ filters.q }}" autocomplete="off">
-    {% if filters.include_samples %}<input type="hidden" name="samples" value="1">{% endif %}
-    {% if filters.include_used %}<input type="hidden" name="used" value="1">{% endif %}
-    {% if filters.color %}<input type="hidden" name="color" value="{{ filters.color }}">{% endif %}
-    {% if filters.view == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
   </form>
+  {% comment %}
+  A native select, not another chip row: the toolbar is already carrying a
+  search field, a view toggle and two icon buttons on a 390px phone. The option
+  values are whole URLs, rebuilt from the live query string by the shell's
+  filter-nav script, so sorting keeps whatever is already filtered or typed.
+  {% endcomment %}
+  <select class="sort-select" data-navkey="sort" aria-label="Sort inks"
+          onchange="if(this.value)window.location.assign(this.value)">
+    {% for o in filters.sort_options %}
+    <option value="{{ o.url }}" data-navval="{% if o.key != 'color' %}{{ o.key }}{% endif %}"
+            {% if o.on %}selected{% endif %}>{{ o.label }}</option>
+    {% endfor %}
+  </select>
   <div class="view-toggle" role="tablist" aria-label="View">
-    <a href="{{ filters.list_url }}"
-       hx-get="{{ filters.list_url }}"
+    <a href="{{ filters.list_url }}" hx-get="{{ filters.list_url }}"
        hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
        class="vt-btn{% if filters.view == 'list' %} on{% endif %}"
        role="tab" aria-selected="{% if filters.view == 'list' %}true{% else %}false{% endif %}"
-       data-view="list">List</a>
-    <a href="{{ filters.grid_url }}"
-       hx-get="{{ filters.grid_url }}"
+       data-view="list" data-navkey="view" data-navval="">List</a>
+    <a href="{{ filters.grid_url }}" hx-get="{{ filters.grid_url }}"
        hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
        class="vt-btn{% if filters.view == 'grid' %} on{% endif %}"
        role="tab" aria-selected="{% if filters.view == 'grid' %}true{% else %}false{% endif %}"
-       data-view="grid">Grid</a>
+       data-view="grid" data-navkey="view" data-navval="grid">Grid</a>
   </div>
   <script>
     (function () {

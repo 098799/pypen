@@ -123,9 +123,15 @@ page load, and it also stopped collectstatic hashing the assets at all.
     </div>
   </div>
 
+  {% comment %}
+  hx-boost="false" because these leave the app. Boosted, htmx fetched the page
+  and hx-select pulled its #main into this shell — Django admin came back
+  wearing the pen site's chrome instead of its own. The sign-in link below
+  already had to opt out for the same reason.
+  {% endcomment %}
   {% if user.is_authenticated %}
-  <a href="/admin/" class="menu-item">Admin</a>
-  <a href="{% url 'account_logout' %}" class="menu-item">Sign out</a>
+  <a href="/admin/" class="menu-item" hx-boost="false">Admin</a>
+  <a href="{% url 'account_logout' %}" class="menu-item" hx-boost="false">Sign out</a>
   {% else %}
   <a href="{% url 'google_login' %}?next={{ request.get_full_path|urlencode }}" class="menu-item signin" hx-boost="false">Sign in with Google</a>
   {% endif %}
@@ -160,6 +166,94 @@ page load, and it also stopped collectstatic hashing the assets at all.
 </nav>
 {% endif %}
 {% block content %}{% endblock %}
+
+{% comment %}
+Filter controls that sit outside the region htmx swaps — the view toggle, the
+sort select, the rotation chips — keep whatever URL the server gave them at
+first render. Type a search and they still point at the pre-search URL, so
+switching view or sort silently threw the search away, and the rotation chips'
+pressed state never moved off "All". Rebuilding each control's URL from the
+live query string means it can only ever set or clear its own key, and the
+pressed state follows from the same comparison. Done in place rather than by
+re-rendering, so a horizontally scrolled bar keeps its scroll position.
+{% endcomment %}
+<script>
+(function () {
+  if (window.__filterNav) return;        // hx-boost re-runs page scripts
+  window.__filterNav = true;
+  function urlFor(key, val) {
+    var p = new URLSearchParams(location.search);
+    if (val) p.set(key, val); else p.delete(key);
+    var qs = p.toString();
+    return location.pathname + (qs ? '?' + qs : '');
+  }
+  function cur(key, allowed) {
+    var v = new URLSearchParams(location.search).get(key) || '';
+    // A value naming nothing on offer is ignored by the view, which falls back
+    // to the default — so the default is what should look selected.
+    return allowed.indexOf(v) === -1 ? '' : v;
+  }
+  function sync() {
+    var links = {}, selects = document.querySelectorAll('select[data-navkey]');
+    document.querySelectorAll('a[data-navkey]').forEach(function (a) {
+      (links[a.getAttribute('data-navkey')] = links[a.getAttribute('data-navkey')] || []).push(a);
+    });
+    Object.keys(links).forEach(function (key) {
+      var group = links[key];
+      var vals = group.map(function (a) { return a.getAttribute('data-navval') || ''; });
+      var now = cur(key, vals);
+      group.forEach(function (a) {
+        var val = a.getAttribute('data-navval') || '';
+        var url = urlFor(key, val);
+        a.setAttribute('href', url);
+        if (a.hasAttribute('hx-get')) a.setAttribute('hx-get', url);
+        var on = val === now;
+        a.classList.toggle('on', on);
+        if (a.hasAttribute('aria-selected')) a.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+    });
+    selects.forEach(function (sel) {
+      var key = sel.getAttribute('data-navkey');
+      var vals = [].map.call(sel.options, function (o) { return o.getAttribute('data-navval') || ''; });
+      var now = cur(key, vals);
+      [].forEach.call(sel.options, function (o) {
+        o.value = urlFor(key, o.getAttribute('data-navval') || '');
+        if ((o.getAttribute('data-navval') || '') === now) sel.value = o.value;
+      });
+    });
+  }
+  // Rewriting href/hx-get is not enough on its own: htmx resolves an element's
+  // request path when it first processes the node and keeps it, so a later
+  // attribute change is ignored and the control re-requests the URL the page
+  // was rendered with. configRequest is the supported seam — the path is built
+  // here, at request time, from the query string as it stands.
+  document.body.addEventListener('htmx:configRequest', function (e) {
+    var el = e.detail.elt;
+    if (!el || !el.getAttribute) return;
+    var key = el.getAttribute('data-navkey');
+    if (key) {
+      e.detail.path = urlFor(key, el.getAttribute('data-navval') || '');
+      return;
+    }
+    if (el.matches && el.matches('form[data-navform]')) {
+      // The field supplies q; everything else in play comes from the URL.
+      new URLSearchParams(location.search).forEach(function (v, k) {
+        if (k !== 'q' && !(k in e.detail.parameters)) e.detail.parameters[k] = v;
+      });
+    }
+  });
+  document.addEventListener('DOMContentLoaded', sync);
+  // hx-push-url writes location during settle, so a sync fired on afterSwap
+  // alone reads the *previous* query string and rebuilds every URL from it —
+  // which is how switching view right after a search still lost the search.
+  // The history events are the ones that mean "location is now current".
+  document.body.addEventListener('htmx:pushedIntoHistory', sync);
+  document.body.addEventListener('htmx:replacedInHistory', sync);
+  document.body.addEventListener('htmx:afterSettle', sync);
+  window.addEventListener('popstate', function () { setTimeout(sync, 0); });
+  sync();
+})();
+</script>
 </main>
 
 {% if is_owner or is_guest %}
