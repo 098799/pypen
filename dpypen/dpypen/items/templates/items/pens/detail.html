@@ -193,18 +193,55 @@
 {% block content %}
 
 {% comment %}
-The back link had this line to itself while the only hamburger within reach sat
-at the bottom of the screen in the tab bar — the corner one is hidden on phones
-as a duplicate of it, and the floating top bar only appears once you scroll.
-A half-empty row and no menu at rest; the row carries both now.
+The site menu lives in the bottom tab bar now, so a second hamburger up here
+was the same door twice. This one belongs to the pen instead: edit, share and
+delete behind it, and the one thing you actually came to do beside it.
 {% endcomment %}
 <div class="detail-bar">
   <a href="{% url 'pens_list' %}" class="pen-back">&larr; All pens</a>
-  <button class="menu-btn detail-menu" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-      <path d="M4 7h16M4 12h16M4 17h16"></path>
-    </svg>
-  </button>
+  {% if can_edit %}
+  <div class="detail-actions">
+    <a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn primary">+ Ink this pen</a>
+    <span class="overflow" data-overflow>
+      <button class="menu-btn detail-menu" type="button" aria-label="Pen actions" aria-haspopup="true" aria-expanded="false" data-overflow-btn>
+        <svg class="gl-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+        <svg class="gl-dots" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/>
+        </svg>
+      </button>
+      <div class="overflow-panel" role="menu">
+        <a href="{% url 'pens_edit' pen.pk %}" data-kbd="edit" role="menuitem">Edit pen</a>
+        <button type="button" role="menuitem" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share pen</button>
+        <form method="post" action="{% url 'pens_delete' pen.pk %}" style="margin: 0;"
+              onsubmit="return confirm('Delete {{ pen|escapejs }}? This cannot be undone.');">
+          {% csrf_token %}
+          <button type="submit" class="danger" role="menuitem">Delete pen</button>
+        </form>
+      </div>
+    </span>
+  </div>
+  <script>
+    (function () {
+      document.querySelectorAll("[data-share-url]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
+          if (navigator.share) {
+            navigator.share({ title: document.title, url: url }).catch(function(){});
+          } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url);
+            var orig = btn.textContent;
+            btn.textContent = "copied";
+            setTimeout(function () { btn.textContent = orig; }, 1400);
+          } else {
+            prompt("Share link:", url);
+          }
+        });
+      });
+    })();
+  </script>
+  {% endif %}
 </div>
 
 <div class="pen-hero">
@@ -305,48 +342,6 @@ A half-empty row and no menu at rest; the row carries both now.
       </div>
     </div>
 
-    {% if can_edit %}
-    {% comment %}
-    Inking a pen is the thing you come here to do; editing and deleting it are
-    things you do once in the life of the record. Only the first earns a button.
-    {% endcomment %}
-    <div class="owner-actions">
-      <a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn primary">+ Ink this pen</a>
-      <span class="overflow" data-overflow>
-        <button type="button" class="icon-btn" aria-label="More actions" aria-haspopup="true" aria-expanded="false" data-overflow-btn>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
-        </button>
-        <div class="overflow-panel" role="menu">
-          <a href="{% url 'pens_edit' pen.pk %}" data-kbd="edit" role="menuitem">Edit pen</a>
-          <button type="button" role="menuitem" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share pen</button>
-          <form method="post" action="{% url 'pens_delete' pen.pk %}" style="margin: 0;"
-                onsubmit="return confirm('Delete {{ pen|escapejs }}? This cannot be undone.');">
-            {% csrf_token %}
-            <button type="submit" class="danger" role="menuitem">Delete pen</button>
-          </form>
-        </div>
-      </span>
-    </div>
-    <script>
-      (function () {
-        document.querySelectorAll("[data-share-url]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
-            if (navigator.share) {
-              navigator.share({ title: document.title, url: url }).catch(function(){});
-            } else if (navigator.clipboard) {
-              navigator.clipboard.writeText(url);
-              var orig = btn.textContent;
-              btn.textContent = "copied";
-              setTimeout(function () { btn.textContent = orig; }, 1400);
-            } else {
-              prompt("Share link:", url);
-            }
-          });
-        });
-      })();
-    </script>
-    {% endif %}
   </div>
 </div>
 

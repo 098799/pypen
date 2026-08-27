@@ -171,8 +171,24 @@ svg:where(:not([width])) { width: 1em; height: 1em; }
   flex: 0 0 auto;
 }
 .detail-bar .menu-btn.detail-menu:hover { transform: none; color: var(--ink); background: none; }
-/* Wide screens already carry a menu in the app nav; this one would be a third. */
-@media (min-width: 720px) { .detail-bar .menu-btn.detail-menu { display: none; } }
+/* Not the site menu — this hamburger holds the record's own actions (edit,
+   share, delete), so it belongs on the line at every width. */
+.detail-bar .detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+.detail-bar .overflow { display: inline-flex; }
+/* Phone: this is the only hamburger on the screen (the site menu is a tab-bar
+   away), so the familiar glyph is right. Desktop: the nav pill already wears a
+   hamburger, and two of them on one screen would be the same door twice — so
+   the record's own actions become the quieter ellipsis. */
+.detail-menu .gl-dots { display: none; }
+@media (min-width: 720px) {
+  .detail-menu .gl-bars { display: none; }
+  .detail-menu .gl-dots { display: block; }
+}
 
 /* An absolutely positioned box hangs off main's *padding* box, so top:0 put
    the hamburger a whole padding-height above the first line of content — on a
@@ -2258,4 +2274,81 @@ html[data-theme="dark"] .sort-select {
   .dash-head { padding-bottom: 0.6rem; margin-bottom: 1rem; }
   .inked { padding: 1.4rem 1rem 1rem; }
   .inked .model { font-size: 1.35rem; }
+}
+
+
+/* ---- Toasts -------------------------------------------------------------
+   Saving, inking, finishing and deleting all used to happen in silence: the
+   page came back looking slightly different and you had to trust it. A toast
+   says what happened, and where the action can be taken back it carries the
+   Undo with it — the offer lives exactly as long as the toast does. Anchored
+   above the tab bar so a thumb reaching for Undo never lands on More. */
+.toasts {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.9rem;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 32rem;
+  width: 100%;
+  padding: 0.7rem 0.75rem 0.7rem 0.95rem;
+  background: var(--plate-top);
+  border: 1px solid var(--ink-line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 0.82rem;
+  color: var(--ink);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.toast.in { opacity: 1; transform: none; }
+.toast.bad { border-left-color: #c0392b; }
+.toast-text { flex: 1 1 auto; min-width: 0; }
+.toast-undo { margin: 0; flex: 0 0 auto; }
+.toast-undo button {
+  background: none;
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  padding: 0.35rem 0.7rem;
+  min-height: 34px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+}
+.toast-undo button:hover { background: var(--chip-top); border-color: var(--accent); }
+.toast-x {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.3rem 0.4rem;
+  cursor: pointer;
+}
+.toast-x:hover { color: var(--ink); }
+
+@media (max-width: 719px) {
+  /* Clear the tab bar, which owns the bottom 72px on a phone. */
+  .toasts { bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; opacity: 1; transform: none; }
 }

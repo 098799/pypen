@@ -128,6 +128,48 @@ page load, and it also stopped collectstatic hashing the assets at all.
 
 <main id="main">
 <style>{% block extra_css %}{% endblock %}</style>
+
+{% comment %}
+Toasts. Every message the views raise lands here, and the ones that carry an
+"undo:<token>" tag get a button that posts the token back. This block sits
+*inside* #main on purpose: hx-boost replaces #main wholesale, so a toast
+rendered outside it would belong to the page you just left and would sit there
+until a hard reload. The script below rides along for the same reason.
+{% endcomment %}
+{% if messages %}
+<div class="toasts" aria-live="polite">
+  {% for m in messages %}
+  <div class="toast{% if m.level_tag == 'error' %} bad{% endif %}" data-toast>
+    <span class="toast-text">{{ m }}</span>
+    {% if m.extra_tags and 'undo:' in m.extra_tags %}
+    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" class="toast-undo" hx-boost="false">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button type="submit">Undo</button>
+    </form>
+    {% endif %}
+    <button type="button" class="toast-x" aria-label="Dismiss">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+<script>
+(function () {
+  document.querySelectorAll("[data-toast]").forEach(function (t) {
+    if (t.dataset.armed) return;
+    t.dataset.armed = "1";
+    requestAnimationFrame(function () { t.classList.add("in"); });
+    var life = setTimeout(dismiss, t.querySelector(".toast-undo") ? 8000 : 4000);
+    function dismiss() {
+      t.classList.remove("in");
+      setTimeout(function () { t.remove(); }, 250);
+    }
+    t.querySelector(".toast-x").addEventListener("click", dismiss);
+    /* Reading it counts as needing it: hovering or touching stops the clock. */
+    t.addEventListener("pointerenter", function () { clearTimeout(life); });
+  });
+})();
+</script>
+{% endif %}
 <button class="menu-btn menu-corner" type="button" id="menuBtnInline" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
     <path d="M4 7h16M4 12h16M4 17h16"></path>

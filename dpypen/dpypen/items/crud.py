@@ -2,11 +2,13 @@ import logging
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
+from django.core import serializers
 from django.core.files.base import ContentFile
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from dpypen.items import undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -72,6 +74,8 @@ def usages_create(request):
     form = UsageForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         usage = form.save()
+        undo.offer(request, f"Inked {usage.pen} with {usage.ink}.",
+                   kind="create", model=Usage, pk=usage.pk)
         return redirect("pens_detail", pk=usage.pen_id)
     return render(request, "items/usages/form.html", {
         "form": form,
@@ -84,9 +88,12 @@ def usages_create(request):
 @login_required
 def usages_edit(request, pk):
     usage = get_object_or_404(Usage, pk=pk)
+    before = undo.snapshot(Usage.objects.get(pk=pk)) if request.method == "POST" else None
     form = UsageForm(request.POST or None, instance=usage)
     if request.method == "POST" and form.is_valid():
         form.save()
+        undo.offer(request, f"Saved {usage.pen} · {usage.ink}.",
+                   kind="update", frozen=before)
         return redirect("usages_list")
     return render(request, "items/usages/form.html", {
         "form": form,
@@ -102,15 +109,24 @@ def usages_edit(request, pk):
 @require_POST
 def usages_end(request, pk):
     usage = get_object_or_404(Usage, pk=pk)
+    before = undo.snapshot(usage)
     usage.end = date.today()
     usage.save(update_fields=["end"])
+    undo.offer(request, f"Finished {usage.pen} · {usage.ink}.",
+               kind="update", frozen=before)
     return redirect("usages_list")
 
 
 @login_required
 @require_POST
 def usages_delete(request, pk):
-    get_object_or_404(Usage, pk=pk).delete()
+    usage = get_object_or_404(Usage, pk=pk)
+    # The samples cascade with the inking, so they ride along in the snapshot;
+    # their image files are left on disk, which is what makes this restorable.
+    frozen = serializers.serialize("json", [usage, *usage.samples.all()])
+    label = f"{usage.pen} · {usage.ink}"
+    usage.delete()
+    undo.offer(request, f"Deleted {label}.", kind="delete", frozen=frozen)
     return redirect("usages_list")
 
 
@@ -162,6 +178,7 @@ def samples_delete(request, pk):
             try: f.delete(save=False)
             except Exception: pass
     sample.delete()
+    undo.say(request, "Writing sample deleted.")
     return redirect("usages_edit", pk=usage_id)
 
 
@@ -366,7 +383,8 @@ def pens_list(request):
 def pens_create(request):
     form = PenForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        pen = form.save()
+        undo.offer(request, f"Added {pen}.", kind="create", model=Pen, pk=pen.pk)
         return redirect("pens_list")
     return render(request, "items/pens/form.html", {
         "form": form,
@@ -379,9 +397,11 @@ def pens_create(request):
 @login_required
 def pens_edit(request, pk):
     pen = get_object_or_404(Pen, pk=pk)
+    before = undo.snapshot(Pen.objects.get(pk=pk)) if request.method == "POST" else None
     form = PenForm(request.POST or None, instance=pen)
     if request.method == "POST" and form.is_valid():
         form.save()
+        undo.offer(request, f"Saved {pen}.", kind="update", frozen=before)
         return redirect("pens_list")
     return render(request, "items/pens/form.html", {
         "form": form,
@@ -396,7 +416,12 @@ def pens_edit(request, pk):
 @login_required
 @require_POST
 def pens_delete(request, pk):
-    get_object_or_404(Pen, pk=pk).delete()
+    # Photos and inkings cascade with it, files and all — nothing honest to
+    # offer as an undo, so this one just says what happened.
+    pen = get_object_or_404(Pen, pk=pk)
+    label = str(pen)
+    pen.delete()
+    undo.say(request, f"Deleted {label}.")
     return redirect("pens_list")
 
 
@@ -481,6 +506,7 @@ def pens_photo_delete(request, pk, photo_pk):
             try: f.delete(save=False)
             except Exception: pass
     photo.delete()
+    undo.say(request, "Photograph deleted.")
     return redirect("pens_edit", pk=pk)
 
 
@@ -752,7 +778,8 @@ def inks_list(request):
 def inks_create(request):
     form = InkForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        ink = form.save()
+        undo.offer(request, f"Added {ink}.", kind="create", model=Ink, pk=ink.pk)
         return redirect("inks_list")
     return render(request, "items/inks/form.html", {
         "form": form,
@@ -765,9 +792,11 @@ def inks_create(request):
 @login_required
 def inks_edit(request, pk):
     ink = get_object_or_404(Ink, pk=pk)
+    before = undo.snapshot(Ink.objects.get(pk=pk)) if request.method == "POST" else None
     form = InkForm(request.POST or None, instance=ink)
     if request.method == "POST" and form.is_valid():
         form.save()
+        undo.offer(request, f"Saved {ink}.", kind="update", frozen=before)
         return redirect("inks_list")
     return render(request, "items/inks/form.html", {
         "form": form,
@@ -827,11 +856,15 @@ def swatches_delete(request, pk):
             try: f.delete(save=False)
             except Exception: pass
     swatch.delete()
+    undo.say(request, "Swatch deleted.")
     return redirect("inks_edit", pk=ink_id)
 
 
 @login_required
 @require_POST
 def inks_delete(request, pk):
-    get_object_or_404(Ink, pk=pk).delete()
+    ink = get_object_or_404(Ink, pk=pk)
+    label = str(ink)
+    ink.delete()
+    undo.say(request, f"Deleted {label}.")
     return redirect("inks_list")
