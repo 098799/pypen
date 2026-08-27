@@ -183,7 +183,7 @@
 
   <form method="post" action="{% url 'inks_swatch_add' ink.pk %}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border: 1px dashed var(--ink-line); border-radius: 5px;">
     {% csrf_token %}
-    <label style="position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.9rem 1.1rem; background: linear-gradient(180deg, var(--plate-top), var(--paper-dark)); border: 1px solid var(--ink-line); border-radius: 999px; font-family: 'Inter', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; overflow: hidden;">
+    <label class="file-pick">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       <span>Snap a swatch</span>
       <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()" style="position: absolute; inset: 0; opacity: 0; cursor: pointer;">

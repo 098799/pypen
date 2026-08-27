@@ -361,8 +361,8 @@
 .gantt-controls button:hover { color: var(--ink); border-color: var(--accent); }
 .gantt-controls button.active {
   color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: var(--plate-active);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .gantt-scroll {
