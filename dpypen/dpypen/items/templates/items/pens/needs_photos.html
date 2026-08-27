@@ -22,57 +22,67 @@
   background: linear-gradient(90deg, var(--accent),
               color-mix(in srgb, var(--accent) 55%, var(--paper-dark)));
 }
+/* Ninety-one rows, each spending a line on a full-width "Choose a photograph"
+   pill and its own copy of the polish tick. The pill is the same action the
+   rest of the app draws as a 30px icon button, and polish is one preference,
+   not ninety-one — so it moves to the top of the page and the rows keep only
+   what differs: which pen, and the button that shoots it. */
 .shot-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.75rem 1.25rem;
+  gap: 0.7rem;
   align-items: center;
-  padding: 0.85rem 0.2rem;
+  padding: 0.55rem 0.2rem;
   border-bottom: 1px solid var(--ink-line);
 }
 .shot-row .who { min-width: 0; }
-.shot-row .title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.2rem; line-height: 1.2; }
+.shot-row .title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem; line-height: 1.2; }
 .shot-row .meta {
-  font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.15em;
-  text-transform: uppercase; color: var(--muted); margin-top: 0.2rem;
+  font-family: "Inter", sans-serif; font-size: 0.68rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin-top: 0.1rem;
 }
-.shot-row form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-/* The file input is the primary action on this page, so it gets to look like
-   a button rather than a browser default. */
-/* Visually hidden, NOT display:none — that would take the input out of the
-   tab order and the accessibility tree, and the wrapping label is not a tab
-   stop, so the only action on this page would be mouse-only. Same pattern as
-   the four older file inputs in the forms. */
+.shot-row form { display: flex; align-items: center; }
+/* Visually hidden, NOT display:none — that would take the input out of the tab
+   order and the accessibility tree, and the wrapping label is not a tab stop,
+   so the only action on this page would become mouse-only. */
 .shot-pick input[type="file"] {
   position: absolute; inset: 0; width: 100%; height: 100%;
   opacity: 0; cursor: pointer;
 }
-.shot-pick { position: relative; }
-.shot-pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shot-pick {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.5rem 0.95rem; min-height: 40px;
-  border: 1px solid var(--ink-line); border-radius: 999px;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  box-shadow: var(--plate-shadow);
-  font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink); cursor: pointer;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border: 1px solid var(--ink-line); border-radius: 6px;
+  background: none; box-shadow: none;
+  color: var(--muted); cursor: pointer;
 }
-.shot-pick:hover { border-color: var(--accent); }
-.shot-row .polish {
-  font-family: "Inter", sans-serif; font-size: 0.66rem; letter-spacing: 0.1em;
+.shot-pick svg { width: 17px; height: 17px; }
+.shot-pick:hover { color: var(--ink); border-color: var(--accent); background: var(--chip-top); }
+.shot-pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.shot-note {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+  margin: 0 0 1.1rem;
+}
+.shot-note .polish {
+  font-family: "Inter", sans-serif; font-size: 0.66rem; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--muted);
-  display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer;
-  /* Same story as the search filters: the label carries the tap target. */
-  padding: 0.55rem 0.25rem; min-height: 44px;
+  display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer;
+  padding: 0.3rem 0.7rem; min-height: 34px;
+  border: 1px solid var(--ink-line); border-radius: 999px;
 }
-.shot-row .polish input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.shot-note .polish input { position: absolute; opacity: 0; pointer-events: none; }
+.shot-note .polish:has(input:checked) {
+  color: var(--ink); border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.shot-note .polish:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shot-note details { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; color: var(--muted); }
+.shot-note summary { cursor: pointer; font-size: 0.95rem; }
+.shot-note details p { margin: 0.5rem 0 0; max-width: 42rem; font-size: 0.98rem; line-height: 1.45; }
 @media (min-width: 900px) {
   .shot-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); column-gap: 2.25rem; }
-}
-@media (max-width: 719px) {
-  .shot-row { grid-template-columns: 1fr; }
-  .shot-row form { justify-content: flex-start; }
 }
 {% endblock %}
 
@@ -88,12 +98,16 @@
   <span class="gmeta">{{ missing_count }} to go</span>
 </div>
 
-<p class="lede">
-  Pick a pen, photograph it against a plain surface, and choose the file here.
-  Leave <em>polish</em> ticked and it goes through the same clean-up as the rest
-  of the collection — background removed, paper backdrop, soft shadow — so the
-  new shots sit alongside the existing ones rather than beside them.
-</p>
+<div class="shot-note">
+  <label class="polish"><input type="checkbox" id="polishAll" checked> polish new shots</label>
+  <details>
+    <summary>How this works</summary>
+    <p>Pick a pen, photograph it against a plain surface, and choose the file here.
+    Leave <em>polish</em> on and it goes through the same clean-up as the rest of the
+    collection — background removed, paper backdrop, soft shadow — so the new shots sit
+    alongside the existing ones rather than beside them.</p>
+  </details>
+</div>
 
 {% for g in groups %}
 <section data-listnav-group>
@@ -113,9 +127,13 @@
       <form method="post" action="{% url 'pens_photo_add' p.pk %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="next" value="queue">
-        <label class="polish"><input type="checkbox" name="enhance" value="1" checked> polish</label>
-        <label class="shot-pick">
-          Choose a photograph
+        {% comment %}
+        Hidden, but still a checkbox: unchecked simply does not submit, which is
+        exactly the semantics the view already expects. {# #} is single-line only.
+        {% endcomment %}
+        <input type="checkbox" name="enhance" value="1" class="polish-flag" checked hidden>
+        <label class="shot-pick" title="Choose a photograph" aria-label="Choose a photograph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.2-2h8.2l1.2 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg>
           <input type="file" name="image" accept="image/*" capture="environment"
                  onchange="this.form.submit()">
         </label>
@@ -127,5 +145,23 @@
 {% empty %}
 <div class="empty">Every pen in the collection has a photograph.</div>
 {% endfor %}
+
+<script>
+(function () {
+  var master = document.getElementById('polishAll');
+  if (!master) return;
+  var flags = document.querySelectorAll('.polish-flag');
+  try {
+    var saved = localStorage.getItem('polishNewShots');
+    if (saved !== null) master.checked = saved === '1';
+  } catch (e) {}
+  function apply() {
+    flags.forEach(function (f) { f.checked = master.checked; });
+    try { localStorage.setItem('polishNewShots', master.checked ? '1' : '0'); } catch (e) {}
+  }
+  master.addEventListener('change', apply);
+  apply();
+})();
+</script>
 
 {% endblock %}

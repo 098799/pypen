@@ -24,10 +24,6 @@
   --bg-grad-1: radial-gradient(ellipse at 15% 10%, #ede2c4 0%, transparent 55%);
   --bg-grad-2: radial-gradient(ellipse at 85% 90%, #f7efd9 0%, transparent 50%);
   --card-shadow: 0 10px 30px -18px #00000055;
-  /* The "raised plate" ring used by every active chip, tab and toggle. It was
-     written out verbatim in five files; pure black reads as a smudge on the
-     dark theme, so it is a token with a value per theme. */
-  --plate-active: 0 0 0 1px var(--ink-line), 0 2px 6px -2px #00000055;
   /* An ink whose colour name has no hex mapping. #333 was 1.43:1 on the dark
      paper — effectively invisible. Unreachable with today's data (all 16
      colours map), but it is what a newly-named colour would fall to. */
@@ -67,7 +63,6 @@ html[data-theme="dark"] {
   --bg-grad-1: radial-gradient(ellipse at 15% 10%, #1f2430 0%, transparent 55%);
   --bg-grad-2: radial-gradient(ellipse at 85% 90%, #181c25 0%, transparent 50%);
   --card-shadow: 0 12px 32px -16px #000000aa;
-  --plate-active: 0 0 0 1px var(--ink-line), 0 2px 8px -2px #00000099;
   --ink-unknown: #9a8f7e;
   --plate-shadow: 0 4px 16px -6px #00000088;
   --noise-opacity: 0.35;
@@ -530,19 +525,19 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 .inked-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
+  gap: 0.8rem;
 }
 .inked {
   --c: #333;
   position: relative;
-  padding: 2rem 1.4rem 1.4rem;
+  padding: 1.5rem 1.1rem 1.1rem;
   border-radius: 4px;
   background:
     radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--c) 55%, transparent) 0%, transparent 55%),
     radial-gradient(80% 90% at 0% 100%, color-mix(in srgb, var(--c) 25%, transparent) 0%, transparent 60%),
     linear-gradient(180deg, var(--plate-top) 0%, var(--paper-dark) 100%);
   border: 1px solid var(--ink-line);
-  box-shadow: var(--plate-shadow), var(--card-shadow);
+  box-shadow: var(--card-shadow);
   overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -574,19 +569,19 @@ html[data-theme="dark"] .inked {
   font-size: 1.5rem;
   font-weight: 500;
   line-height: 1.15;
-  margin: 0.35rem 0 1rem;
+  margin: 0.2rem 0 0.5rem;
 }
 .inked .nib {
   font-family: "Inter", sans-serif;
   font-size: 0.85rem;
   color: var(--ink-soft);
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.7rem;
 }
 .inked .nib b { color: var(--ink); }
 .inked .divider {
   height: 1px;
   background: linear-gradient(90deg, var(--c), transparent);
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 .inked .ink {
   font-style: italic;
@@ -594,7 +589,7 @@ html[data-theme="dark"] .inked {
   color: var(--ink);
 }
 .inked .days {
-  margin-top: 0.9rem;
+  margin-top: 0.5rem;
   font-size: 0.8rem;
   color: var(--muted);
   letter-spacing: 0.1em;
@@ -952,12 +947,7 @@ footer em { color: var(--ink-soft); }
     linear-gradient(var(--accent), var(--accent)) no-repeat
     50% calc(100% - 0.42rem) / calc(100% - 1.7rem) 1.5px;
 }
-.app-nav a.active:hover { background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%); }
-.app-nav a.active {
-  color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%);
-  box-shadow: var(--plate-active);
-}
+
 
 /* -------- Page head -------- */
 .page-head {
@@ -1039,14 +1029,14 @@ footer em { color: var(--ink-soft); }
 .form {
   max-width: 640px;
   display: grid;
-  gap: 1.25rem;
+  gap: 0.85rem;
 }
-.form .field { display: flex; flex-direction: column; gap: 0.4rem; }
+.form .field { display: flex; flex-direction: column; gap: 0.25rem; }
 .form .field[hidden], [hidden] { display: none !important; }
 .form label {
   font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
 }
@@ -1060,7 +1050,7 @@ footer em { color: var(--ink-soft); }
 .form textarea {
   font-family: "EB Garamond", Georgia, serif;
   font-size: 1rem;
-  padding: 0.75rem 0.95rem;
+  padding: 0.55rem 0.85rem;
   background: var(--chip-top);
   color: var(--ink);
   border: 1px solid var(--ink-line);
@@ -1269,8 +1259,8 @@ html[data-theme="dark"] .segmented {
 .segmented input[type="radio"]:checked + * , /* for RadioSelect renders */
 .segmented label:has(input:checked) {
   color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper) 0%, var(--paper-dark) 100%);
-  box-shadow: var(--plate-active);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .segmented label:has(input:checked) { font-weight: 500; }
 /* Django RadioSelect wraps each choice in a <div>; tame it */
