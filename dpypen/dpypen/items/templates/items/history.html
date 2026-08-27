@@ -52,9 +52,9 @@
   .year-row {
     grid-template-columns: 44px 1fr;
     grid-template-areas: "label bar" "meta meta";
-    gap: 0.15rem 0.6rem;
+    gap: 0.1rem 0.6rem;
     font-size: 0.78rem;
-    padding: 0.45rem 0;
+    padding: 0.3rem 0;
   }
   .year-row .year-label { grid-area: label; font-size: 1rem; }
   .year-row .year-bar-track { grid-area: bar; }
@@ -289,7 +289,7 @@
   width: 14px; height: 14px;
   border-radius: 50%;
   background: var(--cc);
-  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.2);
+  border: 1px solid color-mix(in srgb, #000 18%, transparent);
 }
 .pi-row { display: contents; }
 .pi-pen-label {
@@ -318,6 +318,19 @@
 .pi-cell[data-days]:not([data-days="0"]) { cursor: help; }
 .pi-cell:hover { transform: scale(1.35); z-index: 2; }
 .pi-cell.is-blank { background: color-mix(in srgb, var(--paper-dark) 40%, transparent); border-color: color-mix(in srgb, var(--ink-line) 50%, transparent); }
+/* The grid is the point of this page and on a phone it had almost none of the
+   room: a 180px name column and a 210px stack of rotated ink names left about
+   150px of a 390px screen for the cells themselves. The labels come down to
+   what still reads and the matrix gets the rest. */
+@media (max-width: 560px) {
+  .pi-matrix {
+    grid-template-columns: 104px repeat({{ matrix_cols|length }}, 22px);
+    grid-template-rows: 132px;
+  }
+  .pi-header .pi-ink-header { height: 126px; }
+  .pi-header .pi-ink-header a { max-height: 104px; font-size: 0.6rem; }
+  .pi-pen-label { font-size: 0.8rem; padding-right: 0.35rem; }
+}
 
 .gantt-controls {
   display: flex;
@@ -528,7 +541,14 @@
   .gantt-row, .gantt-axis { grid-template-columns: 90px 1fr; }
   .gantt-axis { margin-left: 90px; }
   .gantt-label { font-size: 0.72rem; }
-  .gantt-tick { font-size: 0.58rem; }
+  /* Eleven four-digit years across ~260px of track is ~24px each and they
+     ran into one another — "2016201720182019" as one word. Two digits fit. */
+  .gantt-tick { font-size: 0; }
+  .gantt-tick::before {
+    content: attr(data-short);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
 }
 {% endblock %}
 
@@ -546,40 +566,35 @@
 <style>
 .history-sub-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin: 0 0 2rem;
-  padding: 0.25rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  width: fit-content;
-  max-width: 100%;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 0 1.2rem;
+  padding-bottom: 0.15rem;
 }
+.history-sub-nav::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .history-sub-nav { flex-wrap: wrap; overflow-x: visible; } }
 .history-sub-nav a {
+  flex: 0 0 auto;
   font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
-  padding: 0.5rem 0.95rem;
+  padding: 0.3rem 0.7rem;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ink-line);
   border-radius: 999px;
   text-decoration: none;
-  border: none;
   white-space: nowrap;
 }
-/* The same translucent wash that was removed from .app-nav — this was its
-   last remaining use, and it reads stronger against the dark theme. */
-.history-sub-nav a:hover {
-  color: var(--ink);
-  border: none;
-  background: linear-gradient(var(--accent), var(--accent)) no-repeat
-              50% calc(100% - 0.36rem) / calc(100% - 1.5rem) 1.5px;
-}
+.history-sub-nav a:hover { color: var(--ink); border-color: var(--accent); background: none; }
 .history-sub-nav a.active {
   color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: var(--plate-active);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 </style>
 
@@ -765,7 +780,7 @@
     <div class="gantt" id="ganttInner" data-zoom="1" style="--years: {{ year_ticks|length }};">
       <div class="gantt-axis">
         {% for t in year_ticks %}
-        <span class="gantt-tick" style="left: {{ t.left }}%">{{ t.year }}</span>
+        <span class="gantt-tick" style="left: {{ t.left }}%" data-short="&rsquo;{{ t.year|stringformat:'s'|slice:'2:' }}">{{ t.year }}</span>
         {% endfor %}
       </div>
       {% for row in pen_rows %}
