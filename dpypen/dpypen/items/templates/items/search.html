@@ -5,19 +5,19 @@
 .search-form {
   display: flex;
   gap: 0.5rem;
-  margin: 0 0 1rem;
+  margin: 0 0 0.6rem;
   max-width: 560px;
 }
 .search-input {
   flex: 1 1 auto;
   font-family: "EB Garamond", Georgia, serif;
-  font-size: 1.05rem;
-  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  padding: 0.6rem 1rem;
   background: var(--chip-top);
   color: var(--ink);
   border: 1px solid var(--ink-line);
   border-radius: 999px;
-  min-height: 50px;
+  min-height: 44px;
 }
 html[data-theme="dark"] .search-input { background: color-mix(in srgb, var(--chip-top) 80%, transparent); }
 .search-input:focus {
@@ -42,98 +42,95 @@ html[data-theme="dark"] .search-input { background: color-mix(in srgb, var(--chi
   border-radius: 4px;
 }
 
-/* Search filter bar — consistent with ink list */
+/* -------- Filter row --------------------------------------------------------
+   Was a rounded plate holding a labelled segmented control, a labelled select
+   and three native checkboxes that wrapped onto two further lines — 272px of
+   form above the first result on a 390px phone. Every one of these is a
+   filter, and everywhere else in the app a filter is a chip in a scrolling
+   row. So is this now: no plate, no standing labels, no checkbox furniture. */
 .search-filter-bar {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin: 0 0 1.75rem;
-  padding: 0.55rem 0.8rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 18px;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 0 1rem;
+  padding-bottom: 0.15rem;
 }
-.search-filter-bar .fb-label {
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 0.3rem;
+.search-filter-bar::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) {
+  .search-filter-bar { flex-wrap: wrap; overflow-x: visible; }
 }
 .search-filter-bar .seg-pill {
+  flex: 0 0 auto;
   display: inline-flex;
-  padding: 0.2rem;
+  padding: 0.15rem;
   background: color-mix(in srgb, var(--chip-top) 80%, transparent);
   border: 1px solid var(--ink-line);
   border-radius: 999px;
-  gap: 0.15rem;
+  gap: 0.1rem;
 }
 .search-filter-bar .seg-pill label {
   position: relative;
   cursor: pointer;
-  padding: 0.4rem 0.85rem;
+  padding: 0.35rem 0.7rem;
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   border-radius: 999px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 .search-filter-bar .seg-pill input { position: absolute; opacity: 0; pointer-events: none; }
+/* Selection is the accent outline and ink-coloured label, as everywhere else,
+   not the pressed-plastic radial gradient this used to carry. */
 .search-filter-bar .seg-pill label:has(input:checked) {
   color: var(--ink);
-  background: radial-gradient(circle at 50% 45%, var(--paper), var(--paper-dark));
-  box-shadow: var(--plate-active);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
-.search-filter-bar .sort-select {
-  padding: 0.4rem 2rem 0.4rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--ink-line);
-  font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  background-color: color-mix(in srgb, var(--chip-top) 80%, transparent);
-  color: var(--ink);
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23394b6a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.85rem center;
-  background-size: 10px 7px;
-  min-height: 36px;
-  cursor: pointer;
+.search-filter-bar .sort-select { flex: 0 0 auto; min-height: 32px; }
+.search-filter-bar .sep {
+  flex: 0 0 auto;
+  width: 1px; height: 20px;
+  background: var(--ink-line);
+  margin: 0 0.25rem;
 }
-html[data-theme="dark"] .search-filter-bar .sort-select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23b9ad92' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-}
+/* The native checkbox was the widest thing on the row and said nothing its
+   label did not. The label is the control; checked reads as the accent ring. */
 .search-filter-bar .toggle-check {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  min-height: 34px;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
   font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
   cursor: pointer;
-  /* The label is the tap target; 0.2rem left it 26px tall on a phone. */
-  padding: 0.6rem 0.3rem;
-  min-height: 44px;
+  white-space: nowrap;
 }
-.search-filter-bar .toggle-check input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
-.search-filter-bar .toggle-check:has(input:checked) { color: var(--ink); }
-.search-filter-bar .sep { width: 1px; height: 22px; background: var(--ink-line); margin: 0 0.1rem; }
+.search-filter-bar .toggle-check input { position: absolute; opacity: 0; pointer-events: none; }
+.search-filter-bar .toggle-check:hover { color: var(--ink); border-color: var(--accent); }
+.search-filter-bar .toggle-check:has(input:checked) {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.search-filter-bar .toggle-check:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 {% endblock %}
 
 {% block content %}
 
-<div class="page-head">
+<div class="page-head compact">
   <h1><em>Search</em></h1>
 </div>
 
@@ -161,7 +158,6 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
 
   <nav class="search-filter-bar">
-    <span class="fb-label">Type</span>
     <div class="seg-pill" role="radiogroup">
       {% for k, label in filters.types.items %}
       <label>
@@ -171,7 +167,6 @@ document.addEventListener("DOMContentLoaded", function () {
       {% endfor %}
     </div>
 
-    <span class="fb-label">Sort</span>
     <select name="sort" class="sort-select">
       {% for k, label in filters.sorts.items %}
       <option value="{{ k }}" {% if filters.sort == k %}selected{% endif %}>{{ label }}</option>
