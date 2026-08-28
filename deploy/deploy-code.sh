@@ -49,8 +49,12 @@ fi
 # column the database did not have — every page touching it 500s until someone
 # remembers to migrate by hand. Ordered before the restart so the schema is
 # ready when the new process comes up.
+# backfill_styled_thumbs is idempotent and cheap once the twins exist; it runs
+# every deploy so a catalogue shot made before the field can never keep the pen
+# wall shipping full-size art for a 200px tile.
 ssh "$REMOTE" 'set -euo pipefail; cd /root/pypen/dpypen \
   && /root/pypen/.venv/bin/python manage.py migrate --noinput | tail -3 \
+  && /root/pypen/.venv/bin/python manage.py backfill_styled_thumbs | tail -1 \
   && /root/pypen/.venv/bin/python manage.py collectstatic --noinput | tail -1 \
   && systemctl restart pypen && sleep 2 && systemctl is-active pypen'
 code=$(curl -s -o /dev/null -w '%{http_code}' -m 15 https://pen.grining.eu/)

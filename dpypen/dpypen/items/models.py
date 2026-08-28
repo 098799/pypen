@@ -151,6 +151,11 @@ class PenPhoto(models.Model):
     image = models.ImageField(upload_to=pen_photo_path)
     thumbnail = models.ImageField(upload_to=pen_photo_path, blank=True, null=True)
     image_styled = models.ImageField(upload_to=pen_photo_path, blank=True, null=True)
+    # The styled shot comes back from Gemini at full size, ~300-450 KB. Every
+    # grid on the site preferred it over `thumbnail`, so the pen wall was
+    # shipping ~10 MB of catalogue art to draw 200px tiles. This is its 600px
+    # twin; `grid_url` below is what tiles should ask for.
+    styled_thumbnail = models.ImageField(upload_to=pen_photo_path, blank=True, null=True)
     kind = models.CharField(max_length=8, choices=KINDS, default="other")
     # Where the base image came from, when it was not the owner's own camera.
     source_note = models.CharField(max_length=200, blank=True, default="")
@@ -159,6 +164,46 @@ class PenPhoto(models.Model):
 
     def __str__(self):
         return f"Photo of {self.pen} #{self.position}"
+
+    @property
+    def grid_url(self):
+        """Smallest image that still shows the right thing — for tiles."""
+        for f in (self.styled_thumbnail, self.thumbnail, self.image_styled, self.image):
+            if f:
+                return f.url
+        return None
+
+    @property
+    def full_url(self):
+        """Largest image — for detail pages and share cards."""
+        for f in (self.image_styled, self.image, self.thumbnail):
+            if f:
+                return f.url
+        return None
+
+    def set_styled(self, data: bytes, base: str | None = None, save: bool = True):
+        """Store a catalogue shot and its tile-sized twin together, so the two
+        can never drift apart."""
+        base = base or (self.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+                        if self.image else "photo")
+        self.clear_styled(save=False)
+        self.image_styled = ContentFile(data, name=f"{base}_styled.jpg")
+        self.styled_thumbnail = ContentFile(
+            _process_image(io.BytesIO(data), THUMB_MAX_SIZE), name=f"{base}_styled_t.jpg")
+        if save:
+            self.save(update_fields=["image_styled", "styled_thumbnail"])
+
+    def clear_styled(self, save: bool = True):
+        for field in ("image_styled", "styled_thumbnail"):
+            f = getattr(self, field)
+            if f:
+                try:
+                    f.delete(save=False)
+                except Exception:
+                    pass
+            setattr(self, field, None)
+        if save:
+            self.save(update_fields=["image_styled", "styled_thumbnail"])
 
     def save(self, *args, **kwargs):
         if self.image and not self.pk:

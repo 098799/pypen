@@ -85,7 +85,7 @@ def pens_wall(request):
         photos = list(p.photos.all()[:1])
         ph = photos[0] if photos else None
         if ph:
-            p.tile_url = ph.image_styled.url if ph.image_styled else (ph.thumbnail.url if ph.thumbnail else ph.image.url)
+            p.tile_url = ph.grid_url
             p.tile_styled = bool(ph.image_styled)
             photographed.append(p)
         else:

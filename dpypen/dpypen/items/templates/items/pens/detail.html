@@ -204,7 +204,8 @@ Public, every one of these used to point at a login-gated /inks/<pk>/ or
 onward link bounced them to Google. Anonymous, they go to the same page by its
 share token instead — the door that is actually open.
 {% endcomment %}
-  <a href="{% if public %}{% url 'share_pens_wall' %}{% else %}{% url 'pens_list' %}{% endif %}" class="pen-back">&larr; {% if public %}The pen wall{% else %}All pens{% endif %}</a>
+  {# The wall is a standalone page with no #main — boosted, the swap comes up empty. #}
+  <a href="{% if public %}{% url 'share_pens_wall' %}{% else %}{% url 'pens_list' %}{% endif %}"{% if public %} hx-boost="false"{% endif %} class="pen-back">&larr; {% if public %}The pen wall{% else %}All pens{% endif %}</a>
   {% if can_edit %}
   <div class="detail-actions">
     <a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn primary">+ Ink this pen</a>

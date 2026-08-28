@@ -116,8 +116,14 @@ page load, and it also stopped collectstatic hashing the assets at all.
     <a href="{% url 'pens_needs_photos' %}" class="menu-link{% if nav == 'needs_photos' %} on{% endif %}">Needs a photo</a>
     <a href="{% url 'notebook_upload' %}" class="menu-link{% if nav == 'import' %} on{% endif %}">Import</a>
     {% endif %}
-    <a href="{% url 'share_pens_wall' %}" class="menu-link">Pen wall</a>
-    <a href="{% url 'share_inks_wall' %}" class="menu-link">Ink wall</a>
+    {% comment %}
+    hx-boost="false" on the walls: they are standalone documents with no #main,
+    and this body boosts every link with hx-select="#main". Boosted, htmx found
+    nothing to select, emptied #main and pushed the URL — the wall looked like
+    it had failed to load until you hit refresh.
+    {% endcomment %}
+    <a href="{% url 'share_pens_wall' %}" class="menu-link" hx-boost="false">Pen wall</a>
+    <a href="{% url 'share_inks_wall' %}" class="menu-link" hx-boost="false">Ink wall</a>
   </nav>
   {% else %}
   {% comment %}
@@ -128,8 +134,8 @@ page load, and it also stopped collectstatic hashing the assets at all.
   {% endcomment %}
   <nav class="menu-nav" aria-label="Browse">
     <a href="{% url 'home' %}" class="menu-link{% if nav == 'home' %} on{% endif %}">Home</a>
-    <a href="{% url 'share_pens_wall' %}" class="menu-link">Pen wall</a>
-    <a href="{% url 'share_inks_wall' %}" class="menu-link">Ink wall</a>
+    <a href="{% url 'share_pens_wall' %}" class="menu-link" hx-boost="false">Pen wall</a>
+    <a href="{% url 'share_inks_wall' %}" class="menu-link" hx-boost="false">Ink wall</a>
     <a href="{% url 'share_inks_gallery' %}" class="menu-link{% if nav == 'pub_inks' %} on{% endif %}">Ink cupboard</a>
   </nav>
   {% endif %}

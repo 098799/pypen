@@ -57,7 +57,7 @@ def search(request):
             photos = list(p.photos.all()[:1])
             if photos:
                 ph = photos[0]
-                p.thumb_url = ph.image_styled.url if ph.image_styled else (ph.thumbnail.url if ph.thumbnail else ph.image.url)
+                p.thumb_url = ph.grid_url
             else:
                 p.thumb_url = None
 

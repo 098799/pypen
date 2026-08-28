@@ -169,6 +169,12 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 }
 .tile img.styled { object-fit: contain; padding: 6px; }
 
+/* Tiles arrive one at a time rather than the whole wall blinking in at once:
+   each fades over its --tile-bg as its own bytes land. */
+.tile img { opacity: 0; transition: opacity 0.45s ease; }
+.tile img.ready, .tile img[data-eager] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tile img { opacity: 1; transition: none; } }
+
 .tile-no-img {
   position: absolute; inset: 0;
   display: flex;
@@ -281,7 +287,15 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
      href="/p/{{ p.share_token }}/" target="_blank" rel="noopener"
      aria-label="{{ p.brand.name }} {{ p.model }}{% if p.finish %} {{ p.finish }}{% endif %}">
     {% if p.tile_url %}
-      <img class="{% if p.tile_styled %}styled{% endif %}" src="{{ p.tile_url }}" alt="{{ p }}" loading="lazy">
+      {% comment %}
+      The first two rows carry the fold, so they load eagerly and at high
+      priority; everything below waits for the scroll. decoding="async" keeps
+      a big catalogue shot off the main thread while it is being painted.
+      {% endcomment %}
+      <img class="{% if p.tile_styled %}styled{% endif %}" src="{{ p.tile_url }}" alt="{{ p }}"
+           {% if forloop.counter <= 8 %}loading="eager" fetchpriority="high" data-eager{% else %}loading="lazy"{% endif %}
+           decoding="async" width="600" height="450"
+           onload="this.classList.add('ready')">
     {% else %}
       <div class="tile-no-img">
         <div class="brand">{{ p.brand.name }}</div>
@@ -331,6 +345,19 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
   });
 })();
 </script>
+{% comment %}
+An image that is already in the http cache can finish before this script runs,
+and would then never get its load event — it would stay at opacity 0 forever.
+Sweep for complete images on load and mark them.
+{% endcomment %}
+<script>
+window.addEventListener("load", function () {
+  document.querySelectorAll(".tile img").forEach(function (img) {
+    if (img.complete) img.classList.add("ready");
+  });
+});
+</script>
+
 {% include "items/_tabbar.html" with no_menu=1 %}
 
 </body>

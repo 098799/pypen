@@ -45,7 +45,7 @@ def usages_list(request):
         photos = list(u.pen.photos.all()[:1])
         if photos:
             p = photos[0]
-            u.photo_url = p.image_styled.url if p.image_styled else (p.thumbnail.url if p.thumbnail else p.image.url)
+            u.photo_url = p.grid_url
         else:
             u.photo_url = None
     for u in page.object_list:
@@ -282,7 +282,7 @@ def pens_list(request):
         p.first_photo = photos[0] if photos else None
         if p.first_photo:
             ph = p.first_photo
-            p.list_thumb_url = ph.image_styled.url if ph.image_styled else (ph.thumbnail.url if ph.thumbnail else ph.image.url)
+            p.list_thumb_url = ph.grid_url
             p.list_thumb_styled = bool(ph.image_styled)
         else:
             p.list_thumb_url = None
@@ -446,8 +446,7 @@ def pens_photo_add(request, pk):
                 photo.image.close()
                 styled = generate_catalog_shot(src, prompt=build_prompt(pen),
                                                mime_type="image/jpeg")
-                photo.image_styled.save(f"styled-{photo.pk}.jpg",
-                                        ContentFile(styled), save=True)
+                photo.set_styled(styled)
             except Exception:
                 # The original is already saved; polish is a nicety, so the
                 # upload must still succeed. But swallow it *loudly* — a silent
@@ -559,12 +558,7 @@ def pens_photo_enhance(request, pk, photo_pk):
         messages.error(request, f"Gemini catalog shot failed: {exc}")
         return redirect("pens_photo_edit", pk=pk, photo_pk=photo_pk)
 
-    base = photo.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
-    if photo.image_styled:
-        try: photo.image_styled.delete(save=False)
-        except Exception: pass
-    photo.image_styled = ContentFile(styled, name=f"{base}_styled.jpg")
-    photo.save(update_fields=["image_styled"])
+    photo.set_styled(styled)
     messages.success(request, "Catalog shot ready — review side-by-side below.")
     return redirect("pens_photo_edit", pk=pk, photo_pk=photo_pk)
 
@@ -573,11 +567,7 @@ def pens_photo_enhance(request, pk, photo_pk):
 @require_POST
 def pens_photo_unstyle(request, pk, photo_pk):
     photo = get_object_or_404(PenPhoto, pk=photo_pk, pen_id=pk)
-    if photo.image_styled:
-        try: photo.image_styled.delete(save=False)
-        except Exception: pass
-    photo.image_styled = None
-    photo.save(update_fields=["image_styled"])
+    photo.clear_styled()
     return redirect("pens_photo_edit", pk=pk, photo_pk=photo_pk)
 
 

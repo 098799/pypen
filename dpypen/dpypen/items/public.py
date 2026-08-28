@@ -72,14 +72,8 @@ def _days(begin, end, today):
 
 
 def _pref_url(photo):
-    """Prefer styled → thumbnail → original."""
-    if not photo:
-        return None
-    if getattr(photo, "image_styled", None) and photo.image_styled:
-        return photo.image_styled.url
-    if getattr(photo, "thumbnail", None) and photo.thumbnail:
-        return photo.thumbnail.url
-    return photo.image.url if photo.image else None
+    """Tile-sized: the styled thumb, then the plain one, then the originals."""
+    return photo.grid_url if photo else None
 
 
 def tease(request):
