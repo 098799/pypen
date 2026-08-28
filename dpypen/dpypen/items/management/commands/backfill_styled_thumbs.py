@@ -9,6 +9,7 @@ import io
 import sys
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 from dpypen.items.models import THUMB_MAX_SIZE, PenPhoto, _process_image
 from django.core.files.base import ContentFile
@@ -24,7 +25,9 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         qs = PenPhoto.objects.exclude(image_styled="").exclude(image_styled=None)
         if not opts["force"]:
-            qs = qs.filter(styled_thumbnail__in=["", None])
+            # `__in=["", None]` silently matches nothing — a blank FileField is
+            # "" and a null one is NULL, and neither compares equal inside IN.
+            qs = qs.filter(Q(styled_thumbnail="") | Q(styled_thumbnail__isnull=True))
         done = failed = 0
         for photo in qs.iterator():
             try:
