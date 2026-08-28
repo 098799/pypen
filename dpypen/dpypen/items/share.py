@@ -4,6 +4,7 @@ from datetime import date
 from django.shortcuts import get_object_or_404, render
 
 from dpypen.items import inkindex
+from dpypen.items.auth import public_page
 from dpypen.items.models import Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
 
@@ -31,6 +32,7 @@ def _spectrum_key(ink) -> tuple:
     return (0, h, -l)
 
 
+@public_page
 def inks_wall(request):
     """Full-bleed colour-spectrum wall of every ink in the collection.
     Standalone — no app shell. Includes samples and used-up bottles by default;
@@ -68,6 +70,7 @@ def inks_wall(request):
     })
 
 
+@public_page
 def pens_wall(request):
     """Full-bleed mosaic of every pen with a photo. Standalone — no app shell.
     Defunct pens hidden by default; ?defunct=1 to include them."""
@@ -114,6 +117,7 @@ def pens_wall(request):
     })
 
 
+@public_page
 def inks_gallery(request):
     """The ink cupboard, open to anyone. Same builder as the signed-in
     /inks/ — the two used to be forks and the public one's toolbar had rotted
@@ -122,6 +126,7 @@ def inks_gallery(request):
     return render(request, inkindex.template_for(request, context), context)
 
 
+@public_page
 def pen_by_token(request, token):
     pen = get_object_or_404(Pen.objects.select_related("brand", "rotation"), share_token=token)
     photos = list(pen.photos.all())
@@ -191,6 +196,7 @@ def pen_by_token(request, token):
     })
 
 
+@public_page
 def ink_by_token(request, token):
     ink = get_object_or_404(Ink.objects.select_related("brand", "rotation"), share_token=token)
     today = date.today()

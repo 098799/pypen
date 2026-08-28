@@ -4,7 +4,8 @@ from dpypen.items import crud, history, invite, notebook, palette, public, pwa, 
 
 
 urlpatterns = [
-    path('', public.tease, name='home'),
+    path('', public.landing, name='home'),
+    path('robots.txt', public.robots, name='robots'),
     path('dashboard/', public.dashboard, name='dashboard'),
     path('history/', history.overview, name='history'),
     path('history/calendar/', history.calendar, name='history_calendar'),

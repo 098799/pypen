@@ -127,16 +127,19 @@ page load, and it also stopped collectstatic hashing the assets at all.
   </nav>
   {% else %}
   {% comment %}
-  The public menu used to hold one live link (Sign in) and one trap: Settings,
-  which is login-gated and bounced every visitor to Google. A visitor arriving
-  on a shared pen had no way to reach the walls at all — they are only linked
-  from each other. These are the three doors that are actually open.
+  The public menu listed the walls and the ink cupboard, which is most of the
+  collection and more than we want in the open. They are behind the door now
+  (see @public_page in dpypen.items.auth), so the only honest link left for a
+  signed-out visitor is the way back to the front page — plus the Sign in
+  below, which every branch gets.
   {% endcomment %}
   <nav class="menu-nav" aria-label="Browse">
     <a href="{% url 'home' %}" class="menu-link{% if nav == 'home' %} on{% endif %}">Home</a>
+    {% if public_showcase %}
     <a href="{% url 'share_pens_wall' %}" class="menu-link" hx-boost="false">Pen wall</a>
     <a href="{% url 'share_inks_wall' %}" class="menu-link" hx-boost="false">Ink wall</a>
     <a href="{% url 'share_inks_gallery' %}" class="menu-link{% if nav == 'pub_inks' %} on{% endif %}">Ink cupboard</a>
+    {% endif %}
   </nav>
   {% endif %}
 

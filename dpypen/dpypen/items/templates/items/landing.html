@@ -1,0 +1,156 @@
+{% load static %}<!doctype html>
+<html lang="en">
+{% comment %}
+Standalone, not an extension of items/_shell.html, and that is the point. The
+shell carries the menu panel, the tab bar, htmx boosting, tom-select and the
+service worker — a lot of machinery for a page whose entire job is a name and
+a sign-in button, and every one of those parts is a place for something to
+show through. A door should be a door. The styles below are the shell's own
+tokens, copied down to the handful this page uses.
+{% endcomment %}
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grining Fountain Pens</title>
+<meta name="description" content="A private fountain pen bureau.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preload" as="font" type="font/woff2" crossorigin
+      href="{% static 'items/fonts/cormorant-garamond-normal.woff2' %}">
+<link rel="stylesheet" href="{% static 'items/css/fonts.css' %}">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<meta name="theme-color" content="#f4ecd8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#13161c" media="(prefers-color-scheme: dark)">
+<script>
+// Same key and attribute as every other page, so a visitor who has chosen a
+// theme in Settings meets it here too. Before paint, to avoid a flash.
+(function () {
+  var saved;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  if (!saved) {
+    saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-theme", saved);
+})();
+</script>
+<style>
+html[data-theme="light"] {
+  --bg: #f4ecd8;
+  --ink: #1b2a4a;
+  --muted: #6b6250;
+  --line: rgba(27, 42, 74, 0.18);
+  --accent: #7a1f2b;
+  --plate: rgba(255, 255, 255, 0.45);
+}
+html[data-theme="dark"] {
+  --bg: #13161c;
+  --ink: #e8e2d4;
+  --muted: #8b8577;
+  --line: rgba(232, 226, 212, 0.16);
+  --accent: #e08a94;
+  --plate: rgba(255, 255, 255, 0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "EB Garamond", "Palatino Linotype", Palatino, Georgia, serif;
+  -webkit-text-size-adjust: 100%;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  min-height: 100svh;
+  padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.mark { width: 56px; height: 56px; opacity: 0.85; }
+/* The icon is a cream tile, which in the dark theme is the brightest thing
+   on the page and outshouts the title it sits above. */
+html[data-theme="dark"] .mark { opacity: 0.6; }
+.overline {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2.1rem, 7vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  max-width: 16ch;
+}
+h1 em { font-style: italic; color: var(--accent); }
+.lead {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 1.05rem;
+  max-width: 34ch;
+}
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 46px;
+  padding: 0.65rem 1.3rem;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--plate);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-google:hover { border-color: var(--accent); }
+.g-logo {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%234285F4' d='M45 24c0-1.6-.1-2.7-.4-4H24v7.5h12c-.2 2-1.5 5-4.4 7l6.7 5.2C42.2 36 45 30.6 45 24z'/%3E%3Cpath fill='%2334A853' d='M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4C29.8 36.6 27.2 37.5 24 37.5c-5.8 0-10.7-3.8-12.5-9.1l-7.1 5.5C8 41.2 15.4 46 24 46z'/%3E%3Cpath fill='%23FBBC05' d='M11.5 28.4A13.5 13.5 0 0 1 10.8 24c0-1.5.3-3 .7-4.4l-7.1-5.5A22 22 0 0 0 2 24c0 3.5.8 6.9 2.4 9.9z'/%3E%3Cpath fill='%23EA4335' d='M24 10.5c4.1 0 6.9 1.8 8.5 3.3l6.2-6C34.9 4.3 29.9 2 24 2 15.4 2 8 6.8 4.4 14.1l7.1 5.5C13.3 14.3 18.2 10.5 24 10.5z'/%3E%3C/svg%3E");
+}
+footer {
+  position: fixed;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.7;
+}
+</style>
+</head>
+<body>
+
+<img class="mark" src="/icon.svg" alt="" aria-hidden="true">
+
+<div>
+  <span class="overline">Tomek Grining</span>
+  <h1>The fountain pen <em>bureau</em></h1>
+</div>
+
+<p class="lead">A private collection, kept behind the door. Sign in, or follow an invitation.</p>
+
+{% if user.is_authenticated %}
+<a href="/dashboard/" class="btn-google"><span class="g-logo" aria-hidden="true"></span>Enter the bureau</a>
+{% else %}
+<a href="{% url 'google_login' %}?next=/dashboard/" class="btn-google"><span class="g-logo" aria-hidden="true"></span>Sign in with Google</a>
+{% endif %}
+
+<footer>pen.grining.eu</footer>
+
+</body>
+</html>

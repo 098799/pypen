@@ -2,7 +2,9 @@ from datetime import date
 from collections import defaultdict
 
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import render
 
 from dpypen.items.auth import login_or_guest_required
@@ -29,44 +31,6 @@ INK_COLOR_HEX = {
 }
 
 
-WORD_NUMBERS = {
-    0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
-    6: "six", 7: "seven", 8: "eight", 9: "nine",
-}
-
-
-def spell(n: int) -> str:
-    """Best-effort cardinal spelling for a couple of lovely hero numbers."""
-    if n in WORD_NUMBERS:
-        return WORD_NUMBERS[n]
-
-    tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
-    teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
-             "sixteen", "seventeen", "eighteen", "nineteen"]
-
-    def below_100(x: int) -> str:
-        if x < 10:
-            return WORD_NUMBERS[x]
-        if x < 20:
-            return teens[x - 10]
-        t, r = divmod(x, 10)
-        return tens[t] + ("-" + WORD_NUMBERS[r] if r else "")
-
-    def below_1000(x: int) -> str:
-        if x < 100:
-            return below_100(x)
-        h, r = divmod(x, 100)
-        return WORD_NUMBERS[h] + " hundred" + (" " + below_100(r) if r else "")
-
-    if n < 1000:
-        return below_1000(n)
-    thousands, rest = divmod(n, 1000)
-    out = below_1000(thousands) + " thousand"
-    if rest:
-        out += (" " if rest >= 100 else " and ") + below_1000(rest)
-    return out
-
-
 def _days(begin, end, today):
     return ((end or today) - begin).days
 
@@ -76,38 +40,26 @@ def _pref_url(photo):
     return photo.grid_url if photo else None
 
 
-def tease(request):
-    today = date.today()
-    current = []
-    for u in (
-        Usage.objects.filter(end__isnull=True)
-        .select_related("pen__brand", "ink__brand", "nib")
-        .prefetch_related("pen__photos")
-        .order_by("-begin")
-    ):
-        photos = list(u.pen.photos.all()[:1])
-        photo = photos[0] if photos else None
-        current.append({
-            "pen_id": u.pen.pk,
-            "pen_token": u.pen.share_token,
-            "pen": str(u.pen),
-            "pen_brand": u.pen.brand.name,
-            "pen_model": u.pen.model + (f" {u.pen.finish}" if u.pen.finish else ""),
-            "ink": str(u.ink),
-            "ink_color": u.ink.color,
-            "ink_hex": INK_COLOR_HEX.get(u.ink.color, "#333"),
-            "ink_bg": u.ink.swatch_bg,
-            "nib_html": str(u.nib),
-            "days_inked": (today - u.begin).days,
-            "photo_url": _pref_url(photo),
-        })
-    return render(request, "items/tease.html", {
-        "current": current,
-        "total_pens": Pen.objects.count(),
-        "total_inks": Ink.objects.count(),
-        "total_usages": Usage.objects.count(),
-        "nav": "home",
-    })
+def landing(request):
+    """The door, and nothing else.
+
+    This used to be the tease: the pens on the desk, each linking to its own
+    public page, under a count of every pen, ink and inking in the collection.
+    That was the whole of what a stranger could see, and it was too much of it.
+    Now the front page says whose bureau this is and offers the one way in.
+    It deliberately builds no context and touches no table — there is nothing
+    here to leak, and it stays a 200 for the deploy script's smoke check even
+    if the database is having a bad day.
+    """
+    return render(request, "items/landing.html")
+
+
+def robots(request):
+    """Nothing here is for crawlers while the door is shut."""
+    body = "User-agent: *\nDisallow: /\n"
+    if settings.PUBLIC_SHOWCASE:
+        body = "User-agent: *\nAllow: /\n"
+    return HttpResponse(body, content_type="text/plain")
 
 
 @login_or_guest_required

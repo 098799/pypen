@@ -43,6 +43,16 @@ ALLOWED_EMAILS = {
     if e.strip()
 }
 
+# The site used to show a stranger the whole collection: the landing page led
+# with the pens on the desk, and the menu offered the pen wall, the ink wall
+# and the ink cupboard to anyone who asked. That is more than we want in the
+# open, so the door is shut — an anonymous visitor gets the landing page and a
+# sign-in button, and nothing else. Everything that used to be open now wears
+# @public_page (dpypen.items.auth), which this flag re-opens in one move once
+# we have decided what the public should see. Per-page is the finer knob:
+# drop the decorator from just that view.
+PUBLIC_SHOWCASE = os.getenv("PUBLIC_SHOWCASE") == "True"
+
 
 # Application definition
 

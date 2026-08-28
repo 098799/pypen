@@ -955,7 +955,13 @@ footer em { color: var(--ink-soft); }
   border-radius: 999px;
   border: none;
   text-decoration: none;
-  transition: color 0.15s, background 0.15s;
+  /* background-color, not the `background` shorthand. The hover rule below
+     draws its rule as a background-image pinned to the bottom of the box, and
+     background-position and background-size are both animatable: transitioning
+     the shorthand told the browser to interpolate the position from its
+     initial 0% 0%, so the underline swooped down from the top edge of the pill
+     on every hover. Only the colour should move. */
+  transition: color 0.15s, background-color 0.15s;
   white-space: nowrap;
   flex-shrink: 0;
 }

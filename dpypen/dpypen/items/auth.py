@@ -66,6 +66,26 @@ def login_or_guest_required(view):
     return wrapped
 
 
+def public_page(view):
+    """A page that used to be open to anyone, and is closed for now.
+
+    The walls, the ink cupboard and the shared pen/ink links were reachable
+    without signing in, which showed a stranger most of the collection. Until
+    we decide what the public should see, they answer the same way as every
+    other page: sign in, or arrive on an invite. Set PUBLIC_SHOWCASE=True to
+    open all of them at once; drop the decorator to open just one.
+    """
+    gated = login_or_guest_required(view)
+
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if settings.PUBLIC_SHOWCASE:
+            return view(request, *args, **kwargs)
+        return gated(request, *args, **kwargs)
+
+    return wrapped
+
+
 def visitor_context(request):
     """Template context processor: is_guest, is_owner."""
     is_owner = request.user.is_authenticated
@@ -75,4 +95,8 @@ def visitor_context(request):
         "is_guest": invite is not None,
         "can_edit": is_owner,
         "invite_label": invite.label if invite else "",
+        # So the signed-out menu can only ever offer what @public_page will
+        # actually serve. Without it the flag is half a switch: the pages open
+        # but nothing links to them, or worse, the reverse.
+        "public_showcase": settings.PUBLIC_SHOWCASE,
     }

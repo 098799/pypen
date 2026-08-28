@@ -12,15 +12,19 @@
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <script>
-// Set the theme before paint to avoid a flash.
+// The walls are standalone documents, so they carry their own copy of the
+// shell's theme boot — but the same copy: same "theme" key, same data-theme
+// attribute, same fallback. They used to keep a "wallTheme" of their own,
+// which meant the choice made in Settings stopped at the wall's edge and a
+// wall opened from the menu could come up dark under a light app. Before
+// paint, to avoid a flash.
 (function () {
   var saved;
-  try { saved = localStorage.getItem("wallTheme"); } catch (e) {}
-  var theme = saved;
-  if (!theme || theme === "auto") {
-    theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  if (!saved) {
+    saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
   }
-  document.documentElement.setAttribute("data-wall-theme", theme);
+  document.documentElement.setAttribute("data-theme", saved);
 })();
 </script>
 <style>
@@ -28,7 +32,7 @@
   --tile: clamp(70px, 16vw, 140px);
   --gap: 2px;
 }
-html[data-wall-theme="dark"] {
+html[data-theme="dark"] {
   --bg: #0a0907;
   --paper: #f4ecd8;
   --text: #f4ecd8;
@@ -38,7 +42,7 @@ html[data-wall-theme="dark"] {
   --label-grad-to: rgba(10, 9, 7, 0.85);
   --label-color: #f4ecd8;
 }
-html[data-wall-theme="light"] {
+html[data-theme="light"] {
   --bg: #f4ecd8;
   --paper: #1b2a4a;
   --text: #1b2a4a;
@@ -138,8 +142,8 @@ body { padding-bottom: env(safe-area-inset-bottom); }
 .theme-btn svg { width: 14px; height: 14px; }
 .theme-btn .icon-light { display: none; }
 .theme-btn .icon-dark  { display: inline; }
-html[data-wall-theme="dark"] .theme-btn .icon-light { display: inline; }
-html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
+html[data-theme="dark"] .theme-btn .icon-light { display: inline; }
+html[data-theme="dark"] .theme-btn .icon-dark  { display: none; }
 
 .wall {
   display: grid;
@@ -287,10 +291,10 @@ html[data-wall-theme="dark"] .theme-btn .icon-dark  { display: none; }
 (function () {
   // Theme toggle
   document.getElementById('themeBtn').addEventListener('click', function () {
-    var cur = document.documentElement.getAttribute('data-wall-theme') || 'dark';
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
     var next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-wall-theme', next);
-    try { localStorage.setItem('wallTheme', next); } catch (e) {}
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch (e) {}
   });
 
   // Touch reveal-then-follow
