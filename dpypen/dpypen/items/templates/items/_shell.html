@@ -319,17 +319,89 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
 
 <script>
 (function () {
+  /* These selects were searchable in name only. Tom Select hides its typing
+     input once the control holds an item, and the "— choose —" option counted
+     as one, so the field never showed anywhere to type — and on a phone, with
+     no keyboard up, there was no way to find that out. The search box now
+     lives at the top of the open list, where it is always visible, and a
+     required field keeps its empty option as a placeholder, not an item.
+
+     A select with data-ranked-by="<field>" floats the options that
+     data-ranks lists for the chosen value of that other field to the top,
+     in the listed order, each tagged with how often it was used. A blank
+     select also takes the first of them, so a pen that always wears the same
+     nib does not make you pick it again — until you pick something else. */
+  function wireRanking(ts) {
+    var el = ts.input;
+    var source = el.form && el.form.querySelector('select[name="' + el.dataset.rankedBy + '"]');
+    if (!source) return;
+    var ranks = {};
+    try { ranks = JSON.parse(el.dataset.ranks || "{}"); } catch (e) {}
+    var autoPicked = null;
+
+    function rerank(pickTop) {
+      var used = ranks[source.value] || [];
+      var pos = {};
+      used.forEach(function (pair, i) { pos[String(pair[0])] = { i: i, n: pair[1] }; });
+      ts.clearOptionGroups();
+      if (used.length) {
+        ts.addOptionGroup("ranked", { label: el.dataset.rankedLabel || "Used before" });
+        ts.addOptionGroup("rest", { label: el.dataset.restLabel || "Everything else" });
+      }
+      Object.keys(ts.options).forEach(function (value) {
+        var hit = pos[value];
+        ts.options[value].optgroup = used.length ? (hit ? "ranked" : "rest") : undefined;
+        ts.options[value].rank = hit ? used.length - hit.i : 0;
+        ts.options[value].uses = hit ? hit.n : 0;
+      });
+      // search() reuses its last result while the query is unchanged, which
+      // it always is here — forget it, or the new ranks never get sorted.
+      ts.lastQuery = null;
+      ts.clearCache();
+      ts.refreshOptions(false);
+      var current = ts.getValue();
+      if (pickTop && used.length && (!current || current === autoPicked)) {
+        autoPicked = String(used[0][0]);
+        ts.setValue(autoPicked, true);
+      }
+    }
+    ts.on("change", function () { if (ts.getValue() !== autoPicked) autoPicked = null; });
+    source.addEventListener("change", function () { rerank(true); });
+    // On an edit the pen is already chosen: order the list, keep the nib.
+    rerank(!ts.getValue());
+  }
+
   function initTomSelect(root) {
     if (typeof TomSelect === "undefined") return;
+    var ranked = [];
     (root || document).querySelectorAll("select.js-tom-select").forEach(function (el) {
       if (el.tomselect) return;
-      new TomSelect(el, {
-        allowEmptyOption: true,
+      var ts = new TomSelect(el, {
+        allowEmptyOption: !el.required,
         maxOptions: 500,
+        plugins: ["dropdown_input"],
         searchField: ["text"],
-        sortField: [{ field: "$order" }],
+        sortField: [{ field: "rank", direction: "desc" }, { field: "$order" }],
+        lockOptgroupOrder: true,
+        render: {
+          option: function (data, escape) {
+            return '<div class="ts-opt">' + escape(data.text) +
+              (data.uses ? '<span class="ts-uses">' + data.uses + '×</span>' : '') + '</div>';
+          },
+          optgroup_header: function (data, escape) {
+            return '<div class="optgroup-header">' + escape(data.label) + '</div>';
+          },
+          no_results: function (data, escape) {
+            return '<div class="no-results">Nothing matches “' + escape(data.input) + '”</div>';
+          },
+        },
       });
+      // dropdown_input copies the field's placeholder ("— choose —") into
+      // the search box, which then reads as one more thing to pick.
+      ts.control_input.placeholder = "Type to search…";
+      if (el.dataset.rankedBy) ranked.push(ts);
     });
+    ranked.forEach(wireRanking);
   }
   // Initial load
   if (document.readyState === "loading") {

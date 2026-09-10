@@ -1,6 +1,8 @@
+import json
 from datetime import date
 
 from django import forms
+from django.db.models import Count, Max
 
 from dpypen.items.models import Ink, Pen, Usage
 
@@ -60,6 +62,21 @@ class UsageForm(forms.ModelForm):
         for name in ("pen", "ink", "nib"):
             self.fields[name].empty_label = EMPTY
             self.fields[name].widget.attrs["class"] = "js-tom-select"
+        # Most pens only ever wear one or two of the 30-odd nibs, so the nib
+        # list re-sorts itself around the chosen pen: the ones it has worn,
+        # most-worn first, above the rest. The shell's Tom Select setup reads
+        # these data- attributes; ties go to the nib worn most recently.
+        worn: dict[int, list[list[int]]] = {}
+        for row in (Usage.objects.values("pen_id", "nib_id")
+                    .annotate(n=Count("id"), last=Max("begin"))
+                    .order_by("-n", "-last")):
+            worn.setdefault(row["pen_id"], []).append([row["nib_id"], row["n"]])
+        self.fields["nib"].widget.attrs.update({
+            "data-ranked-by": "pen",
+            "data-ranks": json.dumps(worn, separators=(",", ":")),
+            "data-ranked-label": "Worn by this pen",
+            "data-rest-label": "Other nibs",
+        })
         self.fields["end"].required = False
 
 

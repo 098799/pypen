@@ -1282,6 +1282,47 @@ html[data-theme="dark"] .ts-dropdown {
   color: var(--ink);
 }
 .ts-wrapper.disabled .ts-control { opacity: 0.7; }
+/* The search box sits at the top of the open list (dropdown_input plugin).
+   16px keeps iOS from zooming the page when it takes focus. */
+.plugin-dropdown_input .dropdown-input-wrap { padding: 0.5rem; border-bottom: 1px solid var(--ink-line); }
+.plugin-dropdown_input .dropdown-input {
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 16px;
+  padding: 0.5rem 0.75rem;
+  color: var(--ink);
+  background: var(--chip-top);
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  box-shadow: none;
+}
+.plugin-dropdown_input .dropdown-input:focus { outline: none; border-color: var(--accent); }
+.plugin-dropdown_input.focus.dropdown-active .ts-control {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.ts-wrapper .ts-control .items-placeholder { color: var(--muted); }
+.ts-dropdown .optgroup-header {
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  padding: 0.7rem 0.95rem 0.3rem;
+}
+.ts-dropdown .optgroup + .optgroup { border-top: 1px solid var(--ink-line); }
+.ts-dropdown .option.ts-opt { display: flex; align-items: baseline; gap: 0.6rem; }
+.ts-dropdown .highlight {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 2px;
+}
+.ts-dropdown .ts-uses {
+  margin-left: auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 .form .money-field {
   display: flex;
   gap: 0.5rem;
