@@ -1830,7 +1830,7 @@ html[data-theme="dark"] .switch {
    1440px and 12519px at 390px, i.e. 3.7x the horizontal room bought nothing.
    The rules below give each end of the range its own shape — a bottom tab bar
    and single-column reading on the phone, multi-column density on the desk.
-   Conventions follow ~/dotfiles/webkit/README.md section 3.
+   Conventions follow ~/apps/kit/README.md §4 (phone-first UI).
    ========================================================================== */
 
 /* --- 0. Trapdoors the playbook names explicitly ------------------------- */

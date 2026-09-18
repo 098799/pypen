@@ -675,7 +675,12 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
    state) instead of doing a full page load. */
 window.__go = function (url, push) {
   if (window.htmx && typeof htmx.ajax === "function") {
-    htmx.ajax("GET", url, {target: "#main", select: "#main", swap: "outerHTML"})
+    /* HX-Boosted: the list views answer a bare HX-Request with a partial that
+       has no #main in it, and swapping that in deleted #main — every palette
+       jump to /pens/, /inks/ or /search/ left an empty page (found 2026-09-18).
+       This is a whole-page navigation, so it says so. */
+    htmx.ajax("GET", url, {target: "#main", select: "#main", swap: "outerHTML",
+                           headers: {"HX-Boosted": "true"}})
       .then(function () {
         if (push !== false && location.pathname !== url) history.pushState(null, "", url);
         document.body.dispatchEvent(new CustomEvent("htmx:afterSettle"));
@@ -685,6 +690,73 @@ window.__go = function (url, push) {
   }
   location.href = url;
 };
+</script>
+<script>
+/* The list cursor (KEYS v1, ~/apps/kit/KEYS.md §2; contract in
+   ~/apps/kit/README.md §6). One spec for the whole app, read again on every
+   key, because hx-boost swaps #main and the list under the keys changes with
+   it. The page marks the cursor (.kbd-focused); the layer walks and scrolls. */
+(function () {
+  var ITEMS = "#main [data-listnav-item], #main .list-row, #main article.inked, #main .rec";
+  var ON = "kbd-focused";
+  function cur() { return document.querySelector("#main ." + ON); }
+  function drop() {
+    var c = cur();
+    if (c) c.classList.remove(ON);
+    return !!c;
+  }
+  // The peer places of a page, most local first: rotation chips, ink colours,
+  // history sections; failing those, the app's own tabs.
+  function tabs() {
+    var sets = [
+      ["#rotbar .rotchip", "on", false],
+      [".filter-row a.cc", "on", true],      // a colour chip that is on clears itself
+      [".history-sub-nav a", "active", false],
+      [".app-nav > a", "active", false]
+    ];
+    for (var i = 0; i < sets.length; i++) {
+      var els = [].slice.call(document.querySelectorAll(sets[i][0]))
+        .filter(function (el) { return el.offsetParent !== null; });
+      if (els.length > 1) return { els: els, on: sets[i][1], toggle: sets[i][2] };
+    }
+    return null;
+  }
+  function peers(dir) {
+    var t = tabs();
+    if (!t) return;
+    var at = -1;
+    t.els.forEach(function (el, i) { if (el.classList.contains(t.on)) at = i; });
+    var to = at + dir;
+    if (t.toggle && to === -1 && at >= 0) { t.els[at].click(); return; }  // back to "all"
+    if (to < 0 || to >= t.els.length) return;                             // clamp, no wrap
+    t.els[to].click();
+  }
+  window.__keysList = function () {
+    return {
+      items: ITEMS,
+      current: cur,
+      select: function (el) { drop(); el.classList.add(ON); },
+      open: function (el) {
+        if (!el) return;
+        var a = el.matches("a[href]") ? el
+          : el.querySelector('a[href^="/pens/"], a[href^="/inks/"]') || el.querySelector("a[href]");
+        if (a) a.click();
+      },
+      out: function () {
+        if (drop()) return true;
+        // on a pen or an ink (or a page under it), out is its list
+        var m = location.pathname.match(/^\/(pens|inks|usages)\/[^/]+\//);
+        if (m && window.__go) { window.__go("/" + m[1] + "/", true); return true; }
+        return false;
+      },
+      peers: peers,
+      header: function () {
+        var t = document.getElementById("topbar");
+        return t && !t.classList.contains("tucked") ? t.offsetHeight : 0;
+      }
+    };
+  };
+})();
 </script>
 {% include "items/_keys.html" %}
 </body>

@@ -1,13 +1,16 @@
-"""Command-palette endpoint for the keyboard layer (`d` opens it).
+"""Command-palette endpoint for the keyboard layer (Ctrl-K, `d`).
 
-Returns the shape webkit's snippets/keys.html expects:
+Returns the grouped shape that ~/apps/kit/snippets/keys.html reads:
 
-    {"items": [{"k": kind, "t": title, "s": subtitle, "u": url}, …]}
+    {"groups": [{"type", "title", "items": [{"t", "s", "u"}, …],
+                 "more": {"t", "u"}?}, …]}
 
-Kept deliberately small and un-paginated: the whole collection is 126 pens and
-136 inks, so a query is a couple of indexed LIKEs and the result is capped well
-below anything worth streaming.
+A few rows per group and a "show all" row that lands on /search/ when there is
+more. With nothing typed the layer shows the pages and the recent searches and
+does not call this at all.
 """
+
+from urllib.parse import quote
 
 from django.db.models import Q
 from django.http import JsonResponse
@@ -15,7 +18,7 @@ from django.http import JsonResponse
 from dpypen.items.auth import active_invite
 from dpypen.items.models import Ink, Pen
 
-LIMIT = 40
+LIMIT = 6
 
 
 def _visible(request):
@@ -24,38 +27,44 @@ def _visible(request):
 
 def palette(request):
     if not _visible(request):
-        return JsonResponse({"items": []}, status=403)
+        return JsonResponse({"groups": []}, status=403)
 
     q = (request.GET.get("q") or "").strip()
-    items = []
-
-    pens = Pen.objects.select_related("brand", "rotation")
-    inks = Ink.objects.select_related("brand")
-    if q:
-        pens = pens.filter(
-            Q(model__icontains=q) | Q(brand__name__icontains=q) | Q(finish__icontains=q)
-        )
-        inks = inks.filter(
-            Q(name__icontains=q) | Q(brand__name__icontains=q) | Q(line__icontains=q)
-        )
-
-    for p in pens.order_by("brand__name", "model")[:LIMIT]:
-        items.append({
-            "k": "pen",
-            "t": f"{p.brand.name} {p.model}" + (f" {p.finish}" if p.finish else ""),
-            "s": p.filling or "",
-            "u": f"/pens/{p.pk}/",
-        })
-    for i in inks.order_by("brand__name", "name")[:LIMIT]:
-        items.append({
-            "k": "ink",
-            "t": f"{i.brand.name} {i.name}",
-            "s": i.color or "",
-            "u": f"/inks/{i.pk}/",
-        })
-
-    # Without a query the palette is a launcher, not a dump of the collection.
     if not q:
-        items = items[:12]
+        return JsonResponse({"groups": []})
 
-    return JsonResponse({"items": items})
+    pens = Pen.objects.select_related("brand", "rotation").filter(
+        Q(model__icontains=q) | Q(brand__name__icontains=q) | Q(finish__icontains=q)
+    ).order_by("brand__name", "model")
+    inks = Ink.objects.select_related("brand").filter(
+        Q(name__icontains=q) | Q(brand__name__icontains=q) | Q(line__icontains=q)
+    ).order_by("brand__name", "name")
+
+    def group(type_, title, rows, total, search_type):
+        g = {"type": type_, "title": title, "items": rows}
+        if total > len(rows):
+            g["more"] = {
+                "t": f"Show all {title.lower()} matching",
+                # the palette looks at everything, so the search must too
+                "u": f"/search/?q={quote(q)}&type={search_type}"
+                     "&defunct=1&used_up=1&samples=1",
+            }
+        return g
+
+    pen_rows = [{
+        "t": f"{p.brand.name} {p.model}" + (f" {p.finish}" if p.finish else ""),
+        "s": p.filling or "",
+        "u": f"/pens/{p.pk}/",
+    } for p in pens[:LIMIT]]
+    ink_rows = [{
+        "t": f"{i.brand.name} {i.name}",
+        "s": i.color or "",
+        "u": f"/inks/{i.pk}/",
+    } for i in inks[:LIMIT]]
+
+    groups = []
+    if pen_rows:
+        groups.append(group("pen", "Pens", pen_rows, pens.count(), "pens"))
+    if ink_rows:
+        groups.append(group("ink", "Inks", ink_rows, inks.count(), "inks"))
+    return JsonResponse({"groups": groups})
