@@ -1,14 +1,14 @@
-Django==6.0.4
+Django==6.0.8
 django-admin-sortable2==2.2.3
 django-allauth==65.16.1
 django-extensions==3.2.3
 django-money==3.5.3
-djangorestframework==3.17.1
+djangorestframework==3.17.2
 whitenoise==6.7.0
 
 anthropic==0.96.0
 google-genai==1.73.1
-pillow==12.2.0
+pillow==12.3.0
 
 python-dotenv==1.2.2
 pandas==2.2.2
@@ -23,8 +23,21 @@ typing_extensions==4.15.0
 Babel==2.18.0
 
 # Explicit pins for transitives that had advisories in older versions.
+# Floors raised 2026-09-25 from pip-audit of bae's venv; tests_security.py
+# checks the installed versions against the same list.
 setuptools>=78.1.1
-sqlparse>=0.5.4
+sqlparse>=0.6.0
+urllib3>=2.7.0
+idna>=3.15
+pyasn1>=0.6.4
+anyio>=4.14.2
+
+# allauth's Google provider imports these, but allauth declares them only as
+# the `socialaccount` extra — they were on bae by hand and missing from a fresh
+# install, so `manage.py` could not even start. PyJWT checks Google's id_token.
+PyJWT[crypto]>=2.13.0
+cryptography>=48.0.1
+requests>=2.33.1
 
 black==24.8.0
 isort==5.13.2

@@ -17,8 +17,14 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+
+# The admin's own form took a username and password, which walked round the
+# Google allowlist (an old `admin` superuser still has a password). Signing in
+# to the admin now means signing in to the site: a stranger goes to Google.
+admin.site.login = login_required(admin.site.login)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
