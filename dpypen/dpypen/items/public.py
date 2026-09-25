@@ -67,17 +67,23 @@ def dashboard(request):
     today = date.today()
     year = today.year
 
-    usages = list(
-        Usage.objects.select_related("pen__brand", "ink__brand", "nib")
-        .prefetch_related("pen__photos")
-        .all()
-    )
+    # Every inking feeds the totals, but only the dates and the two ids. The
+    # page shows only the handful inked now, so only those rows get their pen,
+    # ink, nib and brands joined in and their pens' photos fetched. Loading all
+    # 564 inkings in full, with every pen's photos prefetched per row, was
+    # ~3,900 model objects and ~190 ms of server time on bae for a page that
+    # names a few of them. (It also built a 25-row "recent" list, rotation
+    # cards and ink-by-colour groups that the template has long stopped
+    # showing; they are gone.)
+    usages = list(Usage.objects.only("pen_id", "ink_id", "begin", "end"))
 
     current = []
-    for u in sorted(
-        (x for x in usages if x.end is None),
-        key=lambda x: x.begin,
-        reverse=True,
+    # "pk" breaks ties the way the old stable in-Python sort did.
+    for u in (
+        Usage.objects.filter(end__isnull=True)
+        .select_related("pen__brand", "ink__brand", "nib")
+        .prefetch_related("pen__photos")
+        .order_by("-begin", "pk")
     ):
         photos = list(u.pen.photos.all()[:1])
         photo = photos[0] if photos else None
@@ -106,10 +112,7 @@ def dashboard(request):
     total_days_inked = sum(_days(u.begin, u.end, today) for u in usages)
 
     # One query for every pen in the shown rotations, grouped in Python, rather
-    # than one query per rotation. Same for inks below, which cost one query per
-    # colour in INK_COLOR_HEX — 17 of them. Together those were 24 of the
-    # dashboard's 34 queries, for 126 pens and 136 inks that fit in memory
-    # several times over.
+    # than one query per rotation.
     rots = list(
         Rotation.objects.filter(in_use=True, whos="Tomek", priority__in=[0, 1, 2, 3])
         .order_by("priority")
@@ -121,54 +124,6 @@ def dashboard(request):
         .order_by("brand__name", "model")
     ):
         pens_by_rotation[pen.rotation_id].append(pen)
-
-    rotations = []
-    for r in rots:
-        pens = pens_by_rotation.get(r.pk, [])
-        rotations.append({
-            "priority": r.priority,
-            "how_often": r.how_often,
-            "pens": pens,
-            "count": len(pens),
-        })
-
-    inks_by_color = defaultdict(list)
-    for ink in (
-        Ink.objects.filter(color__in=list(INK_COLOR_HEX), used_up=False, volume__gt=5)
-        .select_related("brand")
-        .order_by("brand__name", "name")
-    ):
-        inks_by_color[ink.color].append(ink)
-
-    ink_groups = []
-    for color in INK_COLOR_HEX:
-        inks = inks_by_color.get(color, [])
-        if inks:
-            ink_groups.append({
-                "color": color,
-                "hex": INK_COLOR_HEX[color],
-                "count": len(inks),
-                "inks": inks,
-            })
-
-    recent_usages = sorted(usages, key=lambda u: u.begin, reverse=True)[:25]
-    recent = []
-    max_days = max((_days(u.begin, u.end, today) for u in recent_usages), default=1)
-    for u in recent_usages:
-        days = _days(u.begin, u.end, today)
-        recent.append({
-            "pen_short": f"{u.pen.brand.name} {u.pen.model}",
-            "pen_id": u.pen_id,
-            "ink": str(u.ink),
-            "ink_id": u.ink_id,
-            "ink_hex": INK_COLOR_HEX.get(u.ink.color, "#333"),
-            "ink_bg": u.ink.swatch_bg,
-            "begin": u.begin,
-            "end": u.end,
-            "days": days,
-            "width_pct": max(2.5, 100 * days / max_days) if max_days else 2.5,
-            "current": u.end is None,
-        })
 
     pen_totals = {}
     pen_counts = {}
