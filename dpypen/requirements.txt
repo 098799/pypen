@@ -2,7 +2,7 @@ Django==6.0.8
 django-admin-sortable2==2.2.3
 django-allauth==65.16.1
 django-extensions==3.2.3
-django-money==3.5.3
+django-money==3.6.1
 djangorestframework==3.17.2
 whitenoise==6.7.0
 
