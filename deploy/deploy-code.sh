@@ -17,6 +17,19 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/dpypen/"
 DRY=""
 [[ "${1:-}" == "--dry-run" ]] && DRY="--dry-run"
 
+# The tests gate the deploy, dry run included. `ship` would do this for a p340
+# app, but pypen runs on bae, so ship never sees it — until 2026-09-26 a red
+# suite (say, a view that lost its login decorator) went straight to the
+# public site. They run in the dev venv against a throwaway test database;
+# the local db.sqlite3 is not touched.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if ! out=$(cd "$ROOT/dpypen" && "$ROOT/.devvenv/bin/python" manage.py test dpypen.items 2>&1); then
+  echo "$out" | tail -40
+  echo "TESTS FAILED — nothing was deployed"
+  exit 1
+fi
+echo "$out" | grep -E '^Ran [0-9]+ tests'
+
 # db.sqlite3, staticfiles/ and media/ are server-side state: never push them.
 # .venv is built on bae and only changes when requirements.txt does.
 rsync -az --delete $DRY \
