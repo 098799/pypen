@@ -52,6 +52,7 @@ class KeysLayerRenders(TestCase):
             "/pens/add/", "/pens/needs-photos/", f"/pens/{self.pen.pk}/",
             f"/pens/{self.pen.pk}/edit/", "/inks/", "/inks/?view=grid", "/inks/add/",
             f"/inks/{self.ink.pk}/", f"/inks/{self.ink.pk}/edit/", "/import/",
+            "/next/", f"/next/?pen={self.pen.pk}",
         ]
 
     def test_the_layer_template_compiles(self):

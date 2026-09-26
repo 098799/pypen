@@ -1,6 +1,6 @@
 from django.urls import path
 
-from dpypen.items import crud, history, invite, notebook, palette, public, pwa, records, search, share, undo, views
+from dpypen.items import crud, history, invite, notebook, pairing, palette, public, pwa, records, search, share, undo, views
 
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path('history/gantt/', history.gantt, name='history_gantt'),
     path('history/matrix/', history.matrix, name='history_matrix'),
     path('records/', records.records, name='records'),
+    path('next/', pairing.next_inking, name='next_inking'),
     path('search/', search.search, name='search'),
     path('settings/', public.settings_page, name='settings'),
     path('api/palette', palette.palette, name='api_palette'),

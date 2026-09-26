@@ -107,6 +107,7 @@ page load, and it also stopped collectstatic hashing the assets at all.
   {% if is_owner or is_guest %}
   <nav class="menu-nav" aria-label="More">
     <a href="{% url 'dashboard' %}" class="menu-link{% if nav == 'dashboard' %} on{% endif %}">Desk</a>
+    <a href="{% url 'next_inking' %}" class="menu-link{% if nav == 'next' %} on{% endif %}">Next inking</a>
     <a href="{% url 'history' %}" class="menu-link{% if nav == 'history' %} on{% endif %}">History</a>
     <a href="{% url 'records' %}" class="menu-link{% if nav == 'records' %} on{% endif %}">Records</a>
     <a href="{% url 'usages_list' %}" class="menu-link{% if nav == 'usages' %} on{% endif %}">Inkings</a>

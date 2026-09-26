@@ -9,6 +9,7 @@ from django.shortcuts import render
 
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Brand, Ink, Pen, Rotation, Usage
+from dpypen.items.pairing import due_pens
 
 
 INK_COLOR_HEX = {
@@ -168,43 +169,9 @@ def dashboard(request):
 
     active_ink_count = Ink.objects.filter(used_up=False, volume__gt=5).count()
 
-    # "What should I ink next" — the one question the rotation data can answer
-    # and the dashboard never did. A pen is due when it has been resting longer
-    # than its rotation's how_often; never-inked pens in rotation are due from
-    # the day they arrived. Pens currently inked are excluded outright.
-    inked_now = {u.pen_id for u in usages if u.end is None}
-    last_rest = {}
-    for u in usages:
-        if u.end is None:
-            continue
-        prev = last_rest.get(u.pen_id)
-        if prev is None or u.end > prev:
-            last_rest[u.pen_id] = u.end
-
-    due = []
-    for r in rots:
-        for pen in pens_by_rotation.get(r.pk, []):
-            if pen.pk in inked_now:
-                continue
-            rested = (today - last_rest[pen.pk]).days if pen.pk in last_rest else None
-            overdue = (rested - r.how_often) if rested is not None else None
-            due.append({
-                "pen_id": pen.pk,
-                "pen": f"{pen.brand.name} {pen.model}" + (f" {pen.finish}" if pen.finish else ""),
-                "priority": r.priority,
-                "how_often": r.how_often,
-                "rested": rested,
-                "overdue": overdue,
-                "never": rested is None,
-            })
-    # Ranking by "most overdue" sounded right and was exactly backwards: the
-    # biggest numbers belong to pens deliberately left alone for years, so the
-    # shortlist filled with the collection's dustiest corners. Priority is the
-    # signal — a P0 a month past its turn matters more than a P3 five years
-    # past it — so sort by priority first and only break ties on lateness.
-    due.sort(key=lambda d: (d["priority"], not d["never"],
-                            -(d["overdue"] if d["overdue"] is not None else 0)))
-    ready = [d for d in due if d["never"] or (d["overdue"] or 0) > 0]
+    # "What should I ink next": the pens past their turn. The ink half of the
+    # question is answered on /next/ (dpypen.items.pairing).
+    ready = due_pens(today, usages, rots, pens_by_rotation)
     next_up = ready[:6]
 
     pens_without_photos = Pen.objects.filter(photos__isnull=True).count()

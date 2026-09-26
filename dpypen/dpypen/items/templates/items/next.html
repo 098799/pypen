@@ -1,0 +1,183 @@
+{% extends "items/_shell.html" %}
+{% block title %}Next inking · Grining Fountain Pens{% endblock %}
+
+{% block extra_css %}
+/* The dashboard says which pens are past their turn; this page finishes the
+   thought. One pen at the top, the bottles that suit it beneath, each with
+   the reasons it was picked — so a suggestion can be judged, not just taken. */
+.nx-pen {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.3rem 1rem;
+  align-items: baseline;
+  padding: 0.9rem 0 1rem;
+  border-bottom: 1px solid var(--ink-line);
+  margin-bottom: 1rem;
+}
+.nx-pen h2 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1.15;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.nx-pen h2 a { color: inherit; border: none; }
+.due-pri {
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--ink-line);
+  color: var(--muted);
+}
+.due-pri[data-p="0"], .due-pri[data-p="1"] { color: var(--accent); border-color: var(--accent); }
+.nx-meta {
+  grid-column: 1 / -1;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.nx-meta b { color: var(--accent); font-weight: 500; }
+.nx-note {
+  color: var(--muted);
+  font-style: italic;
+  margin: -0.4rem 0 1rem;
+}
+
+.nx-row { grid-template-columns: auto 1fr auto; }
+.nx-row .title a { color: inherit; border: none; }
+.nx-why { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+.nx-why span {
+  font-family: "Inter", sans-serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--ink-line);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.nx-why .good { border-color: color-mix(in srgb, var(--accent) 45%, var(--ink-line)); color: var(--accent); }
+.nx-why .warn { border-style: dashed; color: var(--muted); }
+
+.nx-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0 2rem; }
+
+.nx-others { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.nx-others a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.nx-others a:hover { border-color: var(--accent); color: var(--ink); }
+.nx-others a.on { border-color: var(--accent); color: var(--accent); }
+.nx-others small {
+  font-family: "Inter", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.nx-others details { width: 100%; margin-top: 0.3rem; }
+.nx-others summary {
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.3rem 0;
+}
+.nx-others details[open] summary { margin-bottom: 0.35rem; }
+.nx-others details > div { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+  <h1>Next <em>inking</em></h1>
+</div>
+
+{% if not pen %}
+<p class="nx-note">No pen in rotation is past its turn. Everything on the rota is either inked or rested less than its turn — come back later, or pick a pen from <a href="{% url 'pens_list' %}">the list</a>.</p>
+{% else %}
+
+<section class="nx-pen" aria-label="The pen">
+  <h2><a href="{% url 'pens_detail' pen.pk %}">{{ pen }}</a></h2>
+  <span class="due-pri" data-p="{{ pen.rotation.priority }}">{% if pen.rotation.priority is not None %}P{{ pen.rotation.priority }}{% else %}out{% endif %}</span>
+  <div class="nx-meta">
+    {{ pen.filling }}
+    {% for d in due %}{% if d.pen_id == pen.pk %} &middot; {% if d.never %}<b>never inked</b>{% else %}rested <b>{{ d.rested }}d</b> of a {{ d.how_often }}d turn{% endif %}{% endif %}{% endfor %}
+  </div>
+</section>
+
+{% if inked_now %}
+<p class="nx-note">Inked now with {{ inked_now.ink }} since {{ inked_now.begin|date:"j M Y" }}. These are for its next fill.</p>
+{% endif %}
+
+<div class="section-head">
+  <h2>Inks that <em>suit it</em></h2>
+  <span class="aside">{% if shuffle %}a shuffle of the best {{ pool }}{% else %}best first{% endif %}</span>
+</div>
+
+{% if suggestions %}
+<div class="list">
+  {% for s in suggestions %}
+  <div class="list-row nx-row" data-listnav-item>
+    <span class="swatch" style="background: {{ s.ink.swatch_bg }}"></span>
+    <div>
+      <div class="title"><a href="{% url 'inks_detail' s.ink.pk %}">{{ s.ink }}</a></div>
+      <div class="meta">{{ s.ink.color }} &middot; {{ s.ink.volume }} ml{% if s.ink.rotation.whos == "Bottle hard to fill from" %} &middot; hard bottle{% endif %}</div>
+      <div class="nx-why">{% for tone, text in s.reasons %}<span class="{{ tone }}">{{ text }}</span>{% endfor %}</div>
+    </div>
+    {% if can_edit %}
+    <a href="{% url 'usages_create' %}?pen={{ pen.pk }}&amp;ink={{ s.ink.pk }}" class="btn small primary">Ink it</a>
+    {% else %}<span></span>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="nx-note">No open bottle left to suggest — every ink in rotation is in a pen or used up.</p>
+{% endif %}
+
+<div class="nx-tools">
+  <a href="{% url 'next_inking' %}?pen={{ pen.pk }}&amp;shuffle={{ next_shuffle }}" class="btn small">Shuffle</a>
+  {% if shuffle %}<a href="{% url 'next_inking' %}?pen={{ pen.pk }}" class="btn small">Best first</a>{% endif %}
+  {% if can_edit %}<a href="{% url 'usages_create' %}?pen={{ pen.pk }}" class="btn small">Choose myself</a>{% endif %}
+</div>
+{% endif %}
+
+{% if due %}
+<section aria-label="Other pens">
+  <div class="section-head">
+    <h2>Past their <em>turn</em></h2>
+    <span class="aside">{{ due|length }} pen{{ due|length|pluralize }}</span>
+  </div>
+  <div class="nx-others">
+    {% for d in due|slice:":12" %}
+    <a href="{% url 'next_inking' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} class="on" aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>
+    {% endfor %}
+    {% if due|length > 12 %}
+    <details>
+      <summary>{{ due|length|add:"-12" }} more</summary>
+      <div>
+        {% for d in due|slice:"12:" %}
+        <a href="{% url 'next_inking' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} class="on" aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

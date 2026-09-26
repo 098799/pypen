@@ -219,6 +219,7 @@ share token instead — the door that is actually open.
         </svg>
       </button>
       <div class="overflow-panel" role="menu">
+        <a href="{% url 'next_inking' %}?pen={{ pen.pk }}" role="menuitem">Suggest an ink</a>
         <a href="{% url 'pens_edit' pen.pk %}" data-kbd="edit" role="menuitem">Edit pen</a>
         <button type="button" role="menuitem" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share pen</button>
         <form method="post" action="{% url 'pens_delete' pen.pk %}" style="margin: 0;"

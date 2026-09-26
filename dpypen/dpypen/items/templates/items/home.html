@@ -164,11 +164,12 @@
 <section id="next-up">
   <div class="section-head">
     <h2>Next <em>up</em></h2>
-    <span class="aside">{{ due_count }} past their turn</span>
+    <a class="aside" href="{% url 'next_inking' %}">{{ due_count }} past their turn &middot; pick an ink &rarr;</a>
   </div>
   <div class="due-list">
     {% for d in next_up %}
-    <a class="due" href="{% url 'pens_detail' d.pen_id %}">
+    {# "ink" on the row promised an inking; it now opens the ink suggestions for that pen. #}
+    <a class="due" href="{% if can_edit %}{% url 'next_inking' %}?pen={{ d.pen_id }}{% else %}{% url 'pens_detail' d.pen_id %}{% endif %}">
       <span class="due-pri" data-p="{{ d.priority }}">P{{ d.priority }}</span>
       <span class="due-pen">{{ d.pen }}</span>
       <span class="due-when">
