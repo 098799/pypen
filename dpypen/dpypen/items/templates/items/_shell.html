@@ -759,6 +759,28 @@ window.__go = function (url, push) {
   };
 })();
 </script>
+<script>
+/* Scroll lock: an overlay freezes the page under it (~/apps/kit/README.md,
+   "Dialogs & sheets"). pypen's dimmed overlays are the keyboard layer's
+   palette and ? sheet; on a phone the page ran on underneath both
+   (2026-09-27). The lock follows what is on screen instead of hooking each
+   open and close, so every way out clears it: Escape, the dim, a pick that
+   navigates, one overlay taking over from the other. The menu panel, the
+   gantt popup and the calendar tip are anchored and undimmed: no lock. */
+(function () {
+  var OPEN = "#kpal.on,#khelp.on";
+  var root = document.documentElement, queued = false;
+  function sync() {
+    queued = false;
+    root.classList.toggle("scroll-lock", !!document.querySelector(OPEN));
+  }
+  new MutationObserver(function () {
+    if (!queued) { queued = true; Promise.resolve().then(sync); }
+  }).observe(document.body, { subtree: true, childList: true,
+                              attributes: true, attributeFilter: ["class"] });
+  sync();
+})();
+</script>
 {% include "items/_keys.html" %}
 </body>
 </html>

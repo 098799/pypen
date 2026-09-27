@@ -2361,3 +2361,14 @@ html[data-theme="dark"] .sort-select {
 @media (prefers-reduced-motion: reduce) {
   .toast { transition: none; opacity: 1; transform: none; }
 }
+
+/* -------- Scroll lock --------
+   An overlay freezes the page under it (~/apps/kit/README.md, "Dialogs &
+   sheets"): _shell.html sets html.scroll-lock while the palette or the ?
+   sheet is open. Native modal <dialog>s lock by themselves. The overlays'
+   own scrollers keep the swipe: their end does not hand it on to the page.
+   (The rule for the keyboard layer lives here, not in _keys.html, which is a
+   copy of the kit's layer.) */
+html.scroll-lock, html.scroll-lock body { overflow: hidden; }
+html:has(dialog[open]:modal) { overflow: hidden; }
+#kpal .kp-list, #khelp .kh-card { overscroll-behavior: contain; }
