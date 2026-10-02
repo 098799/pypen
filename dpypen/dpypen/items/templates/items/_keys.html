@@ -1,5 +1,5 @@
 {% comment %} ——— keyboard layer ————————————————————————————————————————
-   KEYS-LAYER: v1.1 2026-09-18   (the stamp of the canonical copy this was cut from)
+   KEYS-LAYER: v1.2 2026-10-02   (the stamp of the canonical copy this was cut from)
    A copy of ~/apps/kit/snippets/keys.html — KEYS v1, 2026-09-18. The spec is
    ~/apps/kit/KEYS.md; how the layer is built is ~/apps/kit/README.md §6.
    pypen's own parts, and nothing else, differ from the canonical copy:
@@ -159,7 +159,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
 (function(){
   if (window.__keysLoaded) return;   // survives soft navigation; bind once
   window.__keysLoaded = true;
-  window.__keysLayer = 'v1.1 2026-09-18';   // the stamp in the header; fleet-check compares it
+  window.__keysLayer = 'v1.2 2026-10-02';   // the stamp in the header; fleet-check compares it
 
   // ——— CONFIG: the only part that is app-specific ————————————————
   var CFG = {
@@ -710,6 +710,9 @@ article.inked.kbd-focused,.rec.kbd-focused{
   // every key mode, because it is not a Vimium key and every app on the
   // tailnet answers it the same way.
   window.addEventListener('keydown', function(e){
+    // An open <dialog> (the kit's What's new log) keeps every key (v1.2): Esc
+    // is its own cancel, which a preventDefault here would swallow.
+    if (document.querySelector('dialog[open]')) return;
     if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'k' || e.key === 'K')){
       e.preventDefault(); e.stopPropagation();
       if (palIsOpen()) palClose(); else { palNewTab = false; palOpen(); }
@@ -911,6 +914,9 @@ article.inked.kbd-focused,.rec.kbd-focused{
   }
 
   window.addEventListener('keydown', function(e){
+    // An open <dialog> (the kit's What's new log) keeps every key (v1.2): Esc
+    // is its own cancel, which a preventDefault here would swallow.
+    if (document.querySelector('dialog[open]')) return;
     // our own overlays get the keys first, whatever the mode, topmost first —
     // a picture opened from inside the reading pane must go before the pane.
     if (window.__lightboxOpen && window.__lightboxOpen()){
