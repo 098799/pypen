@@ -81,3 +81,46 @@ class KeysLayerRenders(TestCase):
     def test_palette_is_closed_to_strangers(self):
         self.client.logout()
         self.assertEqual(self.client.get("/api/palette?q=a").status_code, 403)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class KitThemeRenders(TestCase):
+    """Every full page carries the kit's theme.js (KIT-THEME) in its head, and
+    Settings carries the kit's chooser. The copy must stay the kit's own bytes."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user("owner", password="x")
+
+    def test_the_copy_is_the_kits(self):
+        from pathlib import Path
+
+        here = Path(__file__).resolve().parent / "templates" / "items" / "_theme.js"
+        kit = Path("/home/tgrining/apps/kit/snippets/theme.js")
+        if not kit.exists():
+            self.skipTest("no kit on this host")
+        self.assertEqual(here.read_bytes(), kit.read_bytes())
+
+    def test_every_full_page_boots_the_kit_theme(self):
+        self.client.force_login(self.user)
+        for url, dark in [("/", "#13161c"), ("/settings/", "#13161c"),
+                          ("/pub/pens/wall/", "#0a0907"), ("/pub/inks/wall/", "#0a0907")]:
+            with self.subTest(url=url):
+                r = self.client.get(url)
+                self.assertEqual(r.status_code, 200, url)
+                html = r.content.decode()
+                head = html.split("</head>")[0]
+                self.assertIn("KIT-THEME: v1", head)
+                self.assertIn('app: "pypen", default: "auto", legacy: ["theme"]', head)
+                self.assertIn(f'dark: "{dark}"', head)
+                # the boot runs before the stylesheet, so the first paint is right
+                if "app.css" in head:
+                    self.assertLess(head.index("KIT-THEME"), head.index("app.css"))
+                self.assertNotIn('localStorage.getItem("theme")', html)
+
+    def test_settings_has_the_kit_chooser(self):
+        self.client.force_login(self.user)
+        html = self.client.get("/settings/").content.decode()
+        self.assertIn("<div data-kit-theme></div>", html)
+        self.assertIn("kitTheme.mount(", html)
+        self.assertNotIn('data-theme="light" aria-label', html)

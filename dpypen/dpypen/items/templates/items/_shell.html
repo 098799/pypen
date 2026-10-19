@@ -40,16 +40,7 @@ page load, and it also stopped collectstatic hashing the assets at all.
   }
 })();
 </script>
-<script>
-(function () {
-  var saved;
-  try { saved = localStorage.getItem("theme"); } catch (e) {}
-  if (!saved) {
-    saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-  }
-  document.documentElement.setAttribute("data-theme", saved);
-})();
-</script>
+{% include "items/_theme_boot.html" %}
 <link rel="stylesheet" href="{% static 'items/css/app.css' %}">
 <link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 </head>

@@ -22,18 +22,7 @@ tokens, copied down to the handful this page uses.
 <link rel="apple-touch-icon" href="/icon.svg">
 <meta name="theme-color" content="#f4ecd8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#13161c" media="(prefers-color-scheme: dark)">
-<script>
-// Same key and attribute as every other page, so a visitor who has chosen a
-// theme in Settings meets it here too. Before paint, to avoid a flash.
-(function () {
-  var saved;
-  try { saved = localStorage.getItem("theme"); } catch (e) {}
-  if (!saved) {
-    saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-  }
-  document.documentElement.setAttribute("data-theme", saved);
-})();
-</script>
+{% include "items/_theme_boot.html" %}
 <style>
 html[data-theme="light"] {
   --bg: #f4ecd8;

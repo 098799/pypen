@@ -1,0 +1,9 @@
+{% load items_extras %}{% comment %}
+The theme boot, one copy for every full page (_shell, landing, both walls).
+It goes in <head> after the theme-color metas and before the stylesheet.
+_theme.js is the kit's theme.js byte for byte (stamp KIT-THEME; never edit
+it, copy a new one from ~/apps/kit/snippets/). It is read in by the kit_theme_js
+tag, not by {% include %}: its header comment names an include tag, which the
+template engine would run. The walls pass their own dark header colour.
+{% endcomment %}<script>window.KITTHEME = {app: "pypen", default: "auto", legacy: ["theme"], colors: {dark: "{{ theme_dark|default:'#13161c' }}", light: "#f4ecd8"}};</script>
+<script>{% kit_theme_js %}</script>

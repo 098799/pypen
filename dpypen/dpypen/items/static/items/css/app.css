@@ -341,6 +341,15 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   box-shadow: none;
   border: 1px solid var(--accent);
 }
+/* The kit's theme chooser (theme.js) reads --bg --panel --line --fg --dim
+   --accent; here they are the paper's own, so it sits like the Keys row. */
+[data-kit-theme] {
+  --bg: color-mix(in srgb, var(--chip-top) 80%, transparent);
+  --panel: color-mix(in srgb, var(--accent) 10%, transparent);
+  --line: var(--ink-line);
+  --fg: var(--ink);
+  --dim: var(--muted);
+}
 /* Floating tooltip (used by calendar heatmap and pen-detail mini-gantt) */
 .cal-tip {
   position: fixed;
@@ -927,7 +936,6 @@ footer em { color: var(--ink-soft); }
     font-size: 0.7rem;
   }
   .user-nav a.dashboard, .user-nav a.out-label { display: none; }
-  .theme-toggle .seg { width: 34px; height: 34px; }
 }
 /* -------- App nav (authenticated) -------- */
 .app-nav {

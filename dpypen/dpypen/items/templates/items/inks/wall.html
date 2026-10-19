@@ -11,22 +11,7 @@
 <meta property="og:description" content="{{ total }} bottles from {{ brand_count }} makers, sorted by hue.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
-<script>
-// The walls are standalone documents, so they carry their own copy of the
-// shell's theme boot — but the same copy: same "theme" key, same data-theme
-// attribute, same fallback. They used to keep a "wallTheme" of their own,
-// which meant the choice made in Settings stopped at the wall's edge and a
-// wall opened from the menu could come up dark under a light app. Before
-// paint, to avoid a flash.
-(function () {
-  var saved;
-  try { saved = localStorage.getItem("theme"); } catch (e) {}
-  if (!saved) {
-    saved = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-  }
-  document.documentElement.setAttribute("data-theme", saved);
-})();
-</script>
+{% include "items/_theme_boot.html" with theme_dark="#0a0907" %}
 <style>
 :root {
   --tile: clamp(70px, 16vw, 140px);
@@ -291,10 +276,9 @@ html[data-theme="dark"] .theme-btn .icon-dark  { display: none; }
 (function () {
   // Theme toggle
   document.getElementById('themeBtn').addEventListener('click', function () {
-    var cur = document.documentElement.getAttribute('data-theme') || 'light';
-    var next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
+    // A one-tap flip kept on the walls (standalone pages, no Settings row);
+    // it sets the kit's choice, so Settings and every other page follow it.
+    kitTheme.set(kitTheme.theme() === 'dark' ? 'light' : 'dark');
   });
 
   // Touch reveal-then-follow

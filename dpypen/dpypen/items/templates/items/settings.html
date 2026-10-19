@@ -33,21 +33,7 @@
 
 <div class="settings-group">
   <div class="menu-label">Theme</div>
-  <div class="theme-choices" role="radiogroup" aria-label="Theme">
-    <button type="button" data-theme="light" aria-label="Light theme">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
-      </svg>
-      <span>Light</span>
-    </button>
-    <button type="button" data-theme="dark" aria-label="Dark theme">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
-      </svg>
-      <span>Dark</span>
-    </button>
-  </div>
+  <div data-kit-theme></div>
 </div>
 
 <div class="settings-group">
@@ -90,24 +76,9 @@ they do not re-run when hx-boost swaps a new page in underneath them.
 {% endcomment %}
 <script>
 (function () {
-  var themeBtns = document.querySelectorAll('.theme-choices:not(.keys-choices) button[data-theme]');
-  function paintTheme() {
-    var cur = document.documentElement.getAttribute('data-theme') || 'light';
-    themeBtns.forEach(function (b) {
-      var on = b.getAttribute('data-theme') === cur;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-checked', on ? 'true' : 'false');
-    });
-  }
-  themeBtns.forEach(function (b) {
-    b.addEventListener('click', function () {
-      var next = b.getAttribute('data-theme');
-      document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('theme', next); } catch (e) {}
-      paintTheme();
-    });
-  });
-  paintTheme();
+  // The theme chooser is the kit's (theme.js in the head). This page arrives
+  // by an hx-boost swap more often than by a load, so mount it here.
+  if (window.kitTheme) kitTheme.mount(document.getElementById('main'));
 
   var keyBtns = document.querySelectorAll('.keys-choices button[data-keys]');
   function paintKeys() {
