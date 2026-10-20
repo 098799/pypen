@@ -1,4 +1,4 @@
-/* KIT-THEME: v1 2026-10-19
+/* KIT-THEME: v1.1 2026-10-20
   The theme: Dark · Light · Auto, the same in every app. Spec: ~/apps/kit/README.md
   §4, "Theme". Canonical copy: ~/apps/kit/snippets/theme.js. Apps carry a
   byte-identical copy (fleet-check `kit` compares them): change this file, bump
@@ -6,13 +6,16 @@
 
   Load it once in the <head>, after the theme-color meta and before the
   stylesheet, as a blocking script, so the first paint is already in the right
-  theme: inline (a script element holding {% include "_theme.js" %}, or the
+  theme: inline (a script element holding a Jinja or Django include of it, or the
   file read into the page by a stdlib server) or by src="/theme.js" where the
   CSP allows no inline script (witness). The app tells it, before, in a script:
     window.KITTHEME = {app: "pod", colors: {dark: "#0b0e14", light: "#f6f4f2"}};
   or, without an inline script, as data- attributes of the script tag:
     data-app="witness" data-dark="#101317" data-light="#ece8df"
-  (this file holds no closing script tag and no HTML comment, so it inlines)
+  (this file holds no closing script tag, no HTML comment and no template
+  syntax — brace-percent, double brace, brace-hash — so it inlines and
+  includes as is; v1.1 took one out of this comment: Jinja included the
+  file into itself)
   app      the key is localStorage['<app>Theme'], <app> = the registry's name
   colors   <meta name="theme-color"> per theme = the header's colour (optional)
   default  'dark' (the fleet's default), 'light' or 'auto'; another one than
@@ -50,7 +53,7 @@
 (function () {
   'use strict';
   if (window.kitTheme) return;
-  var version = 'v1 2026-10-19';
+  var version = 'v1.1 2026-10-20';
   var C = window.KITTHEME || {};
   var tag = document.currentScript;
   var ds = (tag && tag.dataset) || {};
