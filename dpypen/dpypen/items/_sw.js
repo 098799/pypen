@@ -1,4 +1,4 @@
-/* KIT-SW: v1.1 2026-10-26
+/* KIT-SW: v1.2 2026-10-26
   The service worker of every app: offline, and the pages kept on the phone.
   Spec: ~/apps/kit/README.md §4, "Offline". Canonical copy:
   ~/apps/kit/snippets/sw.js. Apps carry a byte-identical copy (fleet-check
@@ -68,12 +68,12 @@
              asked first for every GET of this origin, Range ones too (pod's kept
              audio, a board);
              undefined = the kit decides
-      kitSW.offline() → the offline page, a Promise of a Response
+      kitSW.offline(url) → the offline page for that URL, a Promise of a Response
     kitSW.keep(event, request, response) keeps a page; kitSW.withBar(copy) adds the bar
 */
 (function () {
   'use strict';
-  var VERSION = 'v1.1 2026-10-26';
+  var VERSION = 'v1.2 2026-10-26';
   var C = self.KITSW || {};
   var APP = C.app || 'app';
   var PAGES = 'kit-' + APP + '-pages';
@@ -93,17 +93,17 @@
     en: {tailnet: 'p340 is not reachable — is the phone on the tailnet?',
          internet: 'No connection — is the phone online?', again: 'Try again',
          home: 'Not reachable — is the phone on the home wifi?',
-         kept: 'Kept on this device', title: 'offline', copy: 'Kept copy from %s',
+         kept: 'Kept on this device', title: 'offline', copy: 'Kept copy from %s', back: 'Back to %s',
          auto: 'It tries again by itself when the phone is back online.'},
     pl: {tailnet: 'p340 nie odpowiada — czy telefon jest w tailnecie?',
          internet: 'Brak połączenia — czy telefon jest online?', again: 'Spróbuj ponownie',
          home: 'Brak połączenia — czy telefon jest w domowym wifi?',
-         kept: 'Zapisane na tym urządzeniu', title: 'offline', copy: 'Kopia z %s',
+         kept: 'Zapisane na tym urządzeniu', title: 'offline', copy: 'Kopia z %s', back: 'Wróć do: %s',
          auto: 'Spróbuje sam, gdy telefon wróci do sieci.'},
     tr: {tailnet: 'p340 erişilemiyor — telefon tailnet’te mi?',
          internet: 'Bağlantı yok — telefon çevrimiçi mi?', again: 'Tekrar dene',
          home: 'Erişilemiyor — telefon ev wifi’sinde mi?',
-         kept: 'Bu cihazda saklananlar', title: 'çevrimdışı', copy: '%s tarihli kopya',
+         kept: 'Bu cihazda saklananlar', title: 'çevrimdışı', copy: '%s tarihli kopya', back: 'Geri: %s',
          auto: 'Telefon yeniden bağlanınca kendisi dener.'},
   };
   var LANG = WORDS[C.lang] ? C.lang : 'en';
@@ -126,6 +126,11 @@
     return (resp.headers.get('Content-Type') || '').indexOf('text/html') === 0;
   }
   function noop() {}
+  // An answer nobody reads holds its connection: six of them and every fetch
+  // of the origin waits (health's no-store icons at install, 2026-10-26).
+  function drop(resp) {
+    try { if (resp && resp.body && !resp.bodyUsed) resp.body.cancel().catch(noop); } catch (e) {}
+  }
 
   // Oldest out: Cache Storage lists keys in insertion order, so a key put
   // again is deleted first to move it to the end.
@@ -189,13 +194,16 @@
     }).catch(function () { return []; });
   }
 
-  function offlinePage() {
+  function offlinePage(url) {
     var colors = C.colors || {}, d = colors.dark, l = colors.light;
     var only = d && !l ? 'dark' : (l && !d ? 'light' : '');   // a one-theme app
     var dark = Object.assign({}, DARK, d || l || {});
     var light = Object.assign({}, LIGHT, l || d || {});
     var name = C.name || APP;
     var key = C.theme || (APP + 'Theme');
+    // A way back to the app's first page (its kept copy or shell), from any other address.
+    var away = url && url.pathname !== SCOPE ? '<a class="alt" href="' + esc(SCOPE) + '">' +
+      esc(L.back.replace('%s', name)) + '</a>' : '';
     return keptPages().then(function (kept) {
       // The titles come from the kept pages' own markup, so they are already
       // escaped text; the regex let no '<' through.
@@ -204,12 +212,14 @@
       }).join('') + '</ul>' : '';
       var body = '<!doctype html><html lang="' + LANG + '" data-theme="dark"><head><meta charset="utf-8">' +
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
+        '<meta name="theme-color" content="' + esc(dark.bg) + '">' +
         '<title>' + esc(name) + ' · ' + esc(L.title) + '</title>' +
         '<script>(function(){var m=' + JSON.stringify(only || 'dark') + ';try{m=localStorage.getItem(' +
         JSON.stringify(key) + ')||m}catch(e){}' +
         'if(m!=="dark"&&m!=="light")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";' +
         (only ? 'm=' + JSON.stringify(only) + ';' : '') +
-        'document.documentElement.setAttribute("data-theme",m)})()</script>' +
+        'document.documentElement.setAttribute("data-theme",m);document.querySelector("meta[name=theme-color]")' +
+        '.content=m==="light"?' + JSON.stringify(light.bg) + ':' + JSON.stringify(dark.bg) + '})()</script>' +
         '<style>:root{' + vars(dark) + ';color-scheme:dark}' +
         'html[data-theme=light]{' + vars(light) + ';color-scheme:light}' +
         'body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;' +
@@ -222,10 +232,12 @@
         'color:var(--dim);margin:28px 0 6px}ul{list-style:none;margin:0;padding:0;text-align:left;' +
         'border-top:1px solid var(--line)}li{border-bottom:1px solid var(--line)}a{display:block;padding:12px 4px;' +
         'color:var(--fg);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-        'a:hover,a:focus-visible{color:var(--accent)}</style></head>' +
+        'a:hover,a:focus-visible{color:var(--accent)}a.alt{display:inline-flex;align-items:center;' +
+        'min-height:44px;padding:0 18px;margin:4px 0 0;border:1px solid var(--line);border-radius:10px;' +
+        'white-space:normal}</style></head>' +
         '<body><main id="kit-offline" data-kit-sw="' + VERSION + '"><h1>' + esc(name) + '</h1>' +
         '<p>' + esc(L[C.where] || L.tailnet) + '</p>' +
-        '<button type="button" onclick="location.reload()">' + esc(L.again) + '</button>' +
+        '<button type="button" onclick="location.reload()">' + esc(L.again) + '</button>' + (away ? '<br>' + away : '') +
         '<p class="auto">' + esc(L.auto) + '</p>' + list + '</main>' +
         '<script>addEventListener("online",function(){location.reload()})</script></body></html>';
       return new Response(body, {status: 503, headers: {
@@ -284,9 +296,10 @@
         event.waitUntil(put(PAGES, req, stamped(resp.clone()), MAX.pages));
       }
       if (resp.status >= 502 && resp.status <= 504) {   // nginx: the app is down or restarts
+        drop(resp);
         return caches.match(req, {cacheName: PAGES}).then(function (hit) {
           return hit ? withBar(hit) : caches.match(req, {cacheName: PRE});
-        }).then(function (hit) { return hit || offlinePage(); });
+        }).then(function (hit) { return hit || offlinePage(url); });
       }
       return resp;
     });
@@ -300,7 +313,7 @@
         var shell = C.shell ? match(new URL(C.shell, self.location).href, [PAGES, PRE]) : Promise.resolve();
         return shell.then(function (s) {
           // After `wait`, a slow network still beats the offline page.
-          return s || live.catch(offlinePage);
+          return s || live.catch(function () { return offlinePage(url); });
         });
       });
     });
@@ -312,7 +325,10 @@
       return fetch(req).then(function (resp) {
         if (keepable(resp)) event.waitUntil(put(FILES, req, resp.clone(), MAX.files));
         if (resp.status >= 500) {                      // the app is down: the copy is better
-          return match(req, [FILES, PRE]).then(function (h) { return h || resp; });
+          return match(req, [FILES, PRE]).then(function (h) {
+            if (h) drop(resp);
+            return h || resp;
+          });
         }
         return resp;
       });
@@ -338,7 +354,9 @@
     }).then(function (cache) {
       return Promise.all(PRECACHE.map(function (u) {
         return fetch(u, {cache: 'no-cache'}).then(function (resp) {
-          if (keepable(resp)) return cache.put(u, resp);
+          // The app listed it: kept even when no-store (health's icons).
+          if (resp.status === 200 && !resp.redirected && resp.type === 'basic') return cache.put(u, resp);
+          drop(resp);
         }).catch(noop);
       }));
     }).then(function () {
