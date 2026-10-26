@@ -56,7 +56,8 @@
   {% endcomment %}
   <div class="settings-actions">
     <a href="/admin/" class="btn" hx-boost="false">Admin</a>
-    <a href="{% url 'account_logout' %}" class="btn" hx-boost="false">Sign out</a>
+    {# The kit's worker keeps pages for offline: signing out drops them from this phone. #}
+    <a href="{% url 'account_logout' %}" class="btn" hx-boost="false" onclick="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">Sign out</a>
   </div>
 </div>
 {% elif is_guest %}

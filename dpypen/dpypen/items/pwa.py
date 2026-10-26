@@ -1,20 +1,44 @@
+import hashlib
+import json
+from pathlib import Path
+
 from django.http import HttpResponse, JsonResponse
 
 
-_SW_JS = """
-// Minimal service worker — needs a fetch handler for Android Chrome's install prompt.
-// No caching yet; plain pass-through so pages always reflect latest deploys.
-self.addEventListener("install", (e) => { self.skipWaiting(); });
-self.addEventListener("activate", (e) => { e.waitUntil(self.clients.claim()); });
-self.addEventListener("fetch", (event) => {
-  // Navigations must be left to the browser: a navigation request carries
-  // redirect:"manual", so respondWith(fetch(...)) turns a cross-origin 302
-  // (e.g. the Google OAuth hand-off) into an opaque redirect that never
-  // gets followed, and the login silently bounces in place.
-  if (event.request.mode === "navigate") return;
-  event.respondWith(fetch(event.request));
-});
-"""
+# The kit's service worker (KIT-SW): _sw.js is ~/apps/kit/snippets/sw.js byte for byte
+# (never edit it; copy a new one from the kit). /sw.js = these settings + that text.
+# Navigations are network first and kept for offline; the Google OAuth hand-off is
+# under /accounts/, which the worker never touches (`skip`), nor the admin, the
+# JSON, the media (Range) or the GETs that act (an invite, an undo). Writes are
+# never touched. `build` is a hash of the app's code, templates and static files,
+# so the worker's bytes change on a deploy that changes them, and only then.
+_HERE = Path(__file__).resolve().parent
+_PKG = _HERE.parent
+
+
+def _build() -> str:
+    h = hashlib.sha256()
+    for f in sorted(_PKG.rglob("*")):
+        if f.suffix in {".py", ".html", ".css", ".js", ".svg", ".json"} and f.is_file() \
+                and "__pycache__" not in f.parts and "migrations" not in f.parts:
+            h.update(str(f.relative_to(_PKG)).encode() + b"\0" + f.read_bytes())
+    return h.hexdigest()[:12]
+
+
+KITSW = {
+    "app": "pypen",
+    "build": _build(),
+    "name": "Pens",
+    "where": "internet",
+    "colors": {
+        "light": {"bg": "#f4ecd8", "fg": "#1b2a4a", "dim": "#5a4b2e", "accent": "#7a1f2b", "line": "#d6c9a5"},
+        "dark": {"bg": "#13161c", "fg": "#ece2c8", "dim": "#b9ad92", "accent": "#e08a94", "line": "#2b303b"},
+    },
+    "files": ["/static/"],
+    "skip": ["/accounts/", "/admin/", "/api/", "/media/", "/i/", "/undo/"],
+    "takeover": True,
+}
+_SW_JS = "self.KITSW = " + json.dumps(KITSW) + ";\n" + (_HERE / "_sw.js").read_text()
 
 
 _ICON_SVG = """<?xml version="1.0" encoding="UTF-8"?>
