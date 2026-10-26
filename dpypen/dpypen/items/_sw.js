@@ -1,4 +1,4 @@
-/* KIT-SW: v1 2026-10-26
+/* KIT-SW: v1.1 2026-10-26
   The service worker of every app: offline, and the pages kept on the phone.
   Spec: ~/apps/kit/README.md §4, "Offline". Canonical copy:
   ~/apps/kit/snippets/sw.js. Apps carry a byte-identical copy (fleet-check
@@ -26,8 +26,8 @@
       theme: "podTheme",           // the chooser's localStorage key (default '<app>Theme')
       lang: "en",                  // "en" | "pl" | "tr"; labels: {…} for single words
       precache: ["/offline-ok", "/static/app.css"],
-                                   // fetched at install one by one into a cache that is
-                                   // never trimmed; a 404 is skipped, never fatal
+                                   // fetched at install one by one into a cache that
+                                   // holds just this list; a 404 is skipped, never fatal
       files: ["/static/"],         // path prefixes of same-origin files kept for offline
                                    // (CSS, JS, fonts, icons); ["/"] = every file
       skip: ["/api/"],             // path prefixes never touched (JSON, media, OAuth)
@@ -52,7 +52,7 @@
              else the shell; else the offline page. A 502/503/504 (nginx: the app is down) → the copy, else
              the offline page. A 401 forgets every kept page
     files    `files` prefixes and `precache`: the network first (within `wait`) and
-             kept; the copy when it fails, the newest one first. A `?v=` URL is content-addressed (kit caching.py): the
+             kept; the copy when it fails or answers 5xx, the newest one first. A `?v=` URL is content-addressed (kit caching.py): the
              copy first. Never a page for a file: a miss offline is a network error
     never    writes, other origins, Range (audio, video), `skip`, everything else
     offline  a page in the app's colours and chosen theme: the app's name, why
@@ -60,18 +60,20 @@
              phone is back online), and links to the pages kept here. 503, not kept
     update   'SKIP_WAITING' → skipWaiting(). activate deletes the origin's caches
              that are not a kit worker's (the old hand-made ones) and not in `keep`,
-             then claims the open pages. 'KIT_FORGET' drops pages and files (sign-out)
+             then claims the open pages. 'KIT_FORGET' drops pages, files and the precache
+             (sign-out)
 
   Hooks, in the app's part of the worker (after this file):
     kitSW.route(function (event, url) { return response | promise | undefined; })
              asked first for every GET of this origin, Range ones too (pod's kept
              audio, a board);
              undefined = the kit decides
-    kitSW.offline() → the offline page, a Promise of a Response
+      kitSW.offline() → the offline page, a Promise of a Response
+    kitSW.keep(event, request, response) keeps a page; kitSW.withBar(copy) adds the bar
 */
 (function () {
   'use strict';
-  var VERSION = 'v1 2026-10-26';
+  var VERSION = 'v1.1 2026-10-26';
   var C = self.KITSW || {};
   var APP = C.app || 'app';
   var PAGES = 'kit-' + APP + '-pages';
@@ -80,10 +82,11 @@
   var MAX = Object.assign({pages: 60, files: 400}, C.max || {});
   var SKIP = C.skip || [];
   var FILE_PREFIXES = C.files || [];
-  var NEVER = ['/login', '/logout'];        // the gate's pages: never kept
+  var SCOPE = new URL(self.registration.scope).pathname;
+  var NEVER = ['/login', '/logout', SCOPE + 'login', SCOPE + 'logout'];   // the gate's pages: never kept
   var PRECACHE = (C.precache || []).map(function (u) { return new URL(u, self.location).href; });
   var KEEP = C.keep || [];
-  var BAR_CSS = new URL('kit-sw-kept.css', self.registration.scope).pathname;
+  var BAR_CSS = SCOPE + 'kit-sw-kept.css';
   var routes = [];
 
   var WORDS = {
@@ -158,7 +161,7 @@
   }
 
   function forget() {
-    return Promise.all([caches.delete(PAGES), caches.delete(FILES)]).catch(noop);
+    return Promise.all([caches.delete(PAGES), caches.delete(FILES), caches.delete(PRE)]).catch(noop);
   }
 
   // ---- the offline page and the kept-copy bar ----------------------------
@@ -282,8 +285,8 @@
       }
       if (resp.status >= 502 && resp.status <= 504) {   // nginx: the app is down or restarts
         return caches.match(req, {cacheName: PAGES}).then(function (hit) {
-          return hit ? withBar(hit) : offlinePage();
-        });
+          return hit ? withBar(hit) : caches.match(req, {cacheName: PRE});
+        }).then(function (hit) { return hit || offlinePage(); });
       }
       return resp;
     });
@@ -308,6 +311,9 @@
     function fromNet() {
       return fetch(req).then(function (resp) {
         if (keepable(resp)) event.waitUntil(put(FILES, req, resp.clone(), MAX.files));
+        if (resp.status >= 500) {                      // the app is down: the copy is better
+          return match(req, [FILES, PRE]).then(function (h) { return h || resp; });
+        }
         return resp;
       });
     }
@@ -324,6 +330,12 @@
 
   self.addEventListener('install', function (event) {
     event.waitUntil(caches.open(PRE).then(function (cache) {
+      // What is no longer listed goes (an old ?v=, a page dropped from the list).
+      return cache.keys().then(function (keys) {
+        return Promise.all(keys.filter(function (k) { return PRECACHE.indexOf(k.url) < 0; })
+          .map(function (k) { return cache.delete(k); }));
+      }).then(function () { return cache; });
+    }).then(function (cache) {
       return Promise.all(PRECACHE.map(function (u) {
         return fetch(u, {cache: 'no-cache'}).then(function (resp) {
           if (keepable(resp)) return cache.put(u, resp);
@@ -372,6 +384,11 @@
     route: function (fn) { routes.push(fn); },
     offline: offlinePage,
     forget: forget,
+    // For a hook that answers pages itself (twitter's /unread, pod's episodes):
+    keep: function (event, req, resp) {          // keep an ok page as the kit does
+      if (keepable(resp) && html(resp)) event.waitUntil(put(PAGES, req, stamped(resp.clone()), MAX.pages));
+    },
+    withBar: withBar,                            // a kept copy, with its bar
     caches: {pages: PAGES, files: FILES, precache: PRE},
   };
 })();
