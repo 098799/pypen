@@ -1,4 +1,4 @@
-/* KIT-SW: v1.2 2026-10-26
+/* KIT-SW: v1.3 2026-10-26
   The service worker of every app: offline, and the pages kept on the phone.
   Spec: ~/apps/kit/README.md §4, "Offline". Canonical copy:
   ~/apps/kit/snippets/sw.js. Apps carry a byte-identical copy (fleet-check
@@ -73,7 +73,7 @@
 */
 (function () {
   'use strict';
-  var VERSION = 'v1.2 2026-10-26';
+  var VERSION = 'v1.3 2026-10-26';
   var C = self.KITSW || {};
   var APP = C.app || 'app';
   var PAGES = 'kit-' + APP + '-pages';
@@ -259,8 +259,8 @@
 
   function when(ms) {
     var t = new Date(ms), now = new Date();
-    var opts = t.toDateString() === now.toDateString() ? {hour: '2-digit', minute: '2-digit'}
-      : {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'};
+    var opts = t.toDateString() === now.toDateString() ? {hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}
+      : {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'};
     try { return t.toLocaleString(LANG, opts); } catch (e) { return t.toISOString().slice(0, 16).replace('T', ' '); }
   }
 
