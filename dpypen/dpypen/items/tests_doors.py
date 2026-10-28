@@ -22,6 +22,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import serializers
 from django.test import Client, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from dpypen.items import urls as item_urls
@@ -243,3 +244,53 @@ class UndoBringsItBack(_Collection):
         self.client.post(f"/usages/{self.usage.pk}/end/")
         response = self.client.post(f"/undo/{self.last_token()}/", {"next": "//evil.example/"})
         self.assertEqual(response["Location"], "/dashboard/")
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class MessagesAreTheKitsToast(_Collection):
+    """kit README §4 "Toast" (KIT-TOAST): the server's messages render as data
+    inside #main, read into kitToast; an Undo keeps its form, hidden."""
+
+    def setUp(self):
+        self.client.force_login(self.owner)
+
+    def test_the_copy_is_the_kits_byte_for_byte(self):
+        from pathlib import Path
+
+        canon = Path("/home/tgrining/apps/kit/snippets/toast.html")
+        if canon.exists():
+            copy = Path(__file__).resolve().parent / "templates" / "items" / "_toast.html"
+            self.assertEqual(copy.read_bytes(), canon.read_bytes())
+
+    def test_a_delete_offers_undo_through_the_kit_toast(self):
+        response = self.client.post(f"/usages/{self.usage.pk}/delete/", follow=True)
+        html = response.content.decode()
+        self.assertEqual(html.count("<!-- KIT-TOAST: v1"), 1)
+        self.assertLess(html.index("window.kitToast = show"), html.index("window.__kitMsgs"))
+        box = html[html.index("<div class=\"kit-msgs\" hidden data-kit-msgs>"):]
+        self.assertLess(html.index('<main id="main">'), html.index("data-kit-msgs>"))
+        self.assertIn(f'action="/undo/{self.last_token()}/"', box)
+        self.assertIn("data-undo", box)
+        self.assertNotIn("data-toast", html)
+        self.assertNotIn("toast-x", html)
+        self.assertNotIn("{#", html)  # a Django comment that leaked as text
+
+    def last_token(self):
+        return self.client.session["undo_stack"][-1]["token"]
+
+    def test_an_error_is_marked_bad_and_info_is_not(self):
+        html = self.client.post("/undo/no-such-token/", follow=True).content.decode()
+        self.assertIn("That undo has expired.", html)
+        self.assertNotIn("<div data-msg data-bad>", html)
+        html = self.client.post(reverse("notebook_upload"), follow=True).content.decode()
+        self.assertIn("Please choose a photo.", html)
+        self.assertIn("<div data-msg data-bad>", html)
+
+    def test_no_raw_exception_reaches_a_message(self):
+        from pathlib import Path
+
+        here = Path(__file__).resolve().parent
+        for name in ("crud.py", "notebook.py"):
+            src = (here / name).read_text()
+            self.assertNotRegex(src, r'messages\.\w+\(request, f"[^"]*\{(e|exc)\}')
+            self.assertNotIn('f"Row {idx + 1}: {e}"', src)

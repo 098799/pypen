@@ -45,6 +45,55 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
+{% comment %}
+The kit's toast (kit README §4 "Toast", KIT-TOAST), and the reader that turns
+the server's messages (the data block in #main) into it.
+{% endcomment %}
+{% include "items/_toast.html" %}
+<script>
+/* On each full load and after each htmx swap: the messages not yet shown.
+   The kit shows one toast at a time, so several messages at once (a notebook
+   import: a warning per bad row, then "Saved n inkings") become one toast,
+   joined in order: none is lost, a failure among them makes it kind "bad",
+   and it carries the Undo of the last message that has one. */
+(function () {
+  if (window.__kitMsgs) return;
+  window.__kitMsgs = true;
+  function read() {
+    document.querySelectorAll("[data-kit-msgs]:not([data-done])").forEach(function (box) {
+      box.setAttribute("data-done", "");
+      var words = [], bad = false, form = null;
+      box.querySelectorAll("[data-msg]").forEach(function (m) {
+        var t = (m.querySelector("[data-text]").textContent || "").trim();
+        if (t) words.push(t);
+        if (m.hasAttribute("data-bad")) bad = true;
+        form = m.querySelector("form[data-undo]") || form;
+      });
+      if (!words.length) return;
+      var o = {kind: bad ? "bad" : null};
+      if (form) {
+        o.action = "Undo";
+        o.onAction = function () {
+          // A soft navigation may have taken the form out with the old #main.
+          if (!form.isConnected) { form.hidden = true; document.body.appendChild(form); }
+          form.submit();
+        };
+      }
+      kitToast(words.join(" "), o);
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", read);
+  else read();
+  document.addEventListener("htmx:afterSettle", read);
+  /* Back/forward from htmx's history cache rewrites <body> from a snapshot
+     that holds a copy of #kit-toast: drop the copy (the kit re-attaches its
+     own element at the next toast). */
+  document.addEventListener("htmx:historyRestore", function () {
+    document.querySelectorAll("#kit-toast").forEach(function (n) { n.remove(); });
+    read();
+  });
+})();
+</script>
 <a class="skip-link" href="#main">Skip to content</a>
 
 
@@ -147,45 +196,27 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <style>{% block extra_css %}{% endblock %}</style>
 
 {% comment %}
-Toasts. Every message the views raise lands here, and the ones that carry an
-"undo:<token>" tag get a button that posts the token back. This block sits
-*inside* #main on purpose: hx-boost replaces #main wholesale, so a toast
-rendered outside it would belong to the page you just left and would sit there
-until a hard reload. The script below rides along for the same reason.
+Messages. Every message the views raise lands here as data, and the reader
+after _toast.html (outside #main) shows it with the kit's toast. The block
+sits *inside* #main on purpose: hx-boost replaces #main wholesale, so each
+page brings its own messages and none outlives the page it was meant for. A
+message tagged "undo:<token>" keeps its form, hidden: the toast's Undo
+submits it, a plain POST that the server answers with "Undone."
 {% endcomment %}
 {% if messages %}
-<div class="toasts" aria-live="polite">
+<div class="kit-msgs" hidden data-kit-msgs>
   {% for m in messages %}
-  <div class="toast{% if m.level_tag == 'error' %} bad{% endif %}" data-toast>
-    <span class="toast-text">{{ m }}</span>
+  <div data-msg{% if m.level_tag == 'error' or m.level_tag == 'warning' %} data-bad{% endif %}>
+    <span data-text>{{ m }}</span>
     {% if m.extra_tags and 'undo:' in m.extra_tags %}
-    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" class="toast-undo" hx-boost="false">
+    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" hx-boost="false" data-undo>
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
-      <button type="submit">Undo</button>
     </form>
     {% endif %}
-    <button type="button" class="toast-x" aria-label="Dismiss">&times;</button>
   </div>
   {% endfor %}
 </div>
-<script>
-(function () {
-  document.querySelectorAll("[data-toast]").forEach(function (t) {
-    if (t.dataset.armed) return;
-    t.dataset.armed = "1";
-    requestAnimationFrame(function () { t.classList.add("in"); });
-    var life = setTimeout(dismiss, t.querySelector(".toast-undo") ? 8000 : 4000);
-    function dismiss() {
-      t.classList.remove("in");
-      setTimeout(function () { t.remove(); }, 250);
-    }
-    t.querySelector(".toast-x").addEventListener("click", dismiss);
-    /* Reading it counts as needing it: hovering or touching stops the clock. */
-    t.addEventListener("pointerenter", function () { clearTimeout(life); });
-  });
-})();
-</script>
 {% endif %}
 <button class="menu-btn menu-corner" type="button" id="menuBtnInline" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">

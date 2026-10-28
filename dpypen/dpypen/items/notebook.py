@@ -1,3 +1,4 @@
+import logging
 from dataclasses import asdict
 from datetime import date, datetime
 
@@ -12,6 +13,8 @@ from dpypen.items.models import Ink, Nib, Pen, Usage
 
 SESSION_KEY = "notebook_extractions"
 
+logger = logging.getLogger(__name__)
+
 
 @login_required
 def upload(request):
@@ -22,8 +25,9 @@ def upload(request):
             return redirect("notebook_upload")
         try:
             extractions = extract_from_image(uploaded.read(), media_type=uploaded.content_type or "image/jpeg")
-        except Exception as e:
-            messages.error(request, f"Claude vision failed: {e}")
+        except Exception:
+            logger.exception("notebook upload: Claude vision failed")
+            messages.error(request, "The page was not read — Claude did not answer. Try again, or with a sharper photo.")
             return redirect("notebook_upload")
         request.session[SESSION_KEY] = [asdict(x) for x in extractions]
         return redirect("notebook_review")
@@ -65,8 +69,9 @@ def review(request):
                     end=datetime.strptime(end_str, "%Y-%m-%d").date() if end_str else None,
                 )
                 saved += 1
-            except Exception as e:
-                errors.append(f"Row {idx + 1}: {e}")
+            except Exception:
+                logger.exception("notebook review: row %s not saved", idx + 1)
+                errors.append(f"Row {idx + 1}: not saved — check its dates and choices")
         del request.session[SESSION_KEY]
         if errors:
             for err in errors:

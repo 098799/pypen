@@ -154,8 +154,9 @@ def samples_extract(request, pk):
         sample.image.close()
     try:
         cleaned = generate_writing_sample(src, mime_type="image/jpeg")
-    except Exception as exc:
-        messages.error(request, f"Gemini extraction failed: {exc}")
+    except Exception:
+        logger.exception("writing sample %s: Gemini extraction failed", pk)
+        messages.error(request, "The clean copy was not made — Gemini did not answer. Try again later.")
         return redirect("usages_edit", pk=sample.usage_id)
 
     base = sample.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]
@@ -554,8 +555,9 @@ def pens_photo_enhance(request, pk, photo_pk):
         photo.image.close()
     try:
         styled = generate_catalog_shot(src_bytes, prompt=prompt, mime_type="image/jpeg")
-    except Exception as exc:
-        messages.error(request, f"Gemini catalog shot failed: {exc}")
+    except Exception:
+        logger.exception("pen %s photo %s: Gemini catalog shot failed", pk, photo_pk)
+        messages.error(request, "The catalog shot was not made — Gemini did not answer. Try again later.")
         return redirect("pens_photo_edit", pk=pk, photo_pk=photo_pk)
 
     photo.set_styled(styled)
@@ -707,8 +709,9 @@ def swatches_extract(request, pk):
         swatch.image.close()
     try:
         cleaned = generate_ink_swatch(src, mime_type="image/jpeg")
-    except Exception as exc:
-        messages.error(request, f"Gemini extraction failed: {exc}")
+    except Exception:
+        logger.exception("ink swatch %s: Gemini extraction failed", pk)
+        messages.error(request, "The clean swatch was not made — Gemini did not answer. Try again later.")
         return redirect("inks_edit", pk=swatch.ink_id)
 
     base = swatch.image.name.rsplit("/", 1)[-1].rsplit(".", 1)[0]

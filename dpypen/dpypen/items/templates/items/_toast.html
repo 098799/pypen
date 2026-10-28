@@ -1,0 +1,204 @@
+<!-- KIT-TOAST: v1 2026-10-28
+  The short message after an action ("Saved", "Copied", "Not sent — offline"),
+  with at most one button (Undo, Retry, Open). Spec: ~/apps/kit/README.md §4,
+  "Toast". Canonical copy: ~/apps/kit/snippets/toast.html. Apps carry a
+  byte-identical copy (fleet-check `kit` compares them): change this file, bump
+  the stamp here and in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 17 apps had their own (AUDIT.md, 2026-10-28), at the
+  top or the bottom, 1.6 to 8 s, some hidden under a sheet or the nav, some
+  with an Undo that a second message took away.
+
+  Include it once, anywhere in <body> (before the scripts that call it, or call
+  it after DOMContentLoaded). Then:
+
+    kitToast("Copied");
+    kitToast("Not saved — p340 is not reachable", {kind: "bad"});
+    kitToast("Episode deleted", {action: "Undo", onAction: restore});
+    var t = kitToast("Uploading…", {ms: 0}); … t.close();
+
+  Options (all optional):
+    kind      "bad": a failure; the mark ! and the red edge, role alert, 6 s
+    action    a button's word; onAction(): what it does (the toast closes)
+    ms        how long it stays: 4000; 6000 with an action or "bad"; 0 = until
+              closed (by the app, a tap, or the next toast)
+    onClose   onClose(why), why = "time" | "tap" | "action" | "replaced" |
+              "leave" (the page goes away) | "close" (the app's t.close()).
+              A delete that waits for its Undo commits here, unless why is
+              "action".
+    node      a DOM node to show in place of the text: the app's own markup
+              (tower's notices). Never put a user's text in it as HTML.
+    id        the same id again while shown: the words change, the timer starts
+              again, no new entrance (a counter: "3 kept", "4 kept")
+
+  What it does: one toast at a time, a new one replaces the old (whose onClose
+  gets "replaced", so an Undo is never lost without its commit). The timer
+  stops while a finger or the pointer is on it, while it holds the focus and
+  while the page is hidden. A tap on the words closes it. While a modal
+  <dialog> is open it moves into it (outside, the page is inert: no tap would
+  reach it), and back when the dialog closes; while a dialog or a sheet is open
+  (html.scroll-lock) it sits at the top of the screen, not on the sheet's
+  buttons.
+
+  Look: bottom centre above the nav, the place of the kit's "New version ready"
+  (update.html); when that one shows, this one goes above it. The app's
+  --panel --line --fg --accent --bg, its font; --bad (default #e5484d) for kind
+  "bad". Place, if the default is wrong:
+    --kit-toast-bottom       default var(--kit-update-bottom, 76px); safe area added
+    --kit-toast-desk-bottom  from 900 px; default var(--kit-update-desk-bottom, 24px)
+    --kit-toast-top          to sit at the top always (a game board at the bottom);
+                             then --kit-toast-bottom: none
+
+  API: kitToast(text, opts) → {close()} · kitToast.close() · kitToast.state()
+  → null or {text, kind, action} · kitToast.version
+-->
+<style>
+#kit-toast { position: fixed; inset: auto; left: 50%; margin: 0; z-index: var(--kit-toast-z, 60); box-sizing: border-box;
+  bottom: calc(var(--kit-toast-bottom, var(--kit-update-bottom, 76px)) + env(safe-area-inset-bottom, 0px));
+  top: var(--kit-toast-top, auto);
+  display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(560px, calc(100vw - 24px));
+  min-height: 48px; padding: 4px 4px 4px 16px; border-radius: 14px; overflow: visible;
+  background: var(--panel, #20242b); color: var(--fg, #e8e8e8); border: 1px solid var(--line, #3a404a);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4); font-family: inherit; font-size: 14px; line-height: 1.35;
+  transform: translate(-50%, 12px); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform .18s ease-out, opacity .18s ease-out, visibility 0s linear .18s; }
+#kit-toast.on { transform: translate(-50%, 0); opacity: 1; visibility: visible; pointer-events: auto;
+  transition: transform .18s ease-out, opacity .18s ease-out; }
+#kit-toast.bad { border-left: 4px solid var(--bad, #e5484d); }
+#kit-toast .kit-toast-mark { display: none; flex: none; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bad, #e5484d); color: #fff; font-weight: 800; font-size: 13px; line-height: 20px; text-align: center; }
+#kit-toast.bad .kit-toast-mark { display: block; }
+#kit-toast .kit-toast-text { min-width: 0; padding: 10px 12px 10px 0; overflow-wrap: anywhere; cursor: default; }
+#kit-toast .kit-toast-text a { color: var(--accent, #6aa9ff); }
+#kit-toast button { flex: none; min-height: 40px; margin: 0; padding: 0 14px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--accent, #6aa9ff); font: inherit; font-weight: 700; cursor: pointer; }
+#kit-toast button[hidden] { display: none; }
+#kit-toast button:focus-visible { outline: 2px solid var(--fg, #e8e8e8); outline-offset: 2px; }
+html[data-theme=light] #kit-toast { box-shadow: 0 6px 20px rgba(0, 0, 0, .16); }
+html.kit-update-on #kit-toast {
+  bottom: calc(var(--kit-toast-bottom, var(--kit-update-bottom, 76px)) + 64px + env(safe-area-inset-bottom, 0px)); }
+html.scroll-lock #kit-toast, html:has(dialog[open]:modal) #kit-toast {
+  top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; transform: translate(-50%, -12px); }
+html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { transform: translate(-50%, 0); }
+@media (min-width: 900px) {
+  #kit-toast { bottom: calc(var(--kit-toast-desk-bottom, var(--kit-update-desk-bottom, 24px)) + env(safe-area-inset-bottom, 0px)); }
+  html.kit-update-on #kit-toast {
+    bottom: calc(var(--kit-toast-desk-bottom, var(--kit-update-desk-bottom, 24px)) + 64px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { #kit-toast, #kit-toast.on { transition: none; } }
+@media print { #kit-toast { display: none; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitToast) return;
+  var version = 'v1 2026-10-28';
+  var el = null, mark = null, txt = null, btn = null, cur = null, timer = null, left = 0, started = 0, holds = 0;
+
+  function build() {
+    if (el || !document.body) return el;
+    el = document.createElement('div'); el.id = 'kit-toast';
+    el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'true');
+    mark = document.createElement('span'); mark.className = 'kit-toast-mark'; mark.textContent = '!';
+    mark.setAttribute('aria-hidden', 'true');
+    txt = document.createElement('span'); txt.className = 'kit-toast-text';
+    btn = document.createElement('button'); btn.type = 'button'; btn.hidden = true;
+    el.appendChild(mark); el.appendChild(txt); el.appendChild(btn);
+    btn.addEventListener('click', function () {
+      var c = cur; if (!c) return;
+      end('action');
+      try { if (typeof c.o.onAction === 'function') c.o.onAction(); } catch (e) { setTimeout(function () { throw e; }); }
+    });
+    txt.addEventListener('click', function (e) { if (cur && !(e.target.closest && e.target.closest('a'))) end('tap'); });
+    // The timer stops while a finger, the pointer or the focus is on it.
+    function hold() { holds++; pause(); }
+    function free() { holds = Math.max(0, holds - 1); if (!holds) resume(); }
+    el.addEventListener('pointerenter', hold); el.addEventListener('pointerleave', free);
+    el.addEventListener('focusin', hold); el.addEventListener('focusout', free);
+    document.body.appendChild(el);
+    return el;
+  }
+  function pause() {
+    if (!timer) return;
+    clearTimeout(timer); timer = null;
+    left = Math.max(1200, left - (Date.now() - started));
+  }
+  function resume() {
+    if (!cur || timer || !left || holds || document.visibilityState === 'hidden') return;
+    started = Date.now();
+    timer = setTimeout(function () { timer = null; end('time'); }, left);
+  }
+  // Into the topmost open modal dialog, or back to <body>.
+  function lift() {
+    if (!el) return;
+    var host = document.body, open = document.querySelectorAll('dialog[open]');
+    for (var i = open.length - 1; i >= 0; i--) {
+      var m = false;
+      try { m = open[i].matches(':modal'); } catch (e) {}
+      if (m) { host = open[i]; break; }
+    }
+    if (host && el.parentNode !== host) host.appendChild(el);
+  }
+  function end(why, keep) {
+    var c = cur;
+    if (!c) return;
+    cur = null; clearTimeout(timer); timer = null; holds = 0;
+    if (!keep && el) {
+      el.classList.remove('on');
+      setTimeout(function () {
+        if (cur || !el) return;
+        txt.textContent = ''; btn.hidden = true;
+      }, 200);
+    }
+    try { if (typeof c.o.onClose === 'function') c.o.onClose(why); } catch (e) { setTimeout(function () { throw e; }); }
+  }
+  function show(text, o) {
+    o = o || {};
+    if (!build()) {
+      var h = {close: function () { h.dead = true; }};
+      document.addEventListener('DOMContentLoaded', function () { if (!h.dead) { var r = show(text, o); h.close = r.close; } });
+      return h;
+    }
+    var same = cur && o.id != null && cur.o.id === o.id;
+    if (cur) end('replaced', true);
+    var me = {o: o, text: String(text == null ? '' : text)};
+    cur = me;
+    var bad = o.kind === 'bad';
+    el.classList.toggle('bad', bad);
+    el.setAttribute('role', bad ? 'alert' : 'status');
+    el.setAttribute('aria-live', bad ? 'assertive' : 'polite');
+    txt.textContent = '';
+    if (o.node && o.node.nodeType) txt.appendChild(o.node); else txt.textContent = me.text;
+    btn.hidden = !o.action;
+    btn.textContent = o.action || '';
+    left = o.ms != null ? Math.max(0, +o.ms || 0) : (o.action || bad ? 6000 : 4000);
+    if (!same) {
+      lift();
+      el.classList.remove('on');
+      void el.offsetWidth;   // a new message enters again
+    }
+    el.classList.add('on');
+    resume();
+    return {close: function () { if (cur === me) end('close'); }};
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') pause(); else resume();
+  });
+  window.addEventListener('pagehide', function () { end('leave'); });
+  // A dialog opened or closed while it shows: it follows.
+  function follow(e) { if (e.target && e.target.tagName === 'DIALOG') setTimeout(lift, 0); }
+  document.addEventListener('toggle', follow, true);
+  document.addEventListener('close', follow, true);
+  new MutationObserver(function () { if (cur) lift(); })
+    .observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['open']});
+  if (document.body) build(); else document.addEventListener('DOMContentLoaded', build);
+
+  show.version = version;
+  show.close = function () { end('close'); };
+  show.state = function () {
+    return cur ? {text: cur.o.node ? (txt.textContent || '') : cur.text, kind: cur.o.kind || null, action: cur.o.action || null} : null;
+  };
+  window.kitToast = show;
+})();
+</script>
