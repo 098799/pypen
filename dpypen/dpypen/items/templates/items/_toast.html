@@ -1,4 +1,4 @@
-<!-- KIT-TOAST: v1.1 2026-10-28
+<!-- KIT-TOAST: v1.2 2026-10-28
   The short message after an action ("Saved", "Copied", "Not sent — offline"),
   with at most one button (Undo, Retry, Open). Spec: ~/apps/kit/README.md §4,
   "Toast". Canonical copy: ~/apps/kit/snippets/toast.html. Apps carry a
@@ -10,7 +10,11 @@
   with an Undo that a second message took away.
 
   Include it once, anywhere in <body> (before the scripts that call it, or call
-  it after DOMContentLoaded). Then:
+  it after DOMContentLoaded). A page that loads it late (a deferred bundle, a
+  file fetched to keep the page small) puts this line in its first script, and
+  the calls made before wait and show when it loads (the last one):
+    window.kitToast = window.kitToast || function () { (kitToast.q = kitToast.q || []).push(arguments); return {close: function () {}}; };
+  Then:
 
     kitToast("Copied");
     kitToast("Not saved — p340 is not reachable", {kind: "bad"});
@@ -48,8 +52,15 @@
     --kit-toast-desk-bottom  from 900 px; default var(--kit-update-desk-bottom, 24px)
     --kit-toast-top          to sit at the top always (a game board at the bottom);
                              then --kit-toast-bottom: none
+    --kit-toast-lock-top     its top while a sheet or a dialog is open; default
+                             12px (+ safe area): lower it off a sheet's title
+    --kit-toast-z            default 60
+  An app that moves the update toast to the top (--kit-update-bottom: none)
+  sets --kit-toast-bottom: that fallback is no length.
 
   v1.1: a page that rewrites <body> (htmx's history restore) gets the toast back.
+  v1.2: the early-call stub; --kit-toast-lock-top; a hidden toast stays out of
+  dialogs.
 
   API: kitToast(text, opts) → {close()} · kitToast.close() · kitToast.state()
   → null or {text, kind, action} · kitToast.version
@@ -80,7 +91,7 @@ html[data-theme=light] #kit-toast { box-shadow: 0 6px 20px rgba(0, 0, 0, .16); }
 html.kit-update-on #kit-toast {
   bottom: calc(var(--kit-toast-bottom, var(--kit-update-bottom, 76px)) + 64px + env(safe-area-inset-bottom, 0px)); }
 html.scroll-lock #kit-toast, html:has(dialog[open]:modal) #kit-toast {
-  top: calc(env(safe-area-inset-top, 0px) + 12px); bottom: auto; transform: translate(-50%, -12px); }
+  top: calc(env(safe-area-inset-top, 0px) + var(--kit-toast-lock-top, 12px)); bottom: auto; transform: translate(-50%, -12px); }
 html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { transform: translate(-50%, 0); }
 @media (min-width: 900px) {
   #kit-toast { bottom: calc(var(--kit-toast-desk-bottom, var(--kit-update-desk-bottom, 24px)) + env(safe-area-inset-bottom, 0px)); }
@@ -93,8 +104,9 @@ html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { tra
 <script>
 (function () {
   'use strict';
-  if (window.kitToast) return;
-  var version = 'v1.1 2026-10-28';
+  if (window.kitToast && window.kitToast.version) return;
+  var early = window.kitToast && window.kitToast.q;
+  var version = 'v1.2 2026-10-28';
   var el = null, mark = null, txt = null, btn = null, cur = null, timer = null, left = 0, started = 0, holds = 0;
 
   function build() {
@@ -196,10 +208,15 @@ html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { tra
   });
   window.addEventListener('pagehide', function () { end('leave'); });
   // A dialog opened or closed while it shows: it follows.
-  function follow(e) { if (e.target && e.target.tagName === 'DIALOG') setTimeout(lift, 0); }
+  // Only while it shows: a hidden toast in a dialog would answer the app's
+  // `dialog[open] button` (tower's tests did).
+  function follow(e) {
+    if (!e.target || e.target.tagName !== 'DIALOG') return;
+    setTimeout(function () { if (cur) lift(); else if (el && document.body && el.parentNode !== document.body) document.body.appendChild(el); }, 0);
+  }
   document.addEventListener('toggle', follow, true);
   document.addEventListener('close', follow, true);
-  new MutationObserver(function () { if (cur) lift(); })
+  new MutationObserver(function () { if (cur) lift(); else if (el && document.body && el.parentNode !== document.body) document.body.appendChild(el); })
     .observe(document.documentElement, {subtree: true, attributes: true, attributeFilter: ['open']});
   if (document.body) build(); else document.addEventListener('DOMContentLoaded', build);
 
@@ -209,5 +226,6 @@ html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { tra
     return cur ? {text: cur.o.node ? (txt.textContent || '') : cur.text, kind: cur.o.kind || null, action: cur.o.action || null} : null;
   };
   window.kitToast = show;
+  if (early && early.length) { var a = early[early.length - 1]; show(a[0], a[1]); }
 })();
 </script>
