@@ -1,4 +1,4 @@
-<!-- KIT-TOAST: v1 2026-10-28
+<!-- KIT-TOAST: v1.1 2026-10-28
   The short message after an action ("Saved", "Copied", "Not sent — offline"),
   with at most one button (Undo, Retry, Open). Spec: ~/apps/kit/README.md §4,
   "Toast". Canonical copy: ~/apps/kit/snippets/toast.html. Apps carry a
@@ -49,6 +49,8 @@
     --kit-toast-top          to sit at the top always (a game board at the bottom);
                              then --kit-toast-bottom: none
 
+  v1.1: a page that rewrites <body> (htmx's history restore) gets the toast back.
+
   API: kitToast(text, opts) → {close()} · kitToast.close() · kitToast.state()
   → null or {text, kind, action} · kitToast.version
 -->
@@ -92,10 +94,17 @@ html.scroll-lock #kit-toast.on, html:has(dialog[open]:modal) #kit-toast.on { tra
 (function () {
   'use strict';
   if (window.kitToast) return;
-  var version = 'v1 2026-10-28';
+  var version = 'v1.1 2026-10-28';
   var el = null, mark = null, txt = null, btn = null, cur = null, timer = null, left = 0, started = 0, holds = 0;
 
   function build() {
+    // A page that rewrote <body> (htmx's Back puts back a snapshot, pypen) left
+    // ours outside and maybe a dead copy in: drop the copies, take ours back.
+    if (el && !el.isConnected && document.body) {
+      var old = document.querySelectorAll('#kit-toast');
+      for (var i = 0; i < old.length; i++) old[i].remove();
+      document.body.appendChild(el);
+    }
     if (el || !document.body) return el;
     el = document.createElement('div'); el.id = 'kit-toast';
     el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'true');
