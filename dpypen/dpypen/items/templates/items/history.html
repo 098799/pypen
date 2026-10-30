@@ -480,10 +480,11 @@
   box-shadow: var(--plate-shadow), var(--card-shadow);
   opacity: 0;
   transform: translateY(-4px);
-  transition: opacity 0.15s, transform 0.15s;
+  visibility: hidden;
+  transition: opacity 0.15s, transform 0.15s, visibility 0s linear 0.15s;
   pointer-events: none;
 }
-.gantt-popup.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.gantt-popup.open { opacity: 1; transform: translateY(0); pointer-events: auto; visibility: visible; transition-delay: 0s; }
 .gantt-popup::before {
   content: "";
   position: absolute;
@@ -917,11 +918,20 @@
     popup.style.left = left + "px";
     popup.style.top = top + "px";
     popup.style.setProperty("--arrow-x", Math.max(12, Math.min(popupRect.w - 22, rect.left + rect.width / 2 - left - 5)) + "px");
-    popup.classList.add("open");
+    /* A layer of the kit's (_layer.js): Back, Esc and a tap outside close it;
+       anchored and undimmed, so the chart keeps scrolling (lock: false). A
+       tap on another bar moves it, keeping its one history entry. */
+    if (!kitLayer.isOpen(popup)) {
+      kitLayer.open(popup, {
+        name: "gantt", lock: false, focus: false,
+        show: function () { popup.classList.add("open"); },
+        close: function () { popup.classList.remove("open"); },
+      });
+    }
   }
 
   function closePopup() {
-    popup.classList.remove("open");
+    if (kitLayer.isOpen(popup)) kitLayer.close(popup);
   }
 
   inner.addEventListener("click", function (e) {
@@ -932,9 +942,6 @@
   });
   document.addEventListener("click", function (e) {
     if (!popup.contains(e.target) && !e.target.closest(".gantt-bar")) closePopup();
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closePopup();
   });
 })();
 </script>

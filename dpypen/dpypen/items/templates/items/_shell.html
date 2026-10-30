@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}Grining Fountain Pens{% endblock %}</title>
 <meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
+{% comment %}
+The kit's overlay layer (kit README §4 "Dialogs & sheets", KIT-LAYER, a byte
+copy): first, so its popstate listener runs before htmx's and the app's.
+{% endcomment %}
+<script>{% include "items/_layer.js" %}</script>
 <link rel="preload" as="font" type="font/woff2" crossorigin
       href="{% static 'items/fonts/eb-garamond-normal.woff2' %}">
 <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -118,19 +123,23 @@ the server's messages (the data block in #main) into it.
       var form = document.getElementById("menuSearchForm");
       if (!input || !form) return;
       var timer = null;
+      // The menu (a kit layer) goes first, its history entry with it.
+      function search(q) {
+        var go = function () { window.location.href = "/search/?q=" + encodeURIComponent(q); };
+        var panel = document.getElementById("menuPanel");
+        if (window.kitLayer && panel && kitLayer.isOpen(panel)) kitLayer.close(panel, go); else go();
+      }
       input.addEventListener("input", function () {
         clearTimeout(timer);
         var q = input.value.trim();
         if (q.length < 2) return;
-        timer = setTimeout(function () {
-          window.location.href = "/search/?q=" + encodeURIComponent(q);
-        }, 220);
+        timer = setTimeout(function () { search(q); }, 220);
       });
       input.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
           var q = input.value.trim();
-          if (q) window.location.href = "/search/?q=" + encodeURIComponent(q);
+          if (q) search(q);
         }
       });
     })();
@@ -455,32 +464,57 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     return Array.prototype.slice.call(document.querySelectorAll("[data-menu-btn]"));
   }
 
-  function closeMenu() {
-    panel.classList.remove("open");
-    btns().forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
+  /* The menu and the "⋯" panels are layers of the kit's (_layer.js): Back,
+     Esc and a tap outside close them, focus goes back to the button. They are
+     anchored and undimmed: the page keeps scrolling (lock: false) and focus
+     stays on the button that opened them (focus: false). */
+  function aria(sel, on) {
+    Array.prototype.forEach.call(document.querySelectorAll(sel), function (b) {
+      b.setAttribute("aria-expanded", on ? "true" : "false");
+    });
   }
-  function openMenu(anchor) {
-    panel.classList.add("open");
-    btns().forEach(function (b) { b.setAttribute("aria-expanded", "true"); });
+  function closeMenu() {
+    if (kitLayer.isOpen(panel)) kitLayer.close(panel);
+  }
+  function place(anchor) {
     // Anchor panel's right edge to the anchor button's right edge,
     // and top to the anchor's bottom + 8px.
-    if (anchor) {
-      var r = anchor.getBoundingClientRect();
-      var rightPx = Math.max(8, window.innerWidth - r.right);
-      panel.style.right = rightPx + "px";
-      /* The phone tab bar is fixed to the bottom of the screen, so anchoring
-         the panel's top to the button's bottom edge put the whole panel below
-         the viewport — "More" looked like a dead button. Anything sitting in
-         the lower half of the screen gets bottom-anchored instead, opening
-         upwards off the button. */
-      if (r.top > window.innerHeight / 2) {
-        panel.style.top = "auto";
-        panel.style.bottom = (window.innerHeight - r.top + 8) + "px";
-      } else {
-        panel.style.bottom = "auto";
-        panel.style.top = (r.bottom + 8) + "px";
-      }
+    var r = anchor.getBoundingClientRect();
+    var rightPx = Math.max(8, window.innerWidth - r.right);
+    panel.style.right = rightPx + "px";
+    /* The phone tab bar is fixed to the bottom of the screen, so anchoring
+       the panel's top to the button's bottom edge put the whole panel below
+       the viewport — "More" looked like a dead button. Anything sitting in
+       the lower half of the screen gets bottom-anchored instead, opening
+       upwards off the button. */
+    if (r.top > window.innerHeight / 2) {
+      panel.style.top = "auto";
+      panel.style.bottom = (window.innerHeight - r.top + 8) + "px";
+    } else {
+      panel.style.bottom = "auto";
+      panel.style.top = (r.bottom + 8) + "px";
     }
+  }
+  function openMenu(anchor) {
+    place(anchor);
+    kitLayer.open(panel, {
+      name: "menu", lock: false, focus: false,
+      show: function () { panel.classList.add("open"); aria("[data-menu-btn]", true); },
+      close: function () { panel.classList.remove("open"); aria("[data-menu-btn]", false); },
+    });
+  }
+  function overflowOpen() { return document.querySelector(".overflow-panel.open"); }
+  function closeOverflow() {
+    var p = overflowOpen();
+    if (p) kitLayer.close(p);
+  }
+  function openOverflow(btn) {
+    var mine = btn.parentNode.querySelector(".overflow-panel");
+    kitLayer.open(mine, {
+      name: "overflow", lock: false, focus: false,
+      show: function () { mine.classList.add("open"); btn.setAttribute("aria-expanded", "true"); },
+      close: function () { mine.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); },
+    });
   }
 
   /* One delegated listener on the document survives every swap. */
@@ -488,61 +522,78 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     var btn = e.target.closest("[data-menu-btn]");
     if (btn) {
       e.stopPropagation();
-      if (panel.classList.contains("open")) closeMenu(); else openMenu(btn);
+      if (kitLayer.isOpen(panel)) closeMenu(); else openMenu(btn);
       return;
     }
     if (!panel.contains(e.target)) closeMenu();
-    /* A link inside the panel is the one click the rule above deliberately
-       ignores, so following one left the menu sitting open over the page it
-       had just navigated to. Close on the way out. */
-    else if (e.target.closest("a[href]")) closeMenu();
   });
-  /* And on the navigation itself, which also covers the back button and any
-     boosted swap that did not start with a click in the panel. hx-boost
-     replaces #main without a page load, so nothing else resets it. */
-  document.body.addEventListener("htmx:pushedIntoHistory", closeMenu);
-  document.body.addEventListener("htmx:replacedInHistory", closeMenu);
-  window.addEventListener("popstate", closeMenu);
-  window.addEventListener("resize", function () {
-    if (panel.classList.contains("open")) {
-      var visibleBtn = btns().find(function (b) {
-        var st = getComputedStyle(b);
-        return b.offsetParent !== null && +st.opacity > 0 && st.pointerEvents !== "none";
-      });
-      if (visibleBtn) openMenu(visibleBtn);
-    }
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeMenu();
-  });
-
   /* Detail-page overflow menus ("⋯"). Delegated for the same reason the main
      menu is: these live inside #main, which hx-boost replaces wholesale on
      every soft navigation, so anything bound at load time is dead after the
      first one. */
   document.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-overflow-btn]");
-    var panels = document.querySelectorAll(".overflow-panel.open");
+    var open = overflowOpen();
     if (btn) {
       e.stopPropagation();
       var mine = btn.parentNode.querySelector(".overflow-panel");
-      panels.forEach(function (p) { if (p !== mine) p.classList.remove("open"); });
-      var open = mine.classList.toggle("open");
-      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open === mine) closeOverflow(); else openOverflow(btn);
       return;
     }
-    if (!e.target.closest(".overflow-panel")) {
-      panels.forEach(function (p) { p.classList.remove("open"); });
-      document.querySelectorAll("[data-overflow-btn]").forEach(function (b) {
-        b.setAttribute("aria-expanded", "false");
-      });
-    }
+    if (open && !e.target.closest(".overflow-panel")) closeOverflow();
   });
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    document.querySelectorAll(".overflow-panel.open").forEach(function (p) {
-      p.classList.remove("open");
+
+  /* A link or a form inside an open layer: the layer goes first (its entry
+     with it), then the click or the submit is replayed for htmx, so Back from
+     the next page lands on this one and not on an open menu. hx-boost binds
+     its handlers on the link itself, before the kit's own link rule on the
+     document would see the click: hence this capture-phase step. */
+  function layerOf(el) {
+    var l = el.closest("#menuPanel, .overflow-panel, #ganttPopup");
+    return l && kitLayer.isOpen(l) ? l : null;
+  }
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.__replay || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if ((a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+    var l = layerOf(a);
+    if (!l) return;
+    e.preventDefault();
+    e.stopPropagation();
+    kitLayer.close(l, function () {
+      a.__replay = true;
+      try { a.click(); } finally { a.__replay = false; }
     });
+  }, true);
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (f.__replay) return;
+    var l = layerOf(f);
+    if (!l) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var by = e.submitter;
+    kitLayer.close(l, function () {
+      f.__replay = true;
+      try { f.requestSubmit(by || undefined); } finally { f.__replay = false; }
+    });
+  }, true);
+  /* A navigation that started some other way (a key, the search box) takes
+     the menu with it. hx-boost replaces #main without a page load, so
+     nothing else resets it. */
+  document.body.addEventListener("htmx:beforeRequest", function () {
+    closeMenu(); closeOverflow();
+    var g = document.getElementById("ganttPopup");
+    if (g && kitLayer.isOpen(g)) kitLayer.close(g);
+  });
+  window.addEventListener("resize", function () {
+    if (kitLayer.isOpen(panel)) {
+      var visibleBtn = btns().find(function (b) {
+        var st = getComputedStyle(b);
+        return b.offsetParent !== null && +st.opacity > 0 && st.pointerEvents !== "none";
+      });
+      if (visibleBtn) place(visibleBtn);
+    }
   });
 
   // Auto-hide topbar at top of page; reveal when user scrolls
@@ -787,8 +838,9 @@ window.__go = function (url, push) {
    palette and ? sheet; on a phone the page ran on underneath both
    (2026-09-27). The lock follows what is on screen instead of hooking each
    open and close, so every way out clears it: Escape, the dim, a pick that
-   navigates, one overlay taking over from the other. The menu panel, the
-   gantt popup and the calendar tip are anchored and undimmed: no lock. */
+   navigates, one overlay taking over from the other. Kept for the palette,
+   a kit copy that does not use the kit's layer; the menus and the gantt
+   popup are kitLayer layers with lock: false. */
 (function () {
   var OPEN = "#kpal.on,#khelp.on";
   var root = document.documentElement, queued = false;

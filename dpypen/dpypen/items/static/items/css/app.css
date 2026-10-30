@@ -294,10 +294,13 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   box-shadow: var(--plate-shadow), var(--card-shadow);
   opacity: 0;
   transform: translateY(-6px);
-  transition: opacity 0.15s, transform 0.15s;
+  /* Closed, it is out of the tab order and the accessibility tree too
+     (visibility), after the fade. */
+  visibility: hidden;
+  transition: opacity 0.15s, transform 0.15s, visibility 0s linear 0.15s;
   pointer-events: none;
 }
-.menu-panel.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.menu-panel.open { opacity: 1; transform: translateY(0); pointer-events: auto; visibility: visible; transition-delay: 0s; }
 .menu-panel .menu-label {
   font-family: "Inter", sans-serif;
   font-size: 0.7rem;
@@ -2314,10 +2317,10 @@ html[data-theme="dark"] .sort-select {
 /* -------- Scroll lock --------
    An overlay freezes the page under it (~/apps/kit/README.md, "Dialogs &
    sheets"): _shell.html sets html.scroll-lock while the palette or the ?
-   sheet is open. Native modal <dialog>s lock by themselves. The overlays'
+   sheet is open; the kit's _layer.js sets it for its layers (none of pypen's
+   lock: they are anchored menus). The overlays'
    own scrollers keep the swipe: their end does not hand it on to the page.
    (The rule for the keyboard layer lives here, not in _keys.html, which is a
    copy of the kit's layer.) */
 html.scroll-lock, html.scroll-lock body { overflow: hidden; }
-html:has(dialog[open]:modal) { overflow: hidden; }
 #kpal .kp-list, #khelp .kh-card { overscroll-behavior: contain; }
