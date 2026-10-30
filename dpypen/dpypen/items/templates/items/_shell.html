@@ -543,28 +543,14 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     if (open && !e.target.closest(".overflow-panel")) closeOverflow();
   });
 
-  /* A link or a form inside an open layer: the layer goes first (its entry
-     with it), then the click or the submit is replayed for htmx, so Back from
-     the next page lands on this one and not on an open menu. hx-boost binds
-     its handlers on the link itself, before the kit's own link rule on the
-     document would see the click: hence this capture-phase step. */
+  /* A form inside an open layer: the layer goes first (its entry with it),
+     then the submit is replayed for htmx, so Back from the next page lands
+     on this one and not on an open menu. A link is the kit's (v1.2 takes an
+     hx-boosted link in the capture phase, before htmx's handler on it). */
   function layerOf(el) {
     var l = el.closest("#menuPanel, .overflow-panel, #ganttPopup");
     return l && kitLayer.isOpen(l) ? l : null;
   }
-  document.addEventListener("click", function (e) {
-    var a = e.target.closest && e.target.closest("a[href]");
-    if (!a || a.__replay || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if ((a.target && a.target !== "_self") || a.hasAttribute("download")) return;
-    var l = layerOf(a);
-    if (!l) return;
-    e.preventDefault();
-    e.stopPropagation();
-    kitLayer.close(l, function () {
-      a.__replay = true;
-      try { a.click(); } finally { a.__replay = false; }
-    });
-  }, true);
   document.addEventListener("submit", function (e) {
     var f = e.target;
     if (f.__replay) return;

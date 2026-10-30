@@ -1,4 +1,4 @@
-/* KIT-LAYER: v1.1 2026-10-30
+/* KIT-LAYER: v1.4 2026-10-30
   Overlays — sheets, modal dialogs, menus, viewers — behave the same in every
   app: Back closes the top one, one per swipe, and never leaves the app while
   one is open; the page under it does not scroll; Escape, a tap on the backdrop
@@ -33,7 +33,8 @@
     lock      false = the page under it keeps scrolling (an anchored menu, a
               panel beside a map)
     esc       false = Escape does not close it (a form that must not be lost,
-              a game's end screen)
+              a game's end screen). Esc with focus outside the top layer (the
+              keyboard palette over it) is left to what has focus.
     backdrop  an element whose own taps close it (the dim layer behind a div
               sheet; a div sheet whose padding is its backdrop passes itself);
               for a <dialog> a tap outside its box closes it unless false
@@ -42,7 +43,9 @@
     focus     the element to focus in a div layer (default: el itself, which
               gets tabindex=-1); false = leave focus alone (a menu opened by a
               tap). A <dialog> focuses as the browser does.
-    trap      false = Tab may leave a div layer with lock (it stays in by default)
+    trap      false = Tab may leave a div layer with lock (it stays in by default;
+              the kit's toasts, keyboard palette and help, an open dialog and
+              anything marked data-layer-free may take focus over it)
     inert     an element made inert while the layer is open (the page's main
               element, so a screen reader stays in the sheet)
     restore   false = do not return focus to the opener
@@ -88,7 +91,7 @@
 (function () {
   'use strict';
   if (window.kitLayer) return;
-  var version = 'v1.1 2026-10-30';
+  var version = 'v1.4 2026-10-30';
   var KEY = 'kitLayer';
   var root = document.documentElement;
   var stack = [];          // {el, o, opener, entry, ghost, leaving, thens}; the top is last
@@ -184,6 +187,11 @@
     o = o || {};
     var h = {el: el, close: function (then) { close(el, then); }};
     // a close still waits for its pop (or this one is still on its way out)
+    if (i >= 0 && stack[i].ghost && !stack[i].leaving) {
+      // closed under an entry of the app's own (chess: a move on the big
+      // board): its entry stays as a placeholder, the element opens anew (v1.2)
+      stack[i].el = null; i = -1;
+    }
     if (pending() || i >= 0) { held.push(function () { open(el, o); }); return h; }
     var L = {el: el, o: o, h: h, opener: document.activeElement, ghost: false, thens: []};
     var top = stack[stack.length - 1];
@@ -224,7 +232,8 @@
     if (then) L.thens.push(then);
     if (L.leaving || L.ghost) return;
     var n = 0;
-    for (var k = i; k < stack.length; k++) if (stack[k].entry) n++;
+    // entries already on their way back are counted once, by the close that sent them (v1.4)
+    for (var k = i; k < stack.length; k++) if (stack[k].entry && !stack[k].leaving) n++;
     if (n && onTop()) {
       for (k = i; k < stack.length; k++) { stack[k].leaving = true; stack[k].why = why || stack[k].why; }
       history.go(-n);
@@ -254,7 +263,9 @@
     var at = lvl(), n = entries();
     if (at === n) { later(tidy); return; }                    // not a step through ours
     ev.stopImmediatePropagation();
-    if (at > n) { skip++; history.go(n - at); return; }      // Forward onto a closed layer: step off it
+    // Forward (or Back after a reload) onto a closed layer's entry: step off
+    // it; the pop that lands is the app's like any other (v1.2: it was stopped)
+    if (at > n) { history.go(n - at); return; }
     shutTo(at, follow ? 'follow' : null);
     if (!stack.length && follow) {
       var a = follow; follow = null;
@@ -300,6 +311,11 @@
     if (ev.key !== 'Escape' || ev.defaultPrevented || ev.isComposing) return;
     var L = topLive();
     if (!L || L.o.esc === false) return;
+    // Esc in something that stands over the layer and is not one (the kit's
+    // keyboard palette, a note box) is that thing's own (v1.3)
+    var t = ev.target;
+    if (t instanceof Element && !L.el.contains(t) &&
+        (t.matches('input,textarea,select,[contenteditable]') || t.closest('#kpal,#khelp,[data-layer-free]'))) return;
     ev.preventDefault();
     ev.stopPropagation();
     close(L.el);
@@ -315,7 +331,7 @@
   document.addEventListener('focusin', function (ev) {
     var L = topLive(), t = ev.target;
     if (!L || isDialog(L.el) || L.o.lock === false || L.o.trap === false || L.leaving) return;
-    if (L.el.contains(t) || (t.closest && t.closest('#kit-toast,#kit-update,dialog[open]'))) return;
+    if (L.el.contains(t) || (t.closest && t.closest('#kit-toast,#kit-update,#kpal,#khelp,dialog[open],[data-layer-free]'))) return;
     var f = L.el.querySelector('[autofocus],button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])') || L.el;
     if (f === L.el && !L.el.hasAttribute('tabindex')) L.el.setAttribute('tabindex', '-1');
     try { f.focus({preventScroll: true}); } catch (e) {}
@@ -339,9 +355,23 @@
     }
   });
   // A link inside the top layer: close the layers first, then follow it.
+  // Bubble phase, so an app's own handler on the link (open the next sheet)
+  // wins; an htmx-boosted link is taken in the capture phase, as htmx's
+  // handler sits on the link itself (pypen, v1.2).
+  function boosted(a) {
+    var b = a.closest('[hx-boost]');
+    return !!(b && b.getAttribute('hx-boost') !== 'false') || a.hasAttribute('hx-get');
+  }
+  window.addEventListener('click', function (ev) {
+    var a = ev.target instanceof Element && ev.target.closest('a[href]');
+    if (a && boosted(a)) linkOut(ev, a);
+  }, true);
   document.addEventListener('click', function (ev) {
     var a = ev.target instanceof Element && ev.target.closest('a[href]');
-    if (!a || a.__kitLayerGo || ev.defaultPrevented) return;
+    if (a && !boosted(a)) linkOut(ev, a);
+  });
+  function linkOut(ev, a) {
+    if (a.__kitLayerGo || ev.defaultPrevented) return;
     if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
     if ((a.target && a.target !== '_self') || a.hasAttribute('download')) return;
     var L = topLive();
@@ -349,9 +379,10 @@
     var href = a.getAttribute('href') || '';
     if (href.charAt(0) === '#' || /^javascript:/i.test(href)) return;
     ev.preventDefault();
+    ev.stopPropagation();
     follow = a;
     close(stack[0].el);
-  });
+  }
 
   // Swipe down on a handle: past 90 px, or a flick, the layer goes.
   function swipe(L, handle) {
