@@ -1,4 +1,4 @@
-/* KIT-LAYER: v1 2026-10-30
+/* KIT-LAYER: v1.1 2026-10-30
   Overlays — sheets, modal dialogs, menus, viewers — behave the same in every
   app: Back closes the top one, one per swipe, and never leaves the app while
   one is open; the page under it does not scroll; Escape, a tap on the backdrop
@@ -66,7 +66,9 @@
               Back on a modal) gives its entry back too.
               Only a tap may add an entry (Chrome lets Back skip entries a page
               added on its own and leave the app): a layer opened without one
-              (a report shown at load) gets none, and Back leaves the page.
+              (a report shown at load, a menu from a long-press timer) takes
+              its entry at the next tap or key while it is still the top one
+              (v1.1); until then Back leaves the page.
     lock      html.scroll-lock while any layer with lock is open (toast.html,
               pullrefresh.html and the apps' CSS read that class); the overlay's
               own scroller wants overscroll-behavior: contain in the app's CSS
@@ -86,7 +88,7 @@
 (function () {
   'use strict';
   if (window.kitLayer) return;
-  var version = 'v1 2026-10-30';
+  var version = 'v1.1 2026-10-30';
   var KEY = 'kitLayer';
   var root = document.documentElement;
   var stack = [];          // {el, o, opener, entry, ghost, leaving, thens}; the top is last
@@ -188,12 +190,13 @@
     if (o.replace && top && !top.ghost) {
       // take its place and its entry
       stack.pop();
-      L.entry = top.entry; L.opener = top.opener;
+      L.entry = top.entry; L.late = top.late; L.opener = top.opener;
       hide(top, 'replaced'); emit(top, false);
       L.thens = top.thens || [];
       stack.push(L);
     } else {
       L.entry = activated() && onTop();
+      L.late = !L.entry;
       stack.push(L);
       if (L.entry) { try { history.pushState(state(entries()), ''); } catch (e) { L.entry = false; } }
     }
@@ -272,6 +275,24 @@
   // entries (same document, no load); stripping the key instead would leave a
   // same-URL entry, a Back that does nothing.
   if (lvl()) { skip++; history.go(-lvl()); }
+
+  // A layer opened without a tap takes its entry at the next one (v1.1): the
+  // event that ends a long press or the first tap after a report has activation.
+  function lateEntries() {
+    var i0 = -1;
+    for (var i = 0; i < stack.length; i++) if (stack[i].late && !stack[i].ghost && !stack[i].leaving) { i0 = i; break; }
+    if (i0 < 0 || pending() || !activated() || !onTop()) return;
+    for (i = i0; i < stack.length; i++) if (stack[i].entry) { for (var j = i0; j < i; j++) stack[j].late = false; return; }
+    for (i = i0; i < stack.length; i++) {
+      var L = stack[i];
+      if (!L.late || L.ghost) continue;
+      L.late = false;
+      try { history.pushState(state(entries() + 1), ''); L.entry = true; } catch (e) { return; }
+    }
+  }
+  ['pointerup', 'touchend', 'keydown', 'click'].forEach(function (t) {
+    window.addEventListener(t, function () { if (stack.length) lateEntries(); }, true);
+  });
 
   function ownsPop() { return skip > 0 || lvl() !== entries(); }
 

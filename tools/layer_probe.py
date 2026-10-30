@@ -80,7 +80,7 @@ def run(page):
     page.goto(BASE + "/pens/")
     page.wait_for_load_state("networkidle")
     url = page.url
-    check("kitLayer loaded", page.evaluate("kitLayer.version") == "v1 2026-10-30")
+    check("kitLayer loaded", page.evaluate("kitLayer.version").startswith("v1"))
     check("closed menu is out of the tab order",
           page.evaluate("getComputedStyle(document.getElementById('menuPanel')).visibility") == "hidden")
     more = page.locator(".tabbar [data-menu-btn]")
