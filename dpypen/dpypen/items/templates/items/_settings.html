@@ -1,4 +1,4 @@
-<!-- KIT-SETTINGS: v1.1 2026-10-31
+<!-- KIT-SETTINGS: v1.2 2026-10-31
   The Settings page: grouped rows, compact on a phone, the same in every app.
   Spec: ~/apps/kit/README.md §4, "Settings". Canonical copy:
   ~/apps/kit/snippets/settings.html. Apps carry a byte-identical copy (fleet-check
@@ -53,8 +53,11 @@
   kitSettings.offer(e), and kitSettings.offer(null) once its bar used it.
   API: kitSettings.mount(root) for a panel drawn later; kitSettings.offer(e).
 
-  The app's CSS comes before this <style>, so an app's override of a kit-set rule
-  needs a more specific selector (.kit-set .kit-set-row ...). An app that calls its
+  Another language: before the first fill, window.KITSETTINGS = {labels: {install,
+  installed, add ("Add %s"), ios, phone, desk}}; English for what is left out.
+
+  The app's CSS comes before this style element when it is included in the page,
+  so an app's override of a kit-set rule needs one class more: .kit-set .kit-set-row ... An app that calls its
   red --err maps it: .kit-set{--bad:var(--err)}. Tests that search a page for the
   markup above look past this comment: it holds the same words.
 -->
@@ -107,19 +110,26 @@
 (function () {
   'use strict';
   if (window.kitSettings) return;
-  var version = 'v1.1 2026-10-31';
+  var version = 'v1.2 2026-10-31';
   var offer = null, installed = false;
   function standalone() {
     try { return installed || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
     catch (e) { return installed; }
   }
+  var L;
+  function words() {
+    var lab = (window.KITSETTINGS || {}).labels || {};
+    L = {install: lab.install || 'Install', installed: lab.installed || 'Installed', add: lab.add || 'Add %s',
+    ios: lab.ios || 'Share, then Add to Home Screen', phone: lab.phone || 'Browser menu, then Add to home screen',
+    desk: lab.desk || 'Install icon in the address bar'};
+  }
   function how() {
     var ua = navigator.userAgent || '';
     var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-    if (ios) return 'Share, then Add to Home Screen';
+    if (ios) return L.ios;
     var desk = false;
     try { desk = matchMedia('(hover:hover) and (pointer:fine)').matches; } catch (e) {}
-    return desk ? 'Install icon in the address bar' : 'Browser menu, then Add to home screen';
+    return desk ? L.desk : L.phone;
   }
   function fill(el) {
     if (!standalone() && !document.querySelector('link[rel="manifest"]')) { el.hidden = true; return; }
@@ -128,18 +138,18 @@
     el.textContent = '';
     var k = document.createElement('span');
     k.className = 'kit-set-k';
-    k.textContent = 'Install';
+    k.textContent = L.install;
     el.appendChild(k);
     if (standalone()) {
       var v = document.createElement('span');
       v.className = 'kit-set-v';
-      v.textContent = 'Installed';
+      v.textContent = L.installed;
       el.appendChild(v);
     } else if (offer) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'kit-set-ibtn';
-      b.textContent = 'Add ' + app;
+      b.textContent = L.add.replace('%s', app);
       b.addEventListener('click', function () {
         var ev = offer;
         if (!ev) return;
@@ -156,6 +166,7 @@
     }
   }
   function mount(scope) {
+    words();
     var els = (scope || document).querySelectorAll('[data-kit-install]');
     for (var i = 0; i < els.length; i++) fill(els[i]);
   }
