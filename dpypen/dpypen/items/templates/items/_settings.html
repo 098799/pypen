@@ -1,4 +1,4 @@
-<!-- KIT-SETTINGS: v1.0 2026-10-31
+<!-- KIT-SETTINGS: v1.1 2026-10-31
   The Settings page: grouped rows, compact on a phone, the same in every app.
   Spec: ~/apps/kit/README.md §4, "Settings". Canonical copy:
   ~/apps/kit/snippets/settings.html. Apps carry a byte-identical copy (fleet-check
@@ -47,8 +47,16 @@
   load: "Installed" in a home-screen app; an Install button when the browser
   offered beforeinstallprompt; else the one-line way for this device (iPhone:
   Share, then Add to Home Screen; Android: the browser menu; desk: the install
-  icon in the address bar). After `kit:softnav` it is filled again.
-  API: kitSettings.mount(root) for a panel drawn later.
+  icon in the address bar). After `kit:softnav` it is filled again. A page with no
+  <link rel="manifest"> cannot be installed: the row hides. An app whose own install
+  bar caught the event first (or loads this file late) hands it over with
+  kitSettings.offer(e), and kitSettings.offer(null) once its bar used it.
+  API: kitSettings.mount(root) for a panel drawn later; kitSettings.offer(e).
+
+  The app's CSS comes before this <style>, so an app's override of a kit-set rule
+  needs a more specific selector (.kit-set .kit-set-row ...). An app that calls its
+  red --err maps it: .kit-set{--bad:var(--err)}. Tests that search a page for the
+  markup above look past this comment: it holds the same words.
 -->
 <style>
 .kit-set{max-width:40rem;margin:0;padding:0}
@@ -56,7 +64,7 @@
 .kit-set-g{break-inside:avoid;margin:0 0 18px;padding:0}
 .kit-set-g:last-child{margin-bottom:0}
 .kit-set .kit-set-h{margin:0 0 6px;padding:0 14px;font-size:12px;font-weight:600;line-height:1.4;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--dim,#9aa4b2);border:0;background:none}
+  letter-spacing:.06em;text-transform:uppercase;color:var(--dim,#9aa4b2);border:0;background:none;font-family:inherit}
 .kit-set-card{background:var(--panel,#20242b);border:1px solid var(--line,#3a404a);border-radius:12px;
   overflow:hidden;margin:0;padding:0}
 .kit-set .kit-set-row{all:unset;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;
@@ -64,8 +72,9 @@
   font:inherit;font-size:15px;line-height:1.35;color:var(--fg,#e8e8e8);text-decoration:none;
   -webkit-tap-highlight-color:transparent}
 .kit-set .kit-set-form{display:block;margin:0;padding:0}
+.kit-set .kit-set-row[hidden],.kit-set [hidden]{display:none}
 .kit-set .kit-set-card > * + *{border-top:1px solid var(--line,#3a404a)}
-.kit-set .kit-set-k{flex:1 1 auto;min-width:0;font-weight:500}
+.kit-set .kit-set-k{flex:1 1 0;min-width:min-content;font-weight:500}
 .kit-set .kit-set-sub{display:block;margin-top:2px;font-size:13px;font-weight:400;line-height:1.35;color:var(--dim,#9aa4b2)}
 .kit-set .kit-set-v{flex:0 1 auto;min-width:0;margin-left:auto;font-size:14px;color:var(--dim,#9aa4b2);text-align:right}
 .kit-set .kit-set-row > :last-child:not(.kit-set-k){margin-left:auto}
@@ -98,7 +107,7 @@
 (function () {
   'use strict';
   if (window.kitSettings) return;
-  var version = 'v1.0 2026-10-31';
+  var version = 'v1.1 2026-10-31';
   var offer = null, installed = false;
   function standalone() {
     try { return installed || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
@@ -113,6 +122,8 @@
     return desk ? 'Install icon in the address bar' : 'Browser menu, then Add to home screen';
   }
   function fill(el) {
+    if (!standalone() && !document.querySelector('link[rel="manifest"]')) { el.hidden = true; return; }
+    el.hidden = false;
     var app = el.getAttribute('data-kit-install') || document.title.split(' · ').pop();
     el.textContent = '';
     var k = document.createElement('span');
@@ -151,7 +162,8 @@
   addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); offer = e; mount(); });
   addEventListener('appinstalled', function () { installed = true; offer = null; mount(); });
   document.addEventListener('kit:softnav', function () { mount(); });
-  window.kitSettings = {version: version, mount: mount};
+  function give(e) { offer = e || null; mount(); }
+  window.kitSettings = {version: version, mount: mount, offer: give};
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { mount(); });
   else mount();
 })();
