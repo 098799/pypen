@@ -1,26 +1,6 @@
 {% extends "items/_shell.html" %}
 {% block title %}Settings · Grining Fountain Pens{% endblock %}
 
-{% block extra_css %}
-.settings-group { margin-bottom: 2rem; }
-.settings-group .menu-label {
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 0.6rem;
-}
-.settings-group .note {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-style: italic;
-  color: var(--ink-soft);
-  margin: 0.5rem 0 0;
-  font-size: 1rem;
-}
-.settings-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-{% endblock %}
-
 {% block content %}
 
 <div class="detail-bar">
@@ -31,44 +11,66 @@
   <h1><em>Settings</em></h1>
 </div>
 
-<div class="settings-group">
-  <div class="menu-label">Theme</div>
-  <div data-kit-theme></div>
-</div>
+{% comment %}
+Kit §4 "Settings" (BURNLOG-7): the kit's grouped rows, _settings.html is
+~/apps/kit/snippets/settings.html byte for byte. It sits inside #main, so an
+hx-boost swap carries its style; its script runs once per load, and the page
+script below mounts the Install row again after a swap.
+No "p340 — all apps" row: this site is public, the tailnet index is not.
+{% endcomment %}
+{% include "items/_settings.html" %}
 
-<div class="settings-group">
-  <div class="menu-label">Keys</div>
-  <div class="theme-choices keys-choices" role="radiogroup" aria-label="Keyboard layer">
-    <button type="button" data-keys="full" aria-label="Full keyboard layer"><span>Full</span></button>
-    <button type="button" data-keys="leader" aria-label="Leader only"><span>m&nbsp;only</span></button>
-    <button type="button" data-keys="off" aria-label="Keyboard layer off"><span>Off</span></button>
+<div class="kit-set">
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Look</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row"><span class="kit-set-k">Theme</span><div data-kit-theme></div></div>
+    <div class="kit-set-row" data-kit-install="Pens"><span class="kit-set-k">Install</span></div>
   </div>
-  <p class="note">“m only” is for a browser where Vimium is already driving: the app keeps its own m-… commands and hands back every other key.</p>
-</div>
+</section>
+
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Keyboard</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row">
+      <span class="kit-set-k">Keys<small class="kit-set-sub">Shortcuts on a desk</small></span>
+      <div class="theme-choices keys-choices" role="radiogroup" aria-label="Keyboard layer">
+        <button type="button" data-keys="full" aria-label="Full keyboard layer"><span>Full</span></button>
+        <button type="button" data-keys="leader" aria-label="Leader only"><span>m&nbsp;only</span></button>
+        <button type="button" data-keys="off" aria-label="Keyboard layer off"><span>Off</span></button>
+      </div>
+    </div>
+    <details class="kit-set-more"><summary class="kit-set-row kit-set-go">
+      <span class="kit-set-k">What “m only” is for<small class="kit-set-sub">Vimium and this app on one page</small></span></summary>
+      <div class="kit-set-text"><p>“m only” is for a browser where Vimium is already driving: the app keeps its own m-… commands and hands back every other key.</p></div></details>
+  </div>
+</section>
 
 {% if user.is_authenticated %}
-<div class="settings-group">
-  <div class="menu-label">Account</div>
-  {% comment %}
-  hx-boost="false" because these leave the app — boosted, hx-select pulls the
-  target page's #main into this shell and Django admin arrives wearing the pen
-  site's chrome.
-  {% endcomment %}
-  <div class="settings-actions">
-    <a href="/admin/" class="btn" hx-boost="false">Admin</a>
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Account</h2>
+  <div class="kit-set-card">
+    {% comment %}
+    hx-boost="false" because these leave the app — boosted, hx-select pulls the
+    target page's #main into this shell and Django admin arrives wearing the pen
+    site's chrome. Sign out is a POST (allauth takes it with the CSRF token), so
+    no other page can sign the owner out with a link.
+    {% endcomment %}
+    <a class="kit-set-row kit-set-go kit-set-out" href="/admin/" hx-boost="false"><span class="kit-set-k">Admin<small class="kit-set-sub">Django admin</small></span></a>
     {# The kit's worker keeps pages for offline: signing out drops them from this phone. #}
-    <a href="{% url 'account_logout' %}" class="btn" hx-boost="false" onclick="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">Sign out</a>
+    <form class="kit-set-form" method="post" action="{% url 'account_logout' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Sign out</span></button></form>
   </div>
-</div>
+</section>
 {% elif is_guest %}
-<div class="settings-group">
-  <div class="menu-label">Visiting</div>
-  <p class="note">You are here on an invitation{% if invite_label %} — {{ invite_label }}{% endif %}.</p>
-  <div class="settings-actions">
-    <form method="post" action="{% url 'invite_deactivate' %}">{% csrf_token %}<button type="submit" class="btn">Leave</button></form>
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Visiting</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row"><span class="kit-set-k">Invitation<small class="kit-set-sub">You are here on an invitation{% if invite_label %} — {{ invite_label }}{% endif %}.</small></span></div>
+    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
   </div>
-</div>
+</section>
 {% endif %}
+</div>
 
 {% comment %}
 Bound here rather than in the shell: the shell's copy is scoped to the menu
@@ -78,8 +80,11 @@ they do not re-run when hx-boost swaps a new page in underneath them.
 <script>
 (function () {
   // The theme chooser is the kit's (theme.js in the head). This page arrives
-  // by an hx-boost swap more often than by a load, so mount it here.
-  if (window.kitTheme) kitTheme.mount(document.getElementById('main'));
+  // by an hx-boost swap more often than by a load, so mount it here; the same
+  // for the kit's Install row.
+  var main = document.getElementById('main');
+  if (window.kitTheme) kitTheme.mount(main);
+  if (window.kitSettings) kitSettings.mount(main);
 
   var keyBtns = document.querySelectorAll('.keys-choices button[data-keys]');
   function paintKeys() {
@@ -98,6 +103,9 @@ they do not re-run when hx-boost swaps a new page in underneath them.
     });
   });
   paintKeys();
+  // On a full load the keyboard layer (_keys.html) comes after #main, so it
+  // is not there yet: mark the current mode once it is.
+  if (!window.__keysMode) document.addEventListener('DOMContentLoaded', paintKeys, {once: true});
 })();
 </script>
 

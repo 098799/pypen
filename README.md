@@ -21,3 +21,18 @@ would run) into all four full pages: `_shell`, `landing`, `pens/wall`,
   Settings row); it calls `kitTheme.set(…)`, so the choice is the same one.
 - Their dark header colour is `#0a0907` (passed as `theme_dark`), the shell's
   `#13161c`; light is `#f4ecd8` everywhere.
+
+## Settings
+
+`/settings/` is the kit's grouped rows (kit README §4 "Settings", stamp
+`KIT-SETTINGS`, BURNLOG-7): `kit/snippets/settings.html` copied byte for byte to
+`dpypen/dpypen/items/templates/items/_settings.html` and included inside
+`#main`, so an hx-boost swap brings its style along; the page script calls
+`kitSettings.mount(main)` and `kitTheme.mount(main)` after each swap. Groups:
+Look (Theme, Install "Pens"), Keyboard (Keys, and a closed row with what
+"m only" is for), Account (Admin, Sign out) — or Visiting (Leave) for a guest.
+`app.css` maps the kit's colour names onto the paper (`.kit-set`).
+
+- **No "p340 — all apps" row**: the site is public, the tailnet index is not.
+- **Sign out is a POST** with the CSRF token (it was a GET link), so no other
+  page can sign the owner out; it still tells the worker `KIT_FORGET`.

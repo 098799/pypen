@@ -353,7 +353,24 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   --fg: var(--ink);
   --dim: var(--muted);
 }
-/* Floating tooltip (used by calendar heatmap and pen-detail mini-gantt) */
+/* The kit's Settings rows (_settings.html, KIT-SETTINGS) read the same names:
+   the card is a plate on the paper, the labels ink. The theme chooser inside
+   keeps its own values above. */
+.kit-set {
+  --bg: var(--paper);
+  --panel: var(--plate-top);
+  --line: var(--ink-line);
+  --fg: var(--ink);
+  --dim: var(--muted);
+  --bad: #c0392b;
+}
+.kit-set .kit-set-card { box-shadow: var(--plate-shadow); }
+.kit-set .kit-set-h {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+}
+/* Floating tooltip */ (used by calendar heatmap and pen-detail mini-gantt) */
 .cal-tip {
   position: fixed;
   z-index: 50;

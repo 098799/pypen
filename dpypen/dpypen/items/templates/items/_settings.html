@@ -1,0 +1,158 @@
+<!-- KIT-SETTINGS: v1.0 2026-10-31
+  The Settings page: grouped rows, compact on a phone, the same in every app.
+  Spec: ~/apps/kit/README.md §4, "Settings". Canonical copy:
+  ~/apps/kit/snippets/settings.html. Apps carry a byte-identical copy (fleet-check
+  `kit` compares them): change this file, bump the stamp here and in `version`
+  below, copy it out. Never edit a copy.
+
+  Include it once on the Settings page (or in the base template), inside <body>,
+  before the page's own scripts. This file holds no template syntax (brace-percent,
+  double brace, brace-hash), so a Jinja or Django include takes it as is.
+
+  Markup (every class is optional except the card and its rows):
+    <div class="kit-set">                                  the page: one column on a
+                                                            phone, two from 900 px
+      <section class="kit-set-g">                          a group
+        <h2 class="kit-set-h">Look</h2>                    its heading (short, quiet)
+        <div class="kit-set-card">                         one card per group
+          <div class="kit-set-row">                        label left, control right
+            <span class="kit-set-k">Theme</span><div data-kit-theme></div></div>
+          <div class="kit-set-row" data-kit-install="pod"></div>   filled by this file
+          <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open>
+            <span class="kit-set-k" data-whatsnew-dot>What's new</span></button>
+          <a class="kit-set-row kit-set-go" href="/x">                a row that leads on
+            <span class="kit-set-k">Label<small class="kit-set-sub">one line</small></span>
+            <span class="kit-set-v">value</span></a>
+          <form method="post" action="/logout" class="kit-set-form">
+            <button class="kit-set-row kit-set-bad" type="submit">Log out</button></form>
+          <a class="kit-set-row kit-set-go kit-set-out" href="https://p340.grining.eu/">
+            <span class="kit-set-k">p340 — all apps</span></a>
+          <details class="kit-set-more"><summary class="kit-set-row kit-set-go">
+            <span class="kit-set-k">How it works</span></summary>
+            <div class="kit-set-text">long help, read on demand</div></details>
+        </div>
+        <p class="kit-set-foot">One or two lines under the card.</p>
+      </section>
+    </div>
+
+  Rows are ≥ 48 px tall, divided by hairlines; a label may carry one dim line
+  (kit-set-sub). A control that does not fit beside its label wraps under it
+  (kit-set-stack forces that). kit-set-go adds a chevron (an arrow out for
+  kit-set-out), kit-set-bad paints the label in --bad (Log out). Long help text
+  goes in a kit-set-more row, closed, never as paragraphs between the rows.
+  The look takes the app's --accent --panel --line --fg --dim --bg --bad and the
+  app's font, nothing else; the app's .btn, h2 and card rules stop at kit-set.
+
+  The Install row: an element with data-kit-install="<app name>" is filled at
+  load: "Installed" in a home-screen app; an Install button when the browser
+  offered beforeinstallprompt; else the one-line way for this device (iPhone:
+  Share, then Add to Home Screen; Android: the browser menu; desk: the install
+  icon in the address bar). After `kit:softnav` it is filled again.
+  API: kitSettings.mount(root) for a panel drawn later.
+-->
+<style>
+.kit-set{max-width:40rem;margin:0;padding:0}
+@media (min-width:900px){.kit-set{max-width:none;columns:2 22rem;column-gap:28px}}
+.kit-set-g{break-inside:avoid;margin:0 0 18px;padding:0}
+.kit-set-g:last-child{margin-bottom:0}
+.kit-set .kit-set-h{margin:0 0 6px;padding:0 14px;font-size:12px;font-weight:600;line-height:1.4;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--dim,#9aa4b2);border:0;background:none}
+.kit-set-card{background:var(--panel,#20242b);border:1px solid var(--line,#3a404a);border-radius:12px;
+  overflow:hidden;margin:0;padding:0}
+.kit-set .kit-set-row{all:unset;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;
+  justify-content:space-between;gap:6px 12px;width:100%;min-height:48px;padding:8px 14px;
+  font:inherit;font-size:15px;line-height:1.35;color:var(--fg,#e8e8e8);text-decoration:none;
+  -webkit-tap-highlight-color:transparent}
+.kit-set .kit-set-form{display:block;margin:0;padding:0}
+.kit-set .kit-set-card > * + *{border-top:1px solid var(--line,#3a404a)}
+.kit-set .kit-set-k{flex:1 1 auto;min-width:0;font-weight:500}
+.kit-set .kit-set-sub{display:block;margin-top:2px;font-size:13px;font-weight:400;line-height:1.35;color:var(--dim,#9aa4b2)}
+.kit-set .kit-set-v{flex:0 1 auto;min-width:0;margin-left:auto;font-size:14px;color:var(--dim,#9aa4b2);text-align:right}
+.kit-set .kit-set-row > :last-child:not(.kit-set-k){margin-left:auto}
+.kit-set .kit-set-stack > :last-child:not(.kit-set-k){flex-basis:100%;margin-left:0}
+.kit-set .kit-set-go{flex-wrap:nowrap;cursor:pointer}
+.kit-set .kit-set-go::after{content:"";flex:none;width:7px;height:7px;margin:0 2px 0 4px;
+  border:solid var(--dim,#9aa4b2);border-width:2px 2px 0 0;transform:rotate(45deg);opacity:.7}
+.kit-set .kit-set-out::after{width:6px;height:6px;margin-top:-4px}
+.kit-set .kit-set-bad,.kit-set .kit-set-bad .kit-set-k{color:var(--bad,#f87171);cursor:pointer}
+.kit-set .kit-set-row:focus-visible{outline:2px solid var(--accent,#6aa9ff);outline-offset:-2px;border-radius:12px}
+.kit-set a.kit-set-row:active,.kit-set button.kit-set-row:active,.kit-set summary.kit-set-row:active{background:var(--line,#3a404a)}
+@media (hover:hover) and (pointer:fine){.kit-set a.kit-set-row:hover,.kit-set button.kit-set-row:hover,
+  .kit-set summary.kit-set-row:hover{background:color-mix(in srgb,var(--line,#3a404a) 45%,transparent)}}
+.kit-set .kit-set-more{margin:0;padding:0}
+.kit-set .kit-set-more > summary{list-style:none}
+.kit-set .kit-set-more > summary::-webkit-details-marker{display:none}
+.kit-set .kit-set-more > summary::after{transform:rotate(135deg);margin-top:-5px}
+.kit-set .kit-set-more[open] > summary::after{transform:rotate(-45deg);margin-top:4px}
+.kit-set .kit-set-text{padding:2px 14px 14px;font-size:14px;line-height:1.55;color:var(--fg,#e8e8e8);overflow-wrap:anywhere}
+.kit-set .kit-set-text > :first-child{margin-top:0}
+.kit-set .kit-set-text > :last-child{margin-bottom:0}
+.kit-set .kit-set-text p{margin:0 0 10px}
+.kit-set .kit-set-foot{margin:6px 0 0;padding:0 14px;font-size:13px;line-height:1.45;color:var(--dim,#9aa4b2)}
+.kit-set .kit-set-ibtn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;min-height:34px;padding:0 14px;
+  border-radius:9px;cursor:pointer;font:inherit;font-size:14px;font-weight:600;background:var(--accent,#6aa9ff);
+  color:var(--bg,#111)}
+.kit-set .kit-set-ibtn:focus-visible{outline:2px solid var(--fg,#e8e8e8);outline-offset:2px}
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitSettings) return;
+  var version = 'v1.0 2026-10-31';
+  var offer = null, installed = false;
+  function standalone() {
+    try { return installed || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+    catch (e) { return installed; }
+  }
+  function how() {
+    var ua = navigator.userAgent || '';
+    var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    if (ios) return 'Share, then Add to Home Screen';
+    var desk = false;
+    try { desk = matchMedia('(hover:hover) and (pointer:fine)').matches; } catch (e) {}
+    return desk ? 'Install icon in the address bar' : 'Browser menu, then Add to home screen';
+  }
+  function fill(el) {
+    var app = el.getAttribute('data-kit-install') || document.title.split(' · ').pop();
+    el.textContent = '';
+    var k = document.createElement('span');
+    k.className = 'kit-set-k';
+    k.textContent = 'Install';
+    el.appendChild(k);
+    if (standalone()) {
+      var v = document.createElement('span');
+      v.className = 'kit-set-v';
+      v.textContent = 'Installed';
+      el.appendChild(v);
+    } else if (offer) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'kit-set-ibtn';
+      b.textContent = 'Add ' + app;
+      b.addEventListener('click', function () {
+        var ev = offer;
+        if (!ev) return;
+        offer = null;
+        ev.prompt();
+        if (ev.userChoice) ev.userChoice.then(function (r) { if (r && r.outcome === 'accepted') installed = true; mount(); });
+      });
+      el.appendChild(b);
+    } else {
+      var w = document.createElement('span');
+      w.className = 'kit-set-v';
+      w.textContent = how();
+      el.appendChild(w);
+    }
+  }
+  function mount(scope) {
+    var els = (scope || document).querySelectorAll('[data-kit-install]');
+    for (var i = 0; i < els.length; i++) fill(els[i]);
+  }
+  addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); offer = e; mount(); });
+  addEventListener('appinstalled', function () { installed = true; offer = null; mount(); });
+  document.addEventListener('kit:softnav', function () { mount(); });
+  window.kitSettings = {version: version, mount: mount};
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { mount(); });
+  else mount();
+})();
+</script>
