@@ -1,4 +1,4 @@
-/* KIT-LAYER: v1.4 2026-10-30
+/* KIT-LAYER: v1.5 2026-10-30
   Overlays — sheets, modal dialogs, menus, viewers — behave the same in every
   app: Back closes the top one, one per swipe, and never leaves the app while
   one is open; the page under it does not scroll; Escape, a tap on the backdrop
@@ -63,7 +63,9 @@
               the pop and stops the event, so the app's popstate listeners
               (soft navigation, tabs) never see a pop that only closed a layer.
               Forward onto a closed layer steps off it. A reload with a layer
-              open steps back off its entry (no dead Back). An open while a
+              open steps back off its entry (no dead Back; the entry under it
+              belongs to the document before the reload, so Chrome loads the
+              page once more). An open while a
               close still waits for its pop is held until the pop came. A
               <dialog> that closes by itself (a form method=dialog, Android's
               Back on a modal) gives its entry back too.
@@ -91,7 +93,7 @@
 (function () {
   'use strict';
   if (window.kitLayer) return;
-  var version = 'v1.4 2026-10-30';
+  var version = 'v1.5 2026-10-30';
   var KEY = 'kitLayer';
   var root = document.documentElement;
   var stack = [];          // {el, o, opener, entry, ghost, leaving, thens}; the top is last
@@ -311,6 +313,10 @@
     if (ev.key !== 'Escape' || ev.defaultPrevented || ev.isComposing) return;
     var L = topLive();
     if (!L || L.o.esc === false) return;
+    // a modal <dialog> that is no layer stands above it (What's new): the
+    // browser's cancel closes that one (v1.5)
+    var dm = document.querySelector('dialog[open]');
+    if (dm && find(dm) < 0 && dm.matches(':modal')) return;
     // Esc in something that stands over the layer and is not one (the kit's
     // keyboard palette, a note box) is that thing's own (v1.3)
     var t = ev.target;
@@ -327,6 +333,20 @@
     if (L && L.el === ev.target && (L.o.esc === false || L.leaving)) ev.preventDefault();
   }, true);
 
+  // Tab wraps inside the top div layer with lock: from its last stop to its
+  // first and back, so focus never leaves for the browser's bar, where no
+  // focusin would bring it back (health's runner, the last element of the page; v1.5).
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Tab' || ev.defaultPrevented) return;
+    var L = topLive();
+    if (!L || isDialog(L.el) || L.o.lock === false || L.o.trap === false || L.leaving) return;
+    var f = [].filter.call(L.el.querySelectorAll('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])'),
+      function (e) { return !e.disabled && e.getClientRects().length && !e.closest('[hidden],[inert]'); });
+    if (!f.length) { ev.preventDefault(); return; }
+    var a = document.activeElement, first = f[0], last = f[f.length - 1];
+    if (ev.shiftKey && (a === first || a === L.el || !L.el.contains(a))) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && (a === last || !L.el.contains(a))) { ev.preventDefault(); first.focus(); }
+  });
   // Focus stays in the top div layer with lock (a <dialog> keeps it natively).
   document.addEventListener('focusin', function (ev) {
     var L = topLive(), t = ev.target;
