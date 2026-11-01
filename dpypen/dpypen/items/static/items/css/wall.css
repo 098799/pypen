@@ -1,0 +1,201 @@
+/* The two walls (pens/wall.html, inks/wall.html, both on templates/items/
+   _wall.html): standalone public pages, no shell, a tile grid under a sticky
+   header. Until PYPEN-3 each page carried all of this in its own <style>;
+   what differs (the tile's shape, its picture or colour, its pips) is still
+   in the page's own block. Dark and light are the kit theme's
+   (html[data-theme]), set in <head> by _theme_boot.html. */
+html[data-theme="dark"] {
+  --bg: #0a0907;
+  --paper: #f4ecd8;
+  --text: #f4ecd8;
+  --muted: #8b815f;
+  --accent: #e08a94;
+  --tile-bg: #181513;
+  --label-grad-from: rgba(10, 9, 7, 0);
+  --label-grad-to: rgba(10, 9, 7, 0.85);
+  --label-color: #f4ecd8;
+}
+html[data-theme="light"] {
+  --bg: #f4ecd8;
+  --paper: #1b2a4a;
+  --text: #1b2a4a;
+  --muted: #5a4b2e;
+  --accent: #7a1f2b;
+  --tile-bg: #e9dfc5;
+  --label-grad-from: rgba(244, 236, 216, 0);
+  --label-grad-to: rgba(244, 236, 216, 0.92);
+  --label-color: #1b2a4a;
+}
+/* The kit's pull mark (_pullrefresh.html) and update toast (_update.html)
+   read the fleet's names. The pull mark also turns the browser's own pull
+   off, which is why html and body say no overscroll rule of their own (kit
+   README §4 "Pull to refresh"). */
+#kit-pull, #kit-update {
+  --panel: var(--tile-bg, var(--bg));
+  --fg: var(--text);
+  --line: color-mix(in srgb, var(--text) 22%, transparent);
+}
+/* The bar in tabbar.css reads these; both themes define --bg and --text. */
+html {
+  --tabbar-paper: var(--bg);
+  --tabbar-line: color-mix(in srgb, var(--text) 22%, transparent);
+  --tabbar-muted: var(--muted);
+  --tabbar-accent: var(--accent);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "EB Garamond", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  -webkit-text-size-adjust: 100%;
+  transition: background-color 0.4s, color 0.4s;
+}
+body { padding-bottom: env(safe-area-inset-bottom); }
+
+.wall-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--bg) 92%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 60%, transparent) 70%,
+    transparent 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+.wall-head > * { pointer-events: auto; }
+.wall-title {
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  font-size: clamp(1.1rem, 3.4vw, 1.6rem);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.wall-title strong { font-style: normal; font-weight: 500; color: var(--accent); }
+.wall-meta {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.wall-meta a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px dotted transparent;
+  padding-bottom: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.wall-meta a:hover { color: var(--text); border-bottom-color: var(--text); }
+.wall-meta a.on    { color: var(--text); border-bottom-color: var(--accent); }
+.wall-meta .sep    { opacity: 0.5; }
+
+/* A one-tap sun/moon on the walls, which have no Settings row: it sets the
+   kit's choice (kitTheme.set), so every other page follows it. */
+.theme-btn {
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--muted) 60%, transparent);
+  border-radius: 999px;
+  width: 28px; height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+  transition: color 0.15s, border-color 0.15s;
+}
+.theme-btn:hover { color: var(--text); border-color: var(--text); }
+.theme-btn svg { width: 14px; height: 14px; }
+.theme-btn .icon-light { display: none; }
+.theme-btn .icon-dark  { display: inline; }
+html[data-theme="dark"] .theme-btn .icon-light { display: inline; }
+html[data-theme="dark"] .theme-btn .icon-dark  { display: none; }
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
+  gap: var(--gap);
+  padding: var(--gap);
+}
+/* A tile: the page sets its shape, its fill, its scale and shadow on hover. */
+.tile {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  transform: translateZ(0);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), z-index 0s 0.25s;
+}
+.tile:hover, .tile:focus-visible {
+  z-index: 2;
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), z-index 0s 0s;
+}
+/* The name slides up on hover, focus, or a first tap on a touch screen
+   (.tap-shown; a second tap follows the link). */
+.tile-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.6rem 0.75rem 0.55rem;
+  background: linear-gradient(180deg,
+    var(--label-grad-from) 0%,
+    color-mix(in srgb, var(--label-grad-to) 35%, transparent) 30%,
+    var(--label-grad-to) 90%);
+  color: var(--label-color);
+  font-family: "Cormorant Garamond", "EB Garamond", Georgia, serif;
+  line-height: 1.12;
+  text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 80%, transparent);
+  opacity: 0;
+  transform: translateY(20%);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.tile:hover .tile-label,
+.tile:focus-visible .tile-label,
+.tile.tap-shown .tile-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+.tile-pip {
+  position: absolute;
+  color: var(--text);
+  border-radius: 999px;
+  font-family: "Inter", system-ui, sans-serif;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.tile:hover .tile-pip,
+.tile:focus-visible .tile-pip,
+.tile.tap-shown .tile-pip { opacity: 0.9; }
+
+.wall-foot {
+  padding: 1.4rem 1rem 1.6rem;
+  text-align: center;
+  color: var(--muted);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.wall-foot a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+.wall-foot a:hover { color: var(--accent); border-color: var(--accent); }
+
+@media (max-width: 480px) {
+  .wall-head { padding: 0.7rem 0.8rem; }
+}

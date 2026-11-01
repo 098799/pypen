@@ -91,6 +91,12 @@ def run(page, pen, ink):
           page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
     check("the photo sits inside the screen",
           page.evaluate("document.getElementById('photoMain').getBoundingClientRect().right <= innerWidth"))
+    # PYPEN-3: the page draws a ~900 px WebP copy; the viewer below still
+    # waits for the stored 2400 px file.
+    drawn = page.evaluate("(() => { const i = document.getElementById('photoImg'); return [i.currentSrc, i.naturalWidth]; })()")
+    check(f"the page draws the 900 px copy {drawn}", "/media/sized/900/" in drawn[0] and drawn[0].endswith(".webp") and drawn[1] == 900)
+    tiles = page.evaluate("[...document.querySelectorAll('.samples-strip img')].map(i => i.getAttribute('src'))")
+    check(f"the samples draw 600 px copies {tiles}", tiles and all("/media/sized/600/" in t for t in tiles))
     hist = page.evaluate("history.length")
     page.click("#photoImg")
     page.wait_for_function("document.getElementById('pv') && document.getElementById('pv').open")

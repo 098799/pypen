@@ -131,3 +131,24 @@ class OneCopyOfEach(_Collection):
     def test_no_back_link_is_left_unstyled(self):
         for t in TEMPLATES.rglob("*.html"):
             self.assertNotRegex(t.read_text(), r'class="(pen|ink)-back"', t.name)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class TheWallsShareOnePage(_Collection):
+    def test_both_walls_extend_the_wall_page(self):
+        for page in ("pens/wall.html", "inks/wall.html"):
+            text = (TEMPLATES / page).read_text()
+            self.assertTrue(text.startswith('{% extends "items/_wall.html" %}'), page)
+            for own in (".wall-head {", ".theme-btn {", "kitTheme.set", "<html"):
+                self.assertNotIn(own, text, f"{page} has its own {own}")
+
+    def test_walls_get_the_kit_pieces(self):
+        c = Client()
+        c.force_login(self.owner)
+        for name in ("share_pens_wall", "share_inks_wall"):
+            r = c.get(reverse(name))
+            self.assertEqual(r.status_code, 200, name)
+            html = r.content.decode()
+            for piece in ("items/css/wall.css", 'id="themeBtn"', "KIT-PULLREFRESH", "KIT-UPDATE",
+                          "items/icons/apple-touch-icon.png", 'class="wall"'):
+                self.assertIn(piece, html, f"{name}: {piece}")

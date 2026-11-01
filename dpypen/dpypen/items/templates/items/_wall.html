@@ -1,0 +1,84 @@
+{% load static %}<!doctype html>
+{% comment %}
+The walls' page (PYPEN-3): pens/wall.html and inks/wall.html extend it.
+Public, standalone (no shell, no #main: a boosted link to one comes up empty,
+so links to a wall say hx-boost="false"). What they share is here and in
+static/items/css/wall.css; each fills the blocks and its own wall_css.
+From the shell and the kit: the theme boot, the icons, pull to refresh, the
+"New version" toast, and the tab bar for the owner and guests.
+{% endcomment %}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}{% endblock %}</title>
+<meta name="description" content="{% block description %}{% endblock %}">
+<meta name="theme-color" content="#0a0907" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4ecd8" media="(prefers-color-scheme: light)">
+<meta property="og:title" content="{% block og_title %}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{% endblock %}">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="{% static 'items/icons/apple-touch-icon.png' %}">
+{% include "items/_theme_boot.html" with theme_dark="#0a0907" %}
+<link rel="stylesheet" href="{% static 'items/css/fonts.css' %}">
+<link rel="stylesheet" href="{% static 'items/css/wall.css' %}">
+<style>{% block wall_css %}{% endblock %}</style>
+<link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
+</head>
+<body{% if is_owner or is_guest %} class="has-tabbar"{% endif %}>
+{# Pull to refresh (kit README §4, KIT-PULLREFRESH): a wall on a home-screen app has no reload. #}
+{% include "items/_pullrefresh.html" %}
+{# New version (kit README §4, KIT-UPDATE): a wall left open is told when a deploy made it old. #}
+<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
+{% include "items/_update.html" %}
+
+<header class="wall-head">
+  <div class="wall-title">{% block wall_title %}{% endblock %}</div>
+  <div class="wall-meta">
+    {% block wall_meta %}{% endblock %}
+    <button type="button" class="theme-btn" id="themeBtn" aria-label="Toggle light/dark">
+      <svg class="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      <svg class="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="wall" role="list">
+{% block tiles %}{% endblock %}
+</div>
+
+<footer class="wall-foot">
+  {% block foot %}{% endblock %}
+</footer>
+
+<script>
+(function () {
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    kitTheme.set(kitTheme.theme() === 'dark' ? 'light' : 'dark');
+  });
+
+  // On a touch screen the first tap shows the tile's name, the second follows it.
+  if (!matchMedia('(hover: none)').matches) return;
+  var lastTapped = null;
+  document.addEventListener('click', function (e) {
+    var tile = e.target.closest('.tile');
+    if (!tile) return;
+    if (lastTapped !== tile) {
+      e.preventDefault();
+      document.querySelectorAll('.tile.tap-shown').forEach(function (t) { t.classList.remove('tap-shown'); });
+      tile.classList.add('tap-shown');
+      lastTapped = tile;
+      setTimeout(function () {
+        if (lastTapped === tile) { tile.classList.remove('tap-shown'); lastTapped = null; }
+      }, 4000);
+    }
+  });
+})();
+</script>
+{% block wall_js %}{% endblock %}
+
+{% include "items/_tabbar.html" with no_menu=1 %}
+
+</body>
+</html>
