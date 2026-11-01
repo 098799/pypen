@@ -4,13 +4,16 @@
 {% block extra_css %}
 .pen-hero {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 1fr;
+  /* minmax(0, …): a bare 1fr is at least as wide as its content, and a
+     strip of five or more thumbs pushed the photo column past a phone's
+     edge (the frame and the photo cut off on the right). */
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1fr);
   gap: 2rem;
   align-items: start;
   margin-bottom: 1.6rem;
 }
 @media (max-width: 760px) {
-  .pen-hero { grid-template-columns: 1fr; }
+  .pen-hero { grid-template-columns: minmax(0, 1fr); }
 }
 /* Shares its line with the shell's corner hamburger, which sits at the same
    top edge — hence no top margin and room kept clear on the right. */

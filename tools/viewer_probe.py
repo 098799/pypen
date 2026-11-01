@@ -44,9 +44,10 @@ def pic(w, h, colour, label):
 u = Usage.objects.select_related("pen", "ink").order_by("-begin").first()
 pen, ink = u.pen, u.ink
 pen.photos.all().delete()
-for i, c in enumerate([(176, 120, 60), (60, 90, 150), (90, 140, 80)]):
+# six: a strip of five or more thumbs once pushed the page past a phone's edge
+for i, c in enumerate([(176, 120, 60), (60, 90, 150), (90, 140, 80), (150, 60, 90), (120, 120, 120), (200, 180, 90)]):
     PenPhoto(pen=pen, image=pic(2400, 1600, c, f"photo{i}"), position=i,
-             kind=["main", "nib", "capped"][i]).save()
+             kind=["main", "nib", "capped", "other", "other", "other"][i]).save()
 WritingSample(usage=u, image=pic(1600, 1200, (230, 220, 200), "sample0"), notes="loops").save()
 WritingSample(usage=u, image=pic(1600, 1200, (220, 230, 210), "sample1")).save()
 InkSwatch(ink=ink, image=pic(1200, 1200, (40, 60, 160), "swatch0")).save()
@@ -86,6 +87,10 @@ def run(page, pen, ink):
     page.goto(f"{BASE}/pens/{pen}/")
     page.wait_for_load_state("networkidle")
     shot(page, "pen-page.png")
+    check("the page is no wider than the phone",
+          page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
+    check("the photo sits inside the screen",
+          page.evaluate("document.getElementById('photoMain').getBoundingClientRect().right <= innerWidth"))
     hist = page.evaluate("history.length")
     page.click("#photoImg")
     page.wait_for_function("document.getElementById('pv') && document.getElementById('pv').open")
@@ -93,22 +98,25 @@ def run(page, pen, ink):
     s = st(page)
     check("tap the photo: the viewer opens", s["open"])
     check("the page under it is locked", s["lock"])
-    check("caption says the pen and 1 of 3", s["n"] == "1 of 3" and "uncapped" in s["t"])
+    check("caption says the pen and 1 of 6", s["n"] == "1 of 6" and "uncapped" in s["t"])
     check("it shows the full file, fitted to the width", 380 <= s["w"] <= 391)
     shot(page, "viewer-open.png")
 
     page.click("#pv .pv-next")
     page.wait_for_timeout(400)
     s = st(page)
-    check("› walks to the next photo", s["n"] == "2 of 3" and "nib" in s["t"] and s["src"])
+    check("› walks to the next photo", s["n"] == "2 of 6" and "nib" in s["t"] and s["src"])
 
     # a sideways swipe walks on, too
     pointer(page, "pointerdown", 1, 300, 420)
     pointer(page, "pointermove", 1, 150, 425)
     pointer(page, "pointerup", 1, 150, 425)
     page.wait_for_timeout(300)
-    check("a swipe left walks on", st(page)["n"] == "3 of 3")
-    check("at the end, no ›", not st(page)["next"])
+    check("a swipe left walks on", st(page)["n"] == "3 of 6")
+    for _ in range(3):
+        page.click("#pv .pv-next")
+    page.wait_for_timeout(300)
+    check("at the end, no ›", st(page)["n"] == "6 of 6" and not st(page)["next"])
 
     # pinch: two fingers apart
     pointer(page, "pointerdown", 1, 170, 420)
@@ -147,7 +155,7 @@ def run(page, pen, ink):
     page.click(".pen-photo-thumbs a:nth-child(3)")
     page.click("#photoImg")
     page.wait_for_timeout(300)
-    check("the photo opens at the thumb chosen", st(page)["n"] == "3 of 3")
+    check("the photo opens at the thumb chosen", st(page)["n"] == "3 of 6")
     page.click("#pv .pv-close")
     page.wait_for_timeout(400)
     check("✕ closes", not st(page)["open"] and page.url.endswith(f"/pens/{pen}/"))
