@@ -7,7 +7,11 @@ on bae for the walk and deleted after (AUDIT.md, PYPEN-4 and PYPEN-2):
 
     PYPEN_SESSION=<key> SHOTS=dir PREFIX=after- python3 tools/live_walk.py
 
-Checks each screen: 200, no page error, nothing wider than the phone.
+Checks each screen: 200, no page error, nothing wider than the phone. Then
+a desk (1440×900, PYPEN-6): the 52 px bar, its tabs, Filter ▾ (a chip there
+filters by a GET), ⌕ and ⋯. DESK=0 skips it; DESK=only walks only it (the
+"before" shots of a deploy that adds the bar: the checks then fail, the shots
+are what counts).
 """
 
 import os
@@ -67,9 +71,48 @@ def visit(page, path, name=None, status=200):
         shot(page, name)
 
 
+def desk(b):
+    ctx = b.new_context(viewport={"width": 1440, "height": 900}, service_workers="block")
+    ctx.add_init_script(READ_ONLY)
+    ctx.add_cookies([{"name": "sessionid", "value": SESSION, "url": BASE}])
+    page = ctx.new_page()
+    js = page.evaluate
+    visit(page, "/dashboard/", "desk-dashboard")
+    check("desk: one 52 px bar at the top", js("(() => { const r = document.getElementById('hdr').getBoundingClientRect(); return r.top === 0 && r.height === 52; })()"))
+    tabs = js("[...document.querySelectorAll('#hdr .tabbar a')].filter(a => a.offsetParent).map(a => a.textContent.trim())")
+    check(f"desk: six tabs {tabs}", tabs == ["Desk", "Inkings", "Pens", "Inks", "History", "Records"])
+    visit(page, "/pens/", "desk-pens")
+    page.click("#deskFilterBtn")
+    page.wait_for_timeout(400)
+    check("desk: Filter opens the rotation chips", js("document.querySelectorAll('#deskFilter.open .db-chips > button').length") > 2)
+    shot(page, "desk-pens-filter")
+    page.locator("#deskFilter .db-chips > button").nth(1).click()
+    page.wait_for_timeout(1500)
+    check("desk: a chip filters", "rot=" in page.url)
+    check("desk: Filter names it", js("document.querySelector('#deskFilterBtn b').textContent") != "")
+    visit(page, "/inks/", "desk-inks")
+    page.click("#deskSearchBtn")
+    page.wait_for_timeout(400)
+    check("desk: ⌕ opens the search", js("document.activeElement.id") == "menuSearchInput")
+    shot(page, "desk-search")
+    page.keyboard.press("Escape")
+    page.wait_for_timeout(300)
+    page.click("#hdr [data-menu-btn]")
+    page.wait_for_timeout(400)
+    check("desk: ⋯ opens the menu", js("document.getElementById('menuPanel').classList.contains('open')"))
+    shot(page, "desk-menu")
+    page.keyboard.press("Escape")
+    ctx.close()
+
+
 def main():
     with sync_playwright() as p:
         b = p.chromium.launch()
+        if os.environ.get("DESK") == "only":
+            desk(b)
+            b.close()
+            print("all passed" if not failures else f"{len(failures)} FAILED: {failures}")
+            sys.exit(1 if failures else 0)
         ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=3, is_mobile=True, has_touch=True, service_workers="block")
         ctx.add_init_script(READ_ONLY)
         ctx.add_cookies([{"name": "sessionid", "value": SESSION, "url": BASE}])
@@ -153,6 +196,8 @@ def main():
         visit(page, "/pub/pens/wall/", "pen-wall")
         visit(page, "/pub/inks/wall/")
         visit(page, "/pens/no-such-page/", "404", status=404)
+        if os.environ.get("DESK") != "0":
+            desk(b)
         b.close()
     print("all passed" if not failures else f"{len(failures)} FAILED: {failures}")
     sys.exit(1 if failures else 0)
