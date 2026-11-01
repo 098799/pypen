@@ -82,6 +82,8 @@ the route.
 {% endcomment %}
 <script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};</script>
 {% include "items/_whatsnew.html" %}
+{# The install nudge (PYPEN-5, kit Fleet UX "Install nudge"): above the tab bar, never for a stranger. #}
+{% include "items/_installbar.html" %}
 <script>
 /* An hx-boost swap brings new controls (a pen's photo) and new dots without a
    load: the snippet tags them again. */

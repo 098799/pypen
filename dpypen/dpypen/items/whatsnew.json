@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "install-nudge", "date": "2026-11-01", "title": "Put Grining Pens on your home screen",
+   "use": "When you open the collection in a phone's browser: a few seconds in, a bar above the tab bar offers to add Grining Pens to your home screen, where it opens full screen like an app. Tap Install (on an iPhone: Share, then Add to Home Screen), or tap the cross and it stays away for two weeks. Settings, Install does the same at any time.",
+   "shots": ["/static/items/whatsnew/2026-11-01-install-nudge.png"], "try": "/settings/"},
   {"id": "desk-bar", "date": "2026-11-01", "title": "One bar on a big screen",
    "use": "When you browse the collection on a computer: everything sits in one bar at the top. Your places are tabs (Desk, Inkings, Pens, Inks, History, Records); on Pens and Inks, Filter opens the rotation or colour chips under it; the magnifier searches pens and inks; the three dots open the menu. On a pen or an ink page its actions (Edit, Share, Delete) are buttons you can see. On a phone each list now says at the top how many there are and when you last inked a pen.",
    "shots": ["/static/items/whatsnew/2026-11-01-desk-bar.png"], "try": "/inks/"},

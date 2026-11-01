@@ -29,7 +29,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 | New version (update.html) | none: the worker takes over at install, nothing told an open page | **fixed**: kit copy, `build` against `/api/version` |
 | Toast (toast.html) | kit copy v1.2 | ok |
 | Pull to refresh (pullrefresh.html) | none: an iPhone home-screen app could not reload | **fixed**: kit copy in the shell and both walls; the walls' `overscroll-behavior: none` removed (the kit forbids it) |
-| Install nudge | Settings row only | gap: PYPEN-5 |
+| Install nudge | Settings row only | **fixed**: PYPEN-5, museum's `#installbar` in `_installbar.html`, owner and guests |
 | Desk (≥ 900 px, one 52 px bar) | pill nav inside the page + floating menu | **fixed** (PYPEN-6): brand, six tabs, Filter ▾, ⌕, ⋯; the tab bar's markup, drawn by CSS (no script moves it); anchored popovers, no dim; a record's verbs as labelled buttons |
 | Keyboard (§6) | kit keys.html v1.2 | ok, see §6 |
 | Offline (sw.js) | kit copy v1.3, `where: internet` | ok |
