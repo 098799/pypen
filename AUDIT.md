@@ -22,7 +22,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 |---|---|---|
 | system fonts | EB Garamond / Cormorant / Inter, self-hosted | own: the paper look is the app |
 | `viewport-fit=cover`, safe area | yes, tab bar padded | ok |
-| Header (≤ 56 px, what the screen answers + freshness, ≤ 2 icons) | no app header: each page's own heading, a menu button that tucks away | gap: PYPEN-6 (with the desk bar) |
+| Header (≤ 56 px, what the screen answers + freshness, ≤ 2 icons) | no app header: each page's own heading, a menu button that tucks away | **fixed** (PYPEN-6): Desk, Pens, Inks and Inkings open with a header row, title + "126 pens · 3 inked · last inked 2 mo ago", ≤ 2 icon buttons; the tucking button is gone. README "Desk bar and header row" |
 | Bottom nav (3–5 tabs, ≥ 56 px, labels ≥ 11 px) | 5 tabs, icon + label, More | **fixed**: 54 → 56 px, labels 9.9 → 11 px |
 | Settings (grouped rows, kit settings.html) | kit copy v1.2; Look, Pens, Keyboard, Account | ok; Settings sits behind More, not as the last tab: the five slots are Desk, Inkings, Pens, Inks, More (own) |
 | Theme (kit theme.js) | kit copy; default auto | own: public site on paper, README "Theme" |
@@ -30,7 +30,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 | Toast (toast.html) | kit copy v1.2 | ok |
 | Pull to refresh (pullrefresh.html) | none: an iPhone home-screen app could not reload | **fixed**: kit copy in the shell and both walls; the walls' `overscroll-behavior: none` removed (the kit forbids it) |
 | Install nudge | Settings row only | gap: PYPEN-5 |
-| Desk (≥ 900 px, one 52 px bar) | pill nav inside the page + floating menu | gap: PYPEN-6 |
+| Desk (≥ 900 px, one 52 px bar) | pill nav inside the page + floating menu | **fixed** (PYPEN-6): brand, six tabs, Filter ▾, ⌕, ⋯; the tab bar's markup, drawn by CSS (no script moves it); anchored popovers, no dim; a record's verbs as labelled buttons |
 | Keyboard (§6) | kit keys.html v1.2 | ok, see §6 |
 | Offline (sw.js) | kit copy v1.3, `where: internet` | ok |
 | 404 / errors | Django's bare "Not Found"; a boosted dead link did nothing | **fixed**, see §5.7 |

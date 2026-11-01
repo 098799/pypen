@@ -151,6 +151,52 @@ check and the highlighter; `items/listing.py` is the Django side.
 - Query count per page does not grow with the rows (`tests_lists.QueryCount`).
 - Probe: `python3 tools/lists_probe.py` (backup copy, 390×844).
 
+## Desk bar and header row
+
+(PYPEN-6, kit §4 Fleet UX "Desk" and "Header".) From 900 px the chrome is one
+52 px bar, `#hdr` in `_shell.html`: the brand, the tabs (Desk, Inkings, Pens,
+Inks, History, Records), then Filter ▾, ⌕ and ⋯. Below 900 px it is the bottom
+tab bar (it was below 720; the old 720–899 pill nav is gone, and with it the
+floating menu button that showed on scroll).
+
+- **One markup, no move**: `_tabbar.html` is included once, inside `#hdr`.
+  `app.css` "Desk bar" draws it as the bar's tabs (its More button, wearing ⋯,
+  absolute at the bar's right end; `.desk-tab` History and Records shown only
+  there) and below 900 px gives `#hdr` no box, so the bar is the fixed tab bar
+  of `tabbar.css`. Taken over pod's way (a script moves the nav in): nothing
+  waits for a script, so the first paint has its tabs, and htmx's history
+  snapshot cannot catch a half-moved bar. Nothing may give `#hdr` a
+  transform, filter or backdrop-filter: the fixed tab bar and the popovers
+  would be measured from it.
+- **Filter ▾** (`static/items/js/deskbar.js`): a page marks its chip row
+  `data-fold="<name>"` (the pens' rotation, the inks' filters). On a desk the
+  row hides and the button opens the same chips in a popover; a chip there
+  clicks the real one, so htmx, the URL and the filter-nav sync work as on a
+  phone. The button names what is on ("Priority 1", "Used-up · Blue Black").
+  Without the script the row stays in the page.
+- **⌕** opens a popover with the menu's search field, lent while it is open.
+- **⋯** is the menu, under the bar, without the places the bar has as tabs
+  (`data-tab`) and without its search. A guest's name and Leave are in the
+  menu now, on a phone too (they were in the pill nav only).
+- All three are kit layers, `lock: false`: Back, Esc and a click outside close
+  them, the page keeps scrolling.
+- **A record's verbs** (a pen, an ink): on a desk the `⋯` panel is a row of
+  labelled buttons (Suggest an ink, Edit, Share, Delete with its confirm).
+- 900–1099 px: the brand is its mark alone, so the tabs and a named filter fit.
+- A stranger (an error page, a shared pen) has no tab bar: the bar has the
+  brand and ⋯, a phone has the corner button.
+- **Header row** (`.page-head.hrow`): Desk, Pens, Inks and Inkings open with
+  their title and one line of what they hold and how fresh, from
+  `items/shelf.py` (a lazy context value: a page that does not print it runs
+  no query): "126 pens · 3 inked · last inked 2 mo ago". The numbers are the
+  collection's, not the filter's (the list's "1–50 of N" counts matches); the
+  freshness is the newest inking. At most two icon buttons: Pens has Needs a
+  photo and Add, Inks Share and Add, the Desk Needs a photo (a count badge;
+  it was a fourth clause that wrapped the line) and New inking; Inkings keeps
+  its two labelled verbs. The public ink cupboard prints no numbers.
+- Probe: `python3 tools/desk_probe.py` (DB copy; 1440 px, a narrowed window,
+  390×844).
+
 ## Kit pieces
 
 `AUDIT.md` "Kit adherence" walks `~/apps/kit/README.md` section by section
@@ -169,7 +215,7 @@ own CONFIG).
 - **What's new**: `items/whatsnew.json`, newest on top, served by
   `pwa.whatsnew` (owner and guests, like the pages). Opened from Settings →
   Pens → What's new and the palette (`#whatsnew`, handled in `window.__go`);
-  the dot sits on More, the desk's menu button and Settings in the menu.
+  the dot sits on More (the desk bar's ⋯) and Settings in the menu.
   Shots in `static/items/whatsnew/`. A `data-new` id must be in the file
   (`tests_kit.py`).
 - **Error pages** (`items/error_pages.py`): Django's `handler404/403/400`
