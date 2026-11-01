@@ -8,7 +8,9 @@
     {% if code.label %}{{ code.label }} · {% endif %}read-only guest access to Tomek's fountain pen bureau.
   </p>
 
-  <form method="post" style="margin: 0;">
+  {# A full load, not an hx-boost swap: the swap replaced only #main, so a new
+     guest kept the stranger's header and had no tab bar until a reload. #}
+  <form method="post" style="margin: 0;" hx-boost="false">
     {% csrf_token %}
     <button type="submit" class="btn primary" style="min-width: 180px;">Accept &amp; enter</button>
   </form>

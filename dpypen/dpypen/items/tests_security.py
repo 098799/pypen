@@ -151,6 +151,13 @@ class SigningOutForgetsTheDevice(TestCase):
         self.assertNotIn(GUEST_SESSION_KEY, self.client.session)
         self.assertEqual(r["Clear-Site-Data"], '"cache", "storage"')
 
+    def test_accepting_an_invite_is_a_full_page_load(self):
+        # An hx-boost swap replaced #main only: the new guest kept the
+        # stranger's header and had no tab bar until a reload.
+        body = self.client.get(f"/i/{self.invite.token}/").content.decode()
+        form = re.search(r"<form method=\"post\"[^>]*>", body).group(0)
+        self.assertIn('hx-boost="false"', form)
+
     def test_an_ordinary_page_clears_nothing(self):
         self.client.force_login(self.owner)
         self.assertNotIn("Clear-Site-Data", self.client.get("/dashboard/"))

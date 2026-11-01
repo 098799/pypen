@@ -48,6 +48,13 @@ list for Tomek at the end. Earlier pass: 25 Sep 2026, `tests_security.py`
 | nginx had a rate limit on `/admin/` only. | `/accounts/` and `/i/`: 12 a minute per address, burst 10, then 429 (checked live: the 12th request got 429). `nosniff` on `/static/` and `/media/` too. The upstream is `127.0.0.1:8000`: `localhost` tried `[::1]` first and was refused on every request. | — |
 | nginx had not reloaded since about 30 Oct: atlas's vhost changed a `limit_req` zone's key, which a reload cannot take (`[emerg]` in `/var/log/nginx-error.log`, while `systemctl reload` said OK). | One `systemctl restart nginx`; all nine sites answered 200 before and after. Atlas's waiting change is live with it. | — |
 
+| Accepting an invite was an hx-boost swap of `#main` only: the new guest kept the stranger's header, with no tab bar and no Leave, until a reload (found on the live walk). | The form is a full page load, like Sign out and Leave. | `test_accepting_an_invite_is_a_full_page_load` |
+
+GitHub's Dependabot counted 47 alerts at the push of this pass; `gh` is not
+on p340, so they were not read one by one. `dpypen/requirements.txt` on
+GitHub now pins the venv that pip-audit finds clean. If alerts stay, look at
+`_archive/requirements.txt` (open `>=` ranges, never installed).
+
 Checked and fine, nothing changed:
 
 - `/admin/` sends a stranger to Google (25 Sep); allauth's own `/accounts/login/`
