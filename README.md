@@ -52,7 +52,7 @@ lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
   leaves the page. The shell's own scroll-lock watcher lists `dialog.pv[open]`,
   or it would clear the kit's lock a microtask later; a new locking layer goes
   on that list too.
-- The page's own image shows at once, the full file (≤ 1800 px, `PHOTO_MAX_SIZE`)
+- The page's own image shows at once, the stored file (up to 2400 px; new uploads ≤ 1800, `PHOTO_MAX_SIZE`)
   replaces it in place.
 - A writing sample no longer links to the fill's edit form (a guest met a
   sign-in page there); the owner gets a pencil on the tile instead.
