@@ -37,7 +37,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 | Icons (PNG 192 + 512 + maskable, `"id": "/"`) | SVG only; the iPhone home-screen icon was an SVG link, which iOS ignores | **fixed**: committed PNGs, PNG apple-touch-icon, `id` |
 | Names (one name) | "Grining Pens" everywhere: manifest, tile, titles `‹page› · Grining Pens`, offline page, keys, Install row (`pwa.APP_NAME`) | ok: PYPEN-9 |
 | Between apps | a public app on bae, not in the tailnet index | n/a |
-| Dialogs & sheets (layer.js) | kit copy v1.5: menu, ⋯ panels, gantt popup, viewer | ok; the keyboard palette and `?` sheet are not layers (kit keys.html), see §6 |
+| Dialogs & sheets (layer.js) | kit copy v1.5: menu, ⋯ panels, gantt popup, viewer | ok; since PYPEN-8 the keyboard palette and `?` sheet are layers too (KEYS-LAYER v1.3), see §6 |
 | What's new | none, though main-tier and growing | **fixed**: kit copy + whatsnew.py, `whatsnew.json` (photo viewer, pull to refresh), Settings row, palette, dot on More |
 | Login | Google sign-in (allauth) | own: gate.py is for token apps |
 
@@ -62,6 +62,9 @@ table, the token map at the top of the style and the Django header, as §6
 allows — and two lines outside them: the palette's placeholder and the `?`
 sheet's line naming `~/apps/kit/KEYS.md` (a path shown on a public site).
 This pass added the palette entry "What's new".
+**Closed by PYPEN-8 (2026-11-01):** KEYS-LAYER v1.3 makes the placeholder
+`CONFIG.placeholder` and pypen drops the KEYS.md line; `tests_scroll_lock.py`
+`KeysCopy` now fails if the shared code differs from the kit's.
 
 **The shell's scroll-lock watcher stays, changed.** The kit's keys.html
 opens its palette and `?` sheet itself (class `on`), not through kitLayer, so
@@ -71,7 +74,10 @@ microtask after the kit set it for any layer not on the list (PYPEN-1 had to
 add the viewer). It now counts every `dialog:modal` too: the viewer and the
 What's new log need no line, and a new modal layer cannot be forgotten. The
 real fix is the kit's (keys.html v1.3 through kitLayer, copied to five apps):
-PYPEN-8, which then removes the watcher.
+PYPEN-8, which then removes the watcher. **Done 2026-11-01 (PYPEN-8):** the
+palette and the `?` sheet are kit layers (Back closes them, the kit locks the
+page), and the watcher is gone; `tools/layer_probe.py` and `live_walk.py`
+check both.
 
 ### §7–§14
 

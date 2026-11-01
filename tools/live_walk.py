@@ -7,7 +7,8 @@ on bae for the walk and deleted after (AUDIT.md, PYPEN-4 and PYPEN-2):
 
     PYPEN_SESSION=<key> SHOTS=dir PREFIX=after- python3 tools/live_walk.py
 
-Checks each screen: 200, no page error, nothing wider than the phone. Then
+Checks each screen: 200, no page error, nothing wider than the phone; the
+keyboard palette and ? sheet lock the page and close on Back (PYPEN-8). Then
 a desk (1440×900, PYPEN-6): the 52 px bar, its tabs, Filter ▾ (a chip there
 filters by a GET), ⌕ and ⋯. DESK=0 skips it; DESK=only walks only it (the
 "before" shots of a deploy that adds the bar: the checks then fail, the shots
@@ -193,6 +194,29 @@ def main():
         shot(page, "menu")
         page.go_back()
         page.wait_for_timeout(500)
+        # The keyboard palette and the ? sheet (PYPEN-8, KEYS-LAYER v1.3): kit
+        # layers, so the page under them is locked and Back closes them.
+        visit(page, "/pens/")
+        on = "document.getElementById('%s').classList.contains('on')"
+        locked = "document.documentElement.classList.contains('scroll-lock')"
+        page.keyboard.press("Control+k")
+        page.wait_for_timeout(500)
+        check("palette: opens", page.evaluate(on % "kpal"))
+        check("palette: page locked", page.evaluate(locked))
+        shot(page, "palette")
+        page.go_back()
+        page.wait_for_timeout(700)
+        check("palette: Back closes it, stays", not page.evaluate(on % "kpal") and page.url.endswith("/pens/"))
+        if page.url.endswith("/pens/"):
+            page.keyboard.press("?")
+            page.wait_for_timeout(500)
+            check("? sheet: opens", page.evaluate(on % "khelp"))
+            check("? sheet: page locked", page.evaluate(locked))
+            check("? sheet: names no path of the box", "~/apps" not in page.evaluate("document.getElementById('khelp').textContent"))
+            shot(page, "keys-sheet")
+            page.go_back()
+            page.wait_for_timeout(700)
+            check("? sheet: Back closes it, stays", not page.evaluate(on % "khelp") and page.url.endswith("/pens/"))
         visit(page, "/pub/pens/wall/", "pen-wall")
         visit(page, "/pub/inks/wall/")
         visit(page, "/pens/no-such-page/", "404", status=404)

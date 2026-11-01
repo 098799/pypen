@@ -1,5 +1,6 @@
 """Overlays go through the kit's layer (_layer.js, KIT-LAYER; kit README §4
-"Dialogs & sheets"): the menu, a detail page's "⋯" panel and the gantt popup.
+"Dialogs & sheets"): the menu, a detail page's "⋯" panel, the gantt popup, and
+since KEYS-LAYER v1.3 the keyboard palette and ? sheet (PYPEN-8).
 
 Headless Chromium at 390×844 against a throwaway copy of the local database
 (a temp dir, a spare port, DEBUG on, a session made in the copy): never the
@@ -157,6 +158,47 @@ def run(page):
     check("share: the toast says so", "Link copied" in page.evaluate("(document.querySelector('#kit-toast') || {}).textContent || ''"))
     check("share: the menu closes", not page.evaluate("!!document.querySelector('.overflow-panel.open')"))
     check("share: the page stays", page.url == purl)
+
+    # The keyboard palette and the ? sheet (KEYS-LAYER v1.3, PYPEN-8): kit
+    # layers, so Back closes them and the page under them is locked.
+    page.goto(BASE + "/pens/"); page.wait_for_load_state("networkidle")
+    url = page.url
+    pal_on = "document.getElementById('kpal').classList.contains('on')"
+    help_on = "document.getElementById('khelp').classList.contains('on')"
+    page.keyboard.press("Control+k"); page.wait_for_timeout(300)
+    check("palette: open", page.evaluate(pal_on))
+    check("palette: page locked", lock(page))
+    check("palette: a history entry", (page.evaluate("history.state") or {}).get("kitLayer") == 1)
+    check("palette: placeholder is pypen's",
+          page.evaluate("document.querySelector('#kpal input').placeholder").startswith("Jump to a pen"))
+    page.go_back(); page.wait_for_timeout(400)
+    check("palette: Back closes it", not page.evaluate(pal_on))
+    check("palette: Back stays on the page", page.url == url)
+    check("palette: lock off", not lock(page))
+    page.keyboard.press("d"); page.wait_for_timeout(300)
+    page.keyboard.press("Escape"); page.wait_for_timeout(400)
+    check("palette: Esc closes it", not page.evaluate(pal_on))
+    check("palette: Esc leaves no entry", not (page.evaluate("history.state") or {}).get("kitLayer"))
+    # a choice: the palette goes, htmx navigates, Back lands on the list with it shut
+    page.keyboard.press("Control+k"); page.wait_for_timeout(300)
+    page.keyboard.type("Inks"); page.wait_for_timeout(700)
+    page.keyboard.press("Enter")
+    page.wait_for_url("**/inks/", timeout=8000); page.wait_for_timeout(600)
+    check("palette choice: on /inks/", page.url.startswith(BASE + "/inks/"))
+    check("palette choice: palette gone, lock off", not page.evaluate(pal_on) and not lock(page))
+    page.go_back(); page.wait_for_timeout(900)
+    check("palette choice: Back lands on the list", page.url == url)
+    check("palette choice: ... with the palette shut", not page.evaluate(pal_on))
+    # the ? sheet
+    page.keyboard.press("?"); page.wait_for_timeout(300)
+    check("? sheet: open", page.evaluate(help_on))
+    check("? sheet: page locked", lock(page))
+    check("? sheet: names no path of the box",
+          "~/apps" not in page.evaluate("document.getElementById('khelp').textContent"))
+    page.go_back(); page.wait_for_timeout(400)
+    check("? sheet: Back closes it", not page.evaluate(help_on))
+    check("? sheet: Back stays on the page", page.url == url)
+    check("? sheet: lock off", not lock(page))
 
     # The gantt popup.
     page.goto(BASE + "/history/gantt/"); page.wait_for_load_state("networkidle")

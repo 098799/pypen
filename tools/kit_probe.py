@@ -98,7 +98,12 @@ def run(page, cdp):
     page.locator("button[data-whatsnew-open]").click()
     page.wait_for_timeout(600)
     check("whatsnew: the log opens", page.evaluate("!!document.querySelector('dialog#kit-wn[open]')"))
-    check("whatsnew: the page under it is locked", page.evaluate("document.documentElement.classList.contains('scroll-lock')"))
+    # What's new locks with its own class (kit-wn-lock), not html.scroll-lock:
+    # the page's overflow is what counts (until PYPEN-8 a watcher in
+    # _shell.html also set scroll-lock under any modal dialog).
+    check("whatsnew: the page under it is locked",
+          page.evaluate("getComputedStyle(document.documentElement).overflow === 'hidden'"
+                        " && getComputedStyle(document.body).overflow === 'hidden'"))
     check(
         "whatsnew: it lists the entries",
         page.evaluate("document.querySelectorAll('#kit-wn [data-id], #kit-wn .kit-wn-item, #kit-wn article').length") >= 1,

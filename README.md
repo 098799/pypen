@@ -64,10 +64,10 @@ lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
   `data-zoom-group` / `data-zoom-item`; the header of `viewer.js` has the rest.
   No page script, so an hx-boost swap needs nothing.
 - **A kit layer** (`kitLayer.open`, a modal `<dialog>`): Back closes it and
-  never leaves the page. The shell's own scroll-lock watcher (for the keyboard
-  palette and `?` sheet, which the kit's keys.html does not open through
-  kitLayer) counts any `dialog:modal` as open, so it never clears the kit's
-  lock under one; a new modal layer needs nothing there.
+  never leaves the page, and the kit sets `html.scroll-lock` under it. pypen
+  has no lock code of its own: since KEYS-LAYER v1.3 (PYPEN-8) the keyboard
+  palette and `?` sheet are kit layers too, so the shell's old scroll-lock
+  watcher is gone.
 - The page's own image shows at once, the stored file (up to 2400 px; new uploads ≤ 1800, `PHOTO_MAX_SIZE`)
   replaces it in place.
 - A writing sample no longer links to the fill's edit form (a guest met a
