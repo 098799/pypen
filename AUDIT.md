@@ -81,6 +81,23 @@ its default branch, every push prints `GitHub found N vulnerabilities on
 pass's first push printed 47). Read: no open alerts. It is a proxy, not the
 list; the `gh api` call above stays the proof.
 
+Then the source itself: the repository is public, and GitHub's dependency
+graph (the data Dependabot raises its alerts from) is readable without a
+sign-in at `api.github.com/repos/098799/pypen/dependency-graph/sbom`. The
+graph built at 11:45 UTC on 1 Nov (after the floors were raised) lists 48
+PyPI packages. 28 have a pinned version in the graph. The other 20 are
+`>=` ranges, which the graph leaves unresolved, so each was taken at its
+floor in the manifest. Checked against OSV, which mirrors GitHub's
+advisory database: 76 name and version pairs, **0 advisories**. Every
+package has a version in the graph or in a manifest. So Dependabot has
+nothing to alert on.
+Only the `/dependabot/alerts` endpoint itself needs a sign-in (401).
+
+Left on GitHub, harmless: two Dependabot PRs from 2023 are still open,
+#12 (ipython to 8.10.0) and #13 (Django 3.2.13 to 3.2.18). The repo now
+pins ipython 8.27.0 and Django 6.0.8, so both are outdated. Closing them
+needs a sign-in: Tomek, close them when you next use GitHub.
+
 Re-checked live in the same pass, all as above: the headers (CSP,
 Permissions-Policy, HSTS, `X-Frame-Options`), gunicorn as `pypen` on
 `127.0.0.1:8000` only, `/opt/pypen/secrets` root:pypen 0640, the data
