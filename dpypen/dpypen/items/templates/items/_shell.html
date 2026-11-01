@@ -864,35 +864,6 @@ window.__go = function (url, push) {
   };
 })();
 </script>
-<script>
-/* Scroll lock for the keyboard layer's palette and ? sheet (~/apps/kit/README.md,
-   "Dialogs & sheets"). They are the kit's keys.html, which has its own overlays
-   and does not open them through kitLayer (KEYS-LAYER v1.2): until the kit's
-   layer does, html.scroll-lock follows them here. Every other overlay of
-   pypen's is a kitLayer layer, and the kit sets and clears the class for those.
-   The two must not fight: a modal <dialog> (the photo viewer, What's new) counts
-   as open here too, by `:modal`, so this watcher never clears the lock under
-   one, and a new modal layer needs no line here (until PYPEN-1 it named the
-   viewer, and a forgotten one would have lost its lock a microtask after the
-   kit set it). The menus are lock: false and not modal, so they stay out. */
-(function () {
-  var OPEN = "#kpal.on,#khelp.on";
-  var root = document.documentElement, queued = false;
-  function modal() {
-    try { return !!document.querySelector("dialog:modal"); }
-    catch (e) { return !!document.querySelector("dialog[open]"); }   // no :modal: older Safari
-  }
-  function sync() {
-    queued = false;
-    root.classList.toggle("scroll-lock", !!document.querySelector(OPEN) || modal());
-  }
-  new MutationObserver(function () {
-    if (!queued) { queued = true; Promise.resolve().then(sync); }
-  }).observe(document.body, { subtree: true, childList: true,
-                              attributes: true, attributeFilter: ["class", "open"] });
-  sync();
-})();
-</script>
 {% include "items/_keys.html" %}
 </body>
 </html>

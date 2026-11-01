@@ -1,5 +1,5 @@
 {% comment %} ——— keyboard layer ————————————————————————————————————————
-   KEYS-LAYER: v1.2 2026-10-02   (the stamp of the canonical copy this was cut from)
+   KEYS-LAYER: v1.3 2026-11-01   (the stamp of the canonical copy this was cut from)
    A copy of ~/apps/kit/snippets/keys.html — KEYS v1, 2026-09-18. The spec is
    ~/apps/kit/KEYS.md; how the layer is built is ~/apps/kit/README.md §6.
    pypen's own parts, and nothing else, differ from the canonical copy:
@@ -7,7 +7,9 @@
        comment block, never a multi-line brace-hash);
      - the token block at the top of the style sheet (the layer's --panel,
        --line, --dim … mapped onto the parchment set);
-     - the palette placeholder, the CONFIG block and the SHEET table.
+     - the CONFIG block and the SHEET table.
+   Since v1.3 the palette and the ? sheet open through _layer.js (kitLayer):
+   Back closes them and the kit sets html.scroll-lock (PYPEN-8).
    A fix to the shared code goes to the canonical copy first and is copied
    out. The list cursor lives in _shell.html (window.__keysList): hx-boost
    swaps #main, so one spec reads whatever list the page now shows. {% endcomment %}
@@ -142,7 +144,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
     <div class="kp-in">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="Jump to a pen, an ink, anywhere…" aria-label="Jump to"
+             placeholder="Jump to…" aria-label="Jump to"
              role="combobox" aria-expanded="true">
       <span class="kp-spin" aria-hidden="true"></span>
       <button class="kp-key" data-pal-close type="button" title="Close">esc</button>
@@ -159,13 +161,14 @@ article.inked.kbd-focused,.rec.kbd-focused{
 (function(){
   if (window.__keysLoaded) return;   // survives soft navigation; bind once
   window.__keysLoaded = true;
-  window.__keysLayer = 'v1.2 2026-10-02';   // the stamp in the header; fleet-check compares it
+  window.__keysLayer = 'v1.3 2026-11-01';   // the stamp in the header; fleet-check compares it
 
   // ——— CONFIG: the only part that is app-specific ————————————————
   var CFG = {
     name: '{{ app_name|escapejs }}',  // the app, in the hud and the help (pwa.APP_NAME)
     store: 'pypen.keys',               // localStorage key for the mode
     palette: '/api/palette?q=',        // JSON: {groups:[{type,title,items:[{t,s,u}],more?:{t,u}}]}
+    placeholder: 'Jump to a pen, an ink, anywhere\u2026',   // the palette's empty field
     searchUrl: function(q){ return '/search/?q=' + encodeURIComponent(q); },  // Enter on nothing
     glyphs: {pen: '\u2712', ink: '\u25cf'},   // the tile per group type
     // the pen photo on a detail page is the only thing worth enlarging
@@ -522,6 +525,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
   var palCard = pal.querySelector('.kp-card');
   var palOpts = [], palSel = 0, palSeq = 0, palT = null, palQ = '';
   var palNewTab = false;             // `D`: everything chosen opens in a new tab
+  if (CFG.placeholder) palIn.placeholder = CFG.placeholder;
   var RECENT = CFG.store + '.recent', RECENT_N = 5, DEBOUNCE = 250;
   var PAGE_N = 5;                       // pages offered for one query
 
@@ -577,15 +581,30 @@ article.inked.kbd-focused,.rec.kbd-focused{
     });
     return order.map(function(k){ return by[k]; });
   }
-  function palOpen(){
-    pal.classList.add('on');
-    palIn.value = ''; palQ = ''; palSel = 0;
-    paint('', [], true);
-    palIn.focus();
-  }
-  function palClose(){
+  // The palette and the ? sheet are layers of the kit's layer.js when the
+  // page carries it (v1.3): Back closes them, the page under them does not
+  // scroll (html.scroll-lock), focus goes back to where it was. Without it
+  // they open and close on their own, as before.
+  function layers(){ return window.kitLayer && window.kitLayer.open ? window.kitLayer : null; }
+  function palShow(){ pal.classList.add('on'); }
+  // every way out (Esc, Back, the backdrop, a choice) ends here, once
+  function palHide(){
     pal.classList.remove('on'); palCard.classList.remove('busy'); palIn.blur();
     clearTimeout(palT); palSeq++;
+  }
+  function palOpen(){
+    palIn.value = ''; palQ = ''; palSel = 0;
+    paint('', [], true);
+    var L = layers();
+    if (L) L.open(pal, {name: 'palette', show: palShow, close: palHide, focus: palIn});
+    else { palShow(); palIn.focus(); }
+  }
+  // `then` runs once the palette is gone and Back's entry with it, so a page
+  // it opens lands on top of the history, not under a stale entry.
+  function palClose(then){
+    var L = layers();
+    if (L) L.close(pal, then);
+    else { palHide(); if (then) then(); }
   }
   function palIsOpen(){ return pal.classList.contains('on'); }
 
@@ -661,16 +680,21 @@ article.inked.kbd-focused,.rec.kbd-focused{
     newTab = newTab || palNewTab;
     if (!o){
       // Enter on nothing: the page's own search, for what was typed.
-      if (q && CFG.searchUrl){ remember(q); palClose(); go(CFG.searchUrl(q), newTab); }
+      if (q && CFG.searchUrl){ remember(q); leave(CFG.searchUrl(q), newTab); }
       return;
     }
     if (o.kind === 'recent'){ palIn.value = o.q; palIn.dispatchEvent(new Event('input')); return; }
     // A page was never a search, and neither is an entity the app marks
     // `nosave` (a person, a source): only a result you had to look for is.
     if ((o.kind === 'row' && !o.nosave) || o.kind === 'more') remember(q);
-    palClose();
-    if (o.u === '#help'){ helpOpen(); return; }
-    go(o.u, newTab);
+    if (o.u === '#help'){ palClose(helpOpen); return; }
+    leave(o.u, newTab);
+  }
+  // A new tab opens at once (it needs the key's activation); the page itself
+  // moves only once the palette has closed.
+  function leave(u, newTab){
+    if (newTab){ go(u, true); palClose(); }
+    else palClose(function(){ go(u, false); });
   }
   function query(q){
     var mine = ++palSeq;
@@ -762,13 +786,13 @@ article.inked.kbd-focused,.rec.kbd-focused{
   // Escape clears the filter before it closes the sheet.
   var helpIn = null;
   function helpOpen(){
+    if (helpIsOpen()) return;   // a second ? keeps the filter typed so far
     var h = '<div class="kh-head"><h2>Keyboard</h2>' +
       '<label class="kh-find"><input type="text" placeholder="Type to filter the keys…" ' +
       'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Filter the keys">' +
       '<span class="kh-n"></span></label></div>' +
       '<div class="muted" style="font-size:12.5px">' +
-      'Your Vimium bindings, inside ' + CFG.name + '. A number repeats: <b>3i</b>. ' +
-      'The whole dialect: <code>~/apps/kit/KEYS.md</code>.</div>' +
+      'Your Vimium bindings, inside ' + CFG.name + '. A number repeats: <b>3i</b>.</div>' +
       '<div class="kh-grid">';
     SHEET.forEach(function(sec){
       h += '<div class="kh-sec"><div class="eyebrow" style="margin:12px 0 4px">' + sec[0] + '</div>';
@@ -785,9 +809,12 @@ article.inked.kbd-focused,.rec.kbd-focused{
     helpCard.innerHTML = h;
     helpIn = helpCard.querySelector('.kh-find input');
     helpIn.addEventListener('input', helpFilter);
-    help.classList.add('on');
-    helpCard.scrollTop = 0;
+    var L = layers();
+    if (L) L.open(help, {name: 'keys', show: helpShow, close: helpHide});
+    else helpShow();
   }
+  function helpShow(){ help.classList.add('on'); helpCard.scrollTop = 0; }
+  function helpHide(){ help.classList.remove('on'); helpIn = null; }
   function helpFilter(){
     var q = (helpIn.value || '').trim().toLowerCase(), n = 0, all = 0;
     [].forEach.call(helpCard.querySelectorAll('.kh-sec'), function(sec){
@@ -802,7 +829,11 @@ article.inked.kbd-focused,.rec.kbd-focused{
     c.textContent = q ? (n ? n + ' of ' + all : 'no key matches') : '';
     c.classList.toggle('none', q && !n);
   }
-  function helpClose(){ help.classList.remove('on'); helpIn = null; }
+  function helpClose(then){
+    var L = layers();
+    if (L) L.close(help, then);
+    else { helpHide(); if (then) then(); }
+  }
   function helpIsOpen(){ return help.classList.contains('on'); }
   help.addEventListener('mousedown', function(e){ if (e.target === help) helpClose(); });
   window.__keysHelp = helpOpen;

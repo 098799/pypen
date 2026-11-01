@@ -2213,12 +2213,13 @@ html[data-theme="dark"] .sort-select {
 
 /* -------- Scroll lock --------
    An overlay freezes the page under it (~/apps/kit/README.md, "Dialogs &
-   sheets"): _shell.html sets html.scroll-lock while the palette or the ?
-   sheet is open; the kit's _layer.js sets it for its layers (none of pypen's
-   lock: they are anchored menus). The overlays'
-   own scrollers keep the swipe: their end does not hand it on to the page.
-   (The rule for the keyboard layer lives here, not in _keys.html, which is a
-   copy of the kit's layer.) */
+   sheets"): the kit's _layer.js sets html.scroll-lock while a layer that
+   locks is open: the photo viewer, What's new, and since KEYS-LAYER v1.3 the
+   keyboard palette and the ? sheet (PYPEN-8). The menus and the "⋯" panels
+   are anchored (lock: false). _layer.js adds this rule itself; it stays here
+   so the page's own CSS says it. The overlays' own scrollers keep the swipe:
+   their end does not hand it on to the page. (The rule for the keyboard
+   layer lives here, not in _keys.html, which is a copy of the kit's layer.) */
 html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 #kpal .kp-list, #khelp .kh-card { overscroll-behavior: contain; }
 
