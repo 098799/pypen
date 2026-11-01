@@ -1,23 +1,23 @@
 {% load items_extras %}
-{# Swappable content: filter bar + colour cards + ink groups. #}
-<div id="inkContentBody" data-listnav>
+{# Swappable content: filter bar + ink groups + Load more. #}
+<div id="inkContentBody" data-listnav data-more-host="inks">
 {% include "items/inks/_filters.html" %}
 
-{% if not groups %}
-<div class="empty">No inks match this filter. <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
+{% if not sections %}
+<div class="empty">{% if filters.q %}No ink matches “{{ filters.q }}”{% if filters.color or not filters.include_samples or not filters.include_used %} with these filters{% endif %}.{% else %}No inks match this filter.{% endif %} <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
 {% endif %}
 
-{% for g in groups %}
-<section data-listnav-group>
-{% if not g.flat %}
-<div class="group-head">
-  <span class="dot" style="background: {{ g.hex }};"></span>
-  <h3>{{ g.color }}</h3>
-  <span class="gmeta">{{ g.inks|length }} bottle{{ g.inks|length|pluralize }}</span>
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+{% if s.head and not s.flat %}
+<div class="group-head" data-more-head>
+  <span class="dot" style="background: {{ s.hex }};"></span>
+  <h3>{{ s.color }}</h3>
+  <span class="gmeta">{{ s.count }} bottle{{ s.count|pluralize }}</span>
 </div>
 {% endif %}
-<div class="list">
-  {% for i in g.inks %}
+<div class="list" data-more-rows>
+  {% for i in s.rows %}
   <div class="list-row no-actions" data-listnav-item>
     <span class="swatch" style="background: {{ i.swatch_bg }}"></span>
     <div>
@@ -30,14 +30,15 @@
          class="plain">
         <div class="title">
           {% if i.volume <= 5 %}<span class="dim fs-small">(sample)</span> {% endif %}
-          {{ i.brand.name|highlight:filters.terms }} {% if i.line %}{{ i.line|highlight:filters.terms }} {% endif %}{{ i.name|highlight:filters.terms }}
+          {{ i.brand.name|highlight:filters.q }} {% if i.line %}{{ i.line|highlight:filters.q }} {% endif %}{{ i.name|highlight:filters.q }}
         </div>
       </a>
       <div class="meta">
-        {{ i.color|highlight:filters.terms }}
+        {{ i.color|highlight:filters.q }}
         · {{ i.volume }}ml
         {% if i.used_up %} · used up{% endif %}
         {% if i.obtained %} · obtained {{ i.obtained|date:"Y" }}{% endif %}
+        {% if filters.q and not public %} · from {{ i.obtained_from|highlight:filters.q }}{% endif %}
         {% if i.moi_url %} · <a href="{{ i.moi_url }}" target="_blank" rel="noopener" class="moi-link">MoI ↗</a>{% endif %}
       </div>
     </div>
@@ -46,5 +47,5 @@
 </div>
 </section>
 {% endfor %}
+{% include "items/_more.html" %}
 </div>
-

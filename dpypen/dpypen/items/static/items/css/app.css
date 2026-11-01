@@ -2622,12 +2622,15 @@ a.moi-link, a.moi-link:hover { border: none; color: var(--accent); letter-spacin
 .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
 a.pen-thumb { border-bottom: none; }
 
-/* Inkings: the pager under the list. */
-.pager { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
-.pager-at {
+/* Load more under a paged list (templates/items/_more.html, PYPEN-7). */
+.more-nav { display: flex; justify-content: center; align-items: center; gap: 0.5rem 1rem; margin-top: 1.6rem; flex-wrap: wrap; }
+.more-count {
   font-family: "Inter", sans-serif; font-size: 0.72rem; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--muted); padding: 0 0.75rem;
+  text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums;
 }
+.more-btn { min-width: 9rem; min-height: 44px; justify-content: center; }
+.more-btn[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+.more-first { font-size: 0.85rem; color: var(--muted); }
 
 /* The photo editor: messages, the AI shot's badge, the note under the actions. */
 .flash-list { margin-bottom: 1rem; }

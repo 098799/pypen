@@ -12,9 +12,9 @@ does not call this at all.
 
 from urllib.parse import quote
 
-from django.db.models import Q
 from django.http import JsonResponse
 
+from dpypen.items import listing
 from dpypen.items.auth import active_invite
 from dpypen.items.models import Ink, Pen
 
@@ -30,15 +30,17 @@ def palette(request):
         return JsonResponse({"groups": []}, status=403)
 
     q = (request.GET.get("q") or "").strip()
-    if not q:
+    if not listing.lists.tokens(q):
         return JsonResponse({"groups": []})
 
-    pens = Pen.objects.select_related("brand", "rotation").filter(
-        Q(model__icontains=q) | Q(brand__name__icontains=q) | Q(finish__icontains=q)
-    ).order_by("brand__name", "model")
-    inks = Ink.objects.select_related("brand").filter(
-        Q(name__icontains=q) | Q(brand__name__icontains=q) | Q(line__icontains=q)
-    ).order_by("brand__name", "name")
+    # The kit's words (kit §14, PYPEN-7): every word must match, accents
+    # fold ("zur" finds "Zürich"), the same fields as the lists and /search/.
+    # It took the whole query as one phrase before, so "pilot blue" found
+    # nothing.
+    pens = listing.search(Pen.objects.select_related("brand", "rotation"), q,
+                          listing.PEN_FIELDS).order_by("brand__name", "model", "pk")
+    inks = listing.search(Ink.objects.select_related("brand"), q,
+                          listing.INK_FIELDS).order_by("brand__name", "name", "pk")
 
     def group(type_, title, rows, total, search_type):
         g = {"type": type_, "title": title, "items": rows}
@@ -51,20 +53,22 @@ def palette(request):
             }
         return g
 
+    pen_list = list(pens[:LIMIT + 1])
+    ink_list = list(inks[:LIMIT + 1])
     pen_rows = [{
         "t": f"{p.brand.name} {p.model}" + (f" {p.finish}" if p.finish else ""),
         "s": p.filling or "",
         "u": f"/pens/{p.pk}/",
-    } for p in pens[:LIMIT]]
+    } for p in pen_list[:LIMIT]]
     ink_rows = [{
-        "t": f"{i.brand.name} {i.name}",
+        "t": f"{i.brand.name} " + (f"{i.line} " if i.line else "") + i.name,
         "s": i.color or "",
         "u": f"/inks/{i.pk}/",
-    } for i in inks[:LIMIT]]
+    } for i in ink_list[:LIMIT]]
 
     groups = []
     if pen_rows:
-        groups.append(group("pen", "Pens", pen_rows, pens.count(), "pens"))
+        groups.append(group("pen", "Pens", pen_rows, len(pen_list), "pens"))
     if ink_rows:
-        groups.append(group("ink", "Inks", ink_rows, inks.count(), "inks"))
+        groups.append(group("ink", "Inks", ink_rows, len(ink_list), "inks"))
     return JsonResponse({"groups": groups})

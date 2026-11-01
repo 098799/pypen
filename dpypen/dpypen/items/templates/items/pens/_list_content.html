@@ -1,15 +1,15 @@
 {% load items_extras %}
-<div id="penContentBody" data-listnav>
-{% for g in groups %}
-<section data-listnav-group>
-{% if not g.headless %}
-<div class="group-head">
-  <h3>{{ g.title }}</h3>
-  <span class="gmeta">{{ g.pens|length }} pen{{ g.pens|length|pluralize }}{% if g.subtitle %} · {{ g.subtitle }}{% endif %}</span>
+<div id="penContentBody" data-listnav data-more-host="pens">
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+{% if s.head and not headless %}
+<div class="group-head" data-more-head>
+  <h3>{{ s.title }}</h3>
+  <span class="gmeta">{{ s.count }} pen{{ s.count|pluralize }}{% if s.subtitle %} · {{ s.subtitle }}{% endif %}</span>
 </div>
 {% endif %}
-<div class="list">
-  {% for p in g.pens %}
+<div class="list" data-more-rows>
+  {% for p in s.rows %}
   <div class="list-row pen-row" data-listnav-item>
     <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb">
       {% if p.list_thumb_url %}
@@ -20,13 +20,14 @@
     </a>
     <div>
       <a href="{% url 'pens_detail' p.pk %}" class="plain">
-        <div class="title">{{ p.brand.name|highlight:terms }} {{ p.model|highlight:terms }}{% if p.finish %} <span class="soft">{{ p.finish|highlight:terms }}</span>{% endif %}</div>
+        <div class="title">{{ p.brand.name|highlight:query }} {{ p.model|highlight:query }}{% if p.finish %} <span class="soft">{{ p.finish|highlight:query }}</span>{% endif %}</div>
       </a>
       <div class="meta">
-        {{ p.filling|highlight:terms }}
-        {% if g.headless and p.rotation.priority is not None %} · priority {{ p.rotation.priority }}{% endif %}
+        {{ p.filling|highlight:query }}
+        {% if headless and p.rotation.priority is not None %} · priority {{ p.rotation.priority }}{% endif %}
         {% if not p.rotation.in_use %} · defunct{% endif %}
         {% if p.obtained %} · obtained {{ p.obtained|date:"Y" }}{% endif %}
+        {% if query %} · from {{ p.obtained_from|highlight:query }}{% endif %}
       </div>
     </div>
   </div>
@@ -34,7 +35,7 @@
 </div>
 </section>
 {% empty %}
-<div class="empty">{% if query %}Nothing here matches “{{ query }}”. <a href="{% url 'pens_list' %}">Show every pen</a>.{% else %}No pens in the bureau yet.{% if can_edit %} <a href="{% url 'pens_create' %}">Add the first one</a>.{% endif %}{% endif %}</div>
+<div class="empty">{% if query %}No pen matches “{{ query }}”. <a href="{% url 'pens_list' %}">Clear the search</a>.{% else %}No pens in the bureau yet.{% if can_edit %} <a href="{% url 'pens_create' %}">Add the first one</a>.{% endif %}{% endif %}</div>
 {% endfor %}
+{% include "items/_more.html" %}
 </div>
-

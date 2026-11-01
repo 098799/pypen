@@ -1,6 +1,6 @@
 from django.urls import path
 
-from dpypen.items import crud, history, invite, notebook, pairing, palette, public, pwa, records, search, share, undo, views
+from dpypen.items import api_lists, crud, history, invite, notebook, pairing, palette, public, pwa, records, search, share, undo, views
 
 
 urlpatterns = [
@@ -16,6 +16,9 @@ urlpatterns = [
     path('search/', search.search, name='search'),
     path('settings/', public.settings_page, name='settings'),
     path('api/palette', palette.palette, name='api_palette'),
+    path('api/pens', api_lists.pens, name='api_pens'),
+    path('api/inks', api_lists.inks, name='api_inks'),
+    path('api/usages', api_lists.usages, name='api_usages'),
     path('api/version', pwa.version, name='api_version'),
     path('whatsnew.json', pwa.whatsnew, name='whatsnew'),
     path('undo/<str:token>/', undo.undo, name='undo'),

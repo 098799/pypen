@@ -67,6 +67,11 @@ def bad_request(request, exception=None):
     return _page(request, errors.describe(400, method=request.method))
 
 
+def unprocessable(request, detail=""):
+    """A list parameter out of range (`?limit=1000`): kit §14 says 422."""
+    return _page(request, errors.describe(422, detail=detail, method=request.method))
+
+
 def csrf_failure(request, reason=""):
     err = errors.describe(403, method=request.method)
     err.title, err.text = "That did not go through", CSRF_TEXT

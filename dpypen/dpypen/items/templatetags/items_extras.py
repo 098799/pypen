@@ -1,35 +1,25 @@
-import re
-
 from django import template
-from django.utils.html import escape
 from django.utils.safestring import mark_safe
+
+from dpypen.items import lists
 
 register = template.Library()
 
 
 @register.filter
 def highlight(text, terms):
-    """Wrap each search-term occurrence in <mark>. Terms may be a list or space-separated string.
+    """Each search word in <mark>, through the kit's `lists.highlight`
+    (KIT-LISTS): accent-folded like the search, so "zur" marks the "Zür" of
+    "Zürich", longest word first, every piece escaped. `terms` is the query
+    as a string or its words as a list.
 
-    The terms are matched in the stored text and each piece is escaped on its
-    own. Matching in the escaped text instead found "amp" or "lt" inside
-    &amp; and &lt; and cut the entity in two, so a search for "lt" printed
-    "&<mark>lt</mark>;" where the name had a "<".
+    The hand-written one before it matched case but not accents, so a search
+    that found "Zürich" marked nothing in it.
     """
     if not text:
         return ""
-    text = str(text)
-    if isinstance(terms, str):
-        terms = terms.split()
-    unique = sorted({t for t in (terms or []) if t}, key=len, reverse=True)
-    if not unique:
-        return mark_safe(escape(text))
-    pattern = re.compile("(" + "|".join(re.escape(t) for t in unique) + ")", re.IGNORECASE)
-    parts = pattern.split(text)
-    # split() with one group: even indexes are the text between, odd the hits.
-    return mark_safe(
-        "".join(f"<mark>{escape(p)}</mark>" if i % 2 else escape(p) for i, p in enumerate(parts))
-    )
+    q = " ".join(terms) if isinstance(terms, (list, tuple)) else (terms or "")
+    return mark_safe(lists.highlight(text, q))
 
 
 _KIT_THEME_JS = None

@@ -1,7 +1,8 @@
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
+from dpypen.items import listing
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Usage
 from dpypen.items.public import INK_COLOR_HEX
@@ -13,6 +14,43 @@ SORTS = {
     "used": "most used",
 }
 TYPES = {"both": "both", "pens": "pens", "inks": "inks"}
+
+
+# Both kinds at once show this many of each, with Load more going on to that
+# kind alone; one kind shows the usual page of 50.
+PREVIEW = 20
+
+
+def _n_usages(fk):
+    """How many inkings a pen or an ink had, as a subquery (no GROUP BY).
+    The "most used" order summed the inkings' ids before (PYPEN-7)."""
+    return Coalesce(Subquery(
+        Usage.objects.filter(**{fk: OuterRef("pk")}).order_by().values(fk)
+        .annotate(n=Count("pk")).values("n")[:1]), 0)
+
+
+PEN_ORDER = {
+    "alpha": ("brand__name", "model", "pk"),
+    "recent": ("-obtained", "pk"),
+    "used": ("-n_used", "brand__name", "model", "pk"),
+}
+INK_ORDER = {
+    "alpha": ("brand__name", "name", "pk"),
+    "recent": (F("obtained").desc(nulls_last=True), "pk"),
+    "used": ("-n_used", "brand__name", "name", "pk"),
+}
+
+
+def _more(request, kind, offset, limit, total, type_):
+    """listing.more, but from both kinds Load more goes on with this kind alone."""
+    m = listing.more(request, offset, limit, total)
+    if m["next"] and type_ == "both":
+        params = request.GET.copy()
+        params["type"] = kind
+        params["offset"] = str(offset + limit)
+        params.pop("limit", None)
+        m["next"] = request.path + "?" + params.urlencode()
+    return m
 
 
 @login_or_guest_required
@@ -27,64 +65,41 @@ def search(request):
     show_defunct = request.GET.get("defunct") == "1"
     show_used_up = request.GET.get("used_up") == "1"
     show_samples = request.GET.get("samples") == "1"
+    limit, offset = listing.page_args(request, default=PREVIEW if type_ == "both" else listing.LIMIT_DEFAULT)
+    if type_ == "both":
+        offset = 0
 
-    pens = []
-    inks = []
-    terms = [t for t in q.split() if t]
+    pens = inks = []
+    pen_more = ink_more = None
+    terms = listing.lists.tokens(q)
 
-    if q and type_ in ("both", "pens"):
-        pqs = Pen.objects.select_related("brand", "rotation").prefetch_related("photos")
-        for term in terms:
-            pqs = pqs.filter(
-                Q(brand__name__icontains=term)
-                | Q(model__icontains=term)
-                | Q(finish__icontains=term)
-                | Q(filling__icontains=term)
-                | Q(obtained_from__icontains=term)
-            )
+    if terms and type_ in ("both", "pens"):
+        pqs = listing.search(Pen.objects.select_related("brand", "rotation"), q, listing.PEN_FIELDS)
         if not show_defunct:
             pqs = pqs.filter(rotation__in_use=True)
-        if sort == "alpha":
-            pqs = pqs.order_by("brand__name", "model")
-        elif sort == "recent":
-            pqs = pqs.order_by("-obtained")
-        elif sort == "used":
-            pqs = pqs.annotate(
-                total_days=Coalesce(Sum("usage__id"), 0) + Count("usage"),
-            ).order_by("-total_days")
-        pens = list(pqs[:60])
+        total = pqs.count()
+        if sort == "used":
+            pqs = pqs.annotate(n_used=_n_usages("pen"))
+        pens = list(pqs.prefetch_related("photos").order_by(*PEN_ORDER[sort])[offset:offset + limit])
         for p in pens:
             photos = list(p.photos.all()[:1])
-            if photos:
-                ph = photos[0]
-                p.thumb_url = ph.grid_url
-            else:
-                p.thumb_url = None
+            p.thumb_url = photos[0].grid_url if photos else None
+        pen_more = _more(request, "pens", offset, limit, total, type_)
 
-    if q and type_ in ("both", "inks"):
-        iqs = Ink.objects.select_related("brand")
-        for term in terms:
-            iqs = iqs.filter(
-                Q(brand__name__icontains=term)
-                | Q(name__icontains=term)
-                | Q(line__icontains=term)
-                | Q(color__icontains=term)
-                | Q(obtained_from__icontains=term)
-            )
+    if terms and type_ in ("both", "inks"):
+        iqs = listing.search(Ink.objects.select_related("brand"), q, listing.INK_FIELDS)
         if not show_used_up:
             iqs = iqs.exclude(used_up=True)
         if not show_samples:
             iqs = iqs.filter(volume__gt=5)
-        if sort == "alpha":
-            iqs = iqs.order_by("brand__name", "name")
-        elif sort == "recent":
-            iqs = iqs.order_by("-obtained")
-        elif sort == "used":
-            iqs = iqs.annotate(fill_count=Count("usage")).order_by("-fill_count")
-        inks = list(iqs[:60])
+        total = iqs.count()
+        if sort == "used":
+            iqs = iqs.annotate(n_used=_n_usages("ink"))
+        inks = list(iqs.order_by(*INK_ORDER[sort])[offset:offset + limit])
         for i in inks:
             i.hex = INK_COLOR_HEX.get(i.color, "#333")
             i.bg = i.swatch_bg
+        ink_more = _more(request, "inks", offset, limit, total, type_)
 
     def _toggle_url(key, new_val):
         params = request.GET.copy()
@@ -92,6 +107,7 @@ def search(request):
             params[key] = new_val
         else:
             params.pop(key, None)
+        params.pop("offset", None)
         q_ = params.urlencode()
         return request.path + (("?" + q_) if q_ else "")
 
@@ -114,9 +130,14 @@ def search(request):
         "terms": terms,
         "pens": pens,
         "inks": inks,
+        "pen_more": pen_more,
+        "ink_more": ink_more,
+        "type": type_,
+        "more_only": listing.is_more(request),
         "filters": filters,
         "nav": "search",
     }
-    partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
+    partial = listing.is_more(request) or (
+        request.headers.get("HX-Request") and not request.headers.get("HX-Boosted"))
     template = "items/_search_results.html" if partial else "items/search.html"
-    return render(request, template, context)
+    return listing.vary(render(request, template, context))

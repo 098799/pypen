@@ -1,23 +1,23 @@
 {% load items_extras %}
-<div id="inkContentBody" data-listnav>
+<div id="inkContentBody" data-listnav data-more-host="inks">
 {% include "items/inks/_filters.html" %}
 
-{% if not groups %}
-<div class="empty">No inks match this filter. <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
+{% if not sections %}
+<div class="empty">{% if filters.q %}No ink matches “{{ filters.q }}”{% if filters.color or not filters.include_samples or not filters.include_used %} with these filters{% endif %}.{% else %}No inks match this filter.{% endif %} <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
 {% endif %}
 
-{% for g in groups %}
-<section data-listnav-group>
-  {% if not g.flat %}
-  <div class="grid-section-head">
-    <span class="dot" style="background: {{ g.hex }};"></span>
-    <span>{{ g.color }}</span>
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+  {% if s.head and not s.flat %}
+  <div class="grid-section-head" data-more-head>
+    <span class="dot" style="background: {{ s.hex }};"></span>
+    <span>{{ s.color }}</span>
     <span class="faint">·</span>
-    <span>{{ g.inks|length }} bottle{{ g.inks|length|pluralize }}</span>
+    <span>{{ s.count }} bottle{{ s.count|pluralize }}</span>
   </div>
   {% endif %}
-  <div class="ink-grid">
-    {% for i in g.inks %}
+  <div class="ink-grid" data-more-rows>
+    {% for i in s.rows %}
     {% comment %}
     Anonymous, /inks/<pk>/ is login-gated, so this whole grid used to be a wall
     of links that bounced the visitor to Google. The ink's own share token is
@@ -30,12 +30,13 @@
       <div class="ink-tile-swatch" style="--ink-bg: {{ i.swatch_bg }}; background: {{ i.swatch_bg }};"></div>
       {% if i.volume <= 5 %}<span class="ink-tile-pip">sample</span>{% endif %}
       <div class="ink-tile-label">
-        <div class="ink-tile-brand">{{ i.brand.name|highlight:filters.terms }}</div>
-        <div class="ink-tile-name">{% if i.line %}<em class="ink-tile-line">{{ i.line|highlight:filters.terms }}</em> {% endif %}{{ i.name|highlight:filters.terms }}</div>
+        <div class="ink-tile-brand">{{ i.brand.name|highlight:filters.q }}</div>
+        <div class="ink-tile-name">{% if i.line %}<em class="ink-tile-line">{{ i.line|highlight:filters.q }}</em> {% endif %}{{ i.name|highlight:filters.q }}</div>
       </div>
     </a>
     {% endfor %}
   </div>
 </section>
 {% endfor %}
+{% include "items/_more.html" %}
 </div>

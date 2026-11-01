@@ -8,7 +8,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from dpypen.items import inkindex, undo
+from dpypen.items import inkindex, listing, penindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -19,46 +19,58 @@ logger = logging.getLogger(__name__)
 
 # ----- Usages -----
 
+USAGE_ROWS = ("pen__brand", "ink__brand", "nib")
+
+
+def usage_search(request):
+    """(queryset, q): the inkings the search keeps (/usages/, /api/usages)."""
+    q = (request.GET.get("q") or "").strip()
+    return listing.search(Usage.objects.select_related(*USAGE_ROWS), q, listing.USAGE_FIELDS), q
+
+
+def usage_rows(request):
+    """(active, past, q) for /usages/, searched."""
+    qs, q = usage_search(request)
+    return qs.filter(end__isnull=True), qs.filter(end__isnull=False), q
+
+
 @login_or_guest_required
 def usages_list(request):
-    from django.core.paginator import Paginator
+    """The pens on the desk (all of them: no more than there are pens), then
+    the past inkings newest first, 50 at a time (kit §14, PYPEN-7). They were
+    40 to a numbered page; Load more suits a phone."""
+    limit, offset = listing.page_args(request)
     today = date.today()
-    active = list(
-        Usage.objects.filter(end__isnull=True)
-        .select_related("pen__brand", "ink__brand", "nib")
-        .prefetch_related("pen__photos")
-        .order_by("-begin")
-    )
-    past_qs = (
-        Usage.objects.filter(end__isnull=False)
-        .select_related("pen__brand", "ink__brand", "nib")
-        .order_by("-begin")
-    )
-    paginator = Paginator(past_qs, 40)
-    page_num = request.GET.get("page") or 1
-    page = paginator.get_page(page_num)
+    active_qs, past_qs, q = usage_rows(request)
+    more_only = listing.is_more(request)
+    active = [] if (offset or more_only) else list(
+        active_qs.prefetch_related("pen__photos").order_by("-begin", "-pk"))
+    total = past_qs.count()
+    past, _ = listing.window(past_qs.order_by("-begin", "-pk"), offset, limit)
 
     for u in active:
         u.days = (today - u.begin).days
         u.ink_hex = INK_COLOR_HEX.get(u.ink.color, "#333")
         u.ink_bg = u.ink.swatch_bg
         photos = list(u.pen.photos.all()[:1])
-        if photos:
-            p = photos[0]
-            u.photo_url = p.grid_url
-        else:
-            u.photo_url = None
-    for u in page.object_list:
+        u.photo_url = photos[0].grid_url if photos else None
+    for u in past:
         u.days = (u.end - u.begin).days
         u.ink_hex = INK_COLOR_HEX.get(u.ink.color, "#333")
         u.ink_bg = u.ink.swatch_bg
-    return render(request, "items/usages/list.html", {
+
+    partial = more_only or (request.headers.get("HX-Request") and not request.headers.get("HX-Boosted"))
+    template = "items/usages/_content.html" if partial else "items/usages/list.html"
+    return listing.vary(render(request, template, {
         "active": active,
-        "past": page.object_list,
-        "page": page,
-        "paginator": paginator,
+        "past": past,
+        # The heading opens the list; a Load more answer continues it.
+        "past_head": not more_only,
+        "total": total,
+        "query": q,
+        "more": listing.more(request, offset, limit, total),
         "nav": "usages",
-    })
+    }))
 
 
 @login_required
@@ -285,120 +297,9 @@ def pens_detail(request, pk):
 
 @login_or_guest_required
 def pens_list(request):
-    from django.db.models import Q
-    q = (request.GET.get("q") or "").strip()
-    qs = (
-        Pen.objects.select_related("brand", "rotation")
-        .prefetch_related("photos")
-    )
-    for term in q.split():
-        qs = qs.filter(
-            Q(brand__name__icontains=term) | Q(model__icontains=term)
-            | Q(finish__icontains=term) | Q(filling__icontains=term)
-        )
-    pens = list(qs.order_by("-rotation__in_use", "rotation__priority", "brand__name", "model"))
-    for p in pens:
-        photos = list(p.photos.all()[:1])
-        p.first_photo = photos[0] if photos else None
-        if p.first_photo:
-            ph = p.first_photo
-            p.list_thumb_url = ph.grid_url
-            p.list_thumb_styled = bool(ph.image_styled)
-        else:
-            p.list_thumb_url = None
-            p.list_thumb_styled = False
-
-    groups: dict[str, dict] = {}
-    # `chip` is the filter-bar label, `title` the section heading. The bar is
-    # horizontal and lives on a 390px phone, where "Priority 0" spent ten
-    # characters saying what one says.
-    def bucket(key, title, subtitle="", chip=None):
-        if key not in groups:
-            groups[key] = {"key": key, "title": title, "subtitle": subtitle,
-                           "chip": chip or title, "pens": []}
-        return groups[key]
-
-    for p in pens:
-        r = p.rotation
-        if not r.in_use:
-            bucket("defunct", "Defunct / sold", chip="Defunct")["pens"].append(p)
-        elif r.whos == "Tomek" and r.priority in (0, 1, 2, 3):
-            bucket(f"p{r.priority}", f"Priority {r.priority}",
-                   f"~every {r.how_often} days", chip=str(r.priority))["pens"].append(p)
-        else:
-            bucket("other", "Other active", r.whos, chip="Other")["pens"].append(p)
-
-    ordered = []
-    for k in ("p0", "p1", "p2", "p3", "other", "defunct"):
-        if k in groups:
-            ordered.append(groups[k])
-    groups_ordered_all = list(ordered)
-
-    view = "grid" if request.GET.get("view") == "grid" else "list"
-
-    # Rotation used to be six stacked sections you scrolled past to reach the
-    # one you wanted. It reads far better as a filter: pick a priority and the
-    # list is only that priority, with the group headings dropped entirely.
-    rot = (request.GET.get("rot") or "").strip()
-    rot_counts = {g["key"]: len(g["pens"]) for g in ordered}
-    if rot and rot in rot_counts:
-        ordered = [g for g in ordered if g["key"] == rot]
-        for g in ordered:
-            g["headless"] = True
-
-    def _url_with(**changes):
-        params = request.GET.copy()
-        for k, v in changes.items():
-            if v is None:
-                params.pop(k, None)
-            else:
-                params[k] = v
-        qs_str = params.urlencode()
-        return request.path + (("?" + qs_str) if qs_str else "")
-
-    def _view_url(target_view):
-        return _url_with(view=None if target_view == "list" else target_view)
-
-    # `rot` is only honoured when it names a real group, so a stale ?rot= from a
-    # bookmark falls back to showing everything — "All" has to light up on the
-    # same condition the filtering uses, not merely on rot being empty.
-    active_rot = rot if rot in rot_counts else ""
-    rot_filters = [{
-        "key": "",
-        "label": "All",
-        "title": "All pens",
-        "count": len(pens),
-        "url": _url_with(rot=None),
-        "on": not active_rot,
-    }]
-    for g in groups_ordered_all:
-        rot_filters.append({
-            "key": g["key"],
-            "label": g["chip"],
-            "title": g["title"],
-            "count": len(g["pens"]),
-            "url": _url_with(rot=g["key"]),
-            "on": active_rot == g["key"],
-        })
-
-    context = {
-        "pens": pens,
-        "groups": ordered,
-        "rot_filters": rot_filters,
-        "rot": rot,
-        "query": q,
-        "terms": q.split(),
-        "nav": "pens",
-        "view": view,
-        "list_url": _view_url("list"),
-        "grid_url": _view_url("grid"),
-    }
-    partial = request.headers.get("HX-Request") and not request.headers.get("HX-Boosted")
-    if partial:
-        template = "items/pens/_grid_content.html" if view == "grid" else "items/pens/_list_content.html"
-    else:
-        template = "items/pens/list.html"
-    return render(request, template, context)
+    """The pens, 50 at a time in rotation order (dpypen.items.penindex)."""
+    context = penindex.build(request)
+    return listing.vary(render(request, penindex.template_for(request, context), context))
 
 
 @login_required
@@ -678,7 +579,7 @@ def inks_list(request):
     """The ink cupboard, signed in. Shares every query and every toolbar URL
     with the public one at /pub/inks/ — see dpypen.items.inkindex."""
     context = inkindex.build(request, public=False)
-    return render(request, inkindex.template_for(request, context), context)
+    return listing.vary(render(request, inkindex.template_for(request, context), context))
 
 
 @login_required

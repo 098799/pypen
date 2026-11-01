@@ -1,57 +1,62 @@
 {% load items_extras %}
 <div id="searchResultsBody" data-listnav>
 {% if not query %}
-<p class="note">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance.</p>
+<p class="note">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance. Every word has to match; accents do not matter (“zur” finds “Zürich”).</p>
 {% endif %}
 {% if query %}
   {% if pens %}
-  <section data-listnav-group>
-    <div class="sr-count">{{ pens|length }} pen{{ pens|length|pluralize }}</div>
-    <div class="list">
+  <div data-more-host="search-pens">
+  <section data-listnav-group data-more-section data-group="pens">
+    {% if not more_only %}<div class="sr-count" data-more-head>{{ pen_more.total }} pen{{ pen_more.total|pluralize }}</div>{% endif %}
+    <div class="list" data-more-rows>
       {% for p in pens %}
       <div class="list-row pen-row thumb-row" data-listnav-item>
         <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb thumb-box">
           {% if p.thumb_url %}
-            <img src="{{ p.thumb_url }}" alt="{{ p }}">
+            <img src="{{ p.thumb_url }}" alt="{{ p }}" loading="lazy">
           {% else %}—{% endif %}
         </a>
         <div>
           <a href="{% url 'pens_detail' p.pk %}" class="plain">
-            <div class="title">{{ p.brand.name|highlight:terms }} {{ p.model|highlight:terms }}{% if p.finish %} <span class="soft">{{ p.finish|highlight:terms }}</span>{% endif %}</div>
+            <div class="title">{{ p.brand.name|highlight:query }} {{ p.model|highlight:query }}{% if p.finish %} <span class="soft">{{ p.finish|highlight:query }}</span>{% endif %}</div>
           </a>
-          <div class="meta">{{ p.filling|highlight:terms }}{% if p.rotation.priority is not None %} · priority {{ p.rotation.priority }}{% endif %}{% if not p.rotation.in_use %} · defunct{% endif %}</div>
+          <div class="meta">{{ p.filling|highlight:query }}{% if p.rotation.priority is not None %} · priority {{ p.rotation.priority }}{% endif %}{% if not p.rotation.in_use %} · defunct{% endif %} · from {{ p.obtained_from|highlight:query }}</div>
         </div>
       </div>
       {% endfor %}
     </div>
   </section>
+  {% include "items/_more.html" with more=pen_more %}
+  </div>
   {% endif %}
 
   {% if inks %}
-  <section data-listnav-group class="mt-2">
-    <div class="sr-count">{{ inks|length }} ink{{ inks|length|pluralize }}</div>
-    <div class="list">
+  <div data-more-host="search-inks"{% if pens %} class="mt-2"{% endif %}>
+  <section data-listnav-group data-more-section data-group="inks">
+    {% if not more_only %}<div class="sr-count" data-more-head>{{ ink_more.total }} ink{{ ink_more.total|pluralize }}</div>{% endif %}
+    <div class="list" data-more-rows>
       {% for i in inks %}
       <div class="list-row no-actions" data-listnav-item>
-        <span class="swatch" style="background: {{ i.hex }}"></span>
+        <span class="swatch" style="background: {{ i.bg|default:i.hex }}"></span>
         <div>
           <a href="{% url 'inks_detail' i.pk %}" class="plain">
             <div class="title">
               {% if i.volume <= 5 %}<span class="dim fs-small">(sample)</span> {% endif %}
-              {{ i.brand.name|highlight:terms }} {% if i.line %}{{ i.line|highlight:terms }} {% endif %}{{ i.name|highlight:terms }}
+              {{ i.brand.name|highlight:query }} {% if i.line %}{{ i.line|highlight:query }} {% endif %}{{ i.name|highlight:query }}
             </div>
           </a>
-          <div class="meta">{{ i.color|highlight:terms }} · {{ i.volume }}ml{% if i.used_up %} · used up{% endif %}</div>
+          <div class="meta">{{ i.color|highlight:query }} · {{ i.volume }}ml{% if i.used_up %} · used up{% endif %} · from {{ i.obtained_from|highlight:query }}</div>
         </div>
       </div>
       {% endfor %}
     </div>
   </section>
+  {% include "items/_more.html" with more=ink_more %}
+  </div>
   {% endif %}
 
   {% if not pens and not inks %}
-  <div class="sr-empty">No pen or ink matches <em>“{{ query }}”</em>.</div>
+  <div class="sr-empty">No {% if type == "pens" %}pen{% elif type == "inks" %}ink{% else %}pen or ink{% endif %} matches <em>“{{ query }}”</em>.{% if not filters.show_defunct or not filters.show_used_up or not filters.show_samples %} Defunct pens, used-up inks and samples are hidden — the chips above show them.{% endif %}</div>
   {% endif %}
 {% endif %}
 </div>
-

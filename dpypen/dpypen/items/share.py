@@ -3,7 +3,7 @@ from datetime import date
 
 from django.shortcuts import get_object_or_404, render
 
-from dpypen.items import inkindex
+from dpypen.items import inkindex, listing
 from dpypen.items.auth import public_page
 from dpypen.items.models import Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
@@ -123,7 +123,7 @@ def inks_gallery(request):
     /inks/ — the two used to be forks and the public one's toolbar had rotted
     into dead links. See dpypen.items.inkindex."""
     context = inkindex.build(request, public=True)
-    return render(request, inkindex.template_for(request, context), context)
+    return listing.vary(render(request, inkindex.template_for(request, context), context))
 
 
 @public_page

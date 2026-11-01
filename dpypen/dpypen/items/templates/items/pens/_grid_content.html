@@ -1,15 +1,17 @@
 {% load items_extras %}
-<div id="penContentBody" data-listnav>
-{% for g in groups %}
-<section data-listnav-group>
-  <div class="grid-section-head">
-    <span>{{ g.title }}</span>
-    {% if g.subtitle %}<span class="faint">·</span><span>{{ g.subtitle }}</span>{% endif %}
+<div id="penContentBody" data-listnav data-more-host="pens">
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+  {% if s.head and not headless %}
+  <div class="grid-section-head" data-more-head>
+    <span>{{ s.title }}</span>
+    {% if s.subtitle %}<span class="faint">·</span><span>{{ s.subtitle }}</span>{% endif %}
     <span class="faint">·</span>
-    <span>{{ g.pens|length }} pen{{ g.pens|length|pluralize }}</span>
+    <span>{{ s.count }} pen{{ s.count|pluralize }}</span>
   </div>
-  <div class="pen-grid">
-    {% for p in g.pens %}
+  {% endif %}
+  <div class="pen-grid" data-more-rows>
+    {% for p in s.rows %}
     <a href="{% url 'pens_detail' p.pk %}"
        class="pen-tile{% if not p.rotation.in_use %} defunct{% endif %}"
        data-listnav-item
@@ -26,14 +28,15 @@
         <span class="pen-tile-pip">defunct</span>
       {% endif %}
       <div class="pen-tile-label">
-        <div class="pen-tile-brand">{{ p.brand.name }}</div>
-        <div class="pen-tile-model">{{ p.model }}{% if p.finish %} <span class="pen-tile-finish">{{ p.finish }}</span>{% endif %}</div>
+        <div class="pen-tile-brand">{{ p.brand.name|highlight:query }}</div>
+        <div class="pen-tile-model">{{ p.model|highlight:query }}{% if p.finish %} <span class="pen-tile-finish">{{ p.finish|highlight:query }}</span>{% endif %}</div>
       </div>
     </a>
     {% endfor %}
   </div>
 </section>
 {% empty %}
-<div class="empty">{% if query %}Nothing here matches “{{ query }}”. <a href="{% url 'pens_list' %}">Show every pen</a>.{% else %}No pens in the bureau yet.{% if can_edit %} <a href="{% url 'pens_create' %}">Add the first one</a>.{% endif %}{% endif %}</div>
+<div class="empty">{% if query %}No pen matches “{{ query }}”. <a href="{% url 'pens_list' %}">Clear the search</a>.{% else %}No pens in the bureau yet.{% if can_edit %} <a href="{% url 'pens_create' %}">Add the first one</a>.{% endif %}{% endif %}</div>
 {% endfor %}
+{% include "items/_more.html" %}
 </div>

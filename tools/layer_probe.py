@@ -32,7 +32,7 @@ def check(name, cond):
         failures.append(name)
 
 
-def start(tmp):
+def start(tmp, src=None):
     try:
         urllib.request.urlopen(BASE + "/", timeout=1)
         sys.exit(f"port {PORT} is taken; set PROBE_PORT")
@@ -41,7 +41,7 @@ def start(tmp):
     except OSError:
         pass
     db = Path(tmp) / "db.sqlite3"
-    shutil.copy(APP / "db.sqlite3", db)
+    shutil.copy(src or APP / "db.sqlite3", db)
     (Path(tmp) / "probe_settings.py").write_text(
         "from dpypen.settings import *  # noqa\n"
         f"DATABASES['default']['NAME'] = {str(db)!r}\n"

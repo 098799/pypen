@@ -93,6 +93,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "dpypen.items.security.SecurityHeaders",
+    # A bad ?limit= or ?offset= is a 422, not a 500 (items/listing.py).
+    "dpypen.items.listing.ListErrors",
     "allauth.account.middleware.AccountMiddleware",
 ]
 

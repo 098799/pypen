@@ -39,6 +39,7 @@ page load, and it also stopped collectstatic hashing the assets at all.
 {# The photo viewer (PYPEN-1): tap a [data-zoom] photo, pinch it, walk its group. #}
 <script src="{% static 'items/js/viewer.js' %}" defer></script>
 <script src="{% static 'items/js/share.js' %}" defer></script>
+<script src="{% static 'items/js/more.js' %}" defer></script>
 <script>
 (function () {
   if ("serviceWorker" in navigator) {
@@ -315,6 +316,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
   window.__filterNav = true;
   function urlFor(key, val) {
     var p = new URLSearchParams(location.search);
+    p.delete('offset');   // a new filter or sort starts at the first row (kit §14)
     if (val) p.set(key, val); else p.delete(key);
     var qs = p.toString();
     return location.pathname + (qs ? '?' + qs : '');
@@ -370,7 +372,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     if (el.matches && el.matches('form[data-navform]')) {
       // The field supplies q; everything else in play comes from the URL.
       new URLSearchParams(location.search).forEach(function (v, k) {
-        if (k !== 'q' && !(k in e.detail.parameters)) e.detail.parameters[k] = v;
+        if (k !== 'q' && k !== 'offset' && !(k in e.detail.parameters)) e.detail.parameters[k] = v;
       });
     }
   });
@@ -771,6 +773,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     document.addEventListener("DOMContentLoaded", build);
   } else { build(); }
   document.body.addEventListener("htmx:afterSettle", build);
+  document.addEventListener("pypen:more", build);   // Load more added groups
 })();
 </script>
 <script>

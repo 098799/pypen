@@ -27,6 +27,7 @@ COPIES = {
     TPL / "_whatsnew.html": KIT / "snippets" / "whatsnew.html",
     HERE / "errors.py": KIT / "py" / "errors.py",
     HERE / "whatsnew.py": KIT / "py" / "whatsnew.py",
+    HERE / "lists.py": KIT / "py" / "lists.py",
 }
 
 NAVIGATE = {"HTTP_SEC_FETCH_MODE": "navigate", "HTTP_ACCEPT": "text/html"}

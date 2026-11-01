@@ -1,0 +1,15 @@
+{% comment %}
+Load more (kit §14, PYPEN-7): a list that grows is paged on the server, 50
+rows at a time. The link is a plain ?offset= address, so it works without
+script and as a bookmark; static/items/js/more.js fetches it instead and
+appends the rows (ignoring a double tap). Hidden while everything fits.
+`more` comes from listing.more(); `more_host` names the list when a page has
+two (/search/).
+{% endcomment %}
+{% if more.next or more.first %}
+<nav class="more-nav" data-more-nav aria-label="More rows">
+  <span class="more-count"><span data-more-start>{{ more.start }}</span>–{{ more.end }} of {{ more.total }}</span>
+  {% if more.next %}<a class="btn small more-btn" href="{{ more.next }}" data-more hx-boost="false" rel="next">Load more</a>{% endif %}
+  {% if more.first %}<a class="more-first" href="{{ more.first }}" data-more-first>From the start</a>{% endif %}
+</nav>
+{% endif %}

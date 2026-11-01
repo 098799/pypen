@@ -23,84 +23,20 @@
   {% endif %}
 </div>
 
-{% if active %}
-<section>
-  <div class="section-head">
-    <h2>On the <em>desk</em></h2>
-    <span class="aside">{{ active|length }} on duty</span>
-  </div>
-  <div class="active-usages">
-    {% for u in active %}
-    <article class="inked" style="--c: {{ u.ink_hex }}; --cbg: {{ u.ink_bg|default:u.ink_hex }};">
-      {% if u.photo_url %}<div class="pen-bg" style="background-image: url('{{ u.photo_url }}')"></div>{% endif %}
-      <span class="ribbon">inked</span>
-      <div class="brand">{{ u.pen.brand.name }}</div>
-      <div class="model"><a href="{% url 'pens_detail' u.pen.pk %}" class="plain">{{ u.pen.model }}{% if u.pen.finish %} {{ u.pen.finish }}{% endif %}</a></div>
-      <div class="nib">{{ u.nib }}</div>
-      <div class="divider"></div>
-      <div class="ink">{{ u.ink }}</div>
-      <div class="days">
-        {% if u.days == 0 %}freshly inked today{% elif u.days == 1 %}1 day on the page{% else %}{{ u.days }} days on the page{% endif %}
-      </div>
-      <div class="blot"></div>
-      {% if can_edit %}
-      <div class="card-actions">
-        <a href="{% url 'usages_edit' u.pk %}" class="icon-btn" aria-label="Edit inking" title="Edit inking">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path></svg>
-        </a>
-        <form method="post" action="{% url 'usages_end' u.pk %}" class="form-inline">
-          {% csrf_token %}
-          <button type="submit" class="icon-btn" aria-label="Mark ended" title="Mark ended">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
-          </button>
-        </form>
-      </div>
-      {% endif %}
-    </article>
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
+<div class="toolbar">
+  <form id="usageFilterForm" onsubmit="return false;" data-navform
+        hx-get="{% url 'usages_list' %}"
+        hx-trigger="input changed delay:300ms from:#usageQ, submit"
+        hx-target="#usageContentBody"
+        hx-swap="outerHTML"
+        hx-select="#usageContentBody"
+        hx-push-url="true"
+        class="toolbar-search">
+    <input type="search" id="usageQ" name="q" placeholder="Search inkings — pen, ink, nib…" value="{{ query }}"
+           autocomplete="off" aria-label="Search inkings" data-new="inkings-search">
+  </form>
+</div>
 
-<section>
-  <div class="section-head">
-    <h2>Past <em>inkings</em></h2>
-    <span class="aside">{{ paginator.count }} total · page {{ page.number }} / {{ paginator.num_pages }}</span>
-  </div>
-  {% if past %}
-  <div class="list">
-    {% for u in past %}
-    <div class="list-row">
-      <span class="swatch" style="background: {{ u.ink_bg }}"></span>
-      <div>
-        <div class="title">{{ u.pen.brand.name }} {{ u.pen.model }} · <em class="ink-soft">{{ u.ink }}</em></div>
-        <div class="meta">{{ u.begin|date:"M j, Y" }} – {{ u.end|date:"M j, Y" }} · {{ u.days }}d · {{ u.nib }}</div>
-      </div>
-      {% if can_edit %}
-      <a href="{% url 'usages_edit' u.pk %}" class="icon-btn" aria-label="Edit inking" title="Edit inking">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path></svg>
-      </a>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty">Nothing has been cleaned out yet — every inking so far is still on the desk.</div>
-  {% endif %}
-
-  {% if paginator.num_pages > 1 %}
-  <nav class="pager">
-    {% if page.has_previous %}
-    <a href="?page={{ page.previous_page_number }}" class="btn small">← Newer</a>
-    {% endif %}
-    <span class="pager-at">
-      page {{ page.number }} of {{ paginator.num_pages }}
-    </span>
-    {% if page.has_next %}
-    <a href="?page={{ page.next_page_number }}" class="btn small">Older →</a>
-    {% endif %}
-  </nav>
-  {% endif %}
-</section>
+{% include "items/usages/_content.html" %}
 
 {% endblock %}
