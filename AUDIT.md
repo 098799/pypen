@@ -1,5 +1,100 @@
 # pypen — audit
 
+## Kit adherence (PYPEN-2, 1 Nov 2026)
+
+`~/apps/kit/README.md` walked section by section against pypen. Each row:
+**ok** (conforms), **fixed** (in this pass), **own** (deliberately different,
+with the reason), **gap** (a ticket). Before this pass fleet-check `kit` knew
+four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
+
+### §1–§3: shape, fetching, auth
+
+| kit | pypen | verdict |
+|---|---|---|
+| §1 FastAPI + Jinja, `app/` layout, stdlib sqlite | Django 5 + Django ORM, `dpypen/`, gunicorn on bae | own: the app predates the kit (2020); a rewrite buys nothing |
+| §1 self-contained, no CDN | htmx and tom-select vendored, fonts self-hosted | ok |
+| §2 anything that fetches | only the AI calls (notebook import, enhance), behind the owner | ok |
+| §3 gate.py / sameorigin.py / harden.py | Google sign-in (allauth) + Django CSRF + `security.py` (no framing, CSP, nosniff, referrer) | own: the kit names pypen as the Django exception; same four headers on every answer, errors too |
+
+### §4: phone-first UI and the Fleet UX table
+
+| row | pypen | verdict |
+|---|---|---|
+| system fonts | EB Garamond / Cormorant / Inter, self-hosted | own: the paper look is the app |
+| `viewport-fit=cover`, safe area | yes, tab bar padded | ok |
+| Header (≤ 56 px, what the screen answers + freshness, ≤ 2 icons) | no app header: each page's own heading, a menu button that tucks away | gap: PYPEN-6 (with the desk bar) |
+| Bottom nav (3–5 tabs, ≥ 56 px, labels ≥ 11 px) | 5 tabs, icon + label, More | **fixed**: 54 → 56 px, labels 9.9 → 11 px |
+| Settings (grouped rows, kit settings.html) | kit copy v1.2; Look, Pens, Keyboard, Account | ok; Settings sits behind More, not as the last tab: the five slots are Desk, Inkings, Pens, Inks, More (own) |
+| Theme (kit theme.js) | kit copy; default auto | own: public site on paper, README "Theme" |
+| New version (update.html) | none: the worker takes over at install, nothing told an open page | **fixed**: kit copy, `build` against `/api/version` |
+| Toast (toast.html) | kit copy v1.2 | ok |
+| Pull to refresh (pullrefresh.html) | none: an iPhone home-screen app could not reload | **fixed**: kit copy in the shell and both walls; the walls' `overscroll-behavior: none` removed (the kit forbids it) |
+| Install nudge | Settings row only | gap: PYPEN-5 |
+| Desk (≥ 900 px, one 52 px bar) | pill nav inside the page + floating menu | gap: PYPEN-6 |
+| Keyboard (§6) | kit keys.html v1.2 | ok, see §6 |
+| Offline (sw.js) | kit copy v1.3, `where: internet` | ok |
+| 404 / errors | Django's bare "Not Found"; a boosted dead link did nothing | **fixed**, see §5.7 |
+| Icons (PNG 192 + 512 + maskable, `"id": "/"`) | SVG only; the iPhone home-screen icon was an SVG link, which iOS ignores | **fixed**: committed PNGs, PNG apple-touch-icon, `id` |
+| Names (one name) | "Grining Fountain Pens" / "Pens" / "the bureau" | gap: PYPEN-9 (Tomek names it) |
+| Between apps | a public app on bae, not in the tailnet index | n/a |
+| Dialogs & sheets (layer.js) | kit copy v1.5: menu, ⋯ panels, gantt popup, viewer | ok; the keyboard palette and `?` sheet are not layers (kit keys.html), see §6 |
+| What's new | none, though main-tier and growing | **fixed**: kit copy + whatsnew.py, `whatsnew.json` (photo viewer, pull to refresh), Settings row, palette, dot on More |
+| Login | Google sign-in (allauth) | own: gate.py is for token apps |
+
+### §5: the things that always break
+
+| kit | pypen | verdict |
+|---|---|---|
+| §5.1 soft navigation (softnav.html) | htmx `hx-boost` into `#main` | own: works, with its own hooks (filter URLs, tab state, menus); swapping it is a rewrite of every page script |
+| §5.2 overlay layering | kit layer | ok |
+| §5.3 `no-cache` on every HTML answer | only `private` on a visitor's page, nothing on the landing page | **fixed**: `no-cache` on every page (`security.py`) |
+| §5.3 hashed assets | Django's manifest storage | ok (own mechanism) |
+| §5.4 HEAD | Django answers HEAD for GET | ok (checked live) |
+| §5.5 SQLite threads | Django | ok |
+| §5.6 pictures at the size drawn (webp.py) | the pen page ships the stored 1800–2400 px JPEG | gap: already in PYPEN-3 |
+| §5.7 errors.py | — | **fixed**: kit copy for `describe()` / `wants_page()`; `items/error_pages.py` behind `handler404/403/400/500` and `CSRF_FAILURE_VIEW`: a page in the shell with Back and the desk (a stranger: the front page), JSON for a fetch, `/api/`, the JSON files and `/static/`; the 500 page needs no database; the shell swaps an error page in for a boosted link |
+
+### §6: keyboard layer
+
+`_keys.html` is the kit's KEYS-LAYER v1.2 (the current one; fleet-check
+`keys` ok). The diff against the canonical file is the CONFIG block, the SHEET
+table, the token map at the top of the style and the Django header, as §6
+allows — and two lines outside them: the palette's placeholder and the `?`
+sheet's line naming `~/apps/kit/KEYS.md` (a path shown on a public site).
+This pass added the palette entry "What's new".
+
+**The shell's scroll-lock watcher stays, changed.** The kit's keys.html
+opens its palette and `?` sheet itself (class `on`), not through kitLayer, so
+nothing else locks the page under them. It used to compute the lock from a
+list (`#kpal.on,#khelp.on,dialog.pv[open]`) and so cleared the kit's lock a
+microtask after the kit set it for any layer not on the list (PYPEN-1 had to
+add the viewer). It now counts every `dialog:modal` too: the viewer and the
+What's new log need no line, and a new modal layer cannot be forgotten. The
+real fix is the kit's (keys.html v1.3 through kitLayer, copied to five apps):
+PYPEN-8, which then removes the watcher.
+
+### §7–§14
+
+| kit | pypen | verdict |
+|---|---|---|
+| §7 units, vhost, backups | bae: `/opt/pypen`, user `pypen`, its own unit; DB in the nightly backup | own (public app on bae), REGISTRY row |
+| §8 `ship` | `deploy/deploy-code.sh`: tests gate, rsync, migrate, collectstatic | own (bae), as the kit allows |
+| §9 `/healthz` | none | own: the kit lists pypen as "Django on bae, not watched" |
+| §10 verifying | `tools/layer_probe.py`, `viewer_probe.py`, `kit_probe.py` on a DB copy | ok |
+| §11 public | HSTS, CSP, secure cookies, `limit_req`, HTML 404 (now), HEAD, `robots.txt` (noindex) | ok |
+| §12 sharp edges | tests on a throwaway DB, probes on a copy | ok |
+| §13 README | numbers, decisions | ok |
+| §14 lists | pens, inks and inkings unpaged; search by hand | gap: PYPEN-7 |
+
+### Reading taken
+
+The ticket says "fix what is cheap". Taken as: every kit snippet pypen did not
+carry and could carry unchanged (update, pull to refresh, What's new, errors),
+the small conformance numbers (tab bar, icons, `no-cache`), and the watcher.
+Not cheap, so tickets: anything that changes how the screens are laid out
+(desk bar, header, install bar), the list API, the name, and a change to a
+canonical kit file that five other apps carry.
+
 ## Security (PYPEN-4, 1 Nov 2026)
 
 The live app (pen.grining.eu, public on bae), end to end: the routes, sign-in,

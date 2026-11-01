@@ -29,7 +29,7 @@ would run) into all four full pages: `_shell`, `landing`, `pens/wall`,
 `dpypen/dpypen/items/templates/items/_settings.html` and included inside
 `#main`, so an hx-boost swap brings its style along; the page script calls
 `kitSettings.mount(main)` and `kitTheme.mount(main)` after each swap. Groups:
-Look (Theme, Install "Pens"), Keyboard (Keys, and a closed row with what
+Look (Theme, Install "Pens"), Pens (What's new), Keyboard (Keys, and a closed row with what
 "m only" is for), Account (Admin, Sign out) — or Visiting (Leave) for a guest.
 `app.css` maps the kit's colour names onto the paper (`.kit-set`).
 
@@ -48,15 +48,46 @@ lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
 - **Markup only**: a page marks a photo `data-zoom` and its group
   `data-zoom-group` / `data-zoom-item`; the header of `viewer.js` has the rest.
   No page script, so an hx-boost swap needs nothing.
-- **A kit layer** (`kitLayer.open`, a `<dialog>`): Back closes it and never
-  leaves the page. The shell's own scroll-lock watcher lists `dialog.pv[open]`,
-  or it would clear the kit's lock a microtask later; a new locking layer goes
-  on that list too.
+- **A kit layer** (`kitLayer.open`, a modal `<dialog>`): Back closes it and
+  never leaves the page. The shell's own scroll-lock watcher (for the keyboard
+  palette and `?` sheet, which the kit's keys.html does not open through
+  kitLayer) counts any `dialog:modal` as open, so it never clears the kit's
+  lock under one; a new modal layer needs nothing there.
 - The page's own image shows at once, the stored file (up to 2400 px; new uploads ≤ 1800, `PHOTO_MAX_SIZE`)
   replaces it in place.
 - A writing sample no longer links to the fill's edit form (a guest met a
   sign-in page there); the owner gets a pencil on the tile instead.
 - Probe: `python3 tools/viewer_probe.py` (throwaway DB copy, made-up photos).
+
+## Kit pieces
+
+`AUDIT.md` "Kit adherence" walks `~/apps/kit/README.md` section by section
+(PYPEN-2). Byte copies, all in fleet-check `kit`: `_layer.js`, `_toast.html`,
+`_settings.html`, `_theme.js`, `_sw.js`, `_update.html`, `_pullrefresh.html`,
+`_whatsnew.html` (templates) and `errors.py`, `whatsnew.py` (items/).
+
+- **New version**: the worker takes over at install (`takeover`), so the
+  update toast polls `build`: the page's `kit_build` (context processor
+  `pwa.build_context`) against `GET /api/version` (open, `no-store`). Both are
+  the worker's hash of the code, templates and static files.
+- **Pull to refresh**: in the shell and both walls. The walls no longer set
+  `overscroll-behavior: none` (the snippet switches the browser's pull off).
+- **What's new**: `items/whatsnew.json`, newest on top, served by
+  `pwa.whatsnew` (owner and guests, like the pages). Opened from Settings →
+  Pens → What's new and the palette (`#whatsnew`, handled in `window.__go`);
+  the dot sits on More, the desk's menu button and Settings in the menu.
+  Shots in `static/items/whatsnew/`. A `data-new` id must be in the file
+  (`tests_kit.py`).
+- **Error pages** (`items/error_pages.py`): Django's `handler404/403/400`
+  and `CSRF_FAILURE_VIEW` give `items/error.html` in the shell with Back and
+  the desk (a stranger: the front page); `/api/`, the JSON files, `/static/`,
+  `/media/` and a `fetch()` get `{"detail"}`. The 500 page needs no database
+  and no static manifest. htmx swaps no 4xx/5xx, so the shell's
+  `htmx:beforeSwap` takes these pages for a boosted navigation.
+- **Icons**: committed PNGs in `static/items/icons/` (192, 512, 512
+  maskable, 180 apple-touch), drawn from the SVGs in `pwa.py` with
+  `rsvg-convert`. iOS takes only a PNG apple-touch-icon.
+- Probe: `python3 tools/kit_probe.py` (DB copy, DEBUG off, 390×844 touch).
 
 ## Security
 
