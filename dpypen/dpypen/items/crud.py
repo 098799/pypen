@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 from dpypen.items import inkindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
-from dpypen.items.models import Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
+from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
 
 logger = logging.getLogger(__name__)
@@ -130,12 +130,31 @@ def usages_delete(request, pk):
     return redirect("usages_list")
 
 
+def _save_uploads(request, files, make):
+    """Each uploaded file through `make`; one that is not a readable photo is
+    named in a message and skipped, so the others still go in (PYPEN-4: it
+    was a 500 that lost the whole batch)."""
+    from django.contrib import messages
+
+    made, bad = [], []
+    for f in files:
+        try:
+            made.append(make(f))
+        except BadImage as exc:
+            logger.warning("upload %r is not a readable photo: %s", f.name, exc)
+            bad.append((f.name or "file")[:60])
+    if bad:
+        messages.error(request, "Not a photo this app can read, so not added: " + ", ".join(bad)
+                       + ". JPEG, PNG or WebP works.")
+    return made
+
+
 @login_required
 @require_POST
 def usages_sample_add(request, pk):
     usage = get_object_or_404(Usage, pk=pk)
-    for f in request.FILES.getlist("image"):
-        WritingSample.objects.create(usage=usage, image=f)
+    _save_uploads(request, request.FILES.getlist("image"),
+                  lambda f: WritingSample.objects.create(usage=usage, image=f))
     return redirect("usages_edit", pk=pk)
 
 
@@ -433,7 +452,7 @@ def pens_delete(request, pk):
 def pens_photo_add(request, pk):
     pen = get_object_or_404(Pen, pk=pk)
     uploaded = request.FILES.getlist("image")
-    made = [PenPhoto.objects.create(pen=pen, image=f) for f in uploaded]
+    made = _save_uploads(request, uploaded, lambda f: PenPhoto.objects.create(pen=pen, image=f))
 
     # Uploading from the capture queue polishes straight away, so a session of
     # photographing pens does not leave a second pass of "Polish with AI"
@@ -581,7 +600,14 @@ def pens_photo_rotate(request, pk, photo_pk):
     from dpypen.items.models import PHOTO_MAX_SIZE, THUMB_MAX_SIZE, JPEG_QUALITY
 
     photo = get_object_or_404(PenPhoto, pk=photo_pk, pen_id=pk)
-    degrees = int(request.POST.get("degrees", "90"))
+    # Only quarter turns: a stray value was a 500, and any other angle would
+    # leave black corners on the photo.
+    try:
+        degrees = int(request.POST.get("degrees", "90")) % 360
+    except ValueError:
+        degrees = 90
+    if degrees not in (90, 180, 270):
+        return redirect("pens_edit", pk=pk)
     for field_name, max_size in (("image", PHOTO_MAX_SIZE), ("thumbnail", THUMB_MAX_SIZE)):
         field = getattr(photo, field_name)
         if not field:
@@ -689,8 +715,8 @@ def inks_edit(request, pk):
 @require_POST
 def inks_swatch_add(request, pk):
     ink = get_object_or_404(Ink, pk=pk)
-    for f in request.FILES.getlist("image"):
-        InkSwatch.objects.create(ink=ink, image=f)
+    _save_uploads(request, request.FILES.getlist("image"),
+                  lambda f: InkSwatch.objects.create(ink=ink, image=f))
     return redirect("inks_edit", pk=pk)
 
 

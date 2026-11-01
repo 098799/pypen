@@ -519,7 +519,14 @@ share token instead — the door that is actually open.
         var days = bar.getAttribute("data-days");
         var nib = bar.getAttribute("data-nib");
         var current = bar.getAttribute("data-current") === "1";
-        metaEl.innerHTML = nib + " · " + days + " day" + (days === "1" ? "" : "s") + (current ? " · <em style='color: var(--accent);'>on the page</em>" : "");
+        // Stored text goes in as text, never as markup (PYPEN-4).
+        metaEl.textContent = nib + " · " + days + " day" + (days === "1" ? "" : "s");
+        if (current) {
+          metaEl.appendChild(document.createTextNode(" · "));
+          var on = metaEl.appendChild(document.createElement("em"));
+          on.style.color = "var(--accent)";
+          on.textContent = "on the page";
+        }
         var left = r.left + r.width / 2 - 130;
         left = Math.max(8, Math.min(window.innerWidth - 270, left));
         tip.style.left = left + "px";

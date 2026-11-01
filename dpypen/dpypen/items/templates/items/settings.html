@@ -66,7 +66,7 @@ No "p340 — all apps" row: this site is public, the tailnet index is not.
   <h2 class="kit-set-h">Visiting</h2>
   <div class="kit-set-card">
     <div class="kit-set-row"><span class="kit-set-k">Invitation<small class="kit-set-sub">You are here on an invitation{% if invite_label %} — {{ invite_label }}{% endif %}.</small></span></div>
-    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
+    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
   </div>
 </section>
 {% endif %}

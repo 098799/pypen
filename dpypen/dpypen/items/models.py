@@ -1,11 +1,12 @@
 import io
 import secrets as _secrets
+import warnings
 from datetime import date
 
 from django.core.files.base import ContentFile
 from django.db import models
 from djmoney.models.fields import MoneyField
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from dpypen.items import constants
 
@@ -26,15 +27,37 @@ JPEG_QUALITY = 85
 Image.MAX_IMAGE_PIXELS = 50_000_000
 
 
-def _process_image(source_file, max_size: int):
-    img = Image.open(source_file)
-    img = ImageOps.exif_transpose(img)
-    if img.mode not in ("RGB", "L"):
-        img = img.convert("RGB")
-    img.thumbnail((max_size, max_size), Image.LANCZOS)
+class BadImage(ValueError):
+    """An upload that is not a photo Pillow can read, or one too big to open.
+
+    Until PYPEN-4 such a file was a 500: a PDF or a HEIC picked by mistake, or
+    a crafted file. Pillow also only *warns* between MAX_IMAGE_PIXELS and twice
+    that, so the 50 MP cap above was really 100 MP; here the warning is an
+    error too.
+    """
+
+
+def _process_image(source_file, max_size: int, quality: int = JPEG_QUALITY):
+    """Any image in, a fresh JPEG out: no EXIF (no place, no camera), at most max_size px."""
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            img = Image.open(source_file)
+            img = ImageOps.exif_transpose(img)
+            if img.mode not in ("RGB", "L"):
+                img = img.convert("RGB")
+            img.thumbnail((max_size, max_size), Image.LANCZOS)
+    except (UnidentifiedImageError, Image.DecompressionBombError, Image.DecompressionBombWarning,
+            OSError, SyntaxError, ValueError) as exc:
+        raise BadImage(str(exc) or exc.__class__.__name__) from exc
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    img.save(buf, format="JPEG", quality=quality, optimize=True, progressive=True)
     return buf.getvalue()
+
+
+def normalised_jpeg(data: bytes, max_size: int = 2400) -> bytes:
+    """An upload checked and re-encoded before it leaves for an AI model."""
+    return _process_image(io.BytesIO(data), max_size, quality=88)
 
 
 class Brand(models.Model):

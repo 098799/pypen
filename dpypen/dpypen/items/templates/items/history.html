@@ -901,9 +901,17 @@
     var current = bar.getAttribute("data-current") === "1";
     popup.querySelector(".gp-pen").textContent = pen;
     popup.querySelector(".gp-ink").textContent = ink;
-    popup.querySelector(".gp-meta").innerHTML =
-      nib + "<br>" + begin + " — " + end + " · " + days + " day" + (days === "1" ? "" : "s") +
-      (current ? " · <em style='color: var(--accent);'>on the page</em>" : "");
+    // Stored text goes in as text, never as markup (PYPEN-4).
+    var meta = popup.querySelector(".gp-meta");
+    meta.textContent = nib;
+    meta.appendChild(document.createElement("br"));
+    meta.appendChild(document.createTextNode(begin + " — " + end + " · " + days + " day" + (days === "1" ? "" : "s")));
+    if (current) {
+      meta.appendChild(document.createTextNode(" · "));
+      var on = meta.appendChild(document.createElement("em"));
+      on.style.color = "var(--accent)";
+      on.textContent = "on the page";
+    }
     popup.querySelector(".gp-pen-link").href = penUrlTemplate.replace("__id__", bar.getAttribute("data-pen-id"));
     popup.querySelector(".gp-ink-link").href = inkUrlTemplate.replace("__id__", bar.getAttribute("data-ink-id"));
 

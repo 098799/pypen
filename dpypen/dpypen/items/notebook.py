@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from dpypen.items.importer import extract_from_image
-from dpypen.items.models import Ink, Nib, Pen, Usage
+from dpypen.items.models import BadImage, Ink, Nib, Pen, Usage, normalised_jpeg
 
 
 SESSION_KEY = "notebook_extractions"
@@ -23,8 +23,17 @@ def upload(request):
         if not uploaded:
             messages.error(request, "Please choose a photo.")
             return redirect("notebook_upload")
+        # The page goes to Anthropic as a fresh JPEG, never as sent: the
+        # browser's content type is only a claim, a HEIC or a 25 MB photo was
+        # turned down by the API after the wait, and the phone's EXIF (where
+        # the photo was taken) had no business leaving with it (PYPEN-4).
         try:
-            extractions = extract_from_image(uploaded.read(), media_type=uploaded.content_type or "image/jpeg")
+            page = normalised_jpeg(uploaded.read())
+        except BadImage:
+            messages.error(request, "That file is not a photo this app can read. JPEG, PNG or WebP works.")
+            return redirect("notebook_upload")
+        try:
+            extractions = extract_from_image(page, media_type="image/jpeg")
         except Exception:
             logger.exception("notebook upload: Claude vision failed")
             messages.error(request, "The page was not read — Claude did not answer. Try again, or with a sharper photo.")

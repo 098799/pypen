@@ -13,12 +13,29 @@ def _is_allowed(email: str) -> bool:
     return (email or "").strip().lower() in settings.ALLOWED_EMAILS
 
 
+def _verified_allowed(sociallogin) -> bool:
+    """An allowlisted address that Google says the account owns.
+
+    Google hands over the address with an `email_verified` flag, and an account
+    made on a non-Gmail address can carry one it never proved. The allowlist
+    alone read only the address, so such an account, given one of ours, would
+    have come in as a new superuser (PYPEN-4).
+    """
+    email = sociallogin.user.email
+    if not _is_allowed(email):
+        return False
+    return any(
+        a.verified and (a.email or "").strip().lower() == email.strip().lower()
+        for a in sociallogin.email_addresses
+    )
+
+
 class AllowlistAdapter(DefaultSocialAccountAdapter):
     def is_open_for_signup(self, request, sociallogin):
-        return _is_allowed(sociallogin.user.email)
+        return _verified_allowed(sociallogin)
 
     def pre_social_login(self, request, sociallogin):
-        if not _is_allowed(sociallogin.user.email):
+        if not _verified_allowed(sociallogin):
             raise ImmediateHttpResponse(
                 HttpResponseForbidden("Not authorised. This site is private.")
             )

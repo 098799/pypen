@@ -86,6 +86,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "dpypen.items.security.SecurityHeaders",
     "allauth.account.middleware.AccountMiddleware",
 ]
 
@@ -97,7 +98,10 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = "/accounts/google/login/"
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
-ACCOUNT_LOGOUT_ON_GET = True
+# Sign out is a POST with the CSRF token (Settings). On GET, any page on the
+# internet could sign the owner out with an <img src>; allauth now answers a
+# GET with its "Are you sure?" page.
+ACCOUNT_LOGOUT_ON_GET = False
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_METHODS = {"email"}
