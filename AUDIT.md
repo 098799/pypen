@@ -73,6 +73,25 @@ Tomek: after `gh auth login`, `gh api repos/098799/pypen/dependabot/alerts
 --jq '.[]|select(.state=="open")'` should be empty; dismiss what is left as
 "not used" if it is the archive.
 
+**Second look, 1 Nov 2026 (burn p11011140).** Still no GitHub sign-in on
+p340, p14s or bae (`gh` absent, no `~/.config/gh`). The one signal GitHub
+gives without one is the push answer: while a repository has open alerts on
+its default branch, every push prints `GitHub found N vulnerabilities on
+098799/pypen's default branch`. The push of this note printed none (the
+pass's first push printed 47). Read: no open alerts. It is a proxy, not the
+list; the `gh api` call above stays the proof.
+
+Re-checked live in the same pass, all as above: the headers (CSP,
+Permissions-Policy, HSTS, `X-Frame-Options`), gunicorn as `pypen` on
+`127.0.0.1:8000` only, `/opt/pypen/secrets` root:pypen 0640, the data
+directory 0750, `/media/` and `/media/pen_photos/` 403, signup and password
+reset 404, no debug page on a 404, nginx sets `X-Forwarded-Proto` itself on
+every location (the app trusts it for HTTPS). Walked as owner (a one-hour
+session made on bae, deleted after) at 390×844: 24 screens, all 200, no
+console error, no CSP report, nothing wider than the phone. As a stranger:
+every closed screen goes to Google, and the 13th try within the minute got
+nginx's 429.
+
 Checked and fine, nothing changed:
 
 - `/admin/` sends a stranger to Google (25 Sep); allauth's own `/accounts/login/`
