@@ -192,7 +192,7 @@ share token instead — the door that is actually open.
         {# What's new: the tag goes here, over the photo, until the first tap. #}
         <span class="pv-new" data-new-tag></span>
         {# Tap it: the viewer opens on this photo and walks the others (PYPEN-1). #}
-        {# The page draws a ~900 px copy (page_url, sized.py); the viewer opens the stored file (PYPEN-3). #}
+        {# The page draws a 1200 px WebP copy (page_url, sized.py); the viewer opens the stored file (PYPEN-3). #}
         <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}
              data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if photos.0.kind != 'other' %} · {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>
         <span class="zoom-pip" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6"/></svg></span>

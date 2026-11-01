@@ -42,7 +42,7 @@ class _Media(_Collection):
         self.enterContext(override_settings(MEDIA_ROOT=self.media, STORAGES=PLAIN_STATIC))
         _photo(Path(self.media) / "pen_photos" / "a.jpg")
         _photo(Path(self.media) / "writing_samples" / "a.jpg", (1800, 1350))
-        _photo(Path(self.media) / "ink_swatches" / "a.jpg", (1200, 1200))
+        _photo(Path(self.media) / "ink_swatches" / "a.jpg", (1500, 1500))
         self.owner_client = Client()
         self.owner_client.force_login(self.owner)
 
@@ -50,36 +50,36 @@ class _Media(_Collection):
 class SizedCopies(_Media):
     def test_copy_is_webp_at_the_edge_and_smaller(self):
         photo = PenPhoto.objects.get(pk=self.photo.pk)
-        url = sized.url(photo.image, sized.PAGE)
-        self.assertEqual(url, "/media/sized/900/pen_photos/a.webp")
-        copy = Path(self.media) / "sized" / "900" / "pen_photos" / "a.webp"
+        url = sized.url(photo.image)
+        self.assertEqual(url, "/media/sized/1200/pen_photos/a.webp")
+        copy = Path(self.media) / "sized" / "1200" / "pen_photos" / "a.webp"
         with Image.open(copy) as im:
             self.assertEqual(im.format, "WEBP")
-            self.assertEqual(max(im.size), 900)
+            self.assertEqual(max(im.size), 1200)
         self.assertLess(copy.stat().st_size, (Path(self.media) / "pen_photos" / "a.jpg").stat().st_size / 2)
 
     def test_a_missing_file_gives_the_stored_url(self):
         photo = PenPhoto.objects.get(pk=self.photo.pk)
         photo.image.name = "pen_photos/gone.jpg"
-        self.assertEqual(sized.url(photo.image, sized.PAGE), "/media/pen_photos/gone.jpg")
+        self.assertEqual(sized.url(photo.image), "/media/pen_photos/gone.jpg")
 
     def test_no_field_no_url(self):
-        self.assertIsNone(sized.url(None, sized.PAGE))
+        self.assertIsNone(sized.url(None))
 
     def test_prune_removes_only_orphans(self):
         photo = PenPhoto.objects.get(pk=self.photo.pk)
-        sized.url(photo.image, sized.PAGE)
-        orphan = Path(self.media) / "sized" / "900" / "pen_photos" / "deleted.webp"
+        sized.url(photo.image)
+        orphan = Path(self.media) / "sized" / "1200" / "pen_photos" / "deleted.webp"
         orphan.write_bytes(b"x")
         self.assertEqual(sized.prune(), 1)
         self.assertFalse(orphan.exists())
-        self.assertTrue((Path(self.media) / "sized" / "900" / "pen_photos" / "a.webp").exists())
+        self.assertTrue((Path(self.media) / "sized" / "1200" / "pen_photos" / "a.webp").exists())
 
     def test_the_deploy_command_makes_them_all(self):
         out = io.StringIO()
         call_command("sized_copies", stdout=out)
         self.assertIn("3 of 3 pictures drawn from a copy", out.getvalue())
-        for rel in ("900/pen_photos/a.webp", "600/writing_samples/a.webp", "600/ink_swatches/a.webp"):
+        for rel in ("1200/pen_photos/a.webp", "1200/writing_samples/a.webp", "1200/ink_swatches/a.webp"):
             self.assertTrue((Path(self.media) / "sized" / rel).exists(), rel)
 
 
@@ -92,16 +92,16 @@ class PagesDrawTheCopy(_Media):
     def test_pen_page_draws_the_copy_and_the_viewer_opens_the_file(self):
         html = self.html("pens_detail", self.pen.pk)
         img = re.search(r'<img id="photoImg"[^>]*>', html).group(0)
-        self.assertIn('src="/media/sized/900/pen_photos/a.webp"', img)
+        self.assertIn('src="/media/sized/1200/pen_photos/a.webp"', img)
         self.assertIn('data-zoom="/media/pen_photos/a.jpg"', img)
 
     def test_samples_and_swatches_draw_tiles(self):
         for name, args in (("pens_detail", [self.pen.pk]), ("inks_detail", [self.ink.pk])):
             html = self.html(name, *args)
-            self.assertIn('src="/media/sized/600/writing_samples/a.webp"', html, name)
+            self.assertIn('src="/media/sized/1200/writing_samples/a.webp"', html, name)
             self.assertIn('data-zoom="/media/writing_samples/a.jpg"', html, name)
         html = self.html("inks_detail", self.ink.pk)
-        self.assertIn('src="/media/sized/600/ink_swatches/a.webp"', html)
+        self.assertIn('src="/media/sized/1200/ink_swatches/a.webp"', html)
         self.assertIn('data-zoom="/media/ink_swatches/a.jpg"', html)
 
 

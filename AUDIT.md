@@ -51,7 +51,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 | §5.3 hashed assets | Django's manifest storage | ok (own mechanism) |
 | §5.4 HEAD | Django answers HEAD for GET | ok (checked live) |
 | §5.5 SQLite threads | Django | ok |
-| §5.6 pictures at the size drawn (webp.py) | the pen page ships the stored 1800–2400 px JPEG | gap: already in PYPEN-3 |
+| §5.6 pictures at the size drawn (webp.py) | the pen page ships the stored 1800–2400 px JPEG | **fixed** (PYPEN-3): kit copy, 1200 px WebP copies, README "Pictures at the size drawn" |
 | §5.7 errors.py | — | **fixed**: kit copy for `describe()` / `wants_page()`; `items/error_pages.py` behind `handler404/403/400/500` and `CSRF_FAILURE_VIEW`: a page in the shell with Back and the desk (a stranger: the front page), JSON for a fetch, `/api/`, the JSON files and `/static/`; the 500 page needs no database; the shell swaps an error page in for a boosted link |
 
 ### §6: keyboard layer
@@ -94,6 +94,24 @@ the small conformance numbers (tab bar, icons, `no-cache`), and the watcher.
 Not cheap, so tickets: anything that changes how the screens are laid out
 (desk bar, header, install bar), the list API, the name, and a change to a
 canonical kit file that five other apps carry.
+
+### Reuse pass (PYPEN-3, 1 Nov 2026)
+
+What pypen carried twice, or by hand where the kit has a piece:
+
+| what | before | now |
+|---|---|---|
+| kit `webp.py` | none; the pen page drew the stored JPEG | byte copy, in fleet-check `kit`; `sized.py` |
+| kit `theme.js` | byte copy, but fleet-check did not compare any app's copy | `theme.js` in `KIT_SNIPPET_COPIES`: 19 copies, all equal |
+| share script | pasted in the pen page, the ink page and the inks list; on a desk it wiped the list's icon button | `share.js`, once |
+| samples strip, history rows, back link | a copy in each record page; the photo editor and Settings used `.pen-back` with no style at all | `app.css` |
+| the walls | two standalone pages, same head, header, toggle, script, ~200 lines of the same CSS | `_wall.html` + `wall.css`; plus the update toast they lacked |
+| fixed `style=""` | 74 in 18 templates | 0, and a test |
+
+Every other kit snippet pypen can carry it carries (the table above). Not
+carried, by decision: `softnav.html` (§5.1 own), `gate.py` / `sameorigin.py`
+/ `harden.py` / `head.py` / `healthz.py` / `caching.py` (Django does each:
+the §1–§3, §5 and §9 rows above). `lists.py` waits for PYPEN-7 (§14).
 
 ## Security (PYPEN-4, 1 Nov 2026)
 

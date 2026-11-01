@@ -59,12 +59,54 @@ lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
   sign-in page there); the owner gets a pencil on the tile instead.
 - Probe: `python3 tools/viewer_probe.py` (throwaway DB copy, made-up photos).
 
+## Pictures at the size drawn
+
+(PYPEN-3, kit §5.6.) A page draws a WebP copy, the viewer opens the stored
+file. `items/sized.py` over the kit's `webp.py` (byte copy, KIT-WEBP):
+`sized.url(field)` gives `/media/sized/1200/<stored name>.webp`, made on first
+use and kept, or the stored file's url when no copy is smaller or the file is
+not on disk. `PenPhoto.page_url` (the pen page's photo and its thumbs' swap)
+and `tile_url` on a swatch or a writing sample use it; `full_url` /
+`shown_url` stay what the viewer opens (`data-zoom`, `data-zoom-src`).
+
+- **1200, not the ~900 the ticket guessed**: the kit's edge is CSS px × 3; the
+  frame is ~360 CSS px on a phone, up to ~560 on a desk at 2×. On the live
+  photos that is 16–29 KB against the stored 254–299 KB JPEG.
+- **Samples and swatches too**: one tile to a row on a phone, so ~360 px wide;
+  they drew the whole stored file before.
+- **Grids keep their 600 px JPEG twins** (`grid_url`): already at the size a
+  tile draws.
+- `manage.py sized_copies` (the deploy runs it as `pypen`) makes the copies
+  ahead and removes those whose photo is gone. A stored file is never
+  rewritten under its name (a turn or an edit saves a new random name), so a
+  copy never goes stale under nginx's `immutable`.
+
+## Shared page pieces
+
+(PYPEN-3.) One copy of each, so a fix lands once:
+
+- **Share** (`static/items/js/share.js`, loaded by the shell): any
+  `data-share-url` button. The phone's share sheet; on a desk the clipboard and
+  the kit toast "Link copied"; else a prompt. It listens on the document, so a
+  swapped page needs nothing.
+- **Record pages** (`app.css` "Record pages"): `.back-link`, `.history-row`,
+  `.samples-strip`, `.swatch-grid`; each detail page keeps only its own layout.
+- **Walls**: `templates/items/_wall.html` + `static/items/css/wall.css`; a
+  wall fills the blocks and keeps its tile's CSS. They get the shell's icons
+  and the kit's update toast and pull to refresh, but no shell: they stay
+  public, standalone, linked with `hx-boost="false"`.
+- **No fixed `style=""`**: a fixed look is a class in `app.css`; inline stays
+  only what the server knows per item (an ink's colour, a width in %).
+  `tests_sized.NoFixedInlineStyle` holds it.
+
 ## Kit pieces
 
 `AUDIT.md` "Kit adherence" walks `~/apps/kit/README.md` section by section
 (PYPEN-2). Byte copies, all in fleet-check `kit`: `_layer.js`, `_toast.html`,
 `_settings.html`, `_theme.js`, `_sw.js`, `_update.html`, `_pullrefresh.html`,
-`_whatsnew.html` (templates) and `errors.py`, `whatsnew.py` (items/).
+`_whatsnew.html` (templates) and `errors.py`, `whatsnew.py`, `webp.py`
+(items/). `_keys.html` is in fleet-check `keys` (stamp only: it carries its
+own CONFIG).
 
 - **New version**: the worker takes over at install (`takeover`), so the
   update toast polls `build`: the page's `kit_build` (context processor

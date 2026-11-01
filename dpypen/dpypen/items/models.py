@@ -206,12 +206,12 @@ class PenPhoto(models.Model):
 
     @property
     def page_url(self):
-        """The full image at the size the pen page draws it: a ~900 px WebP
+        """The full image at the size the pen page draws it: a 1200 px WebP
         copy (sized.py, PYPEN-3) of what `full_url` points at. The page shows
         this; the viewer opens `full_url`."""
         for f in (self.image_styled, self.image):
             if f:
-                return sized.url(f, sized.PAGE)
+                return sized.url(f)
         return self.full_url
 
     def set_styled(self, data: bytes, base: str | None = None, save: bool = True):
@@ -272,8 +272,8 @@ class _Shown:
 
     @property
     def tile_url(self):
-        """What a tile draws: a 600 px WebP copy (sized.py, PYPEN-3)."""
-        return sized.url(self.shown, sized.TILE)
+        """What a tile draws: a 1200 px WebP copy (sized.py, PYPEN-3)."""
+        return sized.url(self.shown)
 
 
 class InkSwatch(_Shown, models.Model):

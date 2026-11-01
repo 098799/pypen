@@ -20,15 +20,15 @@ class Command(BaseCommand):
         made = 0
         jobs = []
         for ph in PenPhoto.objects.all().iterator():
-            jobs.append((ph.image_styled or ph.image, sized.PAGE))
+            jobs.append(ph.image_styled or ph.image)
         for model in (WritingSample, InkSwatch):
             for s in model.objects.all().iterator():
-                jobs.append((s.image_clean or s.image, sized.TILE))
-        for field, edge in jobs:
+                jobs.append(s.image_clean or s.image)
+        for field in jobs:
             if not field:
                 continue
             try:
-                if sized.url(field, edge) != field.url:
+                if sized.url(field) != field.url:
                     made += 1
             except Exception as exc:  # one bad file must not stop the deploy
                 print(f"{field.name}: {exc}", file=sys.stderr)
