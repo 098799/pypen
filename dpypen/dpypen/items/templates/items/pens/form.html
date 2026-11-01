@@ -177,7 +177,7 @@
 
   <div class="field">
     <label for="{{ form.price.id_for_label }}">Price</label>
-    <div class="money-field" style="max-width: 420px;">{{ form.price }}</div>
+    <div class="money-field narrow">{{ form.price }}</div>
     {% if form.price.errors %}<div class="errors">{{ form.price.errors|join:" · " }}</div>{% endif %}
   </div>
 
@@ -192,7 +192,7 @@
 
   <div class="field" id="soldPriceField"{% if not form.instance.out %} hidden{% endif %}>
     <label for="{{ form.price_out.id_for_label }}">Sold-for price</label>
-    <div class="money-field" style="max-width: 420px;">{{ form.price_out }}</div>
+    <div class="money-field narrow">{{ form.price_out }}</div>
     {% if form.price_out.errors %}<div class="errors">{{ form.price_out.errors|join:" · " }}</div>{% endif %}
   </div>
 
@@ -216,7 +216,7 @@
 </form>
 
 {% if pen %}
-<section style="margin-top: 3rem;">
+<section class="mt-3">
   <div class="section-head">
     <h2><em>Photos</em></h2>
     <span class="aside">{{ photos|length }}</span>
@@ -230,27 +230,27 @@
         <img src="{{ ph.grid_url }}" alt="Photo of {{ pen }}" loading="lazy">
       </a>
       {% if not forloop.first %}
-      <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" style="display: inline;">
+      <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" class="form-inline">
         {% csrf_token %}
         <button type="submit" class="ph-btn star" title="Make primary" aria-label="Make primary">★</button>
       </form>
       {% endif %}
-      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" style="display: inline;" onsubmit="return confirm('Delete this photo?');">
+      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" class="form-inline" onsubmit="return confirm('Delete this photo?');">
         {% csrf_token %}
         <button type="submit" class="ph-btn del" title="Delete photo" aria-label="Delete photo">&times;</button>
       </form>
-      <form method="post" action="{% url 'pens_photo_rotate' pen.pk ph.pk %}" style="display: inline;">
+      <form method="post" action="{% url 'pens_photo_rotate' pen.pk ph.pk %}" class="form-inline">
         {% csrf_token %}
         <input type="hidden" name="degrees" value="90">
         <button type="submit" class="ph-btn rot" title="Rotate 90°" aria-label="Rotate 90°">↻</button>
       </form>
       {% if ph.image_styled %}
-      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" style="display: inline;" onsubmit="return confirm('Revert to original photo? The catalog shot will be discarded.');">
+      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" class="form-inline" onsubmit="return confirm('Revert to original photo? The catalog shot will be discarded.');">
         {% csrf_token %}
         <button type="submit" class="ph-btn sparkle on" title="Revert to original" aria-label="Revert to original">✨</button>
       </form>
       {% else %}
-      <form method="post" action="{% url 'pens_photo_enhance' pen.pk ph.pk %}" style="display: inline;" class="enhance-form">
+      <form method="post" action="{% url 'pens_photo_enhance' pen.pk ph.pk %}" class="form-inline enhance-form">
         {% csrf_token %}
         <button type="submit" class="ph-btn sparkle" title="Make catalog shot (AI)" aria-label="Make catalog shot">✨</button>
       </form>
@@ -279,7 +279,7 @@
       <span>Take a photo / choose</span>
       <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()">
     </label>
-    <span style="font-size: 0.78rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; align-self: center;">auto-uploads on select</span>
+    <span class="upload-hint inline">auto-uploads on select</span>
   </form>
 </section>
 {% endif %}

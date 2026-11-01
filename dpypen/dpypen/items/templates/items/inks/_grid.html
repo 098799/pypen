@@ -12,7 +12,7 @@
   <div class="grid-section-head">
     <span class="dot" style="background: {{ g.hex }};"></span>
     <span>{{ g.color }}</span>
-    <span style="opacity: 0.6;">·</span>
+    <span class="faint">·</span>
     <span>{{ g.inks|length }} bottle{{ g.inks|length|pluralize }}</span>
   </div>
   {% endif %}
@@ -31,7 +31,7 @@
       {% if i.volume <= 5 %}<span class="ink-tile-pip">sample</span>{% endif %}
       <div class="ink-tile-label">
         <div class="ink-tile-brand">{{ i.brand.name|highlight:filters.terms }}</div>
-        <div class="ink-tile-name">{% if i.line %}<em style="opacity: 0.85;">{{ i.line|highlight:filters.terms }}</em> {% endif %}{{ i.name|highlight:filters.terms }}</div>
+        <div class="ink-tile-name">{% if i.line %}<em class="ink-tile-line">{{ i.line|highlight:filters.terms }}</em> {% endif %}{{ i.name|highlight:filters.terms }}</div>
       </div>
     </a>
     {% endfor %}

@@ -104,7 +104,7 @@
   <div class="field">
     <label for="id_moi_url">Mountain of Ink link</label>
     <input type="url" name="moi_url" id="id_moi_url" value="{{ form.instance.moi_url|default:'' }}" placeholder="https://mountainofink.com/blog/…">
-    <span style="display: block; font-size: 0.75rem; color: var(--muted); font-style: italic; margin-top: 0.1rem;">Auto-matched from sitemap on import; paste or correct if needed.</span>
+    <span class="field-hint">Auto-matched from sitemap on import; paste or correct if needed.</span>
   </div>
 
   {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors|join:" · " }}</div>{% endif %}
@@ -116,7 +116,7 @@
 </form>
 
 {% if ink %}
-<section style="margin-top: 3rem;">
+<section class="mt-3">
   <div class="section-head">
     <h2>Ink <em>swatches</em></h2>
     <span class="aside">{{ swatches|length }}</span>
@@ -182,14 +182,14 @@
   </div>
   {% endif %}
 
-  <form method="post" action="{% url 'inks_swatch_add' ink.pk %}" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border: 1px dashed var(--ink-line); border-radius: 5px;">
+  <form method="post" action="{% url 'inks_swatch_add' ink.pk %}" enctype="multipart/form-data" class="upload-box">
     {% csrf_token %}
     <label class="file-pick">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       <span>Snap a swatch</span>
-      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()" style="position: absolute; inset: 0; opacity: 0; cursor: pointer;">
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()">
     </label>
-    <span style="font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; text-align: center;">photograph your swatch — ✨ Extract to clean it up.</span>
+    <span class="upload-hint">photograph your swatch — ✨ Extract to clean it up.</span>
   </form>
 </section>
 {% endif %}

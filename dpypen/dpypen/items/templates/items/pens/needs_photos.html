@@ -119,8 +119,8 @@
     {% for p in g.pens %}
     <div class="shot-row">
       <div class="who">
-        <a href="{% url 'pens_detail' p.pk %}" style="border: none; color: inherit;">
-          <div class="title">{{ p.brand.name }} {{ p.model }}{% if p.finish %} <span style="color: var(--ink-soft); font-style: italic;">{{ p.finish }}</span>{% endif %}</div>
+        <a href="{% url 'pens_detail' p.pk %}" class="plain">
+          <div class="title">{{ p.brand.name }} {{ p.model }}{% if p.finish %} <span class="soft">{{ p.finish }}</span>{% endif %}</div>
         </a>
         <div class="meta">{{ p.filling }}{% if p.obtained %} · obtained {{ p.obtained|date:"Y" }}{% endif %}</div>
       </div>

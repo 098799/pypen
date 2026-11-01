@@ -62,11 +62,11 @@
   </div>
 </div>
 
-<p style="color: var(--muted); font-style: italic; margin-top: -0.5rem;">
+<p class="page-note">
 Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-confidence rows are amber, poor matches are red. Skip any that are wrong.
 </p>
 
-<form method="post" class="form" style="max-width: none;">
+<form method="post" class="form wide">
   {% csrf_token %}
 
   {% for row in rows %}
@@ -77,7 +77,7 @@ Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-conf
       <span class="conf">{{ row.confidence|floatformat:2 }} conf</span>
     </div>
     {% if row.notes %}
-    <div style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">note: {{ row.notes }}</div>
+    <div class="row-note">note: {{ row.notes }}</div>
     {% endif %}
 
     <div class="grid-3">
@@ -110,7 +110,7 @@ Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-conf
       </div>
     </div>
 
-    <div class="grid-2" style="margin-top: 0.75rem;">
+    <div class="grid-2 mt-s">
       <div class="field">
         <label>Begin</label>
         <input type="date" name="begin_{{ idx }}" value="{{ row.begin|default:today }}">

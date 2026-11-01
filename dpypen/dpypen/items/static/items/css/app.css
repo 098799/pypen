@@ -2579,13 +2579,80 @@ a.plain, a.plain:hover { color: inherit; border: none; }
 .soft { color: var(--ink-soft); font-style: italic; }
 .dim { color: var(--muted); }
 .fs-small { font-size: 0.85em; }
-/* The muted italic line under a page's heading. */
-.page-note { color: var(--muted); font-style: italic; max-width: 42rem; margin: -0.6rem 0 1.5rem; }
-/* The small caps label of the Inter set: a counter, a hint beside a control. */
-.caps-note {
-  font-family: "Inter", sans-serif; font-size: 0.72rem; letter-spacing: 0.15em;
-  text-transform: uppercase; color: var(--muted);
-}
+.ink-soft { color: var(--ink-soft); }
+.faint { opacity: 0.6; }
+/* A muted italic line; under a page's heading, a page note. */
+.note, .page-note { color: var(--muted); font-style: italic; }
+.page-note { max-width: 42rem; margin: -0.6rem 0 1.5rem; }
+.mt-s { margin-top: 0.75rem; }
 .mt-1 { margin-top: 1.5rem; }
 .mt-2 { margin-top: 2.5rem; }
 .mt-3 { margin-top: 3rem; }
+.narrow { max-width: 420px; }
+.form.wide { max-width: none; }
+/* The word beside a label: "(optional — …)". */
+.label-aside { font-weight: normal; text-transform: none; letter-spacing: 0; color: var(--muted); font-size: 0.75rem; }
+.field-hint { display: block; font-size: 0.75rem; color: var(--muted); font-style: italic; margin-top: 0.1rem; }
+.row-note { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem; }
+.v-rule { width: 1px; height: 22px; background: var(--ink-line); margin: 0 0.3rem; }
+.pen-tile-finish { opacity: 0.78; }
+.ink-tile-line { opacity: 0.85; }
+a.moi-link, a.moi-link:hover { border: none; color: var(--accent); letter-spacing: 0.05em; }
+
+/* Adding a swatch or a writing sample: the picker (.file-pick, whose file
+   input covers it, unseen) and a line of hint under it. */
+.upload-box {
+  display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem;
+  border: 1px dashed var(--ink-line); border-radius: 5px;
+}
+.file-pick input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-hint {
+  font-size: 0.72rem; color: var(--muted); letter-spacing: 0.08em;
+  text-transform: uppercase; text-align: center;
+}
+.upload-hint.inline { font-size: 0.78rem; letter-spacing: 0.1em; text-align: left; align-self: center; }
+
+/* Search: a pen's row with a 56 px picture. */
+.list-row.thumb-row { grid-template-columns: 56px 1fr; }
+.thumb-box {
+  border-bottom: none; width: 56px; height: 56px; border-radius: 4px; overflow: hidden;
+  background: var(--paper-dark); border: 1px solid var(--ink-line);
+  display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.7rem;
+}
+.thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+a.pen-thumb { border-bottom: none; }
+
+/* Inkings: the pager under the list. */
+.pager { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
+.pager-at {
+  font-family: "Inter", sans-serif; font-size: 0.72rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); padding: 0 0.75rem;
+}
+
+/* The photo editor: messages, the AI shot's badge, the note under the actions. */
+.flash-list { margin-bottom: 1rem; }
+.photo-note { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.4rem; }
+
+/* An invite's door. */
+.invite-page { max-width: 560px; margin: 4rem auto 0; text-align: center; }
+.invite-page h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400; font-size: 2.4rem; margin-bottom: 0.4rem; }
+.invite-page .invite-lead { color: var(--muted); font-style: italic; margin-bottom: 2rem; }
+.invite-page .btn { min-width: 180px; }
+.invite-page .invite-foot { color: var(--muted); font-size: 0.8rem; margin-top: 2rem; }
+
+/* The menu: search at the top; a guest's name and Leave in the desk nav. */
+.menu-search { display: flex; gap: 0.4rem; }
+.menu-search input {
+  flex: 1 1 auto; font-family: "EB Garamond", Georgia, serif; font-size: 0.95rem;
+  padding: 0.55rem 0.8rem; border: 1px solid var(--ink-line); border-radius: 999px;
+  background: color-mix(in srgb, var(--chip-top) 80%, transparent); color: var(--ink); min-height: 40px;
+}
+.guest-tag {
+  font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--muted); padding: 0.55rem 0.9rem;
+}
+.guest-leave {
+  background: none; border: none; padding: 0.55rem 0.9rem; color: var(--accent);
+  font-family: "Inter", sans-serif; font-size: 0.78rem; letter-spacing: 0.15em;
+  text-transform: uppercase; cursor: pointer;
+}

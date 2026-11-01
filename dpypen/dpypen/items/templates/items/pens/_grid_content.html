@@ -4,8 +4,8 @@
 <section data-listnav-group>
   <div class="grid-section-head">
     <span>{{ g.title }}</span>
-    {% if g.subtitle %}<span style="opacity: 0.6;">·</span><span>{{ g.subtitle }}</span>{% endif %}
-    <span style="opacity: 0.6;">·</span>
+    {% if g.subtitle %}<span class="faint">·</span><span>{{ g.subtitle }}</span>{% endif %}
+    <span class="faint">·</span>
     <span>{{ g.pens|length }} pen{{ g.pens|length|pluralize }}</span>
   </div>
   <div class="pen-grid">
@@ -27,7 +27,7 @@
       {% endif %}
       <div class="pen-tile-label">
         <div class="pen-tile-brand">{{ p.brand.name }}</div>
-        <div class="pen-tile-model">{{ p.model }}{% if p.finish %} <span style="opacity: 0.78;">{{ p.finish }}</span>{% endif %}</div>
+        <div class="pen-tile-model">{{ p.model }}{% if p.finish %} <span class="pen-tile-finish">{{ p.finish }}</span>{% endif %}</div>
       </div>
     </a>
     {% endfor %}

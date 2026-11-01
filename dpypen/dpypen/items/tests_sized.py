@@ -152,3 +152,15 @@ class TheWallsShareOnePage(_Collection):
             for piece in ("items/css/wall.css", 'id="themeBtn"', "KIT-PULLREFRESH", "KIT-UPDATE",
                           "items/icons/apple-touch-icon.png", 'class="wall"'):
                 self.assertIn(piece, html, f"{name}: {piece}")
+
+
+class NoFixedInlineStyle(_Collection):
+    """A style="" attribute holds only what the server knows per item (a
+    colour, a width in %): a fixed look is a class in app.css (PYPEN-3)."""
+
+    def test_templates(self):
+        fixed = re.compile(r'style="[^"{]*"')
+        for t in TEMPLATES.rglob("*.html"):
+            if t.name == "_keys.html":  # the kit's keyboard layer, its own markup
+                continue
+            self.assertEqual(fixed.findall(t.read_text()), [], t.relative_to(TEMPLATES))

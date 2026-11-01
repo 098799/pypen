@@ -36,6 +36,7 @@
 }
 .frame.primary { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), var(--card-shadow); }
 .frame .label.primary { background: var(--accent); }
+.frame .label.ai { background: linear-gradient(135deg, #d4a52c, var(--accent)); }
 .frame.is-blank {
   display: flex; align-items: center; justify-content: center;
   color: var(--muted); font-style: italic;
@@ -112,7 +113,7 @@
 </div>
 
 {% if messages %}
-<div style="margin-bottom: 1rem;">
+<div class="flash-list">
   {% for m in messages %}
   <div style="padding: 0.7rem 1rem; border-radius: 4px; background: color-mix(in srgb, {% if m.tags == 'error' %}var(--accent){% else %}var(--ink){% endif %} 15%, transparent); margin-bottom: 0.4rem; font-size: 0.9rem;">{{ m }}</div>
   {% endfor %}
@@ -127,7 +128,7 @@
 
   {% if photo.image_styled %}
   <div class="frame">
-    <span class="label" style="background: linear-gradient(135deg, #d4a52c, var(--accent));">Catalog shot · AI</span>
+    <span class="label ai">Catalog shot · AI</span>
     <img src="{{ photo.image_styled.url }}" alt="AI catalog" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Catalog shot · AI">
   </div>
   {% else %}
@@ -139,7 +140,7 @@
 </div>
 
 <div class="action-bar">
-  <form method="post" action="{% url 'pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" style="display: inline;">
+  <form method="post" action="{% url 'pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" class="form-inline">
     {% csrf_token %}
     <input type="hidden" name="prompt" id="promptInput" value="">
     <button type="submit" class="btn primary">
@@ -148,26 +149,26 @@
   </form>
 
   {% if photo.image_styled %}
-  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" style="display: inline;" onsubmit="return confirm('Discard the AI catalog shot and go back to the original?');">
+  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" class="form-inline" onsubmit="return confirm('Discard the AI catalog shot and go back to the original?');">
     {% csrf_token %}
     <button type="submit" class="btn">↩ Revert to original</button>
   </form>
   {% endif %}
 
-  <form method="post" action="{% url 'pens_photo_rotate' pen.pk photo.pk %}" style="display: inline;">
+  <form method="post" action="{% url 'pens_photo_rotate' pen.pk photo.pk %}" class="form-inline">
     {% csrf_token %}
     <input type="hidden" name="degrees" value="90">
     <button type="submit" class="btn">↻ Rotate 90°</button>
   </form>
 
   {% if photo != photo.pen.photos.first %}
-  <form method="post" action="{% url 'pens_photo_primary' pen.pk photo.pk %}" style="display: inline;">
+  <form method="post" action="{% url 'pens_photo_primary' pen.pk photo.pk %}" class="form-inline">
     {% csrf_token %}
     <button type="submit" class="btn">★ Make primary</button>
   </form>
   {% endif %}
 
-  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" style="display: inline;" onsubmit="return confirm('Delete this photo entirely?');">
+  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" class="form-inline" onsubmit="return confirm('Delete this photo entirely?');">
     {% csrf_token %}
     <button type="submit" class="btn danger">Delete photo</button>
   </form>
@@ -178,7 +179,7 @@
   <a href="#" id="resetPrompt">reset to default</a>
 </div>
 <textarea class="prompt-area" id="promptEditor" spellcheck="false">{{ prompt_value }}</textarea>
-<p style="color: var(--muted); font-size: 0.82rem; font-style: italic; margin-top: 0.4rem;">
+<p class="photo-note">
   The default prompt includes the pen's brand, model, finish, filling and era so Gemini has a fighting chance to preserve the right pen. Tweak above if results drift — then hit ✨ Regenerate.
 </p>
 

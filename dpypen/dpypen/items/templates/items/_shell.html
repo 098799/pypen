@@ -158,9 +158,8 @@ document.addEventListener("htmx:beforeSwap", function (e) {
 
 <div class="menu-panel" id="menuPanel" role="menu" aria-labelledby="menuBtn">
   {% if is_owner or is_guest %}
-  <form method="get" action="{% url 'search' %}" id="menuSearchForm" style="display: flex; gap: 0.4rem;">
-    <input type="search" name="q" id="menuSearchInput" placeholder="Search…" autocomplete="off"
-           style="flex: 1 1 auto; font-family: 'EB Garamond', Georgia, serif; font-size: 0.95rem; padding: 0.55rem 0.8rem; border: 1px solid var(--ink-line); border-radius: 999px; background: color-mix(in srgb, var(--chip-top) 80%, transparent); color: var(--ink); min-height: 40px;">
+  <form method="get" action="{% url 'search' %}" id="menuSearchForm" class="menu-search">
+    <input type="search" name="q" id="menuSearchInput" placeholder="Search…" autocomplete="off">
   </form>
   <script>
     (function () {
@@ -288,8 +287,8 @@ submits it, a plain POST that the server answers with "Undone."
   {% if is_owner %}
   <a href="{% url 'notebook_upload' %}"{% if nav == 'import' %} class="active"{% endif %}>Import</a>
   {% else %}
-  <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 0.9rem;">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
-  <form method="post" action="{% url 'invite_deactivate' %}" style="display: inline; margin: 0;" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" style="background: none; border: none; padding: 0.55rem 0.9rem; color: var(--accent); font-family: 'Inter', sans-serif; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;">Leave</button></form>
+  <span class="guest-tag">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
+  <form method="post" action="{% url 'invite_deactivate' %}" class="form-inline" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" class="guest-leave">Leave</button></form>
   {% endif %}
   <button class="menu-btn menu-in-nav" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn data-whatsnew-dot>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">

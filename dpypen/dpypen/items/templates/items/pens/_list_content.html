@@ -11,7 +11,7 @@
 <div class="list">
   {% for p in g.pens %}
   <div class="list-row pen-row" data-listnav-item>
-    <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb" style="border-bottom: none;">
+    <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb">
       {% if p.list_thumb_url %}
         <img src="{{ p.list_thumb_url }}" alt="{{ p }}" loading="lazy"{% if p.list_thumb_styled %} class="styled"{% endif %}>
       {% else %}
@@ -19,8 +19,8 @@
       {% endif %}
     </a>
     <div>
-      <a href="{% url 'pens_detail' p.pk %}" style="border: none; color: inherit;">
-        <div class="title">{{ p.brand.name|highlight:terms }} {{ p.model|highlight:terms }}{% if p.finish %} <span style="color: var(--ink-soft); font-style: italic;">{{ p.finish|highlight:terms }}</span>{% endif %}</div>
+      <a href="{% url 'pens_detail' p.pk %}" class="plain">
+        <div class="title">{{ p.brand.name|highlight:terms }} {{ p.model|highlight:terms }}{% if p.finish %} <span class="soft">{{ p.finish|highlight:terms }}</span>{% endif %}</div>
       </a>
       <div class="meta">
         {{ p.filling|highlight:terms }}
