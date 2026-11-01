@@ -80,11 +80,11 @@ PYPEN-8, which then removes the watcher.
 | §7 units, vhost, backups | bae: `/opt/pypen`, user `pypen`, its own unit; DB in the nightly backup | own (public app on bae), REGISTRY row |
 | §8 `ship` | `deploy/deploy-code.sh`: tests gate, rsync, migrate, collectstatic | own (bae), as the kit allows |
 | §9 `/healthz` | none | own: the kit lists pypen as "Django on bae, not watched" |
-| §10 verifying | `tools/layer_probe.py`, `viewer_probe.py`, `kit_probe.py` on a DB copy | ok |
+| §10 verifying | `tools/layer_probe.py`, `viewer_probe.py`, `kit_probe.py`, `lists_probe.py` on a DB copy | ok |
 | §11 public | HSTS, CSP, secure cookies, `limit_req`, HTML 404 (now), HEAD, `robots.txt` (noindex) | ok |
 | §12 sharp edges | tests on a throwaway DB, probes on a copy | ok |
 | §13 README | numbers, decisions | ok |
-| §14 lists | pens, inks and inkings unpaged; search by hand | gap: PYPEN-7 |
+| §14 lists | `lists.py` byte copy (fleet-check `kit`); pens, inks, inkings, /search/ paged 50 with Load more, `/api/pens|inks|usages` in the envelope, kit words and highlighter (PYPEN-7) | ok; pages, not page numbers: no screen needs a jump |
 
 ### Reading taken
 
@@ -111,7 +111,7 @@ What pypen carried twice, or by hand where the kit has a piece:
 Every other kit snippet pypen can carry it carries (the table above). Not
 carried, by decision: `softnav.html` (§5.1 own), `gate.py` / `sameorigin.py`
 / `harden.py` / `head.py` / `healthz.py` / `caching.py` (Django does each:
-the §1–§3, §5 and §9 rows above). `lists.py` waits for PYPEN-7 (§14).
+the §1–§3, §5 and §9 rows above). `lists.py` came with PYPEN-7 (§14).
 
 ## Security (PYPEN-4, 1 Nov 2026)
 

@@ -99,13 +99,50 @@ and `tile_url` on a swatch or a writing sample use it; `full_url` /
   only what the server knows per item (an ink's colour, a width in %).
   `tests_sized.NoFixedInlineStyle` holds it.
 
+## Lists
+
+(PYPEN-7, kit §14.) Everything that grows with use comes from the server 50
+rows at a time, with **Load more** under it: `/pens/`, `/inks/` (and the
+public `/pub/inks/`), the past inkings on `/usages/`, `/search/`. The kit's
+`lists.py` (byte copy, KIT-LISTS) does the words, the accent fold, the limit
+check and the highlighter; `items/listing.py` is the Django side.
+
+- **Search**: every word must be in some field, accents fold ("zur" finds
+  "Zürich"), `%` and `_` are plain text. The fields are defined once in
+  `listing.py` (`PEN_FIELDS`, `INK_FIELDS`, `USAGE_FIELDS`) and used by the
+  pages, `/search/`, the palette and the JSON. A field through a foreign key
+  is a correlated subquery, so the WHERE stays plain. A match on where a pen
+  or ink came from shows "from …" in its row, so a row is never there for no
+  visible reason.
+- **Groups**: a pen's rotation group and an ink's colour are ordinals in SQL,
+  so paging keeps the order; the headings' and chips' counts come from one
+  grouped query over the same filter (with a search, the ink chips count what
+  matches). A page that starts inside a group gets no second heading;
+  `static/items/js/more.js` puts its rows under the group above.
+- **The desk** (inkings not ended) is not paged: there are never more than
+  there are pens. It shows on the first page only.
+- **`/search/`** shows 20 pens and 20 inks; Load more goes on with that kind
+  alone (`type=pens`). "Most used" counts the inkings (it summed their ids).
+- **JSON**: `/api/pens`, `/api/inks`, `/api/usages` (`state=active|past`),
+  owner and guests, the same parameters and code as the pages, answered as
+  `{"items", "total", "limit", "offset"}`. `?limit=` over 100, a negative or
+  a non-number offset: 422, page or JSON (`listing.ListErrors`).
+- **State in the URL**: `?q=&rot=&color=&sort=&view=&offset=`. Load more does
+  not change the address (Back and htmx's history snapshot keep the rows); a
+  link to `?offset=50` opens that page with "From the start". A new filter,
+  sort or search drops `offset`.
+- **Load more, not page numbers**: no list here is one a person jumps into the
+  middle of; the inkings had numbered pages of 40 and lose them.
+- Query count per page does not grow with the rows (`tests_lists.QueryCount`).
+- Probe: `python3 tools/lists_probe.py` (backup copy, 390×844).
+
 ## Kit pieces
 
 `AUDIT.md` "Kit adherence" walks `~/apps/kit/README.md` section by section
 (PYPEN-2). Byte copies, all in fleet-check `kit`: `_layer.js`, `_toast.html`,
 `_settings.html`, `_theme.js`, `_sw.js`, `_update.html`, `_pullrefresh.html`,
-`_whatsnew.html` (templates) and `errors.py`, `whatsnew.py`, `webp.py`
-(items/). `_keys.html` is in fleet-check `keys` (stamp only: it carries its
+`_whatsnew.html` (templates) and `errors.py`, `whatsnew.py`, `webp.py`,
+`lists.py` (items/). `_keys.html` is in fleet-check `keys` (stamp only: it carries its
 own CONFIG).
 
 - **New version**: the worker takes over at install (`takeover`), so the
