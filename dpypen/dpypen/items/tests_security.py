@@ -47,6 +47,12 @@ class AdminHasNoPasswordDoor(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
         self.assertTrue(response["Location"].startswith(settings.LOGIN_URL))
 
+    def test_allauths_own_form_takes_no_password_either(self):
+        # SOCIALACCOUNT_ONLY: /accounts/login/ offers Google and nothing else.
+        for login in ("admin", "admin@example.com"):
+            self.client.post("/accounts/login/", {"login": login, "password": "correct horse"})
+            self.assertNotIn("_auth_user_id", self.client.session, login)
+
     def test_the_admin_itself_is_still_closed(self):
         response = self.client.get("/admin/")
         self.assertEqual(response.status_code, 302)

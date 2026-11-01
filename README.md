@@ -57,3 +57,21 @@ lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
 - A writing sample no longer links to the fill's edit form (a guest met a
   sign-in page there); the owner gets a pencil on the tile instead.
 - Probe: `python3 tools/viewer_probe.py` (throwaway DB copy, made-up photos).
+
+## Security
+
+`AUDIT.md` holds the model (one owner, guests read, strangers see the door;
+photos private by a 128-bit name) and every finding with its fix and test.
+In short:
+
+- **On bae** it lives in `/opt/pypen` and runs as user `pypen`: the code and
+  the venv are root's, it writes only `/opt/pypen/data` (the DB) and
+  `/var/www/pen-media`. `deploy/pypen.service` is a copy of the unit.
+  `deploy-code.sh` installs `requirements.txt` when it changes and runs
+  `migrate` as `pypen`.
+- **Headers** (`items/security.py`): a CSP that allows inline script (why not a
+  nonce: `AUDIT.md`), Permissions-Policy, `Cache-Control: private` on every
+  signed-in or guest page, and `Clear-Site-Data` on Sign out and Leave.
+- **Uploads** go through `models._process_image`: a file Pillow cannot read is
+  named and skipped (`BadImage`), over 50 MP is refused, EXIF never survives.
+- **Tests**: `tests_security.py` (and `tests_doors.py` for every route).

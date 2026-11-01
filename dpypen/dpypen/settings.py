@@ -33,6 +33,9 @@ DEBUG = True if os.getenv("DEBUG") == "True" else False
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "pen.grining.eu"]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# nginx sends HSTS and redirects port 80 (the pen.grining.eu vhost on bae), so
+# `check --deploy` need not ask Django to do it as well.
+SILENCED_SYSTEM_CHECKS = ["security.W004", "security.W008"]
 CSRF_TRUSTED_ORIGINS = ["https://pen.grining.eu"]
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -149,7 +152,9 @@ WSGI_APPLICATION = "dpypen.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        # On bae: /opt/pypen/data/db.sqlite3 (PYPEN_DB in the secrets file),
+        # owned by the service's own user, apart from the root-owned code.
+        "NAME": os.getenv("PYPEN_DB") or BASE_DIR / "db.sqlite3",
     }
 }
 

@@ -1,0 +1,55 @@
+# pypen — pen.grining.eu. Source of truth: ~/pypen on p340 (deploy/deploy-code.sh).
+# A copy for reading: the live file is /etc/systemd/system/pypen.service on bae.
+# Change both together (deploy-code.sh does not install it).
+# Since 2026-11-01 (PYPEN-4) it runs as its own user from /opt, not as root
+# from /root: the code and the venv are root-owned and read-only to it; it may
+# write only its database (/opt/pypen/data) and the photos (/var/www/pen-media).
+[Unit]
+Description=pypen Django app (gunicorn)
+After=network-online.target
+Wants=network-online.target
+ConditionHost=bae-llm
+
+[Service]
+Type=exec
+User=pypen
+Group=pypen
+SupplementaryGroups=www-data
+UMask=0022
+WorkingDirectory=/opt/pypen/dpypen
+ExecStart=/opt/pypen/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8000 \
+    --workers 3 \
+    --worker-class sync \
+    --timeout 60 \
+    --graceful-timeout 30 \
+    --access-logfile - \
+    --error-logfile - \
+    --no-control-socket \
+    dpypen.wsgi:application
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/pypen/data /var/www/pen-media
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
