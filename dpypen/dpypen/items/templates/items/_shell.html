@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>{% block title %}Grining Fountain Pens{% endblock %}</title>
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
 <meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
 {% comment %}
 The kit's overlay layer (kit README §4 "Dialogs & sheets", KIT-LAYER, a byte
@@ -22,7 +22,7 @@ copy): first, so its popstate listener runs before htmx's and the app's.
 <meta name="theme-color" content="#13161c" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pens">
+<meta name="apple-mobile-web-app-title" content="{{ app_name }}">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 {% comment %}
 Vendored, not fetched from unpkg. A private collection should not tell a CDN
@@ -68,7 +68,7 @@ with /api/version instead (the same hash the worker carries).
 <script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
 {% include "items/_update.html" %}
 {% comment %}
-Pull to refresh (kit README §4, KIT-PULLREFRESH, a byte copy): Pens on an
+Pull to refresh (kit README §4, KIT-PULLREFRESH, a byte copy): the app on an
 iPhone's home screen has no reload button and no browser gesture of its own.
 {% endcomment %}
 {% include "items/_pullrefresh.html" %}

@@ -1,11 +1,11 @@
 {% extends "items/_shell.html" %}
-{% block title %}Invitation · Grining Fountain Pens{% endblock %}
+{% block title %}Invitation · {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="invite-page">
   <h1>You're <em>invited</em></h1>
   <p class="invite-lead">
-    {% if code.label %}{{ code.label }} · {% endif %}read-only guest access to Tomek's fountain pen bureau.
+    {% if code.label %}{{ code.label }} · {% endif %}read-only guest access to {{ app_name }}, Tomek's fountain pen collection.
   </p>
 
   {# A full load, not an hx-boost swap: the swap replaced only #main, so a new

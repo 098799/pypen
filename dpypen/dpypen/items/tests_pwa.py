@@ -5,7 +5,7 @@ must hold is the old worker's reason for leaving them alone: the Google OAuth
 hand-off. It lives under /accounts/, which the worker never touches.
 """
 
-from django.test import Client, SimpleTestCase, override_settings
+from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import resolve
 
 from dpypen.items import pwa
@@ -53,3 +53,44 @@ class ServiceWorkerTests(SimpleTestCase):
         from pathlib import Path
         html = (Path(pwa.__file__).parent / "templates/items/settings.html").read_text()
         self.assertIn("postMessage('KIT_FORGET')", html)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class OneName(TestCase):
+    """Kit §4 Fleet UX "Names" (PYPEN-9): one name for the tile, short_name,
+    the apple title, the offline page, the keys layer and the Install row;
+    tab titles `‹page› · ‹app›`, and the home page is the name alone."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from django.contrib.auth import get_user_model
+        cls.owner = get_user_model().objects.create_user("owner", password="x", is_superuser=True)
+
+    def test_the_name(self):
+        self.assertEqual(pwa.APP_NAME, "Grining Pens")
+        self.assertLessEqual(len(pwa.APP_NAME), 12)  # a phone tile shows about 12 letters
+
+    def test_manifest_and_worker(self):
+        m = Client().get("/manifest.json").json()
+        self.assertEqual((m["name"], m["short_name"]), (pwa.APP_NAME, pwa.APP_NAME))
+        self.assertEqual(pwa.KITSW["name"], pwa.APP_NAME)
+        self.assertIn('"name": "Grining Pens"', Client().get("/sw.js").content.decode())
+
+    def test_every_screen_says_it_the_same_way(self):
+        self.client.force_login(self.owner)
+        home = self.client.get("/dashboard/").content.decode()
+        self.assertIn("<title>Grining Pens</title>", home)
+        self.assertIn('<meta name="apple-mobile-web-app-title" content="Grining Pens">', home)
+        self.assertIn("name: 'Grining Pens',", home)  # the keyboard layer
+        self.assertIn('<span class="overline">Grining Pens</span>', home)
+        self.assertIn("<title>Pens · Grining Pens</title>", self.client.get("/pens/").content.decode())
+        self.assertIn("<title>Settings · Grining Pens</title>", self.client.get("/settings/").content.decode())
+        for url in ("/dashboard/", "/pens/", "/inks/", "/usages/", "/history/", "/records/", "/settings/"):
+            html = self.client.get(url).content.decode()
+            self.assertNotIn("Grining Fountain Pens", html, url)
+            self.assertNotIn("the bureau'", html, url)
+
+    def test_the_front_door(self):
+        html = Client().get("/").content.decode()
+        self.assertIn("<title>Grining Pens</title>", html)
+        self.assertIn("Grining <em>Pens</em>", html)

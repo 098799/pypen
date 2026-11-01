@@ -5,6 +5,21 @@
 What it is, where it runs and how it deploys: its row in `~/apps/REGISTRY.md`.
 The agent notes for this repo are in `CLAUDE.md`.
 
+## Name
+
+One name, **Grining Pens** (kit §4 Fleet UX "Names", PYPEN-9): `pwa.APP_NAME`,
+which the context processor hands every template as `app_name`. It is the
+manifest's `name` and `short_name`, the apple title, the worker's offline page,
+the keyboard layer's `name`, the Install row and the Settings group of the app's
+own rows. Tab titles are `‹page› · Grining Pens`; the desk (the home screen) and
+the front door are `Grining Pens` alone. Tomek left the choice to the agent:
+"Pens" alone was thin in a public browser tab and gave "Pens · Pens" on /pens/,
+"Grining Fountain Pens" (21 letters) was cut on a phone tile, which shows about
+12. "Bureau" stays as a word in the prose ("No pens in the bureau yet",
+"Wander the bureau"); it is not the app's name. A phone that installed the app
+before keeps the old tile label until the app is added again (iOS) or Chrome
+refreshes the manifest (Android, within a day or so).
+
 ## Theme
 
 The kit's `theme.js` (stamp `KIT-THEME`), copied byte for byte to
@@ -29,7 +44,7 @@ would run) into all four full pages: `_shell`, `landing`, `pens/wall`,
 `dpypen/dpypen/items/templates/items/_settings.html` and included inside
 `#main`, so an hx-boost swap brings its style along; the page script calls
 `kitSettings.mount(main)` and `kitTheme.mount(main)` after each swap. Groups:
-Look (Theme, Install "Pens"), Pens (What's new), Keyboard (Keys, and a closed row with what
+Look (Theme, Install "Grining Pens"), Grining Pens (What's new), Keyboard (Keys, and a closed row with what
 "m only" is for), Account (Admin, Sign out) — or Visiting (Leave) for a guest.
 `app.css` maps the kit's colour names onto the paper (`.kit-set`).
 

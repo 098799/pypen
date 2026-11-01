@@ -35,7 +35,7 @@ four copies (toast, layer, sw, settings) + theme.js; now nine, all byte equal.
 | Offline (sw.js) | kit copy v1.3, `where: internet` | ok |
 | 404 / errors | Django's bare "Not Found"; a boosted dead link did nothing | **fixed**, see §5.7 |
 | Icons (PNG 192 + 512 + maskable, `"id": "/"`) | SVG only; the iPhone home-screen icon was an SVG link, which iOS ignores | **fixed**: committed PNGs, PNG apple-touch-icon, `id` |
-| Names (one name) | "Grining Fountain Pens" / "Pens" / "the bureau" | gap: PYPEN-9 (Tomek names it) |
+| Names (one name) | "Grining Pens" everywhere: manifest, tile, titles `‹page› · Grining Pens`, offline page, keys, Install row (`pwa.APP_NAME`) | ok: PYPEN-9 |
 | Between apps | a public app on bae, not in the tailnet index | n/a |
 | Dialogs & sheets (layer.js) | kit copy v1.5: menu, ⋯ panels, gantt popup, viewer | ok; the keyboard palette and `?` sheet are not layers (kit keys.html), see §6 |
 | What's new | none, though main-tier and growing | **fixed**: kit copy + whatsnew.py, `whatsnew.json` (photo viewer, pull to refresh), Settings row, palette, dot on More |

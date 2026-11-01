@@ -4,7 +4,7 @@ A 4xx in the app's chrome (items/error_pages.py; kit README §4 "404 /
 errors"): what happened in one sentence, and a way on. The status code is in
 small print for whoever reports it.
 {% endcomment %}
-{% block title %}{{ err.title }} · Grining Fountain Pens{% endblock %}
+{% block title %}{{ err.title }} · {{ app_name }}{% endblock %}
 {% block content %}
 <div class="page-head compact">
   <h1><em>{{ err.title }}</em></h1>

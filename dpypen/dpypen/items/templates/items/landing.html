@@ -11,8 +11,8 @@ tokens, copied down to the handful this page uses.
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Grining Fountain Pens</title>
-<meta name="description" content="A private fountain pen bureau.">
+<title>{{ app_name }}</title>
+<meta name="description" content="Tomek Grining's fountain pen collection, kept private.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="preload" as="font" type="font/woff2" crossorigin
       href="{% static 'items/fonts/cormorant-garamond-normal.woff2' %}">
@@ -127,14 +127,14 @@ footer {
 <img class="mark" src="/icon.svg" alt="" aria-hidden="true">
 
 <div>
-  <span class="overline">Tomek Grining</span>
-  <h1>The fountain pen <em>bureau</em></h1>
+  <span class="overline">Tomek Grining's fountain pens</span>
+  <h1>Grining <em>Pens</em></h1>
 </div>
 
 <p class="lead">A private collection, kept behind the door. Sign in, or follow an invitation.</p>
 
 {% if user.is_authenticated %}
-<a href="/dashboard/" class="btn-google"><span class="g-logo" aria-hidden="true"></span>Enter the bureau</a>
+<a href="/dashboard/" class="btn-google"><span class="g-logo" aria-hidden="true"></span>Open {{ app_name }}</a>
 {% else %}
 <a href="{% url 'google_login' %}?next=/dashboard/" class="btn-google"><span class="g-logo" aria-hidden="true"></span>Sign in with Google</a>
 {% endif %}

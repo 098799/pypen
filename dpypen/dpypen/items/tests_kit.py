@@ -153,7 +153,7 @@ class ErrorPages(TestCase):
         self.assertIn('class="tabbar"', html)
         self.assertIn("Not here", html)
         self.assertIn('href="/dashboard/"', html)
-        self.assertIn("<title>Not here · Grining Fountain Pens</title>", html)
+        self.assertIn("<title>Not here · Grining Pens</title>", html)
         self.assertEqual(r["Cache-Control"], "no-store")
         self.assertEqual(r["X-Frame-Options"], "DENY")
 

@@ -163,7 +163,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
 
   // ——— CONFIG: the only part that is app-specific ————————————————
   var CFG = {
-    name: 'the bureau',                // the app, in the hud and the help
+    name: '{{ app_name|escapejs }}',  // the app, in the hud and the help (pwa.APP_NAME)
     store: 'pypen.keys',               // localStorage key for the mode
     palette: '/api/palette?q=',        // JSON: {groups:[{type,title,items:[{t,s,u}],more?:{t,u}}]}
     searchUrl: function(q){ return '/search/?q=' + encodeURIComponent(q); },  // Enter on nothing
@@ -185,7 +185,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
       {k: 'go', t: 'Search', s: 'pens and inks', u: '/search/'},
       {k: 'go', t: 'Import', s: 'a notebook page', u: '/import/'},
       {k: 'go', t: 'Settings', s: '', u: '/settings/'},
-      {k: 'go', t: "What's new", s: 'what the bureau learned lately', u: '#whatsnew'},
+      {k: 'go', t: "What's new", s: 'new things the app can do', u: '#whatsnew'},
       {k: 'go', t: 'Keyboard shortcuts', s: 'this list of keys', u: '#help'}
     ],
     // ] and [ walk whichever list you opened an entry from
@@ -750,7 +750,7 @@ article.inked.kbd-focused,.rec.kbd-focused{
              ['; j', 'the next / previous tab: rotation, colour, view, history section'],
              ['] [', 'next / previous entry of the list you came from'],
              ['z', 'enlarge the photograph']]],
-    ['The bureau', [['m d', 'the desk'], ['m u', 'inkings'], ['m p', 'pens'],
+    ['Go to', [['m d', 'the desk'], ['m u', 'inkings'], ['m p', 'pens'],
                     ['m i', 'inks'], ['m h', 'history'], ['m r', 'records'],
                     ['m n', 'import'], ['m s', 'search']]],
     ['This page', [['y y', 'copy the address'], ['y f', 'copy a link'],

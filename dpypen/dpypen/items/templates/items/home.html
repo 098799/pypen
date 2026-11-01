@@ -1,5 +1,5 @@
 {% extends "items/_shell.html" %}
-{% block title %}Dashboard · Grining Fountain Pens{% endblock %}
+{% block title %}{{ app_name }}{% endblock %}
 {% block description %}{{ total_pens }} fountain pens, {{ total_inks }} inks, {{ total_usages }} inkings.{% endblock %}
 
 {% block extra_css %}
@@ -128,7 +128,7 @@
 {% block content %}
 
 <header class="dash-head">
-  <span class="overline">Tomek Grining &nbsp;·&nbsp; Fountain Pen Bureau</span>
+  <span class="overline">{{ app_name }}</span>
   <p class="dash-line">
     <strong>{{ current|length }}</strong> inked &middot; <strong>{{ due_count }}</strong> due
     {% if can_edit and pens_without_photos %}&middot; <a href="{% url 'pens_needs_photos' %}">{{ pens_without_photos }} unphotographed</a>{% endif %}

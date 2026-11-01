@@ -29,10 +29,16 @@ def _build() -> str:
     return h.hexdigest()[:12]
 
 
+# The app's one name (kit §4 Fleet UX "Names", PYPEN-9): the home-screen tile,
+# short_name, the apple title, every tab title `‹page› · Grining Pens`, the
+# offline page, the keyboard layer and the Install row. Short enough for a tile,
+# full enough for a public browser tab.
+APP_NAME = "Grining Pens"
+
 KITSW = {
     "app": "pypen",
     "build": _build(),
-    "name": "Pens",
+    "name": APP_NAME,
     "where": "internet",
     "colors": {
         "light": {"bg": "#f4ecd8", "fg": "#1b2a4a", "dim": "#5a4b2e", "accent": "#7a1f2b", "line": "#d6c9a5"},
@@ -113,9 +119,9 @@ def service_worker(request):
 def manifest(request):
     data = {
         "id": "/",
-        "name": "Grining Fountain Pens",
-        "short_name": "Pens",
-        "description": "Tomek's fountain-pen bureau.",
+        "name": APP_NAME,
+        "short_name": APP_NAME,
+        "description": "Tomek Grining's fountain pen collection.",
         "start_url": "/dashboard/",
         "scope": "/",
         "display": "standalone",
@@ -155,7 +161,7 @@ def build_context(request):
     The kit's update toast (_update.html) compares it with /api/version: the
     worker takes over at install (`takeover`), so no waiting worker would ever
     tell an open page about a deploy."""
-    return {"kit_build": KITSW["build"]}
+    return {"kit_build": KITSW["build"], "app_name": APP_NAME}
 
 
 def version(request):

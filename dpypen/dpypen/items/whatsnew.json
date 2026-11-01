@@ -3,7 +3,7 @@
    "use": "When you want to know when a pen last held an ink: open Inkings and type in the box at the top, for example \"custom 74 blue\". Every word must match the pen, the ink or the nib, and accents do not matter. The long lists (pens, inks, inkings) now show 50 at a time: tap Load more at the bottom for the next ones.",
    "shots": ["/static/items/whatsnew/2026-11-01-inkings-search.png"], "try": "/usages/"},
   {"id": "pull-to-refresh", "date": "2026-11-01", "title": "Pull down to reload",
-   "use": "When Pens on your phone's home screen shows something old: pull the page down from the top and let go, and it loads again. After a new version goes live, a \"New version ready\" note waits above the tab bar; tap Refresh when it suits you.",
+   "use": "When Grining Pens on your phone's home screen shows something old: pull the page down from the top and let go, and it loads again. After a new version goes live, a \"New version ready\" note waits above the tab bar; tap Refresh when it suits you.",
    "shots": ["/static/items/whatsnew/2026-11-01-pull-to-refresh.png"], "try": "/dashboard/"},
   {"id": "photo-viewer", "date": "2026-11-01", "title": "Photos open full screen",
    "use": "When you want to see a nib, a finish or a swatch up close: tap a pen's photo, an ink's swatch or a writing sample. Pinch or double-tap to zoom, drag to look around, swipe sideways for the next one, and flick down or press Back to close.",

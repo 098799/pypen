@@ -1,5 +1,5 @@
 {% extends "items/_shell.html" %}
-{% block title %}Settings · Grining Fountain Pens{% endblock %}
+{% block title %}Settings · {{ app_name }}{% endblock %}
 
 {% block content %}
 
@@ -25,12 +25,12 @@ No "p340 — all apps" row: this site is public, the tailnet index is not.
   <h2 class="kit-set-h">Look</h2>
   <div class="kit-set-card">
     <div class="kit-set-row"><span class="kit-set-k">Theme</span><div data-kit-theme></div></div>
-    <div class="kit-set-row" data-kit-install="Pens"><span class="kit-set-k">Install</span></div>
+    <div class="kit-set-row" data-kit-install="{{ app_name }}"><span class="kit-set-k">Install</span></div>
   </div>
 </section>
 
 <section class="kit-set-g">
-  <h2 class="kit-set-h">Pens</h2>
+  <h2 class="kit-set-h">{{ app_name }}</h2>
   <div class="kit-set-card">
     {# The kit's What's new log (whatsnew.json); the dot shows while it has unread entries. #}
     <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open>
