@@ -76,7 +76,32 @@ def main():
         page = ctx.new_page()
         visit(page, "/dashboard/", "desk")
         visit(page, "/usages/", "inkings")
+        page.locator("#usageQ").type("pilot blue", delay=40)
+        try:
+            page.wait_for_url("**q=pilot*", timeout=8000)
+        except Exception:
+            pass
+        page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(300)
+        check("inkings: the search is in the URL", "q=pilot" in page.url)
+        check("inkings: the words are marked", page.evaluate("document.querySelectorAll('#main mark').length") > 0)
+        page.evaluate("document.activeElement && document.activeElement.blur()")
+        shot(page, "inkings-search")
+        visit(page, "/inks/?q=diamine", "inks-search")
+        visit(page, "/api/pens?limit=1000", status=422)
         visit(page, "/pens/", "pens")
+        # PYPEN-7: 50 rows a page, Load more appends, no heading twice.
+        n_rows = "document.querySelectorAll('#main [data-listnav-item]').length"
+        n_heads = "[...document.querySelectorAll('#main [data-more-head] h3')].map(h => h.textContent)"
+        check("pens: 50 on the first page", page.evaluate(n_rows) == 50)
+        page.locator("a[data-more]").click()
+        page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(400)
+        hs = page.evaluate(n_heads)
+        check("pens: Load more appends 50", page.evaluate(n_rows) == 100)
+        check(f"pens: no heading twice {hs}", len(hs) == len(set(hs)))
+        page.evaluate("document.querySelector('.more-nav').scrollIntoView({block: 'center'})")
+        shot(page, "pens-load-more")
         pen = page.locator("#main a[href^='/pens/']").evaluate_all(
             "as => as.map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
         )
