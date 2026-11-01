@@ -127,12 +127,33 @@
 
 {% block content %}
 
-<header class="dash-head">
-  <span class="overline">{{ app_name }}</span>
-  <p class="dash-line">
-    <strong>{{ current|length }}</strong> inked &middot; <strong>{{ due_count }}</strong> due
-    {% if can_edit and pens_without_photos %}&middot; <a href="{% url 'pens_needs_photos' %}">{{ pens_without_photos }} unphotographed</a>{% endif %}
-  </p>
+{% comment %}
+The header row (kit Fleet UX "Header", PYPEN-6): the name (kit "Names"; on a
+desk the bar's brand says it, and the overline steps out), what is inked and
+due and how fresh, and two icon buttons: the pens still without a photograph,
+counted on a badge (it was a fourth clause of the line, which wrapped on a
+phone), and a new inking.
+{% endcomment %}
+<header class="dash-head page-head hrow">
+  <div class="htext">
+    <span class="overline">{{ app_name }}</span>
+    <p class="dash-line">
+      <strong>{{ current|length }}</strong> inked &middot; <strong>{{ due_count }}</strong> due{% if shelf.fresh %} &middot; last inked {{ shelf.fresh }}{% endif %}
+    </p>
+  </div>
+  {% if can_edit %}
+  <div class="actions">
+    {% if pens_without_photos %}
+    <a href="{% url 'pens_needs_photos' %}" class="icon-btn" aria-label="{{ pens_without_photos }} pens need a photograph" title="{{ pens_without_photos }} pens need a photograph">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.2l1.2-2h8.2l1.2 2h2.2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg>
+      <span class="ib-badge" aria-hidden="true">{{ pens_without_photos }}</span>
+    </a>
+    {% endif %}
+    <a href="{% url 'usages_create' %}" class="icon-btn" data-kbd="new" aria-label="New inking" title="New inking">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </a>
+  </div>
+  {% endif %}
 </header>
 
 {% if current %}

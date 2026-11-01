@@ -21,7 +21,9 @@
    Size them here so that cannot happen. */
 .tabbar svg { width: 21px; height: 21px; display: block; }
 
-@media (max-width: 719px) {
+/* Below 900 px: a phone, or a window too narrow for the desk bar (app.css
+   "Desk bar" draws the same links as its tabs from 900 px). */
+@media (max-width: 899px) {
   .tabbar {
     position: fixed;
     left: 0; right: 0; bottom: 0;

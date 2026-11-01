@@ -3,8 +3,12 @@
 
 {% block content %}
 
-<div class="page-head">
-  <h1><em>Inkings</em></h1>
+{# The header row (kit Fleet UX "Header", PYPEN-6): two labelled verbs, not icons. #}
+<div class="page-head hrow">
+  <div class="htext">
+    <h1><em>Inkings</em></h1>
+    <p class="hstate"><b>{{ shelf.inked }}</b> inked · <b>{{ total }}</b> past{% if shelf.fresh %} · last {{ shelf.fresh }}{% endif %}</p>
+  </div>
   {% if can_edit %}
   {% comment %}
   Two ways in, and the second is easy to miss: the notebook importer reads a

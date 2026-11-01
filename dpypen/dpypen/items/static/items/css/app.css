@@ -115,7 +115,7 @@ body::before {
 html[data-theme="dark"] body::before {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
-main, header, footer, .topbar { position: relative; z-index: 1; }
+main, header, footer { position: relative; z-index: 1; }
 
 /* Every icon in the app is an inline <svg viewBox> with no width or height, so
    that each context can size it. Miss one rule and the icon does not come out
@@ -124,34 +124,6 @@ main, header, footer, .topbar { position: relative; z-index: 1; }
    so every sizing rule below still wins, and the [width] guard leaves the few
    icons that carry their own dimensions alone. */
 svg:where(:not([width])) { width: 1em; height: 1em; }
-
-/* -------- Top bar (theme toggle + user nav) -------- */
-.topbar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  padding: 0.9rem 0.9rem 0.5rem;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--paper) 90%, transparent) 0%,
-    color-mix(in srgb, var(--paper) 75%, transparent) 65%,
-    transparent 100%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  pointer-events: none;
-  transform: translateY(0);
-  opacity: 1;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.topbar > * { pointer-events: auto; }
-.topbar.tucked {
-  transform: translateY(-110%);
-  opacity: 0;
-}
-.topbar.tucked > * { pointer-events: none; }
 
 /* Corner menu button, absolute, doesn't push content */
 /* Back link on the left, menu on the right, one line. */
@@ -183,16 +155,18 @@ svg:where(:not([width])) { width: 1em; height: 1em; }
 /* Phone: this is the only hamburger on the screen (the site menu is a tab-bar
    away), so the familiar glyph is right. Desktop: the nav pill already wears a
    hamburger, and two of them on one screen would be the same door twice — so
-   the record's own actions become the quieter ellipsis. */
+   the record's own actions become the quieter ellipsis (and from 900 px they
+   are labelled buttons on the line: "Desk bar" below). */
 .detail-menu .gl-dots { display: none; }
 @media (min-width: 720px) {
   .detail-menu .gl-bars { display: none; }
   .detail-menu .gl-dots { display: block; }
 }
 
-/* An absolutely positioned box hangs off main's *padding* box, so top:0 put
-   the hamburger a whole padding-height above the first line of content — on a
-   detail page it floated above the back link instead of sitting beside it. */
+/* A stranger's menu (no tab bar): top right of the page below 900 px, the
+   desk bar's ⋯ from there. An absolutely positioned box hangs off main's
+   *padding* box, so top:0 put the hamburger a whole padding-height above the
+   first line of content — it now sits level with the page's first line. */
 .menu-corner {
   position: absolute;
   top: var(--main-pt);
@@ -250,31 +224,6 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
 .menu-btn:hover { transform: translateY(-1px); border-color: var(--accent); }
 .menu-btn svg { width: 18px; height: 18px; display: block; }
 .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* Inline version — sits inside app-nav pill on wide screens */
-.menu-btn.menu-in-nav {
-  width: auto;
-  height: auto;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  padding: 0.4rem 0.9rem;
-  margin-left: auto;
-  color: var(--muted);
-}
-.menu-btn.menu-in-nav:hover {
-  /* An icon has no baseline to underline, so it just gains ink. */
-  transform: none;
-  color: var(--ink);
-  background: none;
-  border: none;
-}
-.menu-btn.menu-in-nav svg { width: 20px; height: 20px; }
-
-/* Hide the corner floater on wide screens when the in-nav version exists */
-@media (min-width: 561px) {
-  body:has(.menu-btn.menu-in-nav) .menu-corner { display: none; }
-}
 
 .menu-panel {
   position: fixed;
@@ -553,13 +502,10 @@ section[id], .section-head { scroll-margin-top: 5.5rem; }
   text-align: right;
   white-space: nowrap;
 }
-/* Room for the floating corner hamburger — but only on the pages that still
-   have one. With the app nav (or the phone tab bar) carrying the menu, this
-   reserved a lane for a button that isn't there and left every page's own
-   actions stopping 90px short of the right margin, reading as centred rather
-   than aligned. */
-@media (min-width: 720px) {
-  body:not(:has(.app-nav)) .page-head { padding-right: 90px; }
+/* Room for a stranger's corner menu button, on the pages that have one and
+   only below 900 px (the desk bar holds it there). */
+@media (max-width: 899px) {
+  body:has(.menu-corner) :is(.page-head, .detail-bar) { padding-right: 56px; }
 }
 @media (max-width: 560px) {
   .section-head {
@@ -957,60 +903,6 @@ footer em { color: var(--ink-soft); }
   }
   .user-nav a.dashboard, .user-nav a.out-label { display: none; }
 }
-/* -------- App nav (authenticated) -------- */
-.app-nav {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.25rem;
-  margin: 0 0 2.5rem;
-  padding: 0.25rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  box-shadow: var(--plate-shadow);
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.app-nav::-webkit-scrollbar { display: none; }
-.app-nav a {
-  font-family: "Inter", sans-serif;
-  font-size: 0.78rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  border: none;
-  text-decoration: none;
-  /* background-color, not the `background` shorthand. The hover rule below
-     draws its rule as a background-image pinned to the bottom of the box, and
-     background-position and background-size are both animatable: transitioning
-     the shorthand told the browser to interpolate the position from its
-     initial 0% 0%, so the underline swooped down from the top edge of the pill
-     on every hover. Only the colour should move. */
-  transition: color 0.15s, background-color 0.15s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-@media (max-width: 560px) {
-  .app-nav a { padding: 0.5rem 0.75rem; font-size: 0.7rem; letter-spacing: 0.1em; }
-}
-/* Hover used to drop a translucent red rounded rectangle behind the label,
-   which read as a highlighter swipe in a design that otherwise speaks only in
-   hairlines and plates. It also sat awkwardly next to the active state, which
-   is a raised plate — two different colour washes, one meaning each.
-   Now: the label darkens and a rule is drawn under it, inset to the text.
-   Active stays the plate, so the two are never confused, and neither depends
-   on colour alone. */
-.app-nav a:hover {
-  color: var(--ink);
-  background:
-    linear-gradient(var(--accent), var(--accent)) no-repeat
-    50% calc(100% - 0.42rem) / calc(100% - 1.7rem) 1.5px;
-}
-
-
 /* -------- Page head -------- */
 .page-head {
   display: flex;
@@ -1890,17 +1782,14 @@ main { max-width: 1320px; padding: var(--main-pt) clamp(0.9rem, 3vw, 1.75rem) 3r
 
 /* --- 1. Phone: bottom tab bar ------------------------------------------- */
 
+/* The tab bar is the phone's (and a narrow window's) navigation below 900 px;
+   from there it is the desk bar's tabs. Clear it so the last row is never
+   trapped under it. */
+@media (max-width: 899px) {
+  body:has(.tabbar) main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+
 @media (max-width: 719px) {
-  /* The pill nav overflowed its own container here — "Inkings" onwards sat
-     off-screen with no affordance saying so. Replaced by the tab bar. */
-  .app-nav { display: none; }
-
-
-  /* Clear the bar so the last row is never trapped under it. */
-  main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
-
-  /* The floating corner menu duplicated the tab bar's More button. */
-  .menu-corner { display: none; }
 
   /* Horizontal strips scroll inside themselves, never the page. */
   .filter-bar, .view-toggle, .chips {
@@ -1924,15 +1813,6 @@ main { max-width: 1320px; padding: var(--main-pt) clamp(0.9rem, 3vw, 1.75rem) 3r
 }
 
 /* --- 2. Desk: use the width -------------------------------------------- */
-
-@media (min-width: 720px) {
-  /* Nav follows the page instead of scrolling away at the top. */
-  .app-nav {
-    position: sticky;
-    top: 0.75rem;
-    z-index: 12;
-  }
-}
 
 @media (min-width: 900px) {
   /* The single change that collapses those 12000px pages: rows flow into
@@ -2077,7 +1957,7 @@ html[data-theme="dark"] ::selection {
   outline-offset: 3px;
   border-radius: 4px;
 }
-:where(.app-nav a, .tabbar a, .tabbar button, .jumpbar a, .menu-btn,
+:where(.tabbar a, .tabbar button, .jumpbar a, .menu-btn,
        .user-nav a, .btn, .fb-toggle, .vt-btn):focus-visible {
   outline-offset: 2px;
   border-radius: 999px;
@@ -2327,7 +2207,7 @@ html[data-theme="dark"] .sort-select {
   --bad: #c0392b;
 }
 :root { --kit-toast-bottom: 12px; --kit-toast-desk-bottom: 12px; }
-@media (max-width: 719px) {
+@media (max-width: 899px) {
   :root { --kit-toast-bottom: 80px; }
 }
 
@@ -2441,7 +2321,7 @@ html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 }
 /* The update toast sits where the toast does: above the tab bar on a phone. */
 :root { --kit-update-bottom: 80px; --kit-update-desk-bottom: 12px; }
-@media (min-width: 720px) { :root { --kit-update-bottom: 12px; } }
+@media (min-width: 900px) { :root { --kit-update-bottom: 12px; } }
 
 /* The What's new dot (data-whatsnew-dot) is placed on its host's corner. */
 .wn-host { position: relative; display: inline-block; }
@@ -2658,4 +2538,209 @@ a.pen-thumb { border-bottom: none; }
   background: none; border: none; padding: 0.55rem 0.9rem; color: var(--accent);
   font-family: "Inter", sans-serif; font-size: 0.78rem; letter-spacing: 0.15em;
   text-transform: uppercase; cursor: pointer;
+}
+
+/* ---- Desk bar (kit README §4 Fleet UX "Desk", PYPEN-6) ---------------------
+   _shell.html's #hdr holds the brand, the tab bar (_tabbar.html, included
+   once), ⌕ and the popovers; static/items/js/deskbar.js adds Filter ▾ for a
+   page with a chip row. Below 900 px the header has no box: only the tab bar
+   in it shows, fixed to the bottom of the screen by tabbar.css (nothing here
+   may give #hdr a transform, filter or backdrop-filter there, or the fixed
+   bar would hang off it). */
+@media (max-width: 899px) {
+  #hdr { position: static; height: 0; margin: 0; padding: 0; border: 0; }
+  #hdr > :not(.tabbar) { display: none; }
+}
+.tabbar .desk-tab, .tabbar .gl-dots { display: none; }
+.desk-pop { display: none; }
+
+@media (min-width: 900px) {
+  :root { --hdrh: 52px; --hdr-pad: max(clamp(0.9rem, 3vw, 1.75rem), calc((100% - 1320px) / 2 + 1.75rem)); }
+  /* One bar, the paper's own colour with the hairline the page heads use.
+     Opaque rather than blurred: a blur is a backdrop-filter, and that would
+     make the bar the box the popovers' position: fixed is measured from. */
+  #hdr {
+    position: sticky; top: 0; z-index: 25;
+    height: var(--hdrh);
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0 calc(var(--hdr-pad) + 44px) 0 var(--hdr-pad);
+    background: color-mix(in srgb, var(--paper) 96%, var(--plate-top));
+    border-bottom: 1px solid var(--ink-line);
+    box-shadow: 0 8px 22px -20px #00000066;
+  }
+  .db-brand {
+    display: inline-flex; align-items: center; gap: 0.55rem; flex: none;
+    border: none; color: var(--ink); text-decoration: none; margin-right: 0.6rem;
+  }
+  .db-brand img { width: 24px; height: 24px; display: block; border-radius: 6px; }
+  .db-brand span {
+    font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.3rem;
+    font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; line-height: 1;
+  }
+  .db-brand em { font-style: italic; font-weight: 400; color: var(--accent); }
+  .db-brand:hover { color: var(--ink); border: none; }
+  .db-space { flex: 1 1 auto; min-width: 0.5rem; }
+
+  /* The tabs: the tab bar's links, in a row, lit by a rule under the label
+     (not colour alone), as the pill nav's hover rule was. */
+  #hdr .tabbar {
+    display: flex; position: static; align-self: stretch; flex: none;
+    gap: 0; padding: 0; margin: 0; background: none; border: 0; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  #hdr .tabbar a {
+    display: flex; align-items: center; height: 100%;
+    padding: 0 0.8rem; position: relative;
+    font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.15em;
+    text-transform: uppercase; white-space: nowrap;
+    color: var(--muted); border: none; text-decoration: none;
+    transition: color 0.15s, box-shadow 0.15s;
+  }
+  #hdr .tabbar a svg { display: none; }
+  #hdr .tabbar a:hover { color: var(--ink); box-shadow: inset 0 -1.5px 0 var(--ink-line); }
+  #hdr .tabbar a.active { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+  #hdr .tabbar .desk-tab { display: flex; }
+
+  /* The right side: Filter ▾, ⌕, and More as ⋯ at the end of the bar. */
+  .db-btn, #hdr .tabbar [data-menu-btn] {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; padding: 0; flex: none;
+    border: 1px solid var(--ink-line); border-radius: 6px;
+    background: none; color: var(--muted); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  /* What's new: the "new" tag hangs off ⌕'s corner, not inside 34 px */
+  .db-btn { position: relative; }
+  .db-btn .db-new { position: absolute; top: -9px; right: -14px; pointer-events: none; }
+  .db-btn .db-new .kit-new-tag { margin: 0; background: var(--paper); }
+  .db-btn svg, #hdr .tabbar [data-menu-btn] svg { width: 17px; height: 17px; display: block; }
+  .db-btn:hover, #hdr .tabbar [data-menu-btn]:hover,
+  .db-btn[aria-expanded="true"], #hdr .tabbar [data-menu-btn][aria-expanded="true"] {
+    color: var(--ink); border-color: var(--accent); background: var(--chip-top);
+  }
+  #hdr .tabbar [data-menu-btn] {
+    position: absolute; right: var(--hdr-pad); top: calc((var(--hdrh) - 34px) / 2);
+  }
+  #hdr .tabbar [data-menu-btn] .gl-bars, #hdr .tabbar [data-menu-btn] .tb-label { display: none; }
+  #hdr .tabbar [data-menu-btn] .gl-dots { display: block; }
+  #hdr .tabbar [data-menu-btn] .wn-host { display: block; }
+  .db-filter {
+    display: inline-flex; align-items: center; gap: 0.45rem; flex: 0 1 auto; min-width: 0;
+    max-width: 320px; height: 34px; padding: 0 0.75rem;
+    border: 1px solid var(--ink-line); border-radius: 6px; background: none; cursor: pointer;
+    font-family: "Inter", sans-serif; font-size: 0.68rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .db-filter b {
+    font-family: "EB Garamond", Georgia, serif; font-size: 0.95rem; font-weight: 500;
+    letter-spacing: 0; text-transform: none; color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  .db-filter b:empty { display: none; }
+  .db-filter .db-chev { font-size: 0.6rem; opacity: 0.75; }
+  /* 900–1099 px: the tabs keep their words; the brand is its mark alone and
+     Filter says less before it cuts with an ellipsis. */
+  @media (max-width: 1099px) {
+    .db-brand span { display: none; }
+    #hdr .tabbar a { padding: 0 0.6rem; }
+    .db-filter { max-width: 220px; }
+  }
+  .db-filter:hover, .db-filter[aria-expanded="true"] { color: var(--ink); border-color: var(--accent); background: var(--chip-top); }
+  .db-filter.some { border-color: color-mix(in srgb, var(--accent) 55%, var(--ink-line)); }
+
+  /* The popovers: anchored under their button, no dim, the page keeps
+     scrolling. A plate of the paper, like the menu. */
+  #hdr > .desk-pop.open {
+    display: block; position: fixed; z-index: 30;
+    min-width: 280px; max-width: min(560px, calc(100vw - 16px));
+    max-height: calc(100vh - var(--hdrh) - 24px); overflow: auto; overscroll-behavior: contain;
+    padding: 0.85rem 0.9rem 0.95rem;
+    background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+    border: 1px solid var(--ink-line); border-radius: 10px;
+    box-shadow: var(--plate-shadow), var(--card-shadow);
+  }
+  #deskSearch.open { width: 380px; }
+  #deskSearch .menu-search input { min-height: 40px; font-size: 1rem; }
+  .db-pop-head {
+    font-family: "Inter", sans-serif; font-size: 0.62rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 0.6rem;
+  }
+  /* The chips, as the page draws them, wrapped instead of scrolled. */
+  .desk-pop .db-chips {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; overflow: visible;
+    margin: 0; padding: 0; border: 0; background: none; position: static;
+  }
+  /* a button's own font and face, at no weight: each chip's class wins */
+  :where(.desk-pop .db-chips > button) { cursor: pointer; font: inherit; background: none; }
+
+  /* With the script running, the chip row the Filter button stands for, the
+     menu's links that are tabs now, and the menu's search (⌕ has it) leave
+     the page. Without it (no script) the chips stay where they are. */
+  html.desk-on #main [data-fold] { display: none; }
+  html.desk-on #menuPanel [data-tab] { display: none; }
+  html.desk-on #menuPanel > .menu-search { display: none; }
+
+  /* A stranger's corner button: the bar's ⋯ has the menu here. */
+  .menu-corner { display: none; }
+
+  /* Under the bar: the sticky group strip and anchors clear it. */
+  .jumpbar { top: var(--hdrh); }
+  section[id], .section-head, [data-listnav-group] { scroll-margin-top: calc(var(--hdrh) + 1rem); }
+
+  /* A record's verbs: labelled buttons on the line when there is room (kit
+     "Desk"), not a ⋯ that hides four words. Delete keeps its confirm. */
+  .detail-actions .overflow [data-overflow-btn] { display: none; }
+  .detail-actions .overflow-panel {
+    display: flex; position: static; gap: 0.4rem; padding: 0; min-width: 0;
+    background: none; border: none; box-shadow: none;
+  }
+  .detail-actions .overflow-panel .form-bare { display: contents; }
+  .detail-actions .overflow-panel a,
+  .detail-actions .overflow-panel button {
+    display: inline-flex; align-items: center; width: auto; min-height: 40px;
+    padding: 0.5rem 0.8rem; border: 1px solid var(--ink-line); border-radius: 3px;
+    font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-soft); white-space: nowrap;
+  }
+  .detail-actions .overflow-panel a:hover,
+  .detail-actions .overflow-panel button:hover { border-color: var(--accent); color: var(--ink); }
+  .detail-actions .overflow-panel button.danger { color: #c0392b; }
+  .detail-actions .overflow-panel button.danger:hover { border-color: #c0392b; }
+}
+
+/* ---- Header row (kit README §4 Fleet UX "Header", PYPEN-6) ------------------
+   A list screen's first row: what it answers and how fresh ("126 pens ·
+   12 inked · last inked 2 d ago"), its title above that line, at most two
+   icon buttons on the right. 56 px at most, on a phone and on a desk. */
+.page-head.hrow {
+  display: flex; align-items: center; flex-wrap: nowrap; gap: 0.75rem;
+  max-height: 56px; margin: 0 0 0.7rem; padding: 0; border: none;
+}
+.page-head.hrow .htext { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.page-head.hrow h1 { font-size: 1.75rem; line-height: 1.05; margin: 0; white-space: nowrap; }
+/* The paper's serif, as the dashboard's line: tracked capitals were a third
+   wider and cut the line on a 390 px phone. */
+.hstate, .page-head.hrow .dash-line {
+  margin: 0.15rem 0 0; font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 1.02rem; line-height: 1.25; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-variant-numeric: lining-nums proportional-nums;
+}
+.hstate b { font-weight: 500; color: var(--accent); }
+.page-head.hrow .overline { display: block; padding-bottom: 0.1rem; margin: 0; border: none; }
+.icon-btn { position: relative; }
+.ib-badge {
+  position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px;
+  padding: 0 4px; border-radius: 999px; box-sizing: border-box;
+  font-family: "Inter", sans-serif; font-size: 0.6rem; font-weight: 600; line-height: 18px;
+  text-align: center; background: var(--accent); color: var(--on-accent);
+}
+.page-head.hrow .actions { flex: none; flex-wrap: nowrap; margin-left: 0; align-items: center; }
+.page-head.hrow .actions .icon-btn { width: 36px; height: 36px; }
+.page-head.hrow .actions .icon-btn svg { width: 17px; height: 17px; }
+@media (min-width: 900px) {
+  .page-head.hrow { margin-top: 0.4rem; }
+  .page-head.hrow h1 { font-size: 2rem; }
+  /* the bar's brand names the app right above */
+  .page-head.hrow .overline { display: none; }
 }

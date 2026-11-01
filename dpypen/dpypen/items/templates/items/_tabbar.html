@@ -1,8 +1,12 @@
 {% if is_owner or is_guest %}
 {% comment %}
-Phone navigation. The pill nav overflows below ~720px, so this replaces it
-there (see tabbar.css). Five destinations is the ceiling for a thumb; History,
-Records and Import live behind More.
+Phone navigation, below 900 px (see tabbar.css). Five destinations is the
+ceiling for a thumb; History, Records and Import live behind More.
+
+On a desk (900 px and wider) static/items/js/deskbar.js moves these links into
+the desk bar (#hdr) as its tabs, with the two .desk-tab links a phone has no
+room for, and the More button to the bar's right end, where it wears ⋯ (kit
+Fleet UX "Desk": one markup, a script moves it; PYPEN-6).
 
 Included by the shell and, with no_menu=1, by the standalone wall pages, which
 carry none of the shell's chrome — no menu panel to open, so there the bar is
@@ -37,12 +41,16 @@ are most of a wall's audience, get no bar at all.
     <span>Inks</span>
   </a>
   {% if not no_menu %}
+  <a class="desk-tab{% if nav == 'history' %} active{% endif %}" href="{% url 'history' %}"{% if nav == 'history' %} aria-current="page"{% endif %}><span>History</span></a>
+  <a class="desk-tab{% if nav == 'records' %} active{% endif %}" href="{% url 'records' %}"{% if nav == 'records' %} aria-current="page"{% endif %}><span>Records</span></a>
   {# The What's new dot: Settings is behind More, so More carries it. #}
   <button type="button" aria-label="More" aria-controls="menuPanel" data-menu-btn>
-    <span class="wn-host" data-whatsnew-dot><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+    <span class="wn-host" data-whatsnew-dot><svg class="gl-bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
       <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg><svg class="gl-dots" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>
     </svg></span>
-    <span>More</span>
+    <span class="tb-label">More</span>
   </button>
   {% endif %}
 </nav>

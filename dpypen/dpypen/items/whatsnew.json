@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "desk-bar", "date": "2026-11-01", "title": "One bar on a big screen",
+   "use": "When you browse the collection on a computer: everything sits in one bar at the top. Your places are tabs (Desk, Inkings, Pens, Inks, History, Records); on Pens and Inks, Filter opens the rotation or colour chips under it; the magnifier searches pens and inks; the three dots open the menu. On a pen or an ink page its actions (Edit, Share, Delete) are buttons you can see. On a phone each list now says at the top how many there are and when you last inked a pen.",
+   "shots": ["/static/items/whatsnew/2026-11-01-desk-bar.png"], "try": "/inks/"},
   {"id": "inkings-search", "date": "2026-11-01", "title": "Search your inkings",
    "use": "When you want to know when a pen last held an ink: open Inkings and type in the box at the top, for example \"custom 74 blue\". Every word must match the pen, the ink or the nib, and accents do not matter. The long lists (pens, inks, inkings) now show 50 at a time: tap Load more at the bottom for the next ones.",
    "shots": ["/static/items/whatsnew/2026-11-01-inkings-search.png"], "try": "/usages/"},

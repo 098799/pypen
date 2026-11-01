@@ -40,6 +40,7 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <script src="{% static 'items/js/viewer.js' %}" defer></script>
 <script src="{% static 'items/js/share.js' %}" defer></script>
 <script src="{% static 'items/js/more.js' %}" defer></script>
+<script src="{% static 'items/js/deskbar.js' %}" defer></script>
 <script>
 (function () {
   if ("serviceWorker" in navigator) {
@@ -148,16 +149,39 @@ document.addEventListener("htmx:beforeSwap", function (e) {
 <a class="skip-link" href="#main">Skip to content</a>
 
 
-<div class="topbar tucked" id="topbar">
-  <span></span>
-  <button class="menu-btn" type="button" id="menuBtnFloating" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-      <path d="M4 7h16M4 12h16M4 17h16"></path>
-    </svg>
+{% comment %}
+The desk bar (kit README §4 Fleet UX "Desk", PYPEN-6). On a screen 900 px and
+wider this is one 52 px bar: the brand, the app's places as tabs, then what
+the page can do — Filter ▾, ⌕, ⋯ — on the right. The markup is the phone's,
+once: the tab bar is included here, and app.css draws it as the bar's tabs on a
+desk (its More button, wearing ⋯, at the bar's right end) and as the fixed
+bottom bar on a phone, where this header has no box of its own. No script has
+to move it, so there is no first paint without tabs. static/items/js/deskbar.js
+folds the page's chip row ([data-fold]) into the Filter button and lends the
+menu's search field to the ⌕ popover.
+{% endcomment %}
+<header class="deskbar" id="hdr">
+  <a class="db-brand" href="{% if is_owner or is_guest %}{% url 'dashboard' %}{% else %}{% url 'home' %}{% endif %}" aria-label="{{ app_name }}">
+    <img src="/icon.svg" width="24" height="24" alt="">
+    <span>Grining <em>Pens</em></span>
+  </a>
+  {% include "items/_tabbar.html" %}
+  <span class="db-space"></span>
+  {% if is_owner or is_guest %}
+  <button type="button" class="db-btn" id="deskSearchBtn" aria-label="Search" aria-haspopup="true" aria-expanded="false" aria-controls="deskSearch" data-new="desk-bar">
+    <span class="db-new" data-new-tag></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/></svg>
   </button>
-</div>
+  <div class="desk-pop" id="deskSearch" role="dialog" aria-label="Search"></div>
+  <div class="desk-pop" id="deskFilter" role="menu" aria-label="Filter"></div>
+  {% else %}
+  <button class="db-btn" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+  </button>
+  {% endif %}
+</header>
 
-<div class="menu-panel" id="menuPanel" role="menu" aria-labelledby="menuBtn">
+<div class="menu-panel" id="menuPanel" role="menu" aria-label="More">
   {% if is_owner or is_guest %}
   <form method="get" action="{% url 'search' %}" id="menuSearchForm" class="menu-search">
     <input type="search" name="q" id="menuSearchInput" placeholder="Search…" autocomplete="off">
@@ -168,10 +192,11 @@ document.addEventListener("htmx:beforeSwap", function (e) {
       var form = document.getElementById("menuSearchForm");
       if (!input || !form) return;
       var timer = null;
-      // The menu (a kit layer) goes first, its history entry with it.
+      // The layer it sits in goes first, its history entry with it: the menu
+      // on a phone, the desk bar's ⌕ popover on a desk (deskbar.js moves it).
       function search(q) {
         var go = function () { window.location.href = "/search/?q=" + encodeURIComponent(q); };
-        var panel = document.getElementById("menuPanel");
+        var panel = form.closest("#menuPanel, #deskSearch");
         if (window.kitLayer && panel && kitLayer.isOpen(panel)) kitLayer.close(panel, go); else go();
       }
       input.addEventListener("input", function () {
@@ -200,13 +225,13 @@ document.addEventListener("htmx:beforeSwap", function (e) {
   {% endcomment %}
   {% if is_owner or is_guest %}
   <nav class="menu-nav" aria-label="More">
-    <a href="{% url 'dashboard' %}" class="menu-link{% if nav == 'dashboard' %} on{% endif %}">Desk</a>
+    <a href="{% url 'dashboard' %}" class="menu-link{% if nav == 'dashboard' %} on{% endif %}" data-tab>Desk</a>
     <a href="{% url 'next_inking' %}" class="menu-link{% if nav == 'next' %} on{% endif %}">Next inking</a>
-    <a href="{% url 'history' %}" class="menu-link{% if nav == 'history' %} on{% endif %}">History</a>
-    <a href="{% url 'records' %}" class="menu-link{% if nav == 'records' %} on{% endif %}">Records</a>
-    <a href="{% url 'usages_list' %}" class="menu-link{% if nav == 'usages' %} on{% endif %}">Inkings</a>
-    <a href="{% url 'pens_list' %}" class="menu-link{% if nav == 'pens' %} on{% endif %}">Pens</a>
-    <a href="{% url 'inks_list' %}" class="menu-link{% if nav == 'inks' %} on{% endif %}">Inks</a>
+    <a href="{% url 'history' %}" class="menu-link{% if nav == 'history' %} on{% endif %}" data-tab>History</a>
+    <a href="{% url 'records' %}" class="menu-link{% if nav == 'records' %} on{% endif %}" data-tab>Records</a>
+    <a href="{% url 'usages_list' %}" class="menu-link{% if nav == 'usages' %} on{% endif %}" data-tab>Inkings</a>
+    <a href="{% url 'pens_list' %}" class="menu-link{% if nav == 'pens' %} on{% endif %}" data-tab>Pens</a>
+    <a href="{% url 'inks_list' %}" class="menu-link{% if nav == 'inks' %} on{% endif %}" data-tab>Inks</a>
     {% if is_owner %}
     <a href="{% url 'pens_needs_photos' %}" class="menu-link{% if nav == 'needs_photos' %} on{% endif %}">Needs a photo</a>
     <a href="{% url 'notebook_upload' %}" class="menu-link{% if nav == 'import' %} on{% endif %}">Import</a>
@@ -238,6 +263,13 @@ document.addEventListener("htmx:beforeSwap", function (e) {
   </nav>
   {% endif %}
 
+  {% if is_guest %}
+  {# Was in the desk's pill nav only; the phone had it in Settings alone. #}
+  <div class="menu-guest">
+    <span class="guest-tag">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
+    <form method="post" action="{% url 'invite_deactivate' %}" class="form-inline" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" class="guest-leave">Leave</button></form>
+  </div>
+  {% endif %}
   {% if is_owner or is_guest %}
   <a href="{% url 'settings' %}" class="menu-item{% if nav == 'settings' %} on{% endif %}"><span class="wn-host" data-whatsnew-dot>Settings</span></a>
   {% endif %}
@@ -272,31 +304,13 @@ submits it, a plain POST that the server answers with "Undone."
   {% endfor %}
 </div>
 {% endif %}
-<button class="menu-btn menu-corner" type="button" id="menuBtnInline" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+{% if not is_owner and not is_guest %}
+{# A stranger has no tab bar: the menu (Home, the walls, Sign in) opens from here on a phone, from the bar's ⋯ on a desk. #}
+<button class="menu-btn menu-corner" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
     <path d="M4 7h16M4 12h16M4 17h16"></path>
   </svg>
 </button>
-{% if is_owner or is_guest %}
-<nav class="app-nav" aria-label="Main">
-  <a href="{% url 'dashboard' %}"{% if nav == 'dashboard' %} class="active"{% endif %}>Dashboard</a>
-  <a href="{% url 'history' %}"{% if nav == 'history' %} class="active"{% endif %}>History</a>
-  <a href="{% url 'records' %}"{% if nav == 'records' %} class="active"{% endif %}>Records</a>
-  <a href="{% url 'usages_list' %}"{% if nav == 'usages' %} class="active"{% endif %}>Inkings</a>
-  <a href="{% url 'pens_list' %}"{% if nav == 'pens' %} class="active"{% endif %}>Pens</a>
-  <a href="{% url 'inks_list' %}"{% if nav == 'inks' %} class="active"{% endif %}>Inks</a>
-  {% if is_owner %}
-  <a href="{% url 'notebook_upload' %}"{% if nav == 'import' %} class="active"{% endif %}>Import</a>
-  {% else %}
-  <span class="guest-tag">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
-  <form method="post" action="{% url 'invite_deactivate' %}" class="form-inline" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" class="guest-leave">Leave</button></form>
-  {% endif %}
-  <button class="menu-btn menu-in-nav" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn data-whatsnew-dot>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-      <path d="M4 7h16M4 12h16M4 17h16"></path>
-    </svg>
-  </button>
-</nav>
 {% endif %}
 {% block content %}{% endblock %}
 
@@ -389,8 +403,6 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
 })();
 </script>
 </main>
-
-{% include "items/_tabbar.html" %}
 
 </div>
 
@@ -496,16 +508,13 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
 <script>
 (function () {
   var panel = document.getElementById("menuPanel");
-  var topbar = document.getElementById("topbar");
   if (!panel) return;
 
-  /* Two of the four menu buttons — the corner one and the one inside the nav
-     pill — live inside #main, which hx-boost replaces wholesale on every soft
-     navigation. Holding a NodeList from page load therefore bound the buttons
-     exactly once: the desktop menu opened on a fresh load and was dead after
-     the first navigation, because .menu-in-nav (the only one a desktop user
-     can actually press) had come back as a new element with no listener.
-     So: query at use time, and delegate the click. */
+  /* A stranger's corner button lives inside #main, which hx-boost replaces
+     wholesale on every soft navigation, and the desk bar moves the tab bar's
+     More in and out of the header. Holding a NodeList from page load bound a
+     button once and lost it at the first swap. So: query at use time, and
+     delegate the click. */
   function btns() {
     return Array.prototype.slice.call(document.querySelectorAll("[data-menu-btn]"));
   }
@@ -538,7 +547,9 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
       panel.style.bottom = (window.innerHeight - r.top + 8) + "px";
     } else {
       panel.style.bottom = "auto";
-      panel.style.top = (r.bottom + 8) + "px";
+      // under the desk bar, as its other popovers are, not over its hairline
+      var bar = anchor.closest("#hdr");
+      panel.style.top = ((bar ? bar.getBoundingClientRect().bottom - 2 : r.bottom) + 8) + "px";
     }
   }
   function openMenu(anchor) {
@@ -594,7 +605,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
      on this one and not on an open menu. A link is the kit's (v1.2 takes an
      hx-boosted link in the capture phase, before htmx's handler on it). */
   function layerOf(el) {
-    var l = el.closest("#menuPanel, .overflow-panel, #ganttPopup");
+    var l = el.closest("#menuPanel, .overflow-panel, #ganttPopup, #deskSearch, #deskFilter");
     return l && kitLayer.isOpen(l) ? l : null;
   }
   document.addEventListener("submit", function (e) {
@@ -628,21 +639,6 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
     }
   });
 
-  // Auto-hide topbar at top of page; reveal when user scrolls
-  if (topbar) {
-    var showAt = 80;
-    function updateTopbar() {
-      if (window.scrollY > showAt) {
-        topbar.classList.remove("tucked");
-      } else {
-        topbar.classList.add("tucked");
-        closeMenu();
-      }
-    }
-    window.addEventListener("scroll", updateTopbar, { passive: true });
-    updateTopbar();
-  }
-
   /* Theme and keys moved to /settings/, which binds its own controls — it
      lives inside #main and so survives an hx-boost swap, which this script,
      running once outside it, would not. */
@@ -650,7 +646,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
 </script>
 <script>
 /* The tab bar and the hamburger panel both live outside #main, which hx-boost
-   swaps, so neither gets its active state back the way .app-nav does — the
+   swaps, so neither gets its active state back from the server — the
    panel was still lighting "Pens" after you had used it to navigate to
    Records. Re-derive both from the URL after every swap.
 
@@ -821,7 +817,7 @@ window.__go = function (url, push) {
       ["#rotbar .rotchip", "on", false],
       [".filter-row a.cc", "on", true],      // a colour chip that is on clears itself
       [".history-sub-nav a", "active", false],
-      [".app-nav > a", "active", false]
+      ["#hdr .tabbar a", "active", false]      // the desk bar's tabs
     ];
     for (var i = 0; i < sets.length; i++) {
       var els = [].slice.call(document.querySelectorAll(sets[i][0]))
@@ -860,8 +856,9 @@ window.__go = function (url, push) {
       },
       peers: peers,
       header: function () {
-        var t = document.getElementById("topbar");
-        return t && !t.classList.contains("tucked") ? t.offsetHeight : 0;
+        // the desk bar sticks over the top of the page; a phone has none
+        var h = document.getElementById("hdr");
+        return h && h.offsetParent !== null ? h.offsetHeight : 0;
       }
     };
   };

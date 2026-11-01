@@ -144,6 +144,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "dpypen.items.auth.visitor_context",
                 "dpypen.items.pwa.build_context",
+                "dpypen.items.shelf.shelf_context",
             ],
         },
     },
