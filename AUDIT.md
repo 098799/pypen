@@ -65,6 +65,10 @@ pin and each `>=` floor at its floor, as Dependabot reads them:
 | now | **0** (floors raised to what bae runs) | **0** (floors raised; the old CLI is never installed) |
 
 Lesson, in `requirements.txt` too: a `>=` floor is what Dependabot sees.
+The one GitHub credential on the three hosts is the Copilot editor plugin's
+sign-in (`~/.config/github-copilot/hosts.json`, p340). It was not used: it was
+given to Copilot, not for reading a repository's security data.
+**So the alert list itself is still unread — a step only Tomek can do.**
 Tomek: after `gh auth login`, `gh api repos/098799/pypen/dependabot/alerts
 --jq '.[]|select(.state=="open")'` should be empty; dismiss what is left as
 "not used" if it is the archive.
