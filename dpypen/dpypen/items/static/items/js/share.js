@@ -29,5 +29,8 @@
     } else {
       byHand(url);
     }
+    // From a record's ⋯ menu: the menu has done its job (it stayed open).
+    var menu = btn.closest(".overflow-panel");
+    if (menu && window.kitLayer && kitLayer.isOpen(menu)) kitLayer.close(menu);
   });
 })();

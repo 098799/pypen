@@ -147,6 +147,16 @@ def run(page):
     page.mouse.click(30, 700); page.wait_for_timeout(400)
     check("⋯: a tap outside closes it", not page.evaluate("!!document.querySelector('.overflow-panel.open')"))
     check("⋯: ... and gives the entry back", not (page.evaluate("history.state") or {}).get("kitLayer"))
+    # Share (share.js, PYPEN-3): the link reaches the clipboard, the toast says
+    # so, the menu closes and the page stays.
+    page.context.grant_permissions(["clipboard-read", "clipboard-write"], origin=BASE)
+    page.evaluate("delete Navigator.prototype.share")
+    btn.click(); page.wait_for_timeout(300)
+    page.locator(".overflow-panel [data-share-url]").click(); page.wait_for_timeout(600)
+    check("share: the link is copied", page.evaluate("navigator.clipboard.readText()").startswith(BASE + "/p/"))
+    check("share: the toast says so", "Link copied" in page.evaluate("(document.querySelector('#kit-toast') || {}).textContent || ''"))
+    check("share: the menu closes", not page.evaluate("!!document.querySelector('.overflow-panel.open')"))
+    check("share: the page stays", page.url == purl)
 
     # The gantt popup.
     page.goto(BASE + "/history/gantt/"); page.wait_for_load_state("networkidle")
