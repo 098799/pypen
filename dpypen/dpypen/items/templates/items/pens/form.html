@@ -227,7 +227,7 @@
     {% for ph in photos %}
     <div class="photo-cell{% if forloop.first %} primary{% endif %}">
       <a href="{% url 'pens_photo_edit' pen.pk ph.pk %}">
-        <img src="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.thumbnail.url|default:ph.image.url }}{% endif %}" alt="Photo of {{ pen }}" loading="lazy">
+        <img src="{{ ph.grid_url }}" alt="Photo of {{ pen }}" loading="lazy">
       </a>
       {% if not forloop.first %}
       <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" style="display: inline;">

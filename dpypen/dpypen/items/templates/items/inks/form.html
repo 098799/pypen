@@ -167,7 +167,8 @@
   <div class="sw-grid">
     {% for s in swatches %}
     <div class="sw-cell{% if s.image_clean %} clean{% endif %}">
-      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener">
+      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener"
+         data-zoom data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="Swatch{% if s.image_clean %} · cleaned{% endif %}">
         <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Ink swatch" loading="lazy">
       </a>
       <div class="sw-actions">

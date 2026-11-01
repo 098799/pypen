@@ -122,13 +122,13 @@
 <div class="compare">
   <div class="frame">
     <span class="label">Original</span>
-    <img src="{{ photo.image.url }}" alt="Original">
+    <img src="{{ photo.image.url }}" alt="Original" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Original">
   </div>
 
   {% if photo.image_styled %}
   <div class="frame">
     <span class="label" style="background: linear-gradient(135deg, #d4a52c, var(--accent));">Catalog shot · AI</span>
-    <img src="{{ photo.image_styled.url }}" alt="AI catalog">
+    <img src="{{ photo.image_styled.url }}" alt="AI catalog" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Catalog shot · AI">
   </div>
   {% else %}
   <div class="frame is-blank" id="styledFrame">

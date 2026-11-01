@@ -51,6 +51,13 @@
 }
 .pen-photo-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pen-photo-main img.styled { object-fit: contain; padding: 0.75rem; }
+/* The photo opens in the viewer (PYPEN-1); the corner glass says so. */
+.pen-photo-main .zoom-pip {
+  position: absolute; right: 0.5rem; bottom: 0.5rem; width: 2rem; height: 2rem;
+  display: grid; place-items: center; border-radius: 50%; pointer-events: none;
+  background: rgba(19, 22, 28, 0.55); color: #f4ecd8;
+}
+.pen-photo-main .zoom-pip svg { width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .pen-photo-main .no-photo {
   font-family: "Cormorant Garamond", Georgia, serif;
   font-style: italic;
@@ -256,7 +263,10 @@ share token instead — the door that is actually open.
   <div>
     <div class="pen-photo-main" id="photoMain">
       {% if photos %}
-        <img id="photoImg" src="{% if photos.0.image_styled %}{{ photos.0.image_styled.url }}{% else %}{{ photos.0.image.url }}{% endif %}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}>
+        {# Tap it: the viewer opens on this photo and walks the others (PYPEN-1). #}
+        <img id="photoImg" src="{{ photos.0.full_url }}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}
+             data-zoom data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if photos.0.kind != 'other' %} · {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>
+        <span class="zoom-pip" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6"/></svg></span>
       {% else %}
         <div class="no-photo">no photograph yet</div>
       {% endif %}
@@ -264,8 +274,10 @@ share token instead — the door that is actually open.
     {% if photos|length > 1 %}
     <div class="pen-photo-thumbs">
       {% for ph in photos %}
-      <a href="#" data-img="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.image.url }}{% endif %}" class="{% if forloop.first %}active{% endif %}">
-        <img src="{% if ph.image_styled %}{{ ph.image_styled.url }}{% else %}{{ ph.thumbnail.url|default:ph.image.url }}{% endif %}" alt="{{ pen }}" loading="lazy"{% if ph.image_styled %} class="styled"{% endif %}>
+      <a href="#" data-img="{{ ph.full_url }}"{% if ph.image_styled %} data-styled{% endif %}
+         data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if ph.kind != 'other' %} · {{ ph.get_kind_display|lower }}{% endif %}"
+         aria-label="Show photo {{ forloop.counter }}" class="{% if forloop.first %}active{% endif %}">
+        <img src="{{ ph.grid_url }}" alt="" loading="lazy"{% if ph.image_styled %} class="styled"{% endif %}>
       </a>
       {% endfor %}
     </div>
@@ -375,7 +387,12 @@ share token instead — the door that is actually open.
     }
     .samples-strip .sc img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
     .samples-strip .sc.raw img { object-fit: cover; padding: 0; }
-    .samples-strip .sc .cap {
+    .samples-strip .sc .sc-edit {
+      position: absolute; top: 0.35rem; right: 0.35rem; width: 2rem; height: 2rem;
+      display: grid; place-items: center; border-radius: 50%; border-bottom: none;
+      background: rgba(0,0,0,0.55); color: #fff; font-size: 0.95rem; line-height: 1;
+    }
+    .samples-strip .sc .cap { pointer-events: none;
       position: absolute; bottom: 0; left: 0; right: 0;
       padding: 0.4rem 0.55rem;
       background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
@@ -388,10 +405,15 @@ share token instead — the door that is actually open.
   </style>
   <div class="samples-strip">
     {% for s in samples %}
-    <a href="{% url 'usages_edit' s.usage_id %}" class="sc{% if not s.image_clean %} raw{% endif %}" style="border-bottom: none;">
-      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample" loading="lazy">
+    {% comment %}A tap opens the sample in the viewer (PYPEN-1); it used to link to the
+       usage's edit form, which a guest could only meet as a sign-in page. The
+       owner keeps the way there as the pencil.{% endcomment %}
+    <div class="sc{% if not s.image_clean %} raw{% endif %}">
+      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample, {{ s.usage.ink }}" loading="lazy"
+           data-zoom data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.ink }}{% if s.notes %} · {{ s.notes }}{% endif %}">
       <div class="cap">{{ s.usage.ink }}</div>
-    </a>
+      {% if can_edit %}<a class="sc-edit" href="{% url 'usages_edit' s.usage_id %}" aria-label="Edit the fill this sample belongs to" title="Edit the fill">&#9998;</a>{% endif %}
+    </div>
     {% endfor %}
   </div>
 </section>
@@ -588,6 +610,7 @@ share token instead — the door that is actually open.
     a.addEventListener("click", function (e) {
       e.preventDefault();
       main.src = a.getAttribute("data-img");
+      main.classList.toggle("styled", a.hasAttribute("data-styled"));
       document.querySelectorAll(".pen-photo-thumbs a").forEach(function (x) { x.classList.remove("active"); });
       a.classList.add("active");
     });

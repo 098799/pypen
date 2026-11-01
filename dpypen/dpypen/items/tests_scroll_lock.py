@@ -34,7 +34,7 @@ class ScrollLock(TestCase):
         for url in ("/pens/", "/inks/", "/history/"):
             html = self.client.get(url).content.decode()
             self.assertIn('id="kpal"', html, url)
-            self.assertIn('var OPEN = "#kpal.on,#khelp.on";', html, url)
+            self.assertIn('var OPEN = "#kpal.on,#khelp.on,dialog.pv[open]";', html, url)
             self.assertIn('root.classList.toggle("scroll-lock"', html, url)
             self.assertIn("items/css/app.css", html, url)
 

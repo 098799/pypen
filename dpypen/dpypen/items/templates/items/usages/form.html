@@ -131,7 +131,8 @@ this form is the one place you have already decided to change this inking.
   <div class="samples-grid">
     {% for s in samples %}
     <div class="sample-cell{% if s.image_clean %} clean{% endif %}">
-      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener">
+      <a href="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" target="_blank" rel="noopener"
+         data-zoom data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="Writing sample{% if s.notes %} · {{ s.notes }}{% endif %}">
         <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample" loading="lazy">
       </a>
       <div class="sample-actions">

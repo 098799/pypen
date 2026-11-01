@@ -36,6 +36,8 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
 <link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
 <script src="{% static 'items/vendor/tom-select-2.4.3.complete.min.js' %}" defer></script>
+{# The photo viewer (PYPEN-1): tap a [data-zoom] photo, pinch it, walk its group. #}
+<script src="{% static 'items/js/viewer.js' %}" defer></script>
 <script>
 (function () {
   if ("serviceWorker" in navigator) {
@@ -826,9 +828,12 @@ window.__go = function (url, push) {
    open and close, so every way out clears it: Escape, the dim, a pick that
    navigates, one overlay taking over from the other. Kept for the palette,
    a kit copy that does not use the kit's layer; the menus and the gantt
-   popup are kitLayer layers with lock: false. */
+   popup are kitLayer layers with lock: false. The photo viewer (PYPEN-1) is
+   a kitLayer layer *with* the lock: this watcher would clear the kit's class
+   a microtask after the kit set it, so the viewer is on its list too. Any new
+   locking layer must be added here. */
 (function () {
-  var OPEN = "#kpal.on,#khelp.on";
+  var OPEN = "#kpal.on,#khelp.on,dialog.pv[open]";
   var root = document.documentElement, queued = false;
   function sync() {
     queued = false;
@@ -837,7 +842,7 @@ window.__go = function (url, push) {
   new MutationObserver(function () {
     if (!queued) { queued = true; Promise.resolve().then(sync); }
   }).observe(document.body, { subtree: true, childList: true,
-                              attributes: true, attributeFilter: ["class"] });
+                              attributes: true, attributeFilter: ["class", "open"] });
   sync();
 })();
 </script>
