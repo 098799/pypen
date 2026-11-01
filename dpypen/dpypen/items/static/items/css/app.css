@@ -2375,10 +2375,11 @@ html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 .pv .pv-next { right: 8px; }
 .pv .pv-step[hidden], .pv.zoomed .pv-step { display: none; }
 .pv .pv-cap {
-  position: absolute; z-index: 1; left: 14px; right: 70px;
-  top: calc(14px + env(safe-area-inset-top));
+  position: absolute; z-index: 1; left: 10px; max-width: calc(100% - 80px);
+  top: calc(10px + env(safe-area-inset-top));
+  padding: 7px 12px 8px; border-radius: 8px; background: rgba(0, 0, 0, .55);
   font-family: "Cormorant Garamond", Georgia, serif; font-size: 18px; line-height: 1.25;
-  text-shadow: 0 1px 3px #000; opacity: 0; transform: translateY(-4px);
+  opacity: 0; transform: translateY(-4px);
   transition: opacity .25s, transform .25s; pointer-events: none;
 }
 .pv .pv-cap.on { opacity: 1; transform: none; }
