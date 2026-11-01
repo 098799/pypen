@@ -1,8 +1,8 @@
 {"app": "pypen", "entries": [
   {"id": "pull-to-refresh", "date": "2026-11-01", "title": "Pull down to reload",
    "use": "When Pens on your phone's home screen shows something old: pull the page down from the top and let go, and it loads again. After a new version goes live, a \"New version ready\" note waits above the tab bar; tap Refresh when it suits you.",
-   "shots": [], "try": "/dashboard/"},
+   "shots": ["/static/items/whatsnew/2026-11-01-pull-to-refresh.png"], "try": "/dashboard/"},
   {"id": "photo-viewer", "date": "2026-11-01", "title": "Photos open full screen",
    "use": "When you want to see a nib, a finish or a swatch up close: tap a pen's photo, an ink's swatch or a writing sample. Pinch or double-tap to zoom, drag to look around, swipe sideways for the next one, and flick down or press Back to close.",
-   "shots": [], "try": "/pens/"}
+   "shots": ["/static/items/whatsnew/2026-11-01-photo-viewer.png"], "try": "/pens/"}
 ]}
