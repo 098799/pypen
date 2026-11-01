@@ -8,7 +8,7 @@ from django.db import models
 from djmoney.models.fields import MoneyField
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from dpypen.items import constants
+from dpypen.items import constants, sized
 
 
 def _random_media_path(prefix: str) -> str:
@@ -204,6 +204,16 @@ class PenPhoto(models.Model):
                 return f.url
         return None
 
+    @property
+    def page_url(self):
+        """The full image at the size the pen page draws it: a ~900 px WebP
+        copy (sized.py, PYPEN-3) of what `full_url` points at. The page shows
+        this; the viewer opens `full_url`."""
+        for f in (self.image_styled, self.image):
+            if f:
+                return sized.url(f, sized.PAGE)
+        return self.full_url
+
     def set_styled(self, data: bytes, base: str | None = None, save: bool = True):
         """Store a catalogue shot and its tile-sized twin together, so the two
         can never drift apart."""
@@ -248,7 +258,25 @@ def ink_swatch_path(instance, filename):
     return _random_media_path("ink_swatches")
 
 
-class InkSwatch(models.Model):
+class _Shown:
+    """A swatch or a writing sample: the cleaned image when there is one."""
+
+    @property
+    def shown(self):
+        return self.image_clean or self.image
+
+    @property
+    def shown_url(self):
+        """The stored file — what the viewer opens."""
+        return self.shown.url if self.shown else None
+
+    @property
+    def tile_url(self):
+        """What a tile draws: a 600 px WebP copy (sized.py, PYPEN-3)."""
+        return sized.url(self.shown, sized.TILE)
+
+
+class InkSwatch(_Shown, models.Model):
     class Meta:
         ordering = ["position", "-uploaded_at"]
 
@@ -269,7 +297,7 @@ class InkSwatch(models.Model):
         super().save(*args, **kwargs)
 
 
-class WritingSample(models.Model):
+class WritingSample(_Shown, models.Model):
     class Meta:
         ordering = ["-uploaded_at"]
 

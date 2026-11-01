@@ -54,66 +54,8 @@
   white-space: nowrap;
 }
 
-.ink-back {
-  font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  min-height: 40px;
-  line-height: 1.4;
-}
-.ink-back:hover { color: var(--accent); border: none; }
-
-.history-row {
-  display: grid;
-  grid-template-columns: 14px 1fr auto;
-  gap: 0.8rem;
-  align-items: center;
-  padding: 0.9rem 0.2rem;
-  border-bottom: 1px dashed var(--ink-line);
-  font-size: 0.95rem;
-}
-.history-row .dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--cbg, var(--c));
-  box-shadow: inset -2px -2px 3px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.25);
-}
-.history-row a.pen-name {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-style: italic;
-  font-size: 1.05rem;
-  color: inherit;
-  border: none;
-}
-.history-row a.pen-name:hover { color: var(--accent); border: none; }
-.history-row .range {
-  font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-top: 0.15rem;
-}
-.history-row .days {
-  font-family: "Inter", sans-serif;
-  font-size: 0.75rem;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  letter-spacing: 0.05em;
-}
-.history-row.current {
-  background: color-mix(in srgb, var(--c) 12%, transparent);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  border-radius: 4px;
-}
+.ink-title .chip.warn { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line)); }
+.ink-links { display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap; }
 {% endblock %}
 
 {% block content %}
@@ -130,7 +72,7 @@ Public, every one of these used to point at a login-gated /inks/<pk>/ or
 onward link bounced them to Google. Anonymous, they go to the same page by its
 share token instead — the door that is actually open.
 {% endcomment %}
-  <a href="{% if public %}{% url 'share_inks_gallery' %}{% else %}{% url 'inks_list' %}{% endif %}" class="ink-back">&larr; {% if public %}The ink cupboard{% else %}All inks{% endif %}</a>
+  <a href="{% if public %}{% url 'share_inks_gallery' %}{% else %}{% url 'inks_list' %}{% endif %}" class="back-link">&larr; {% if public %}The ink cupboard{% else %}All inks{% endif %}</a>
   {% if can_edit %}
   <div class="detail-actions">
     <a href="{% url 'usages_create' %}?ink={{ ink.pk }}" class="btn primary">+ Use this ink</a>
@@ -146,7 +88,7 @@ share token instead — the door that is actually open.
       <div class="overflow-panel" role="menu">
         <a href="{% url 'inks_edit' ink.pk %}" data-kbd="edit" role="menuitem">Edit ink</a>
         <button type="button" role="menuitem" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">Share ink</button>
-        <form method="post" action="{% url 'inks_delete' ink.pk %}" style="margin: 0;"
+        <form method="post" action="{% url 'inks_delete' ink.pk %}" class="form-bare"
               onsubmit="return confirm('Delete {{ ink|escapejs }}? This cannot be undone.');">
           {% csrf_token %}
           <button type="submit" class="danger" role="menuitem">Delete ink</button>
@@ -166,33 +108,14 @@ share token instead — the door that is actually open.
     <div class="chips">
       <span class="chip">{{ ink.volume }} ml</span>
       {% if ink.obtained %}<span class="chip">obtained {{ ink.obtained|date:"Y" }}</span>{% endif %}
-      {% if ink.used_up %}<span class="chip" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--ink-line));">used up</span>{% endif %}
+      {% if ink.used_up %}<span class="chip warn">used up</span>{% endif %}
       {% if ink.how %}<span class="chip">{{ ink.how }}</span>{% endif %}
     </div>
     {% if ink.moi_url %}
-    <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem; flex-wrap: wrap;">
+    <div class="ink-links">
       <a href="{{ ink.moi_url }}" target="_blank" rel="noopener" class="btn" title="Open review on Mountain of Ink">✎ Mountain of Ink review ↗</a>
     </div>
     {% endif %}
-    <script>
-      (function () {
-        document.querySelectorAll("[data-share-url]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
-            if (navigator.share) {
-              navigator.share({ title: document.title, url: url }).catch(function(){});
-            } else if (navigator.clipboard) {
-              navigator.clipboard.writeText(url);
-              var orig = btn.textContent;
-              btn.textContent = "copied";
-              setTimeout(function () { btn.textContent = orig; }, 1400);
-            } else {
-              prompt("Share link:", url);
-            }
-          });
-        });
-      })();
-    </script>
   </div>
 </div>
 
@@ -202,11 +125,11 @@ share token instead — the door that is actually open.
     <h2>Swatches</h2>
     <span class="aside">{{ swatches|length }}</span>
   </div>
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.8rem;">
+  <div class="swatch-grid">
     {% for s in swatches %}
-    <div style="aspect-ratio: 1/1; border-radius: 5px; overflow: hidden; border: 1px solid var(--ink-line); background: var(--paper-dark);">
-      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Swatch of {{ ink }}" loading="lazy"
-           data-zoom data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="{{ ink }} · swatch" style="width: 100%; height: 100%; object-fit: {% if s.image_clean %}contain{% else %}cover{% endif %}; padding: {% if s.image_clean %}0.4rem{% else %}0{% endif %};">
+    <div class="sw{% if not s.image_clean %} raw{% endif %}">
+      <img src="{{ s.tile_url }}" alt="Swatch of {{ ink }}" loading="lazy"
+           data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="{{ ink }} · swatch">
     </div>
     {% endfor %}
   </div>
@@ -219,46 +142,14 @@ share token instead — the door that is actually open.
     <h2>Writing <em>samples</em></h2>
     <span class="aside">{{ samples|length }}</span>
   </div>
-  <style>
-    .samples-strip {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 0.8rem;
-    }
-    .samples-strip .sc {
-      position: relative;
-      aspect-ratio: 4/3;
-      border-radius: 5px;
-      overflow: hidden;
-      border: 1px solid var(--ink-line);
-      background: var(--paper-dark);
-    }
-    .samples-strip .sc img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
-    .samples-strip .sc.raw img { object-fit: cover; padding: 0; }
-    .samples-strip .sc .sc-edit {
-      position: absolute; top: 0.35rem; right: 0.35rem; width: 2rem; height: 2rem;
-      display: grid; place-items: center; border-radius: 50%; border-bottom: none;
-      background: rgba(0,0,0,0.55); color: #fff; font-size: 0.95rem; line-height: 1;
-    }
-    .samples-strip .sc .cap { pointer-events: none;
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 0.4rem 0.55rem;
-      background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
-      color: #fff;
-      font-family: "Inter", sans-serif;
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-  </style>
   <div class="samples-strip">
     {% for s in samples %}
     {% comment %}A tap opens the sample in the viewer (PYPEN-1); it used to link to the
        usage's edit form, which a guest could only meet as a sign-in page. The
        owner keeps the way there as the pencil.{% endcomment %}
     <div class="sc{% if not s.image_clean %} raw{% endif %}">
-      <img src="{% if s.image_clean %}{{ s.image_clean.url }}{% else %}{{ s.image.url }}{% endif %}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy"
-           data-zoom data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.pen }}{% if s.notes %} · {{ s.notes }}{% endif %}">
+      <img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy"
+           data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.pen }}{% if s.notes %} · {{ s.notes }}{% endif %}">
       <div class="cap">{{ s.usage.pen }}</div>
       {% if can_edit %}<a class="sc-edit" href="{% url 'usages_edit' s.usage_id %}" aria-label="Edit the fill this sample belongs to" title="Edit the fill">&#9998;</a>{% endif %}
     </div>
@@ -276,10 +167,10 @@ share token instead — the door that is actually open.
   {% if current or past %}
   <div>
     {% for u in current %}
-    <div class="history-row current" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
+    <div class="history-row current by-ink" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
       <span class="dot"></span>
       <div>
-        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="pen-name">{{ u.pen }}</a>
+        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="rec-name">{{ u.pen }}</a>
         <div class="range">{{ u.begin|date:"M j, Y" }} — still inked · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>
@@ -289,7 +180,7 @@ share token instead — the door that is actually open.
     <div class="history-row" style="--c: {{ ink_hex }}; --cbg: {{ ink_bg }};">
       <span class="dot"></span>
       <div>
-        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="pen-name">{{ u.pen }}</a>
+        <a href="{% if public %}{% url 'share_pen' u.pen.share_token %}{% else %}{% url 'pens_detail' u.pen.pk %}{% endif %}" class="rec-name">{{ u.pen }}</a>
         <div class="range">{{ u.begin|date:"M j, Y" }} — {{ u.end|date:"M j, Y" }} · {{ u.nib }}</div>
       </div>
       <div class="days">{{ u.days }}d</div>

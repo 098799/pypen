@@ -68,7 +68,9 @@ fi
 #
 # Migrations run here too (they did not until 2026-08-27, and a new field
 # 500'd every page touching it). They, and backfill_styled_thumbs (cheap once
-# the twins exist; it keeps the pen wall off full-size art), run as `pypen`,
+# the twins exist; it keeps the pen wall off full-size art) and sized_copies
+# (the page-size WebP copies, PYPEN-3: made ahead so no visitor waits for an
+# encode, and the copies of deleted photos removed), run as `pypen`,
 # so the database and the media they write stay that user's. clearsessions
 # drops the expired sessions: nothing ever did, and on 1 Nov 2026 the live DB
 # (and so every nightly copy on p340) carried 443 dead ones back to 2020 next
@@ -84,6 +86,7 @@ ssh "$REMOTE" 'set -euo pipefail; cd '"$APP"'/dpypen
   fi
   runuser -u pypen -- '"$APP"'/.venv/bin/python manage.py migrate --noinput | tail -3
   runuser -u pypen -- '"$APP"'/.venv/bin/python manage.py backfill_styled_thumbs | tail -1
+  runuser -u pypen -- '"$APP"'/.venv/bin/python manage.py sized_copies | tail -1
   runuser -u pypen -- '"$APP"'/.venv/bin/python manage.py clearsessions
   '"$APP"'/.venv/bin/python manage.py collectstatic --noinput | tail -1
   '"$APP"'/.venv/bin/python -m compileall -q dpypen >/dev/null || true

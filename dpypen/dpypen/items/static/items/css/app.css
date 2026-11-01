@@ -2449,3 +2449,143 @@ html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 /* The "new" tag on the pen page's photo (data-new="photo-viewer"). */
 .pen-photo-main .pv-new { position: absolute; top: 10px; left: 10px; z-index: 2; pointer-events: none; }
 .pen-photo-main .pv-new .kit-new-tag { margin-left: 0; background: var(--plate-top); }
+
+/* -------- Record pages: a pen, an ink (PYPEN-3) --------
+   Both pages carried their own copy of these in their <style> block (the
+   back link, the history rows, the writing samples). The back link was also
+   used by the photo editor and Settings, which carried no copy, so there it
+   was a bare link. */
+.back-link {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  min-height: 40px;
+  line-height: 1.4;
+}
+.back-link:hover { color: var(--accent); border: none; }
+
+/* A line of the record's history: the ink's bead (--cbg, else --c), the
+   other half of the fill as a link, the dates, the days. */
+.history-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.9rem 0.2rem;
+  border-bottom: 1px dashed var(--ink-line);
+  font-size: 0.95rem;
+}
+.history-row .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--cbg, var(--c, var(--ink-unknown)));
+  box-shadow: inset -2px -2px 3px rgba(0,0,0,0.35), inset 1px 1px 2px rgba(255,255,255,0.25);
+}
+.history-row .rec-name {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: inherit;
+  border: none;
+}
+.history-row a.rec-name:hover { color: var(--accent); border: none; }
+.history-row .range {
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+.history-row .days {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: 0.05em;
+}
+.history-row.current {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 4px;
+}
+/* On an ink's page the pen in it now is tinted with the ink itself. */
+.history-row.current.by-ink { background: color-mix(in srgb, var(--c) 12%, transparent); }
+
+/* Writing samples: a tap opens the viewer on the stored file; the tile draws
+   a 600 px copy (sized.py). The owner's pencil leads to the fill. */
+.samples-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.8rem;
+}
+.samples-strip .sc {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  background: var(--paper-dark);
+}
+.samples-strip .sc img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
+.samples-strip .sc.raw img { object-fit: cover; padding: 0; }
+.samples-strip .sc .sc-edit {
+  position: absolute; top: 0.35rem; right: 0.35rem; width: 2rem; height: 2rem;
+  display: grid; place-items: center; border-radius: 50%; border-bottom: none;
+  background: rgba(0,0,0,0.55); color: #fff; font-size: 0.95rem; line-height: 1;
+}
+.samples-strip .sc .cap { pointer-events: none;
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 0.4rem 0.55rem;
+  background: linear-gradient(0deg, rgba(0,0,0,0.7), transparent);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* An ink's swatches: square tiles; a cleaned swatch sits inside a margin, a
+   raw photo fills its tile. */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+.swatch-grid .sw {
+  aspect-ratio: 1/1;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--ink-line);
+  background: var(--paper-dark);
+}
+.swatch-grid .sw img { width: 100%; height: 100%; object-fit: contain; padding: 0.4rem; display: block; }
+.swatch-grid .sw.raw img { object-fit: cover; padding: 0; }
+
+/* -------- Small shared pieces (PYPEN-3: were style="" attributes) -------- */
+/* A form that is only a button: in a row of buttons, or in a menu. */
+.form-inline { display: inline; margin: 0; }
+.form-bare { margin: 0; }
+/* A link that reads as the text around it (a name in a row). */
+a.plain, a.plain:hover { color: inherit; border: none; }
+.soft { color: var(--ink-soft); font-style: italic; }
+.dim { color: var(--muted); }
+.fs-small { font-size: 0.85em; }
+/* The muted italic line under a page's heading. */
+.page-note { color: var(--muted); font-style: italic; max-width: 42rem; margin: -0.6rem 0 1.5rem; }
+/* The small caps label of the Inter set: a counter, a hint beside a control. */
+.caps-note {
+  font-family: "Inter", sans-serif; font-size: 0.72rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--muted);
+}
+.mt-1 { margin-top: 1.5rem; }
+.mt-2 { margin-top: 2.5rem; }
+.mt-3 { margin-top: 3rem; }

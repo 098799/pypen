@@ -178,25 +178,6 @@ A peek at the ink cupboard. Browse by colour.
   <a href="{% url 'inks_create' %}" class="icon-btn" data-kbd="new" aria-label="Add ink" title="Add ink">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </a>
-  <script>
-    (function () {
-      document.querySelectorAll("[data-share-url]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          var url = new URL(btn.getAttribute("data-share-url"), window.location.origin).href;
-          if (navigator.share) {
-            navigator.share({ title: document.title, url: url }).catch(function(){});
-          } else if (navigator.clipboard) {
-            navigator.clipboard.writeText(url);
-            var orig = btn.textContent;
-            btn.textContent = "copied";
-            setTimeout(function () { btn.textContent = orig; }, 1400);
-          } else {
-            prompt("Share link:", url);
-          }
-        });
-      });
-    })();
-  </script>
   {% endif %}
 </div>
 

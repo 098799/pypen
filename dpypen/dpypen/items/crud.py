@@ -526,6 +526,10 @@ def pens_photo_delete(request, pk, photo_pk):
         if f:
             try: f.delete(save=False)
             except Exception: pass
+    # The catalogue shot and its twin went with it only on Unstyle: a deleted
+    # photo left both on disk (PYPEN-3). Its page-size copy goes at the next
+    # deploy (manage.py sized_copies).
+    photo.clear_styled(save=False)
     photo.delete()
     undo.say(request, "Photograph deleted.")
     return redirect("pens_edit", pk=pk)

@@ -56,10 +56,11 @@ class PhotosOpenInTheViewer(_Collection):
         for client in (self.owner_client, self.guest):
             html = self.page(client, "pens_detail", self.pen.pk)
             self.assertIn('id="photoImg"', html)
-            self.assertRegex(html, r'id="photoImg"[^>]*data-zoom data-zoom-group="pen"')
+            # the viewer opens the stored file, whatever size the page draws (PYPEN-3)
+            self.assertRegex(html, r'id="photoImg"[^>]*data-zoom="/media/[^"]+" data-zoom-group="pen"')
             # two photos: each thumb is an item of the group, with its full file
             self.assertEqual(html.count('data-zoom-item="pen"'), 2)
-            self.assertIn('data-img="/media/pen_photos/b-styled.png"', html)
+            self.assertIn('data-zoom-src="/media/pen_photos/b-styled.png"', html)
             self.assertIn("M800 · nib close-up", html)
             # the strip draws the small twin, not the full catalogue shot
             self.assertIn('src="/media/pen_photos/b-styled-thumb.webp"', html)
