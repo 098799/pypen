@@ -128,6 +128,25 @@ Checked and fine, nothing changed:
 - Uploads: nginx caps a request at 25 MB; Django spills a file over 2.5 MB to
   a temporary file, so a large one does not sit in a worker's memory.
 
+### Third look (1 Nov 2026, burn p11011220)
+
+A fresh read of the code paths the first two passes did not name: the
+redirects, the search marks, the sessions in the database.
+
+| finding | fix | pinned by |
+|---|---|---|
+| Undo checked its way back with `startswith("/")`. `/\evil.example` passes that, and browsers read it as `//evil.example`. The toast's form sends no `next`, so the way back is the Referer, a full URL: the check refused every one, and **every Undo landed on the dashboard** instead of the page it was pressed on. | Django's `url_has_allowed_host_and_scheme` against this host: back to the page, never off the site. | `UndoBringsItBack` (3 new) |
+| A closed page sent the stranger to `/accounts/google/login/?next=<path>` with the path not quoted: a `&` in it ended `next`, and the rest (`process=connect`, …) became allauth's own parameters. | `redirect_to_login`, which quotes it. | `TheWayBackIsQuoted` |
+| The search marks (`highlight`) matched in the escaped text, so "lt" or "amp" hit `&lt;` or `&amp;` and cut the entity: `&<mark>lt</mark>;` on the page. Not a way in (the terms never reach the markup unescaped), but broken text. | Match in the stored text, escape each piece. | `SearchMarksDoNotCutEntities` |
+| Nothing ever ran `clearsessions`. The live DB held 498 sessions, 443 of them expired, back to Nov 2020, and each nightly copy on p340 carried them all. | The deploy runs `clearsessions` (as `pypen`). | — |
+
+Checked and fine: `SOCIALACCOUNT_LOGIN_ON_GET` lets any page start a
+Google sign-in, which only ever signs in the allowlisted owner as themself
+(it is what the `LOGIN_URL` redirect needs). `socialaccount_socialtoken` is
+empty: no Google token is kept. The nightly backups still arrive through the
+`/root/pypen/dpypen/db.sqlite3` symlink (`pypen-7.db`, 1 Nov 00:20).
+`admin.py`'s two `mark_safe` calls hold a number and a token the app made.
+
 ### Decision: CSP with inline script allowed, not a strict (nonce) policy
 
 `script-src 'self' 'unsafe-inline'`, and everything else shut:

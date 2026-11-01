@@ -17,6 +17,7 @@ from django.core import serializers
 from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
@@ -93,8 +94,17 @@ def undo(request, token):
 
 
 def _back(request):
+    """Back to the page the Undo was pressed on, never off the site.
+
+    The toast's form sends no `next`, so the page is the Referer, which the
+    browser sends as a full URL (https://pen.grining.eu/pens/): the old check
+    took only a path and so sent every Undo to the dashboard. Django's own
+    check also refuses `/\\evil.example`, which browsers read as
+    //evil.example and a startswith("/") test let through (PYPEN-4).
+    """
     nxt = request.POST.get("next") or request.META.get("HTTP_REFERER")
-    # Only ever bounce back inside this site.
-    if nxt and nxt.startswith("/") and not nxt.startswith("//"):
+    if nxt and url_has_allowed_host_and_scheme(
+        nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
         return redirect(nxt)
     return redirect(reverse("dashboard"))

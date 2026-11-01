@@ -245,6 +245,27 @@ class UndoBringsItBack(_Collection):
         response = self.client.post(f"/undo/{self.last_token()}/", {"next": "//evil.example/"})
         self.assertEqual(response["Location"], "/dashboard/")
 
+    def test_undo_never_bounces_off_site_by_a_backslash(self):
+        # Browsers read /\evil.example as //evil.example.
+        self.client.post(f"/usages/{self.usage.pk}/end/")
+        response = self.client.post(f"/undo/{self.last_token()}/", {"next": "/\\evil.example/"})
+        self.assertEqual(response["Location"], "/dashboard/")
+
+    def test_undo_goes_back_to_the_page_it_was_pressed_on(self):
+        # The toast's form sends no `next`; the browser's Referer is a full URL.
+        self.client.post(f"/usages/{self.usage.pk}/end/")
+        response = self.client.post(
+            f"/undo/{self.last_token()}/", HTTP_REFERER="http://testserver/pens/"
+        )
+        self.assertEqual(response["Location"], "http://testserver/pens/")
+
+    def test_undo_does_not_follow_another_sites_referer(self):
+        self.client.post(f"/usages/{self.usage.pk}/end/")
+        response = self.client.post(
+            f"/undo/{self.last_token()}/", HTTP_REFERER="https://evil.example/pens/"
+        )
+        self.assertEqual(response["Location"], "/dashboard/")
+
 
 @override_settings(STORAGES=PLAIN_STATIC)
 class MessagesAreTheKitsToast(_Collection):

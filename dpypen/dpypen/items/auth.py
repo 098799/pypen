@@ -3,6 +3,7 @@ from functools import wraps
 from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -77,9 +78,10 @@ def login_or_guest_required(view):
             invite.last_seen_at = timezone.now()
             invite.save(update_fields=["visits", "last_seen_at"])
             return view(request, *args, **kwargs)
-        from django.conf import settings
-        login_url = getattr(settings, "LOGIN_URL", "/accounts/login/")
-        return redirect(f"{login_url}?next={request.get_full_path()}")
+        # redirect_to_login quotes the path: pasted in raw, a query string's
+        # `&` ended `next` early and its other keys (process=, ...) became
+        # parameters of allauth's Google login itself (PYPEN-4).
+        return redirect_to_login(request.get_full_path())
     return wrapped
 
 

@@ -124,6 +124,34 @@ class GoogleMustVouchForTheAddress(TestCase):
         self.assertFalse(_verified_allowed(_login("someone@example.com", "someone@example.com")))
 
 
+class TheWayBackIsQuoted(TestCase):
+    """A closed page sends a stranger to Google with the page in `next`. The
+    path went in raw, so its `&` handed allauth's login parameters of the
+    stranger's choosing."""
+
+    def test_a_query_stays_inside_next(self):
+        response = self.client.get("/pens/?q=a&process=connect")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"], "/accounts/google/login/?next=/pens/%3Fq%3Da%26process%3Dconnect"
+        )
+
+
+class SearchMarksDoNotCutEntities(TestCase):
+    """highlight() matched inside the escaped text: "lt" hit &lt;."""
+
+    def test_a_term_inside_an_entity_is_not_marked(self):
+        from dpypen.items.templatetags.items_extras import highlight
+
+        self.assertEqual(highlight("Salt <Pilot> & co", "lt"), "Sa<mark>lt</mark> &lt;Pilot&gt; &amp; co")
+
+    def test_the_stored_text_is_escaped_around_a_mark(self):
+        from dpypen.items.templatetags.items_extras import highlight
+
+        self.assertEqual(highlight("<b>Blue</b>", "blue"), "&lt;b&gt;<mark>Blue</mark>&lt;/b&gt;")
+        self.assertEqual(highlight("<i>x</i>", ""), "&lt;i&gt;x&lt;/i&gt;")
+
+
 @override_settings(STORAGES=PLAIN_STATIC)
 class SigningOutForgetsTheDevice(TestCase):
     @classmethod

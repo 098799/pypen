@@ -9,20 +9,27 @@ register = template.Library()
 
 @register.filter
 def highlight(text, terms):
-    """Wrap each search-term occurrence in <mark>. Terms may be a list or space-separated string."""
+    """Wrap each search-term occurrence in <mark>. Terms may be a list or space-separated string.
+
+    The terms are matched in the stored text and each piece is escaped on its
+    own. Matching in the escaped text instead found "amp" or "lt" inside
+    &amp; and &lt; and cut the entity in two, so a search for "lt" printed
+    "&<mark>lt</mark>;" where the name had a "<".
+    """
     if not text:
         return ""
-    escaped = escape(str(text))
-    if not terms:
-        return mark_safe(escaped)
+    text = str(text)
     if isinstance(terms, str):
         terms = terms.split()
-    unique = sorted({t for t in terms if t}, key=len, reverse=True)
+    unique = sorted({t for t in (terms or []) if t}, key=len, reverse=True)
     if not unique:
-        return mark_safe(escaped)
-    pattern = "|".join(re.escape(t) for t in unique)
-    result = re.sub(f"({pattern})", r"<mark>\1</mark>", escaped, flags=re.IGNORECASE)
-    return mark_safe(result)
+        return mark_safe(escape(text))
+    pattern = re.compile("(" + "|".join(re.escape(t) for t in unique) + ")", re.IGNORECASE)
+    parts = pattern.split(text)
+    # split() with one group: even indexes are the text between, odd the hits.
+    return mark_safe(
+        "".join(f"<mark>{escape(p)}</mark>" if i % 2 else escape(p) for i, p in enumerate(parts))
+    )
 
 
 _KIT_THEME_JS = None
