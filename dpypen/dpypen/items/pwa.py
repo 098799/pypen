@@ -3,6 +3,10 @@ import json
 from pathlib import Path
 
 from django.http import HttpResponse, JsonResponse
+from django.templatetags.static import static
+
+from dpypen.items import whatsnew as kit_whatsnew
+from dpypen.items.auth import login_or_guest_required
 
 
 # The kit's service worker (KIT-SW): _sw.js is ~/apps/kit/snippets/sw.js byte for byte
@@ -108,6 +112,7 @@ def service_worker(request):
 
 def manifest(request):
     data = {
+        "id": "/",
         "name": "Grining Fountain Pens",
         "short_name": "Pens",
         "description": "Tomek's fountain-pen bureau.",
@@ -118,7 +123,16 @@ def manifest(request):
         "orientation": "portrait",
         "background_color": "#f4ecd8",
         "theme_color": "#1b2a4a",
+        # The kit's set (README §4 "Icons"): committed PNGs 192 + 512 + 512
+        # maskable, drawn from the SVGs below (rsvg-convert), and the SVGs for
+        # whoever takes them. iOS takes neither from here: its home-screen
+        # icon is the apple-touch-icon link, which must be a PNG (an SVG there
+        # gave a screenshot of the page).
         "icons": [
+            {"src": static("items/icons/icon-192.png"), "sizes": "192x192", "type": "image/png"},
+            {"src": static("items/icons/icon-512.png"), "sizes": "512x512", "type": "image/png"},
+            {"src": static("items/icons/icon-maskable-512.png"), "sizes": "512x512", "type": "image/png",
+             "purpose": "maskable"},
             {"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"},
             {"src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable"},
         ],
@@ -133,3 +147,33 @@ def icon(request):
 
 def icon_maskable(request):
     return HttpResponse(_ICON_MASKABLE, content_type="image/svg+xml")
+
+
+def build_context(request):
+    """Template context processor: the build the page was made by.
+
+    The kit's update toast (_update.html) compares it with /api/version: the
+    worker takes over at install (`takeover`), so no waiting worker would ever
+    tell an open page about a deploy."""
+    return {"kit_build": KITSW["build"]}
+
+
+def version(request):
+    """The build now served, for the update toast. No data: open to anyone."""
+    resp = JsonResponse({"build": KITSW["build"]})
+    resp["Cache-Control"] = "no-store"
+    return resp
+
+
+# What's new (kit README §4): the log is a file in the repo, newest entry on
+# top; kit_whatsnew (whatsnew.py, a byte copy of the kit's) answers it as a list.
+_WHATSNEW = _HERE / "whatsnew.json"
+
+
+@login_or_guest_required
+def whatsnew(request):
+    doc = json.loads(_WHATSNEW.read_text(encoding="utf-8"))
+    status, body = kit_whatsnew.answer(doc, request.META.get("QUERY_STRING", ""))
+    resp = JsonResponse(body, status=status)
+    resp["Cache-Control"] = "no-cache"
+    return resp

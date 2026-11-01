@@ -34,7 +34,10 @@ class ScrollLock(TestCase):
         for url in ("/pens/", "/inks/", "/history/"):
             html = self.client.get(url).content.decode()
             self.assertIn('id="kpal"', html, url)
-            self.assertIn('var OPEN = "#kpal.on,#khelp.on,dialog.pv[open]";', html, url)
+            self.assertIn('var OPEN = "#kpal.on,#khelp.on";', html, url)
+            # A modal <dialog> (the viewer, What's new) counts by itself: the
+            # watcher never clears the kit's lock under one (PYPEN-2).
+            self.assertIn('document.querySelector("dialog:modal")', html, url)
             self.assertIn('root.classList.toggle("scroll-lock"', html, url)
             self.assertIn("items/css/app.css", html, url)
 

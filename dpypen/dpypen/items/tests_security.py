@@ -210,6 +210,7 @@ class EveryAnswerCarriesThePolicy(TestCase):
     def test_a_private_page_is_not_for_shared_caches(self):
         self.client.force_login(self.owner)
         self.assertIn("private", self.client.get("/dashboard/")["Cache-Control"])
+        self.assertIn("no-cache", self.client.get("/dashboard/")["Cache-Control"])  # kit §5.3
 
     def test_the_service_worker_keeps_its_own_cache_header(self):
         self.assertEqual(self.client.get("/sw.js")["Cache-Control"], "no-cache")

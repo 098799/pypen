@@ -37,10 +37,11 @@ are most of a wall's audience, get no bar at all.
     <span>Inks</span>
   </a>
   {% if not no_menu %}
+  {# The What's new dot: Settings is behind More, so More carries it. #}
   <button type="button" aria-label="More" aria-controls="menuPanel" data-menu-btn>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+    <span class="wn-host" data-whatsnew-dot><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
       <path d="M4 7h16M4 12h16M4 17h16"></path>
-    </svg>
+    </svg></span>
     <span>More</span>
   </button>
   {% endif %}

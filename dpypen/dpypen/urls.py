@@ -35,3 +35,9 @@ urlpatterns = [
 urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Error pages in the app's chrome, JSON for a fetch (items/error_pages.py).
+handler400 = "dpypen.items.error_pages.bad_request"
+handler403 = "dpypen.items.error_pages.forbidden"
+handler404 = "dpypen.items.error_pages.not_found"
+handler500 = "dpypen.items.error_pages.server_error"

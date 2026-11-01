@@ -37,6 +37,7 @@ OPEN_TO_ANYONE = {
     "pwa_sw",
     "pwa_icon",
     "pwa_icon_maskable",
+    "api_version",  # the build id, for the update toast: no data
     "invite_activate",  # the "accept this invite?" page, for a valid token
 }
 
@@ -53,6 +54,7 @@ GUEST_READS = {
     "search",
     "settings",
     "api_palette",
+    "whatsnew",
     "usages_list",
     "pens_list",
     "pens_detail",

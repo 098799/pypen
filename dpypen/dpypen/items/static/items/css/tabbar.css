@@ -43,14 +43,16 @@
     align-items: center;
     justify-content: center;
     gap: 0.18rem;
-    min-height: 54px;
+    /* kit README §4 "Bottom nav": >= 56 px a tab, labels >= 11 px (they
+       were 54 px and 9.9 px, 0.62rem). */
+    min-height: 56px;
     padding: 0.45rem 0.2rem 0.5rem;
     border: none;
     background: none;
     color: var(--tb-muted);
     font-family: "Inter", sans-serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
+    font-size: 11px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;

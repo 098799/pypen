@@ -1,0 +1,25 @@
+{% extends "items/_shell.html" %}
+{% comment %}
+A 4xx in the app's chrome (items/error_pages.py; kit README §4 "404 /
+errors"): what happened in one sentence, and a way on. The status code is in
+small print for whoever reports it.
+{% endcomment %}
+{% block title %}{{ err.title }} · Grining Fountain Pens{% endblock %}
+{% block content %}
+<div class="page-head compact">
+  <h1><em>{{ err.title }}</em></h1>
+</div>
+<div class="error-page">
+  <p>{{ err.text }}</p>
+  <p class="error-ways">
+    <a class="btn" href="javascript:history.back()" hx-boost="false" data-error-back>&larr; Back</a>
+    {% if is_owner or is_guest %}
+    <a class="btn primary" href="{% url 'dashboard' %}">The desk</a>
+    <a class="btn" href="{% url 'search' %}">Search</a>
+    {% else %}
+    <a class="btn primary" href="{% url 'home' %}">The front page</a>
+    {% endif %}
+  </p>
+  <p class="error-code">{{ err.status }}</p>
+</div>
+{% endblock %}

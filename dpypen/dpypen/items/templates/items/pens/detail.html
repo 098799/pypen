@@ -264,8 +264,10 @@ share token instead — the door that is actually open.
 
 <div class="pen-hero">
   <div>
-    <div class="pen-photo-main" id="photoMain">
+    <div class="pen-photo-main" id="photoMain"{% if photos %} data-new="photo-viewer"{% endif %}>
       {% if photos %}
+        {# What's new: the tag goes here, over the photo, until the first tap. #}
+        <span class="pv-new" data-new-tag></span>
         {# Tap it: the viewer opens on this photo and walks the others (PYPEN-1). #}
         <img id="photoImg" src="{{ photos.0.full_url }}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}
              data-zoom data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if photos.0.kind != 'other' %} · {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>

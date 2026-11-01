@@ -1,0 +1,630 @@
+<!-- KIT-WHATSNEW: v2.0 2026-10-02
+  What's new: a quiet log of new features, and a small "new" tag on each new
+  control until it is first used. Spec and rules: ~/apps/kit/README.md §4,
+  "What's new". Canonical copy: ~/apps/kit/snippets/whatsnew.html. Apps carry a
+  byte-identical copy (fleet-check `kit` compares them): change this file, bump
+  the stamp here and in `version` below, copy it out. Never edit a copy.
+
+  The app sets, before this include:
+    <script>window.WHATSNEW = {app: "pod", src: "/whatsnew.json"};</script>
+  optionally with `lang: "pl"` (dates) and `labels: {…}` for the snippet's own
+  words (English by default; the keys are the object `L` below; museum passes
+  Polish and Turkish).
+  The server answers src as a list (kit/py/whatsnew.py, README §14):
+  ?limit&offset&q&sort&since&id&exclude_id -> {items,total,limit,offset}. The
+  log (v1.3) searches, highlights, filters (All / Unread), sorts (Newest /
+  Oldest) and pages ("Load more") through it; v1.4 puts those controls in one
+  row (README §14, "Controls take one row"). A server that still returns the
+  plain file gets the whole list, without search. v1.5: within a day, the
+  file's order (newest first), not the id's — needs whatsnew.py v2.
+  v1.6: Back closes the log, one layer per swipe, and never leaves the app
+  (README §4, "Back closes the overlay"). Opening pushes {kitWn: 1} (merged
+  into the state under it, same URL); a screenshot opens in a viewer inside the
+  log, {kitWn: 2}, not in a new tab. ✕, Esc and a backdrop tap call
+  history.back(); the snippet's popstate listener closes the layer and stops
+  the event for listeners added after it. "Try it" closes the log first, then
+  follows. An app whose own popstate listener navigates or closes things on a
+  pop it does not know (soft navigation) was added *before* the snippet, so it
+  must step aside itself: its first line returns when kitWhatsNew exists and
+  kitWhatsNew.ownsPop() is true — while the pop only steps through the log's
+  own entries (README §4, "Back closes the overlay", has the line to copy).
+  v1.7: a device that opens the app for the first time shows no tags and no
+  dot: what exists then counts as seen (the baseline). After that, a tag shows
+  for at most 7 days from when this device first showed it, an entry is new for
+  30 days from its date (was 60), at most 3 tags are on a page (the newest),
+  and the log's header has "Mark all seen" while any tag is up (README §4,
+  "What's new"; 2026-09-29: a tablet's first visit to tower tagged 14 controls).
+  v1.8: nothing is stored until the baseline is taken, so a tap, the log or a
+  data-new-seen page after a failed first fetch cannot make the next load a
+  "tag everything" one; "Mark all seen" shows only while a tag is on the page;
+  the 3 tag places go first to entries with a visible control, so a tag on a
+  hidden tab no longer holds a place it never starts its week in. An app that
+  shows and hides panels without a reload calls kitWhatsNew.paint() after the
+  switch.
+  v2.0 (APPS-2, "beautify the What's new dialog across the board"): on a
+  phone the log is a sheet from the bottom (swipe its header down to close), on
+  the desk a card; both slide in and out, and keep still under
+  prefers-reduced-motion. The header carries an icon, the title and "23
+  updates · 3 new"; the heading takes the focus on open, so no ring sits on the
+  first button. The list is a timeline by month (the month's name pinned while
+  you scroll it), a dot per entry lit while unread, a "new" pill, a note cut at
+  five lines with "Show more" (whole while searching), framed screenshots in a
+  swipe row, "Try it" as a button, a skeleton while loading and an icon on
+  empty and broken states. The app's own button and input rules no longer
+  reach inside (`all:unset`), and dialog#kit-wn outranks a `*{margin:0}` reset.
+  New labels: showMore, showLess, and the counted updates_* and fresh_* (one
+  form per plural category: _one, _few, _many, _other; Intl.PluralRules picks).
+  and marks up:
+    data-new="<entry id>"      the control an entry added; tagged "new" until used
+                               (any tap, change or keyboard focus inside it)
+    data-new-tag               on a child of that: the tag goes here instead
+    data-new-seen="<entry id>" being on this page counts as using it (a new page)
+    data-whatsnew-open         opens the log (a Settings row, a palette entry)
+    data-whatsnew-dot          shows a dot while the log has unread entries
+                               (the Settings tab, and the row that opens the log)
+  Nothing pops up by itself: no toast, no auto-open. Plain HTML/JS, no
+  template tags, so it can be included from Jinja, Django or served as is.
+-->
+<style>
+.kit-new-tag{display:inline-block; margin-left:6px; padding:0 5px; border-radius:5px;
+  font:600 10px/15px system-ui,sans-serif; letter-spacing:.3px; text-transform:lowercase;
+  vertical-align:1px; color:var(--accent,#fb923c); background:color-mix(in srgb,var(--accent,#fb923c) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent,#fb923c) 45%,transparent); pointer-events:none}
+.kit-wn-dot{position:absolute; top:-2px; right:-5px; width:7px; height:7px; border-radius:50%;
+  background:var(--accent,#fb923c); box-shadow:0 0 0 2px var(--bg,#111); pointer-events:none}
+/* While the log is open the page under it must not scroll (v1.2: a modal
+   <dialog> alone does not stop that, least of all on a phone). */
+html.kit-wn-lock,html.kit-wn-lock body{overflow:hidden}
+/* v2.0: a sheet from the bottom on a phone, a card on the desk. The app's
+   tokens (--accent --panel --line --fg --dim --bg) colour it; the short names
+   below are only for this file. dialog#kit-wn outranks an app's `*{margin:0}`
+   reset; the font stays on #kit-wn so an app can still set its own. */
+dialog#kit-wn{--wa:var(--accent,#fb923c); --wp:var(--panel,#1b1b1b); --wl:var(--line,#333); --wf:var(--fg,#eee);
+  --wd:var(--dim,#aaa); --wb:var(--bg,#111); --wt:color-mix(in srgb,var(--wa) 15%,transparent);
+  box-sizing:border-box; flex-direction:column; margin:auto; padding:0; inset:0;
+  width:min(620px,calc(100% - 48px)); max-width:none; height:min(86vh,880px); max-height:none;
+  border:1px solid var(--wl); border-radius:18px; overflow:hidden; background:var(--wp); color:var(--wf);
+  box-shadow:0 24px 64px rgba(0,0,0,.42),0 2px 8px rgba(0,0,0,.2); animation:kit-wn-in .22s cubic-bezier(.2,.8,.2,1)}
+dialog#kit-wn[open]{display:flex}
+#kit-wn{font:14.5px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#kit-wn::backdrop{background:rgba(6,8,12,.55); animation:kit-wn-fade .22s}
+dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
+#kit-wn.out::backdrop{animation:kit-wn-fade-out .16s ease-in forwards}
+#kit-wn *{box-sizing:border-box}
+/* The app's own rules stop at the log's edge: its buttons, inputs and headings
+   (an uppercase h2, a bar before it) do not reach inside. */
+#kit-wn :is(div,span,a,img,h2,h3,h4,p,ol,li,section,time,mark,label,button,input){all:unset; box-sizing:border-box}
+#kit-wn :is(div,h2,h3,h4,p,ol,li,section){display:block}
+#kit-wn :is(div,span,a,h2,h3,h4,p,section,label,time,button)::before,
+#kit-wn :is(div,span,a,h2,h3,h4,p,section,label,time,button)::after{content:none}
+#kit-wn a{cursor:pointer}
+#kit-wn button{cursor:pointer; -webkit-tap-highlight-color:transparent; text-align:center}
+#kit-wn [hidden]{display:none !important}
+#kit-wn :focus-visible{outline:2px solid var(--wa); outline-offset:2px}
+#kit-wn svg{display:block; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+@media (max-width:640px){
+  dialog#kit-wn{width:100%; height:calc(100vh - 32px); height:calc(100dvh - max(32px, env(safe-area-inset-top) + 16px));
+    margin:auto 0 0; border-width:1px 0 0; border-radius:20px 20px 0 0; animation:kit-wn-up .3s cubic-bezier(.2,.8,.2,1)}
+  dialog#kit-wn.out{animation:kit-wn-down .2s ease-in forwards}
+  #kit-wn .grab{display:block}
+}
+@keyframes kit-wn-in{from{opacity:0; transform:translateY(10px) scale(.98)}}
+@keyframes kit-wn-out{to{opacity:0; transform:translateY(6px) scale(.98)}}
+@keyframes kit-wn-up{from{transform:translateY(100%)}}
+@keyframes kit-wn-down{to{transform:translateY(100%)}}
+@keyframes kit-wn-fade{from{opacity:0}}
+@keyframes kit-wn-fade-out{to{opacity:0}}
+@keyframes kit-wn-shim{to{background-position:-200% 0}}
+
+/* Header: what this is, how much is in it, then the two ways out. */
+#kit-wn .top{flex:none; position:relative; border-bottom:1px solid var(--wl);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--wa) 8%,var(--wp)),var(--wp)); touch-action:none}
+#kit-wn .grab{display:none; width:40px; height:5px; margin:8px auto -4px; border-radius:3px; background:color-mix(in srgb,var(--wf) 22%,transparent)}
+#kit-wn .hd{display:flex; align-items:center; gap:12px; padding:14px 14px 12px 18px}
+#kit-wn .ic{flex:none; display:grid; place-items:center; width:40px; height:40px; border-radius:12px; color:var(--wa); background:var(--wt)}
+#kit-wn .ic svg{width:21px; height:21px}
+#kit-wn .ttl{flex:1; min-width:0}
+#kit-wn h2{margin:0; font-size:19px; line-height:1.25; font-weight:700; letter-spacing:-.01em; color:var(--wf)}
+#kit-wn h2:focus,#kit-wn h2:focus-visible{outline:none}
+#kit-wn .sub{display:block; min-height:18px; margin-top:1px; font-size:12.5px; line-height:18px; color:var(--wd);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#kit-wn .sub b{font-weight:650; color:var(--wa)}
+#kit-wn .markall{flex:none; max-width:9.5em; padding:7px 12px; border-radius:999px; font-size:12.5px; line-height:1.2; font-weight:650;
+  color:var(--wa); background:var(--wt)}
+#kit-wn .x{flex:none; display:grid; place-items:center; width:36px; height:36px; border-radius:50%; color:var(--wd);
+  background:color-mix(in srgb,var(--wf) 8%,transparent)}
+#kit-wn .x svg{width:16px; height:16px; stroke-width:2.4}
+/* One row: search takes what is left, then All|Unread, then the sort (§14). */
+#kit-wn .tools{display:flex; align-items:center; gap:8px; padding:0 14px 14px 18px}
+#kit-wn .q{position:relative; flex:1 1 auto; min-width:0}
+#kit-wn .q svg{position:absolute; left:11px; top:50%; width:16px; height:16px; margin-top:-8px; color:var(--wd); pointer-events:none}
+#kit-wn input{display:block; width:100%; height:38px; padding:0 10px 0 34px; border-radius:11px; font-size:16px; line-height:38px;
+  color:var(--wf); background:var(--wb); border:1px solid var(--wl)}
+#kit-wn input::placeholder{color:var(--wd); opacity:1}
+#kit-wn input:focus{border-color:var(--wa); box-shadow:0 0 0 3px var(--wt)}
+#kit-wn input:focus-visible{outline:none}
+#kit-wn .seg{display:flex; flex:none; gap:2px; padding:3px; border-radius:11px; background:var(--wb); border:1px solid var(--wl)}
+#kit-wn .seg button{display:inline-flex; align-items:center; height:30px; padding:0 10px; border-radius:8px; font-size:13px; font-weight:550; color:var(--wd)}
+#kit-wn .seg button[aria-pressed="true"]{color:var(--wf); background:var(--wp); box-shadow:0 1px 3px rgba(0,0,0,.22),inset 0 0 0 1px var(--wl)}
+#kit-wn .sort{flex:none; display:grid; place-items:center; width:38px; height:38px; border-radius:11px; color:var(--wd);
+  background:var(--wb); border:1px solid var(--wl)}
+#kit-wn .sort svg{width:17px; height:17px; transition:transform .2s}
+#kit-wn .sort[data-asc] svg{transform:scaleY(-1)}
+@media (hover:hover){
+  #kit-wn .x:hover{color:var(--wf); background:color-mix(in srgb,var(--wf) 14%,transparent)}
+  #kit-wn .sort:hover,#kit-wn .seg button:hover{color:var(--wf)}
+  #kit-wn .markall:hover,#kit-wn a.try:hover{background:color-mix(in srgb,var(--wa) 24%,transparent)}
+  #kit-wn a.try:hover svg{transform:translateX(2px)}
+  #kit-wn .btn:hover{background:color-mix(in srgb,var(--wf) 13%,transparent)}
+}
+
+/* The log: a timeline by month, a dot per entry, lit while it is unread. */
+#kit-wn .body{flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  padding:0 18px calc(20px + env(safe-area-inset-bottom))}
+#kit-wn .mo{position:sticky; top:0; z-index:1; margin:0 -18px; padding:14px 18px 8px; background:var(--wp);
+  font-size:11.5px; line-height:1.2; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--wd)}
+#kit-wn ol{list-style:none; margin:0; padding:0}
+#kit-wn li{position:relative; margin:0; padding:2px 0 24px 26px}
+#kit-wn li::before{content:""; position:absolute; left:5px; top:20px; bottom:0; width:2px; border-radius:1px; background:var(--wl)}
+#kit-wn li:last-child::before{display:none}
+#kit-wn .dot{position:absolute; left:0; top:6px; width:12px; height:12px; border-radius:50%; background:var(--wp); border:2px solid var(--wl)}
+#kit-wn li.un .dot{background:var(--wa); border-color:var(--wa); box-shadow:0 0 0 4px var(--wt)}
+#kit-wn .d{display:flex; align-items:center; gap:8px; font-size:12.5px; line-height:18px; color:var(--wd)}
+#kit-wn .pill{padding:0 7px; border-radius:999px; font-size:10.5px; line-height:17px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--wa); background:var(--wt)}
+#kit-wn h3{margin:4px 0 6px; font-size:16.5px; line-height:1.3; font-weight:650; letter-spacing:-.005em; color:var(--wf); text-wrap:balance}
+#kit-wn .u{margin:0; color:color-mix(in srgb,var(--wf) 84%,var(--wp)); text-wrap:pretty; overflow-wrap:anywhere}
+#kit-wn .u.clamp{display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5; overflow:hidden}
+#kit-wn .mt{display:inline-block; margin-top:4px; padding:2px 0; font-size:13px; font-weight:650; color:var(--wa)}
+#kit-wn .sh{display:flex; gap:10px; overflow-x:auto; margin:0 -18px 0 -4px; padding:12px 18px 10px 4px;
+  scroll-snap-type:x proximity; scrollbar-width:none}
+#kit-wn .sh::-webkit-scrollbar{display:none}
+#kit-wn .sh a{flex:none; display:block; line-height:0; border-radius:12px; scroll-snap-align:start; cursor:zoom-in}
+#kit-wn .sh img{height:240px; width:auto; max-width:none; border-radius:12px; border:1px solid var(--wl); background:var(--wb);
+  box-shadow:0 4px 14px rgba(0,0,0,.22)}
+#kit-wn a.try{display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:8px 14px; border-radius:999px;
+  font-size:13.5px; line-height:1.2; font-weight:650; text-decoration:none; color:var(--wa); background:var(--wt)}
+#kit-wn a.try svg{width:14px; height:14px; stroke-width:2.4; transition:transform .15s}
+#kit-wn mark{padding:0 1px; border-radius:3px; color:inherit; background:color-mix(in srgb,var(--wa) 34%,transparent)}
+/* Empty, broken, loading. */
+#kit-wn .none{display:flex; flex-direction:column; align-items:center; gap:14px; padding:64px 12px; text-align:center; color:var(--wd)}
+#kit-wn .none .ic{width:54px; height:54px; border-radius:17px}
+#kit-wn .none .ic svg{width:26px; height:26px}
+#kit-wn .btn{display:inline-flex; align-items:center; justify-content:center; padding:8px 16px; border-radius:999px;
+  font-size:13.5px; font-weight:600; color:var(--wf); background:color-mix(in srgb,var(--wf) 7%,transparent); border:1px solid var(--wl)}
+#kit-wn .more{display:flex; width:100%; margin:0 0 6px; padding:10px 16px}
+#kit-wn .more[disabled]{opacity:.55; cursor:default}
+#kit-wn .sk{position:relative; padding:16px 0 18px 26px}
+#kit-wn .sk::before{content:""; position:absolute; left:1px; top:20px; width:10px; height:10px; border-radius:50%; background:var(--wl)}
+#kit-wn .sk i{display:block; height:11px; margin:0 0 10px; border-radius:6px;
+  background:linear-gradient(90deg,var(--wl) 0,color-mix(in srgb,var(--wl) 35%,var(--wp)) 50%,var(--wl) 100%);
+  background-size:200% 100%; animation:kit-wn-shim 1.3s linear infinite}
+#kit-wn .sk i:nth-child(1){width:28%} #kit-wn .sk i:nth-child(2){width:62%; height:15px} #kit-wn .sk i:nth-child(4){width:88%} #kit-wn .sk i:nth-child(5){width:46%}
+/* The screenshot viewer (v1.6): a second layer inside the log. */
+#kit-wn .view{position:fixed; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; cursor:zoom-out;
+  padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom)); background:rgba(0,0,0,.92); animation:kit-wn-fade .18s}
+#kit-wn .view img{max-width:100%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#kit-wn .view button{position:absolute; top:max(10px,env(safe-area-inset-top)); right:10px; display:grid; place-items:center;
+  width:42px; height:42px; border-radius:50%; color:#fff; background:rgba(255,255,255,.16)}
+#kit-wn .view button svg{width:18px; height:18px; stroke-width:2.4}
+@media (prefers-reduced-motion:reduce){
+  #kit-wn,#kit-wn::backdrop,#kit-wn *,#kit-wn.out,#kit-wn.out::backdrop{animation:none !important; transition:none !important}
+}
+</style>
+<script>
+(function () {
+  var CFG = window.WHATSNEW || {};
+  if (!CFG.app || !CFG.src) return;
+  var KEY = 'kitWhatsNew:' + CFG.app, DAYS = 30, TAG_DAYS = 7, MAX_TAGS = 3, PAGE = 10, entries = [], byId = {};
+  var L = {title: 'What’s new', tag: 'new', unread: 'unread', tryIt: 'Try it', none: 'Nothing new yet.',
+           close: 'Close', dot: 'unread news', search: 'Search', all: 'All', unreadChip: 'Unread',
+           newest: 'Newest first', oldest: 'Oldest first', more: 'Load more', noMatch: 'Nothing matches',
+           nothingUnread: 'Nothing unread.', failed: 'Could not load the list.', retry: 'Retry', clear: 'Clear',
+           loading: 'Loading…', markAll: 'Mark all seen', showMore: 'Show more', showLess: 'Show less',
+           updates_one: '{n} update', updates_other: '{n} updates', fresh_one: '{n} new', fresh_other: '{n} new'};
+  Object.keys(CFG.labels || {}).forEach(function (k) { if (CFG.labels[k]) L[k] = String(CFG.labels[k]); });
+  // A counted label (v2.0): key_one / _few / _many / _other, picked by the
+  // language's plural rule; a form the app did not pass falls back to _other.
+  var PR = null; try { PR = new Intl.PluralRules(CFG.lang || undefined); } catch (e) {}
+  function count(key, n) {
+    var form = PR ? PR.select(n) : (n === 1 ? 'one' : 'other');
+    return (L[key + '_' + form] || L[key + '_other'] || '{n}').replace('{n}', n);
+  }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  // Nothing is written before the baseline (v1.8): a key without one would make
+  // the next load no first visit, and every entry news.
+  function save(s) { if (first) return; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  // No stored state at all: this device has never opened the app, so nothing in
+  // it is news here (v1.7) -- see baseline(). Storage that throws reads as a
+  // first visit on every load, which means no tags: the quiet way to fail.
+  var first = true; try { first = localStorage.getItem(KEY) === null; } catch (e) {}
+  var st = load(); st.used = st.used || {}; st.read = st.read || {}; st.shown = st.shown || {};
+  // An entry stays "new" for DAYS after its date; after that nobody needs telling.
+  function fresh(e) { return (Date.now() - Date.parse(e.date)) / 864e5 < DAYS; }
+  // A tag is up while its entry is fresh, its control unused, and this device
+  // first showed it less than TAG_DAYS ago: a tag ignored for a week is noise.
+  function live(e) {
+    return !!e && fresh(e) && !st.used[e.id] && !(st.shown[e.id] && Date.now() - st.shown[e.id] > TAG_DAYS * 864e5);
+  }
+  function baseline() {
+    var now = Date.now();
+    entries.forEach(function (e) { st.used[e.id] = st.used[e.id] || now; st.read[e.id] = 1; });
+    st.since = now; first = false; save(st);
+  }
+  function unread() { return entries.filter(function (e) { return fresh(e) && !st.read[e.id]; }); }
+
+  function position(el) { if (getComputedStyle(el).position === 'static') el.style.position = 'relative'; }
+  function paintDots() {
+    var on = unread().length > 0;
+    document.querySelectorAll('[data-whatsnew-dot]').forEach(function (el) {
+      var dot = el.querySelector(':scope > .kit-wn-dot');
+      if (on && !dot) { position(el); dot = document.createElement('span'); dot.className = 'kit-wn-dot';
+        dot.setAttribute('aria-label', L.dot); el.appendChild(dot); }
+      if (!on && dot) dot.remove();
+    });
+  }
+  var VOID = /^(INPUT|SELECT|TEXTAREA|IMG|BR|HR)$/;
+  // The ids that get a tag on this page: live, with a control here, the newest
+  // MAX_TAGS of them (entries is newest first). One id may tag several controls
+  // (both navs); the cap counts ids, not elements. Ids with a visible control
+  // take the places first; ids whose controls are all hidden (another tab) get
+  // only what is left, so they cannot crowd out a tag that can be seen (v1.8).
+  function tagIds() {
+    var here = {};
+    document.querySelectorAll('[data-new]').forEach(function (el) {
+      here[el.dataset.new] = Math.max(here[el.dataset.new] || 0, el.getClientRects().length ? 2 : 1);
+    });
+    var ok = entries.filter(function (e) { return here[e.id] && live(e); });
+    return ok.filter(function (e) { return here[e.id] === 2; })
+      .concat(ok.filter(function (e) { return here[e.id] === 1; })).slice(0, MAX_TAGS)
+      .reduce(function (m, e) { m[e.id] = 1; return m; }, {});
+  }
+  function paintTags() {
+    var ids = tagIds(), now = Date.now(), stamped = false;
+    document.querySelectorAll('[data-new]').forEach(function (el) {
+      var id = el.dataset.new, host = el.querySelector('[data-new-tag]') || el, has = host.nextElementSibling;
+      var tag = VOID.test(host.tagName) ? (has && has.classList.contains('kit-new-tag') ? has : null)
+                                       : host.querySelector(':scope > .kit-new-tag');
+      var want = !!ids[id];
+      if (want && !tag) {
+        tag = document.createElement('span'); tag.className = 'kit-new-tag'; tag.textContent = L.tag;
+        if (VOID.test(host.tagName)) host.after(tag); else host.appendChild(tag);
+      }
+      if (!want && tag) tag.remove();
+      // The week starts when the tag can be seen, not when a hidden tab got it.
+      if (want && !st.shown[id] && el.getClientRects().length) { st.shown[id] = now; stamped = true; }
+    });
+    if (stamped) save(st);
+    paintMarkAll();
+  }
+  function paintMarkAll() {
+    var b = dlg && dlg.querySelector('[data-markall]');
+    // Only while a tag is on the page: a live entry whose control is not here is no tag.
+    if (b) b.hidden = !document.querySelector('.kit-new-tag');
+  }
+  // "Mark all seen" (v1.7): every tag and the dot go, on this device.
+  function markAll() {
+    var now = Date.now();
+    entries.forEach(function (e) { st.used[e.id] = st.used[e.id] || now; st.read[e.id] = 1; });
+    save(st); paintTags(); paintDots();
+  }
+  function use(id) { if (id && !st.used[id]) { st.used[id] = Date.now(); save(st); paintTags(); } }
+  ['pointerdown', 'focusin', 'change'].forEach(function (t) {
+    document.addEventListener(t, function (ev) {
+      var el = ev.target.closest && ev.target.closest('[data-new]');
+      if (el && (t !== 'focusin' || ev.target.matches(':focus-visible'))) use(el.dataset.new);
+    }, true);
+  });
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function url(u) { try { return new URL(u, new URL(CFG.src, location.href)).href; } catch (e) { return '#'; } }
+  function safe(u) { var h = url(u); return /^https?:/.test(h) ? h : '#'; }
+  // Search folds case and accents the way the server does (kit/py/whatsnew.py), and the
+  // highlight uses the same fold, char by char, so "zur" marks the "Zür" of "Zürich".
+  function fold(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function hl(text, q) {
+    text = String(text || '');
+    var words = fold(q).split(/\s+/).filter(Boolean).sort(function (a, b) { return b.length - a.length; });
+    if (!words.length) return esc(text);
+    var f = '', map = [], on = [];
+    for (var i = 0; i < text.length; i++) { var g = fold(text[i]); for (var k = 0; k < g.length; k++) { f += g[k]; map.push(i); } on.push(false); }
+    words.forEach(function (w) {
+      for (var at = f.indexOf(w); at !== -1; at = f.indexOf(w, at + w.length))
+        for (var j = at; j < at + w.length; j++) on[map[j]] = true;
+    });
+    // Escape every piece, marked or not: the text is never HTML.
+    var out = '', run = '', cur = false;
+    for (var n = 0; n <= text.length; n++) {
+      if (n === text.length || on[n] !== cur) { out += cur ? '<mark>' + esc(run) + '</mark>' : esc(run); run = ''; cur = on[n]; }
+      if (n < text.length) run += text[n];
+    }
+    return out;
+  }
+
+  // Icons (v2.0): inline, stroked in currentColor, so they take the app's colours.
+  function svg(d, box) { return '<svg viewBox="0 0 ' + (box || 24) + ' ' + (box || 24) + '" aria-hidden="true">' + d + '</svg>'; }
+  var I = {
+    spark: svg('<path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>'),
+    x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+    search: svg('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'),
+    sort: svg('<path d="M7 4v15M3.5 15.5L7 19l3.5-3.5"/><path d="M13 6h8M13 11h6M13 16h4"/>'),
+    arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+    alert: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/>')
+  };
+
+  // The list in the log: one state, one fetch, one render (README §14).
+  var S = null, dlg = null, timer = 0;
+  function fmt(d, o) { try { return new Intl.DateTimeFormat(CFG.lang || undefined, o).format(new Date(d)); } catch (e) { return d; } }
+  function fetchPage(append) {
+    if (S.ctrl) S.ctrl.abort();
+    var want = S.applied;
+    if (S.filter === 'unread' && !S.unreadIds.length) { S.items = []; S.total = 0; S.shown = want; S.loading = false; render(); return; }
+    var qs = ['limit=' + PAGE, 'offset=' + (append ? S.items.length : 0), 'sort=' + S.sort];
+    if (want) qs.push('q=' + encodeURIComponent(want));
+    if (S.filter === 'unread') S.unreadIds.forEach(function (id) { qs.push('id=' + encodeURIComponent(id)); });
+    var ctrl = S.ctrl = window.AbortController ? new AbortController() : null;
+    S.loading = true; S.error = false; render();
+    fetch(CFG.src + (CFG.src.indexOf('?') < 0 ? '?' : '&') + qs.join('&'),
+          {cache: 'no-cache', credentials: 'same-origin', signal: ctrl && ctrl.signal})
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) {
+        if (ctrl !== S.ctrl) return;                       // a newer request owns the list
+        if (!d.items) {                                    // a server still on the plain file
+          S.plain = true;
+          var all = clean(d.entries).filter(function (e) { return S.filter !== 'unread' || S.unreadIds.indexOf(e.id) >= 0; });
+          if (S.sort === 'date') all.reverse();
+          d = {items: all, total: all.length};
+        }
+        S.items = append ? S.items.concat(d.items) : d.items; S.total = d.total; S.shown = want;
+        if (S.filter === 'all' && !want) S.count = d.total;   // the header's "23 updates"
+        S.loading = false; S.ctrl = null; render();
+      })
+      .catch(function (e) { if (e && e.name === 'AbortError') return; S.loading = false; S.error = true; S.ctrl = null; render(); });
+  }
+  function entry(e) {
+    var un = S.unreadIds.indexOf(e.id) >= 0;
+    // A long note shows five lines and "Show more"; a search shows it whole, so no
+    // highlight hides under the fold. Clamped only when it overflows (see fit()).
+    var cut = !S.shown && !S.open[e.id];
+    return '<li class="' + (un ? 'un' : '') + '" data-id="' + esc(e.id) + '"><span class="dot"></span>' +
+      '<div class="d"><time datetime="' + esc(e.date) + '">' + esc(fmt(e.date, {day: 'numeric', month: 'short'})) + '</time>' +
+      (un ? '<span class="pill">' + esc(L.tag) + '</span>' : '') + '</div>' +
+      '<h3>' + hl(e.title, S.shown) + '</h3>' +
+      (e.use ? '<p class="u' + (cut ? ' clamp' : '') + '">' + hl(e.use, S.shown) + '</p>' +
+        (S.shown ? '' : '<button type="button" class="mt" data-more hidden aria-expanded="' + !cut + '">' + esc(cut ? L.showMore : L.showLess) + '</button>') : '') +
+      ((e.shots || []).length ? '<div class="sh">' + e.shots.map(function (s) {
+        return '<a href="' + safe(s) + '" data-shot><img loading="lazy" alt="' + esc(e.title) + '" src="' + safe(s) + '"></a>';
+      }).join('') + '</div>' : '') +
+      (e.try ? '<div><a class="try" href="' + safe(e.try) + '">' + esc(L.tryIt) + I.arrow + '</a></div>' : '') + '</li>';
+  }
+  // "Show more" only under a note the clamp actually cut.
+  function fit() {
+    dlg.querySelectorAll('.list li').forEach(function (li) {
+      var p = li.querySelector('.u'), b = li.querySelector('[data-more]');
+      if (!p || !b) return;
+      b.hidden = p.classList.contains('clamp') ? p.scrollHeight <= p.clientHeight + 2 : false;
+    });
+  }
+  function empty(icon, text, button) {
+    return '<div class="none"><span class="ic">' + icon + '</span><div>' + text + '</div>' + (button || '') + '</div>';
+  }
+  function render() {
+    if (!dlg || !S) return;
+    var box = dlg.querySelector('.list'), tools = dlg.querySelector('.tools');
+    tools.querySelector('.q').hidden = !!S.plain;
+    tools.querySelectorAll('[data-f]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === S.filter)); });
+    tools.querySelector('.seg').hidden = !S.unreadIds.length;   // nothing unread: no filter to offer
+    var sb = tools.querySelector('.sort'), name = S.sort === '-date' ? L.newest : L.oldest;
+    sb.toggleAttribute('data-asc', S.sort !== '-date'); sb.title = name; sb.setAttribute('aria-label', name);
+    var n = S.unreadIds.length;
+    dlg.querySelector('.sub').innerHTML = S.count == null ? '&nbsp;' :
+      esc(count('updates', S.count)) + (n ? ' · <b>' + esc(count('fresh', n)) + '</b>' : '');
+    // Typed but not yet answered counts as busy, so "nothing matches" never flashes.
+    var busy = S.loading || S.q.trim() !== S.shown;
+    var html = '';
+    if (S.error) html = empty(I.alert, esc(L.failed), '<button type="button" class="btn" data-retry>' + esc(L.retry) + '</button>');
+    else if (!S.items.length && busy) html = '<div aria-label="' + esc(L.loading) + '">' + new Array(4).join('<div class="sk"><i></i><i></i><i></i><i></i><i></i></div>') + '</div>';
+    else if (!S.items.length && S.shown) html = empty(I.search, esc(L.noMatch) + ' “' + esc(S.shown) + '”', '<button type="button" class="btn" data-clear>' + esc(L.clear) + '</button>');
+    else if (!S.items.length && S.filter === 'unread') html = empty(I.spark, esc(L.nothingUnread));
+    else if (!S.items.length) html = empty(I.spark, esc(L.none));
+    else {
+      // One section per month, its name pinned while you scroll through it.
+      var groups = [];
+      S.items.forEach(function (e) {
+        var m = String(e.date).slice(0, 7), g = groups[groups.length - 1];
+        if (!g || g.m !== m) groups.push(g = {m: m, items: []});
+        g.items.push(e);
+      });
+      html = groups.map(function (g) {
+        return '<section><h4 class="mo">' + esc(fmt(g.m + '-15', {month: 'long', year: 'numeric'})) + '</h4><ol>' +
+          g.items.map(entry).join('') + '</ol></section>';
+      }).join('') +
+      (S.items.length < S.total ? '<button type="button" class="btn more"' + (S.loading ? ' disabled' : '') + '>' + esc(L.more) + '</button>' : '');
+    }
+    box.innerHTML = html;
+    fit();
+  }
+  function build() {
+    dlg = document.createElement('dialog'); dlg.id = 'kit-wn'; dlg.setAttribute('aria-labelledby', 'kit-wn-t');
+    document.body.appendChild(dlg);
+    // The heading takes the focus on open (autofocus), not the first button:
+    // a ring round "Mark all seen" is the first thing nobody wants to see.
+    dlg.innerHTML = '<div class="top"><div class="grab"></div><div class="hd"><span class="ic">' + I.spark + '</span>' +
+      '<div class="ttl"><h2 id="kit-wn-t" tabindex="-1" autofocus>' + esc(L.title) + '</h2><span class="sub">&nbsp;</span></div>' +
+      '<button type="button" class="markall" data-markall hidden>' + esc(L.markAll) + '</button>' +
+      '<button type="button" class="x" data-close aria-label="' + esc(L.close) + '">' + I.x + '</button></div>' +
+      '<div class="tools"><label class="q">' + I.search + '<input type="search" enterkeyhint="search" autocomplete="off" placeholder="' + esc(L.search) + '" aria-label="' + esc(L.search) + '"></label>' +
+      '<span class="seg" role="group"><button type="button" data-f="all">' + esc(L.all) + '</button><button type="button" data-f="unread">' + esc(L.unreadChip) + '</button></span>' +
+      '<button type="button" class="sort">' + I.sort + '</button></div></div>' +
+      '<div class="body"><div class="list" aria-live="polite"></div></div>' +
+      '<div class="view" hidden><img alt=""><button type="button" aria-label="' + esc(L.close) + '">' + I.x + '</button></div>';
+    var input = dlg.querySelector('input');
+    input.addEventListener('input', function () {
+      S.q = input.value; render(); clearTimeout(timer);
+      timer = setTimeout(function () { S.applied = S.q.trim(); fetchPage(false); }, 300);
+    });
+    // Esc (and Android's back, which Chrome turns into a cancel) closes the top
+    // layer: the viewer, then the search text, then the log — each via history.
+    dlg.addEventListener('cancel', function (ev) {
+      ev.preventDefault();
+      if (depth < 2 && document.activeElement === input && input.value) { input.value = ''; input.dispatchEvent(new Event('input')); return; }
+      back();
+    });
+    dlg.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t.closest('.view')) { ev.preventDefault(); return back(); }
+      if (t === dlg || t.closest('[data-close]')) return back();
+      if (t.closest('[data-markall]')) return markAll();
+      var a = t.closest('a[data-shot]');
+      if (a && !(ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey)) {
+        ev.preventDefault(); if (depth === 1) showView(a.getAttribute('href'), a.querySelector('img').alt); return;
+      }
+      a = t.closest('a.try');
+      if (a && depth && !(ev.metaKey || ev.ctrlKey || ev.shiftKey)) { ev.preventDefault(); follow = a; return back(); }
+      var more = t.closest('[data-more]');
+      if (more) {
+        var li = more.closest('li'), p = li.querySelector('.u'), opened = p.classList.toggle('clamp') === false;
+        S.open[li.dataset.id] = opened; more.textContent = opened ? L.showLess : L.showMore;
+        more.setAttribute('aria-expanded', String(opened));
+        if (!opened && li.getBoundingClientRect().top < dlg.querySelector('.body').getBoundingClientRect().top) li.scrollIntoView({block: 'start'});
+        return;
+      }
+      if (t.closest('[data-f]')) { S.filter = t.closest('[data-f]').dataset.f; return fetchPage(false); }
+      if (t.closest('.sort')) { S.sort = S.sort === '-date' ? 'date' : '-date'; return fetchPage(false); }
+      if (t.closest('.more')) { if (!S.loading) fetchPage(true); return; }
+      if (t.closest('[data-retry]')) return fetchPage(false);
+      if (t.closest('[data-clear]')) { input.value = ''; S.q = S.applied = ''; input.focus(); return fetchPage(false); }
+    });
+    dlg.addEventListener('close', function () {
+      if (dlg.open) return;                     // the event of a close that open() already undid
+      clearTimeout(outT); outT = 0; dlg.classList.remove('out'); dlg.style.transform = dlg.style.transition = '';
+      document.documentElement.classList.remove('kit-wn-lock'); clearTimeout(timer); if (S && S.ctrl) S.ctrl.abort();
+      // Closed without us (a browser that ignores the cancel): drop our entries too,
+      // or the next Back does nothing.
+      if (!shutting && !backing && depth) { hideView(); drop(); }
+    });
+    // On a phone the sheet goes with a swipe down on its header, like any sheet:
+    // past 90 px (or a flick) it closes through history, else it springs back.
+    var top = dlg.querySelector('.top'), y0 = null, dy = 0, t0 = 0;
+    top.addEventListener('touchstart', function (ev) {
+      if (ev.touches.length !== 1 || ev.target.closest('input,button') || !matchMedia('(max-width:640px)').matches) return;
+      y0 = ev.touches[0].clientY; dy = 0; t0 = Date.now(); dlg.style.transition = 'none';
+    }, {passive: true});
+    top.addEventListener('touchmove', function (ev) {
+      if (y0 == null) return;
+      dy = Math.max(0, ev.touches[0].clientY - y0); dlg.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+    }, {passive: true});
+    function end() {
+      if (y0 == null) return;
+      y0 = null; dlg.style.transition = 'transform .2s ease-out';
+      if (dy > 90 || (dy > 30 && dy / (Date.now() - t0) > 0.6)) { dlg.style.transform = 'translateY(100%)'; back(); }
+      else dlg.style.transform = '';
+    }
+    top.addEventListener('touchend', end); top.addEventListener('touchcancel', end);
+  }
+
+  // History layers (v1.6). depth = how many of our entries are on top: 0 none,
+  // 1 the log, 2 the log and its screenshot viewer. The entry copies the state
+  // under it, so an app that reads its own keys still sees its stack unchanged.
+  var depth = 0, backing = false, shutting = false, skip = 0, follow = null, outT = 0;
+  function lvl() { var s = history.state; return (s && typeof s.kitWn === 'number') ? s.kitWn : 0; }
+  function push(n) {
+    try { history.pushState(Object.assign({}, history.state, {kitWn: n}), ''); depth = n; } catch (e) {}
+  }
+  function hideView() {
+    var v = dlg && dlg.querySelector('.view');
+    if (v && !v.hidden) { v.hidden = true; v.querySelector('img').removeAttribute('src'); }
+  }
+  function showView(src, alt) {
+    var v = dlg.querySelector('.view'), img = v.querySelector('img');
+    img.src = src; img.alt = alt || ''; v.hidden = false; push(2);
+    v.querySelector('button').focus({preventScroll: true});
+  }
+  // The log leaves the way it came (v2.0): it slides out, then closes. The page
+  // is already free (the lock goes now); open() while it slides finishes it first.
+  function finish() {
+    if (!dlg || !dlg.open) return;
+    clearTimeout(outT); outT = 0; shutting = true; dlg.close(); shutting = false;
+  }
+  function shut() {
+    hideView();
+    if (!dlg || !dlg.open || outT) return;
+    document.documentElement.classList.remove('kit-wn-lock');
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return finish();
+    dlg.classList.add('out'); outT = setTimeout(finish, 220);
+  }
+  // Every way out but Back itself: step back through history, popstate closes.
+  function back() {
+    if (depth && lvl() === depth) { backing = true; history.back(); }
+    else { if (depth === 2) { hideView(); depth = 1; } else { shut(); depth = 0; followOn(); } }
+  }
+  function followOn() { if (follow) { var a = follow; follow = null; setTimeout(function () { finish(); a.click(); }, 0); } }
+  // Remove all our entries at once, when they are still on top.
+  function drop() { var d = depth; depth = 0; if (d && lvl() === d) { skip++; history.go(-d); } }
+  // True during a popstate that only steps through our entries (the app asks,
+  // since its listener runs before this one: listeners fire in the order added).
+  function ownsPop() { return skip > 0 || lvl() !== depth; }
+  window.addEventListener('popstate', function (ev) {
+    var at = lvl();
+    if (skip) { skip--; ev.stopImmediatePropagation(); return; }
+    if (at === depth) return;                   // not a step through our layers: the app's
+    ev.stopImmediatePropagation();
+    backing = false;
+    if (at > depth) { skip++; history.go(depth - at); return; }   // Forward onto a shut layer: step off it
+    if (at < 2) hideView();
+    if (at < 1) shut();
+    depth = at;
+    if (depth && !(dlg && dlg.open)) drop();    // the log went while the viewer was up
+    if (!depth) followOn();
+  });
+  // A reload lands on the page, not in the log: the entry it stands on is no layer.
+  if (lvl()) { try { var st0 = Object.assign({}, history.state); delete st0.kitWn; history.replaceState(st0, ''); } catch (e) {} }
+
+  function open() {
+    if (depth) return;
+    if (!dlg) build();
+    finish();
+    paintMarkAll();
+    // What was unread when the log opened stays marked (and filterable) while it is open.
+    S = {q: '', applied: '', shown: '', filter: 'all', sort: '-date', items: [], total: 0, count: null, loading: false, error: false,
+         ctrl: null, plain: false, open: {}, unreadIds: unread().map(function (e) { return e.id; })};
+    dlg.querySelector('input').value = '';
+    document.documentElement.classList.add('kit-wn-lock');
+    dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
+    dlg.querySelector('.body').scrollTop = 0;
+    push(1);
+    fetchPage(false);
+    entries.forEach(function (e) { st.read[e.id] = 1; }); save(st); paintDots();
+  }
+  document.addEventListener('click', function (ev) {
+    var el = ev.target.closest && ev.target.closest('[data-whatsnew-open]');
+    if (el) { ev.preventDefault(); open(); }
+  });
+  function paint() {
+    document.querySelectorAll('[data-new-seen]').forEach(function (el) { use(el.dataset.newSeen); });
+    paintTags(); paintDots();
+  }
+  // Newest first; within a day, the file's own order (it is newest first) —
+  // not the id, which put a day's entries in the alphabet's order (v1.5).
+  function clean(list) {
+    return (list || []).map(function (e, i) { return {e: e, i: i}; })
+      .filter(function (x) { var e = x.e; return e && e.id && e.title && !isNaN(Date.parse(e.date)); })
+      .sort(function (a, b) { return Date.parse(b.e.date) - Date.parse(a.e.date) || a.i - b.i; })
+      .map(function (x) { return x.e; });
+  }
+  window.kitWhatsNew = {version: 'v2.0 2026-10-02', open: open, paint: paint, use: use, ownsPop: ownsPop, markAll: markAll};
+
+  // Tags and the dot need only the recent entries: one small page, not the whole log.
+  var since = new Date(Date.now() - DAYS * 864e5).toISOString().slice(0, 10);
+  fetch(CFG.src + (CFG.src.indexOf('?') < 0 ? '?' : '&') + 'since=' + since + '&limit=50',
+        {cache: 'no-cache', credentials: 'same-origin'}).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      entries = clean(d.items || d.entries);
+      entries.forEach(function (e) { byId[e.id] = e; });
+      // Only a real answer sets the baseline: one taken from a failed fetch
+      // would be empty, and the next load would tag everything again.
+      if (first && (d.items || d.entries)) baseline();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
+    }).catch(function () {});
+})();
+</script>

@@ -16,6 +16,8 @@ urlpatterns = [
     path('search/', search.search, name='search'),
     path('settings/', public.settings_page, name='settings'),
     path('api/palette', palette.palette, name='api_palette'),
+    path('api/version', pwa.version, name='api_version'),
+    path('whatsnew.json', pwa.whatsnew, name='whatsnew'),
     path('undo/<str:token>/', undo.undo, name='undo'),
 
     path('manifest.json', pwa.manifest, name='pwa_manifest'),

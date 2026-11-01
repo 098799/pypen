@@ -17,7 +17,7 @@ copy): first, so its popstate listener runs before htmx's and the app's.
 <link rel="stylesheet" href="{% static 'items/css/fonts.css' %}">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="{% static 'items/icons/apple-touch-icon.png' %}">
 <meta name="theme-color" content="#f4ecd8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#13161c" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
@@ -57,6 +57,34 @@ The kit's toast (kit README §4 "Toast", KIT-TOAST), and the reader that turns
 the server's messages (the data block in #main) into it.
 {% endcomment %}
 {% include "items/_toast.html" %}
+{% comment %}
+The kit's "New version ready · Refresh" toast (kit README §4 "New version",
+KIT-UPDATE, a byte copy). pypen's worker takes over at install (`takeover` in
+pwa.py), so nothing waits to be offered: the toast compares this page's build
+with /api/version instead (the same hash the worker carries).
+{% endcomment %}
+<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
+{% include "items/_update.html" %}
+{% comment %}
+Pull to refresh (kit README §4, KIT-PULLREFRESH, a byte copy): Pens on an
+iPhone's home screen has no reload button and no browser gesture of its own.
+{% endcomment %}
+{% include "items/_pullrefresh.html" %}
+{% if is_owner or is_guest %}
+{% comment %}
+What's new (kit README §4, KIT-WHATSNEW, a byte copy): the log of new features
+(whatsnew.json in the repo, served by whatsnew.py), opened from Settings and the
+palette; the dot sits on More and on Settings. Signed-in and guests only, like
+the route.
+{% endcomment %}
+<script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};</script>
+{% include "items/_whatsnew.html" %}
+<script>
+/* An hx-boost swap brings new controls (a pen's photo) and new dots without a
+   load: the snippet tags them again. */
+document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
+</script>
+{% endif %}
 <script>
 /* On each full load and after each htmx swap: the messages not yet shown.
    The kit shows one toast at a time, so several messages at once (a notebook
@@ -100,6 +128,20 @@ the server's messages (the data block in #main) into it.
     read();
   });
 })();
+</script>
+<script>
+/* htmx swaps no 4xx or 5xx answer, so a boosted link to a page that is not
+   there did nothing at all. The error pages (items/error_pages.py) are pages
+   with a #main: take them for a boosted navigation, as a load would. A fetch
+   of a fragment keeps htmx's way (its answer is JSON or a partial). */
+document.addEventListener("htmx:beforeSwap", function (e) {
+  var d = e.detail, x = d.xhr;
+  if (!d.boosted || !x || x.status < 400) return;
+  if (!/text\/html/.test(x.getResponseHeader("Content-Type") || "")) return;
+  if (x.responseText.indexOf('id="main"') < 0) return;
+  d.shouldSwap = true;
+  d.isError = false;
+});
 </script>
 <a class="skip-link" href="#main">Skip to content</a>
 
@@ -196,7 +238,7 @@ the server's messages (the data block in #main) into it.
   {% endif %}
 
   {% if is_owner or is_guest %}
-  <a href="{% url 'settings' %}" class="menu-item{% if nav == 'settings' %} on{% endif %}">Settings</a>
+  <a href="{% url 'settings' %}" class="menu-item{% if nav == 'settings' %} on{% endif %}"><span class="wn-host" data-whatsnew-dot>Settings</span></a>
   {% endif %}
   {% if not user.is_authenticated and not is_guest %}
   <a href="{% url 'google_login' %}?next={{ request.get_full_path|urlencode }}" class="menu-item signin" hx-boost="false">Sign in with Google</a>
@@ -248,7 +290,7 @@ submits it, a plain POST that the server answers with "Undone."
   <span style="font-family: 'Inter', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding: 0.55rem 0.9rem;">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
   <form method="post" action="{% url 'invite_deactivate' %}" style="display: inline; margin: 0;" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" style="background: none; border: none; padding: 0.55rem 0.9rem; color: var(--accent); font-family: 'Inter', sans-serif; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer;">Leave</button></form>
   {% endif %}
-  <button class="menu-btn menu-in-nav" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+  <button class="menu-btn menu-in-nav" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn data-whatsnew-dot>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
       <path d="M4 7h16M4 12h16M4 17h16"></path>
     </svg>
@@ -736,6 +778,8 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
    jump keeps hx-boost's swap (and with it the scroll position and the tab
    state) instead of doing a full page load. */
 window.__go = function (url, push) {
+  // The palette's "What's new" entry opens the log, it is not a page.
+  if (url === "#whatsnew") { if (window.kitWhatsNew) kitWhatsNew.open(); return; }
   if (window.htmx && typeof htmx.ajax === "function") {
     /* HX-Boosted: the list views answer a bare HX-Request with a partial that
        has no #main in it, and swapping that in deleted #main — every palette
@@ -821,23 +865,26 @@ window.__go = function (url, push) {
 })();
 </script>
 <script>
-/* Scroll lock: an overlay freezes the page under it (~/apps/kit/README.md,
-   "Dialogs & sheets"). pypen's dimmed overlays are the keyboard layer's
-   palette and ? sheet; on a phone the page ran on underneath both
-   (2026-09-27). The lock follows what is on screen instead of hooking each
-   open and close, so every way out clears it: Escape, the dim, a pick that
-   navigates, one overlay taking over from the other. Kept for the palette,
-   a kit copy that does not use the kit's layer; the menus and the gantt
-   popup are kitLayer layers with lock: false. The photo viewer (PYPEN-1) is
-   a kitLayer layer *with* the lock: this watcher would clear the kit's class
-   a microtask after the kit set it, so the viewer is on its list too. Any new
-   locking layer must be added here. */
+/* Scroll lock for the keyboard layer's palette and ? sheet (~/apps/kit/README.md,
+   "Dialogs & sheets"). They are the kit's keys.html, which has its own overlays
+   and does not open them through kitLayer (KEYS-LAYER v1.2): until the kit's
+   layer does, html.scroll-lock follows them here. Every other overlay of
+   pypen's is a kitLayer layer, and the kit sets and clears the class for those.
+   The two must not fight: a modal <dialog> (the photo viewer, What's new) counts
+   as open here too, by `:modal`, so this watcher never clears the lock under
+   one, and a new modal layer needs no line here (until PYPEN-1 it named the
+   viewer, and a forgotten one would have lost its lock a microtask after the
+   kit set it). The menus are lock: false and not modal, so they stay out. */
 (function () {
-  var OPEN = "#kpal.on,#khelp.on,dialog.pv[open]";
+  var OPEN = "#kpal.on,#khelp.on";
   var root = document.documentElement, queued = false;
+  function modal() {
+    try { return !!document.querySelector("dialog:modal"); }
+    catch (e) { return !!document.querySelector("dialog[open]"); }   // no :modal: older Safari
+  }
   function sync() {
     queued = false;
-    root.classList.toggle("scroll-lock", !!document.querySelector(OPEN));
+    root.classList.toggle("scroll-lock", !!document.querySelector(OPEN) || modal());
   }
   new MutationObserver(function () {
     if (!queued) { queued = true; Promise.resolve().then(sync); }

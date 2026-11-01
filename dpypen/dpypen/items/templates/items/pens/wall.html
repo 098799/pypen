@@ -39,6 +39,14 @@ html[data-theme="light"] {
   --label-grad-to: rgba(244, 236, 216, 0.92);
   --label-color: #1b2a4a;
 }
+/* The kit's pull mark (_pullrefresh.html) reads the fleet's names. It also
+   turns the browser's own pull off, which is why html and body no longer say
+   an overscroll rule of their own (kit README §4 "Pull to refresh"). */
+#kit-pull {
+  --panel: var(--tile-bg, var(--bg));
+  --fg: var(--text);
+  --line: color-mix(in srgb, var(--text) 22%, transparent);
+}
 /* The bar in tabbar.css reads these; both wall themes define --bg and --text,
    so one rule covers light and dark. */
 html {
@@ -53,7 +61,6 @@ html, body {
   color: var(--text);
   font-family: "EB Garamond", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior: none;
   transition: background-color 0.4s, color 0.4s;
 }
 body { padding-bottom: env(safe-area-inset-bottom); }
@@ -255,6 +262,8 @@ html[data-theme="dark"] .theme-btn .icon-dark  { display: none; }
 <link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 </head>
 <body{% if is_owner or is_guest %} class="has-tabbar"{% endif %}>
+{# Pull to refresh (kit README §4, KIT-PULLREFRESH): a wall on a home-screen app has no reload. #}
+{% include "items/_pullrefresh.html" %}
 
 <header class="wall-head">
   <div class="wall-title">a <em>wall</em> of <strong>{{ total }}</strong> pens</div>

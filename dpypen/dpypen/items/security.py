@@ -67,8 +67,14 @@ class SecurityHeaders:
         # A page drawn for a signed-in owner or a guest is theirs alone: no
         # shared cache may keep it. (The service worker still keeps it for
         # offline — `private` is not `no-store` — and forgets it on sign-out.)
-        if "Cache-Control" not in response.headers and _is_page(response) and _is_visitor(request):
-            patch_cache_control(response, private=True)
+        # And every page is asked again before it is shown (kit README §5.3,
+        # "Stale phones"): `no-cache`, so a phone never shows yesterday's page
+        # from its HTTP cache after a deploy (PYPEN-2).
+        if "Cache-Control" not in response.headers and _is_page(response):
+            if _is_visitor(request):
+                patch_cache_control(response, private=True, no_cache=True)
+            else:
+                patch_cache_control(response, no_cache=True)
         return response
 
 

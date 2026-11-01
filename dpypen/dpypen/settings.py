@@ -39,6 +39,9 @@ SILENCED_SYSTEM_CHECKS = ["security.W004", "security.W008"]
 CSRF_TRUSTED_ORIGINS = ["https://pen.grining.eu"]
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+# A refused form (an expired token, a page left open) gets the app's page
+# with a way back, not Django's yellow one (items/error_pages.py).
+CSRF_FAILURE_VIEW = "dpypen.items.error_pages.csrf_failure"
 
 ALLOWED_EMAILS = {
     e.strip().lower()
@@ -138,6 +141,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "dpypen.items.auth.visitor_context",
+                "dpypen.items.pwa.build_context",
             ],
         },
     },

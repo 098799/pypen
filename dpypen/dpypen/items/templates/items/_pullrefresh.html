@@ -1,0 +1,192 @@
+<!-- KIT-PULLREFRESH: v1 2026-10-12
+  Pull down to refresh: at the top of a page, a finger that pulls down brings a
+  round mark out from under the top edge; let go past the line and the page
+  loads again. Spec: ~/apps/kit/README.md §4, "Pull to refresh". Canonical
+  copy: ~/apps/kit/snippets/pullrefresh.html. Apps carry a byte-identical copy
+  (fleet-check `kit` compares them): change this file, bump the stamp here and
+  in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: an app installed to the home screen of an iPhone has
+  no pull to refresh at all, and has no reload button either. The browser's own
+  gesture stays where the page cannot switch it off (a tab in an iOS browser);
+  everywhere else on a touch screen this one takes its place
+  (`overscroll-behavior-y: contain` on <html> switches Chrome's off), so there
+  are never two.
+
+  Include it once, anywhere in <body>. It needs nothing. Optional, set before
+  or after the include, in a script of the app:
+    window.KITPULL = {
+      refresh: function () { … },   // in the place of a reload; may return a
+                                    // promise: the mark turns until it settles
+      off: function () { return gameIsRunning; },   // true = no pull now
+    };
+  Without `refresh`: a service worker that waits is told SKIP_WAITING (the
+  fleet's "New version" message), so the pull also fetches the new build; then
+  location.reload().
+
+  It keeps out of the way: only one finger, only from scrollY 0, only a pull
+  that goes more down than sideways; not while the page is frozen under a
+  dialog or sheet (html.scroll-lock, dialog[open], overflow hidden on html or
+  body); not from a text field in use, a textarea, a canvas, a range, or
+  anything inside [data-no-pull]; not from inside a scroller that is not at its top, or that
+  keeps its overscroll (overscroll-behavior other than auto).
+
+  Look: the app's `--panel --line --accent --fg` and nothing else.
+-->
+<style>
+html.kit-pull { overscroll-behavior-y: contain; }
+#kit-pull { position: fixed; z-index: 2147483000; left: 50%; top: calc(env(safe-area-inset-top, 0px) - 46px);
+  width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  background: var(--panel, #20242b); color: var(--fg, #e8e8e8); border: 1px solid var(--line, #3a404a);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .35); opacity: 0; transform: translateY(0); will-change: transform; }
+#kit-pull.back { transition: transform .22s ease-out, opacity .22s ease-out; }
+#kit-pull svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+#kit-pull.armed { color: var(--accent, #6aa9ff); border-color: var(--accent, #6aa9ff); }
+#kit-pull.busy { color: var(--accent, #6aa9ff); }
+#kit-pull.busy svg { animation: kit-pull-turn .8s linear infinite; }
+@keyframes kit-pull-turn { to { transform: rotate(360deg); } }
+#kit-pull-say { position: fixed; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { #kit-pull.back { transition: none; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitPull) return;
+  var touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  var ua = navigator.userAgent || '';
+  var ios = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var installed = navigator.standalone === true;
+  try { installed = installed || matchMedia('(display-mode: standalone)').matches; } catch (e) {}
+  // A tab in an iOS browser has the browser's own pull, and a page cannot switch it off.
+  var active = touch && !(ios && !installed);
+
+  var SLOP = 10, LINE = 64, REST = 58, MAX = 104;
+  var el = null, say = null, t = null, busy = false;
+
+  function cfg() { return window.KITPULL || {}; }
+  function mark() {
+    if (el) return el;
+    el = document.createElement('div'); el.id = 'kit-pull'; el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.6-5.7"/><path d="M17.4 2.6v4h-4"/></svg>';
+    say = document.createElement('div'); say.id = 'kit-pull-say'; say.setAttribute('role', 'status');
+    document.body.appendChild(el); document.body.appendChild(say);
+    return el;
+  }
+  function draw(y, back) {
+    mark();
+    el.classList.toggle('back', !!back);
+    el.style.transform = 'translateY(' + y.toFixed(1) + 'px)';
+    el.style.opacity = Math.min(1, y / 30).toFixed(2);
+    if (!busy) el.firstChild.style.transform = 'rotate(' + Math.round(Math.min(1, y / LINE) * 300 - 300) + 'deg)';
+    el.classList.toggle('armed', !busy && y >= LINE);
+  }
+  function rest() {
+    busy = false;
+    if (!el) return;
+    el.classList.remove('busy');
+    el.firstChild.style.transform = '';
+    draw(0, true);
+    say.textContent = '';
+  }
+
+  function frozen() {
+    var d = document.documentElement, b = document.body;
+    if (d.classList.contains('scroll-lock') || document.querySelector('dialog[open]')) return true;
+    return getComputedStyle(d).overflowY === 'hidden' || (b && getComputedStyle(b).overflowY === 'hidden');
+  }
+  function atTop() {
+    var s = document.scrollingElement || document.documentElement;
+    return (window.scrollY || s.scrollTop || 0) <= 0;
+  }
+  // The place the finger landed: may a pull start from it?
+  function free(node) {
+    if (!node || !node.closest) return true;
+    if (node.closest('textarea, select, canvas, input[type=range], [contenteditable=""], [contenteditable="true"], [draggable="true"], [data-no-pull]')) return false;
+    if (node === document.activeElement && /^(INPUT|TEXTAREA)$/.test(node.tagName)) return false;   // the caret is being moved
+    for (var n = node; n && n !== document.body && n !== document.documentElement; n = n.parentElement) {
+      var cs = getComputedStyle(n);
+      if (/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1) {
+        if (n.scrollTop > 0) return false;
+        if (cs.overscrollBehaviorY && cs.overscrollBehaviorY !== 'auto') return false;
+      }
+    }
+    return true;
+  }
+
+  function reload() {
+    var went = false;
+    function go() { if (!went) { went = true; location.reload(); } }
+    try {
+      var sw = navigator.serviceWorker;
+      if (sw && sw.controller) {
+        sw.getRegistration().then(function (reg) {
+          if (!reg || !reg.waiting) return go();
+          sw.addEventListener('controllerchange', go);
+          reg.waiting.postMessage('SKIP_WAITING');
+          setTimeout(go, 1500);
+        }, go);
+        setTimeout(go, 2500);
+        return;
+      }
+    } catch (e) {}
+    go();
+  }
+  function refresh() {
+    if (busy) return;
+    busy = true;
+    mark(); el.classList.remove('armed'); el.classList.add('busy'); el.firstChild.style.transform = '';
+    draw(REST, true);
+    say.textContent = 'Refreshing';
+    var own = cfg().refresh, out;
+    try { out = typeof own === 'function' ? own() : reload(); } catch (e) { out = null; }
+    if (out && typeof out.then === 'function') out.then(rest, rest);
+    else if (typeof own === 'function') setTimeout(rest, 600);
+    else setTimeout(rest, 8000);   // a reload that did not come (no network, a refused unload)
+  }
+
+  function start(e) {
+    t = null;
+    if (busy || e.touches.length !== 1 || !atTop() || frozen()) return;
+    if (typeof cfg().off === 'function' && cfg().off()) return;
+    if (!free(e.target)) return;
+    t = { x: e.touches[0].clientX, y: e.touches[0].clientY, on: false, pull: 0 };
+  }
+  function move(e) {
+    if (!t) return;
+    if (e.touches.length !== 1) { end(e, true); return; }
+    var dx = e.touches[0].clientX - t.x, dy = e.touches[0].clientY - t.y;
+    if (!t.on) {
+      if (Math.abs(dx) < SLOP && Math.abs(dy) < SLOP) return;
+      if (dy < SLOP || dy < Math.abs(dx) * 1.5 || !atTop()) { t = null; return; }
+      t.on = true;
+    }
+    if (e.cancelable) e.preventDefault();
+    else if (!atTop()) { end(e, true); return; }   // the page took the finger and scrolled
+    var d = Math.max(0, dy - SLOP) * 0.55;
+    t.pull = d < LINE ? d : Math.min(MAX, LINE + (d - LINE) * 0.4);
+    draw(t.pull, false);
+  }
+  function end(e, drop) {
+    var s = t; t = null;
+    if (!s || !s.on) return;
+    if (drop !== true && s.pull >= LINE) refresh(); else rest();
+  }
+
+  if (active) {
+    document.documentElement.classList.add('kit-pull');
+    document.addEventListener('touchstart', start, { passive: true });
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('touchend', end, { passive: true });
+    document.addEventListener('touchcancel', function (e) { end(e, true); }, { passive: true });
+    // A page that comes back from the back/forward cache must not still turn.
+    window.addEventListener('pageshow', function (e) { if (e.persisted) rest(); });
+  }
+
+  window.kitPull = {
+    version: 'v1 2026-10-12',
+    active: active,
+    refresh: refresh,
+  };
+})();
+</script>

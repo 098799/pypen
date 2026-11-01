@@ -2417,3 +2417,35 @@ html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .pv .pv-img, .pv .pv-cap, .pv .pv-hint, .pv .pv-map { transition: none; }
 }
+
+/* -------- Error pages (items/error_pages.py, templates/items/error.html) -------- */
+.error-page { max-width: 34rem; }
+.error-page .error-ways { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.4rem 0; }
+.error-page .error-code {
+  font: 600 0.72rem/1 "Inter", sans-serif; letter-spacing: 0.18em; color: var(--muted);
+}
+
+/* -------- The kit's pieces read the fleet's colour names --------
+   update.html (New version), pullrefresh.html (the pull mark) and
+   whatsnew.html (the log) take --panel --line --fg --dim --bg --accent and
+   nothing else. pypen's own names are the paper set: map them once, here, on
+   the root (the theme chooser, the settings rows and the toast map their own
+   above, and the keyboard layer in _keys.html). */
+:root {
+  --panel: var(--plate-top);
+  --fg: var(--ink);
+  --line: var(--ink-line);
+  --dim: var(--muted);
+  --bg: var(--paper);
+  --bad: #c0392b;
+}
+/* The update toast sits where the toast does: above the tab bar on a phone. */
+:root { --kit-update-bottom: 80px; --kit-update-desk-bottom: 12px; }
+@media (min-width: 720px) { :root { --kit-update-bottom: 12px; } }
+
+/* The What's new dot (data-whatsnew-dot) is placed on its host's corner. */
+.wn-host { position: relative; display: inline-block; }
+
+/* The "new" tag on the pen page's photo (data-new="photo-viewer"). */
+.pen-photo-main .pv-new { position: absolute; top: 10px; left: 10px; z-index: 2; pointer-events: none; }
+.pen-photo-main .pv-new .kit-new-tag { margin-left: 0; background: var(--plate-top); }

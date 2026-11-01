@@ -1,0 +1,39 @@
+{% load items_extras %}<!doctype html>
+{% comment %}
+The 500 page (items/error_pages.py). It needs nothing that may be what broke:
+no database (the shell's context reads one), no static manifest, no url
+lookups. The paper colours of app.css, inline; the kit's theme boot, which is
+a file read once.
+{% endcomment %}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ err.title }} · Grining Fountain Pens</title>
+<meta name="theme-color" content="#f4ecd8">
+<script>window.KITTHEME = {app: "pypen", default: "auto", legacy: ["theme"], colors: {dark: "#13161c", light: "#f4ecd8"}};</script>
+<script>{% kit_theme_js %}</script>
+<style>
+:root { --paper: #f4ecd8; --ink: #1b2a4a; --muted: #5a4b2e; --accent: #7a1f2b; --line: #2a3b5b33; }
+html[data-theme="dark"] { --paper: #13161c; --ink: #ece2c8; --muted: #9c9270; --accent: #e08a94; --line: #ece2c824; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { font: 20px/1.55 "EB Garamond", "Palatino Linotype", Palatino, Georgia, serif;
+       padding: calc(env(safe-area-inset-top) + 18vh) 24px 40px; }
+main { max-width: 34rem; margin: 0 auto; }
+h1 { font: italic 400 2.2rem/1.15 "Cormorant Garamond", Georgia, serif; color: var(--accent); margin: 0 0 .6rem; }
+p { margin: 0 0 1.2rem; }
+a { display: inline-block; margin: 0 .5rem .5rem 0; padding: .55rem 1.1rem; border: 1px solid var(--line);
+    border-radius: 999px; color: var(--ink); text-decoration: none; font-size: .95rem; }
+a.go { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+small { color: var(--muted); font: .75rem/1 system-ui, sans-serif; letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<main id="main">
+  <h1>{{ err.title }}</h1>
+  <p>{{ err.text }}</p>
+  <p><a class="go" href="javascript:location.reload()">Try again</a><a href="/dashboard/">The desk</a><a href="/">The front page</a></p>
+  <small>500</small>
+</main>
+</body>
+</html>

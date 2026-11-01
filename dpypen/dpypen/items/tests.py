@@ -172,7 +172,7 @@ class KitSettingsRows(TestCase):
         self.assertEqual(html.count("<!-- KIT-SETTINGS: v1"), 1)
         page = html[html.index("</script>", html.index("<!-- KIT-SETTINGS")):]  # past the snippet's own example
         heads = [h.split("<")[0] for h in page.split('<h2 class="kit-set-h">')[1:]]
-        self.assertEqual(heads, ["Look", "Keyboard", "Account"])
+        self.assertEqual(heads, ["Look", "Pens", "Keyboard", "Account"])  # Pens: What's new (PYPEN-2)
         self.assertIn('data-kit-install="Pens"', html)
         self.assertIn("kitSettings.mount(", html)
         for mode in ("full", "leader", "off"):

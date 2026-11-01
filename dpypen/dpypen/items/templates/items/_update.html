@@ -1,0 +1,234 @@
+<!-- KIT-UPDATE: v1.1 2026-10-24
+  "New version ready · Refresh": the one toast that tells an open page that a
+  deploy made it old. Spec: ~/apps/kit/README.md §4, "New version". Canonical
+  copy: ~/apps/kit/snippets/update.html. Apps carry a byte-identical copy
+  (fleet-check `kit` compares them): change this file, bump the stamp here and
+  in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 18 apps had 18 copies (AUDIT.md, 2026-10-23); four
+  reloaded the page on a first visit, seven reloaded every other tab without a
+  tap, five left a Refresh that did nothing, two could never show it at all.
+
+  Include it once, anywhere in <body>. The app keeps its own
+  navigator.serviceWorker.register(…) and its worker answers the message
+  'SKIP_WAITING' with self.skipWaiting(). Optional, in a script of the app
+  (read when needed, so before or after the include):
+    window.KITUPDATE = {
+      app: "pod",                    // sessionStorage key 'kitUpdate:<app>'
+      build: {url: "/api/version",   // an app with no worker that waits: the
+              id: "3f2a9c"},         // server's build id now vs this page's
+                                     // (answer {build}, {version} or {v})
+      every: 10,                     // minutes between checks while visible (≥ 1)
+      labels: {text: "Nowa wersja gotowa", button: "Odśwież"},
+      quiet: function () { return formInUse; },   // true = not now; asked again
+                                     // at once on focus and input, and every 3 s,
+                                     // while a version is on offer, so a shown
+                                     // toast goes away too (v1.1)
+      hold: function (go) { … return true; },     // true = the app calls go() later
+      before: function () { return promise; },    // right before the reload
+    };
+
+  What it does:
+    worker   a worker that waits while this page has a controller → the toast;
+             Refresh → 'SKIP_WAITING' → reload once the new worker controls
+             (never on a first install: that page had no controller)
+    tabs     when another tab (or a pull to refresh) put the new worker in
+             charge, this page runs old code: it is offered the toast, never
+             reloaded, and its Refresh is a plain reload
+    build    the server's id ≠ this page's id → the toast; back to the page's
+             id → the toast goes; a reload that comes back with the old id is
+             not offered again for that id (a cache on the way)
+    checks   reg.update() / the build fetch: when the page becomes visible, on
+             focus, back from the back/forward cache, and every `every`
+             minutes while visible; at most one per 30 s. None at load.
+    never    a reload without a tap
+    shown    html.kit-update-on; #installbar gives way; a 'kit:update' event on
+             document, detail {kind: 'worker'|'took'|'build'}
+
+  Look: bottom centre, above the nav; the app's --panel --line --fg --accent
+  --bg and its font. Place, if the default 76 px (24 px from 900 px) is wrong:
+    --kit-update-bottom       e.g. calc(var(--navh) + 12px); safe area added
+    --kit-update-desk-bottom  from 900 px
+    --kit-update-top          to sit at the top; then --kit-update-bottom: none
+    --kit-update-z            default 50
+
+  API: kitUpdate.check() · kitUpdate.apply() · kitUpdate.seen(id) (an id the
+  app learnt by itself: a stream, its own poll; needs build.id, url optional) ·
+  kitUpdate.show() (screenshots, tests) · kitUpdate.state() → null or the kind
+  on offer
+-->
+<style>
+#kit-update { position: fixed; left: 50%; z-index: var(--kit-update-z, 50); box-sizing: border-box;
+  bottom: calc(var(--kit-update-bottom, 76px) + env(safe-area-inset-bottom, 0px)); top: var(--kit-update-top, auto);
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 24px);
+  min-height: 52px; padding: 4px 4px 4px 16px; border-radius: 14px;
+  background: var(--panel, #20242b); color: var(--fg, #e8e8e8); border: 1px solid var(--line, #3a404a);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4); font-family: inherit; font-size: 14px; line-height: 1.3;
+  transform: translate(-50%, 12px); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform .2s ease-out, opacity .2s ease-out, visibility 0s linear .2s; }
+#kit-update.on { transform: translate(-50%, 0); opacity: 1; visibility: visible; pointer-events: auto;
+  transition: transform .2s ease-out, opacity .2s ease-out; }
+#kit-update span { min-width: 0; }
+#kit-update button { flex: none; min-height: 44px; margin: 0; padding: 0 16px; border: 0; border-radius: 10px;
+  background: var(--accent, #6aa9ff); color: var(--bg, #111); font: inherit; font-weight: 650; cursor: pointer; }
+#kit-update button:focus-visible { outline: 2px solid var(--fg, #e8e8e8); outline-offset: 2px; }
+html[data-theme=light] #kit-update { box-shadow: 0 6px 20px rgba(0, 0, 0, .16); }
+html.kit-update-on #installbar { display: none !important; }
+@media (min-width: 900px) {
+  #kit-update { bottom: calc(var(--kit-update-desk-bottom, 24px) + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { #kit-update, #kit-update.on { transition: none; } }
+@media print { #kit-update { display: none; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitUpdate) return;
+  var version = 'v1.1 2026-10-24';
+  var GAP = 30000;
+  var offer = null, asked = false, going = false, last = 0, el = null, txt = null, btn = null, timer = null;
+  var sw = 'serviceWorker' in navigator ? navigator.serviceWorker : null;
+  var reg = null;
+  var had = !!(sw && sw.controller);
+
+  function cfg() { return window.KITUPDATE || {}; }
+  function key() { return 'kitUpdate:' + (cfg().app || location.host); }
+  function store(v) { try { if (v == null) sessionStorage.removeItem(key()); else sessionStorage.setItem(key(), v); } catch (e) {} }
+  function stored() { try { return sessionStorage.getItem(key()); } catch (e) { return null; } }
+  function quiet() { try { return typeof cfg().quiet === 'function' && !!cfg().quiet(); } catch (e) { return false; } }
+
+  function build() {
+    if (el || !document.body) return el;
+    el = document.createElement('div'); el.id = 'kit-update';
+    el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); el.inert = true;
+    txt = document.createElement('span');
+    btn = document.createElement('button'); btn.type = 'button';
+    btn.addEventListener('click', apply);
+    el.appendChild(txt); el.appendChild(btn);
+    document.body.appendChild(el);
+    return el;
+  }
+  // Show or hide to match the offer and the app's quiet().
+  function paint() {
+    if (!build()) return;
+    var on = !!offer && !going && !quiet();
+    if (on === el.classList.contains('on')) return;
+    var L = cfg().labels || {};
+    el.classList.toggle('on', on);
+    el.inert = !on;
+    document.documentElement.classList.toggle('kit-update-on', on);
+    btn.textContent = L.button || 'Refresh';
+    // Words go in after the box shows, so a screen reader announces them.
+    if (on) setTimeout(function () { if (el.classList.contains('on')) txt.textContent = L.text || 'New version ready'; }, 60);
+    else txt.textContent = '';
+  }
+  function tick() {
+    clearInterval(timer); timer = null;
+    paint();
+    if (offer && typeof cfg().quiet === 'function') timer = setInterval(paint, 3000);
+  }
+  function give(kind, extra) {
+    var first = !offer;
+    offer = {kind: kind, id: extra};
+    tick();
+    if (first) {
+      try { document.dispatchEvent(new CustomEvent('kit:update', {detail: {kind: kind}})); } catch (e) {}
+    }
+  }
+  function withdraw() { offer = null; tick(); }
+
+  function reload() { if (!going || reload.done) return; reload.done = true; location.reload(); }
+  function go() {
+    going = true; paint();
+    var waiting = reg && reg.waiting;
+    if (offer && offer.kind === 'build') store(offer.id);
+    var before = cfg().before, p = null;
+    try { p = typeof before === 'function' ? before() : null; } catch (e) {}
+    function now() {
+      if (waiting && sw) {
+        asked = true;
+        waiting.postMessage('SKIP_WAITING');
+        setTimeout(reload, 3000);   // a worker that never takes over must not leave the tap unanswered
+      } else reload();
+    }
+    if (p && typeof p.then === 'function') {
+      var done = false, once = function () { if (!done) { done = true; now(); } };
+      p.then(once, once); setTimeout(once, 3000);
+    } else now();
+  }
+  function apply() {
+    if (going) return;
+    var hold = cfg().hold;
+    var later = false;
+    try { later = typeof hold === 'function' && !!hold(function () { if (!going) go(); }); } catch (e) {}
+    if (later) { withdraw(); return; }
+    go();
+  }
+
+  function check(force) {
+    var t = Date.now();
+    if (!force && t - last < GAP) return;
+    last = t;
+    if (reg) reg.update().catch(function () {});
+    var b = cfg().build;
+    if (b && b.url && b.id) {
+      fetch(b.url, {cache: 'no-store', credentials: 'same-origin', headers: {Accept: 'application/json'}})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { seen(j && (j.build || j.version || j.v)); })
+        .catch(function () {});
+    }
+  }
+  // The server runs build `id` (a poll's answer, or one the app was pushed).
+  function seen(id) {
+    var b = cfg().build;
+    if (!id || !b || !b.id) return;
+    id = String(id);
+    if (id === String(b.id)) { if (offer && offer.kind === 'build') withdraw(); return; }
+    if (stored() === id) return;   // reloaded for it once and came back old
+    if (!offer) give('build', id);
+  }
+  function visible() { return document.visibilityState === 'visible'; }
+
+  if (sw) {
+    sw.addEventListener('controllerchange', function () {
+      if (asked) { reload(); return; }
+      if (had) give('took');   // another tab, or a pull, put the new worker in charge
+      had = true;
+    });
+    sw.ready.then(function (r) {
+      reg = r;
+      if (r.waiting && sw.controller) give('worker');
+      r.addEventListener('updatefound', function () {
+        var w = r.installing;
+        if (!w) return;
+        w.addEventListener('statechange', function () {
+          if (w.state === 'installed' && sw.controller) give('worker');
+        });
+      });
+    }).catch(function () {});
+  }
+  // A page loaded with the id stored for it is the new build: forget the guard.
+  (function () { var b = cfg().build, s = stored(); if (b && s && String(b.id) === s) store(null); })();
+
+  ['focusin', 'focusout', 'input'].forEach(function (ev) {
+    document.addEventListener(ev, function () { if (offer) setTimeout(paint, 0); }, true);
+  });
+  document.addEventListener('visibilitychange', function () { if (visible()) check(); });
+  window.addEventListener('focus', function () { check(); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) check(true); });
+  setInterval(function () {
+    if (visible() && Date.now() - last >= Math.max(1, +cfg().every || 10) * 60000 - 1000) check();
+  }, 60000);
+  last = Date.now();
+  if (document.body) build(); else document.addEventListener('DOMContentLoaded', build);
+
+  window.kitUpdate = {
+    version: version,
+    check: function () { check(true); },
+    apply: apply,
+    seen: seen,
+    show: function () { give('test'); },
+    state: function () { return offer && offer.kind; },
+  };
+})();
+</script>
