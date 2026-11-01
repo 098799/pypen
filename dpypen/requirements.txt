@@ -28,9 +28,11 @@ Babel==2.18.0
 # Explicit pins for transitives that had advisories in older versions.
 # Floors raised 2026-09-25 and 2026-11-01 (PYPEN-4) from pip-audit of bae's
 # venv; tests_security.py checks the installed versions against the same list.
+# GitHub's Dependabot reads a `>=` line at its floor, not at what bae has, so
+# a floor below a fix is an alert even when the venv is clean.
 setuptools>=84.1.0
 sqlparse>=0.6.0
-urllib3>=2.7.0
+urllib3>=2.8.0
 idna>=3.15
 pyasn1>=0.6.5
 certifi>=2026.10.18
@@ -40,8 +42,8 @@ anyio>=4.14.2
 # allauth's Google provider imports these, but allauth declares them only as
 # the `socialaccount` extra — they were on bae by hand and missing from a fresh
 # install, so `manage.py` could not even start. PyJWT checks Google's id_token.
-PyJWT[crypto]>=2.13.0
-cryptography>=48.0.1
+PyJWT[crypto]>=2.15.1
+cryptography>=50.0.2
 requests>=2.33.1
 
 black==26.10.1

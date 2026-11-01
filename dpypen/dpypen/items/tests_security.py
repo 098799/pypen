@@ -69,9 +69,9 @@ SECURITY_FLOORS = {
     "pillow": "13.0.0",  # 14 more decoder advisories in 12.3.0 (pip-audit, 2026-11-01)
     "djangorestframework": "3.18.2",
     "sqlparse": "0.6.0",
-    "PyJWT": "2.13.0",  # allauth verifies Google's id_token with it
-    "cryptography": "48.0.1",
-    "urllib3": "2.7.0",
+    "PyJWT": "2.15.1",  # allauth verifies Google's id_token with it
+    "cryptography": "50.0.2",
+    "urllib3": "2.8.0",
     "requests": "2.33.1",
     "idna": "3.15",
     "pyasn1": "0.6.5",

@@ -50,10 +50,24 @@ list for Tomek at the end. Earlier pass: 25 Sep 2026, `tests_security.py`
 
 | Accepting an invite was an hx-boost swap of `#main` only: the new guest kept the stranger's header, with no tab bar and no Leave, until a reload (found on the live walk). | The form is a full page load, like Sign out and Leave. | `test_accepting_an_invite_is_a_full_page_load` |
 
-GitHub's Dependabot counted 47 alerts at the push of this pass; `gh` is not
-on p340, so they were not read one by one. `dpypen/requirements.txt` on
-GitHub now pins the venv that pip-audit finds clean. If alerts stay, look at
-`_archive/requirements.txt` (open `>=` ranges, never installed).
+**GitHub's Dependabot** (the ticket said to start there) counted 47 alerts
+at the push of this pass. Its list needs a GitHub sign-in, and p340 has none
+(`gh` is not installed on p340, p14s or bae; no token; no browser profile has
+a GitHub session; pushes go over an SSH key, which the API does not take). So
+the same scan was done against OSV (api.osv.dev), which mirrors GitHub's
+advisory database, over the two manifests Dependabot reads, with each `==`
+pin and each `>=` floor at its floor, as Dependabot reads them:
+
+| | `dpypen/requirements.txt` | `_archive/requirements.txt` |
+|---|---|---|
+| before this pass | 116 advisories: pillow 12.3.0 (59), PyJWT ≥2.13.0 (29), urllib3, cryptography, pyasn1, DRF, setuptools, black, pytest | 3: pandas ≥0.22.0, pytest ≥3.5.0 |
+| after the venv bumps | 41: PyJWT, urllib3, cryptography — **floors** below a fix while bae ran fixed versions (2.15.1, 2.8.0, 50.0.2), so pip-audit of the venv was clean and Dependabot was not | 3 |
+| now | **0** (floors raised to what bae runs) | **0** (floors raised; the old CLI is never installed) |
+
+Lesson, in `requirements.txt` too: a `>=` floor is what Dependabot sees.
+Tomek: after `gh auth login`, `gh api repos/098799/pypen/dependabot/alerts
+--jq '.[]|select(.state=="open")'` should be empty; dismiss what is left as
+"not used" if it is the archive.
 
 Checked and fine, nothing changed:
 

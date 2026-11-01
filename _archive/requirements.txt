@@ -1,9 +1,11 @@
+# The old CLI, never installed. Floors raised 2026-11-01 (PYPEN-4) only so
+# that GitHub's Dependabot stops counting advisories below them.
 ipdb>=0.11
-pandas>=0.22.0
+pandas>=1.0.4
 tabulate>=0.8.2
 coverage>=4.5.1
 flake8>=3.5.0
-pytest>=3.5.0
+pytest>=9.0.3
 pytest-cov>=2.5.1
 pytest-sugar>=0.9.1
 tox>=2.9.1
