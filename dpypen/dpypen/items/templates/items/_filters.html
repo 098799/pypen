@@ -1,4 +1,4 @@
-<!-- KIT-FILTERS: v1.0 2026-11-02
+<!-- KIT-FILTERS: v1.1 2026-11-03
   The controls above a list: filter chips, the search box, the sort. Spec:
   ~/apps/kit/README.md §4, "Filters and search", and §14. Canonical copy:
   ~/apps/kit/snippets/filters.html. Apps carry a byte-identical copy (fleet-check
@@ -90,6 +90,9 @@
   Baby-tier apps may carry it (no settings, no keys in it).
   Not a filter: a preset that starts something, a game's control, a link to a place.
   Those keep their own look. Test: kit/snippets/tests/test_filters.py.
+  v1.1, what the first rollout found: a count stays readable on a picked chip; `hidden` hides a box;
+  no bare "?" when a form has nothing left to send; a live box left by a soft nav writes no
+  address; mount(root) takes a strip itself; an htmx form is not left busy.
 -->
 <style>
 .kit-chips { display: flex; align-items: center; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 6px 0;
@@ -113,6 +116,7 @@
 .kit-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .kit-chip[aria-current=true], .kit-chip[aria-pressed=true] { background: var(--kit-chip-on, var(--accent)); border-color: var(--kit-chip-on, var(--accent));
   color: var(--kit-chip-on-fg, var(--on-accent, var(--bg))); font-weight: 700; }
+.kit-chip[aria-current=true] b, .kit-chip[aria-pressed=true] b, .kit-chip[aria-current=true] small, .kit-chip[aria-pressed=true] small { opacity: 1; }
 .kit-chip-clear { border-style: dashed; background: transparent; }
 .kit-chips .kit-fold { display: none; }
 @media (hover: hover) and (pointer: fine) { .kit-chip:not([aria-current=true]):not([aria-pressed=true]):hover { color: var(--fg); border-color: var(--dim); } }
@@ -132,6 +136,7 @@
 .kit-search input::placeholder { color: var(--dim); opacity: 1; }
 .kit-search input:focus-visible { outline: 2px solid var(--accent); border-color: transparent; }
 .kit-search input::-webkit-search-cancel-button, .kit-search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.kit-search[hidden] { display: none; }
 .kit-search-x { position: absolute; right: 0; top: 0; width: 44px; height: 44px; padding: 0; margin: 0; border: 0; background: none; color: var(--dim); font: inherit; font-size: 18px; line-height: 44px; text-align: center; cursor: pointer; }
 .kit-search-x[hidden] { display: none; }
 .kit-search[aria-busy=true]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 1px; height: 2px; border-radius: 2px; background: var(--accent); animation: kit-search-busy 1s ease-in-out infinite; pointer-events: none; }
@@ -152,7 +157,11 @@
   var KEY = 'kitFiltersRow';
   var ACTIVE = '[aria-current=true],[aria-pressed=true]';
 
-  function each(root, sel, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
+  function each(root, sel, fn) {
+    root = root || document;
+    if (root.matches && root.matches(sel)) fn(root);
+    Array.prototype.forEach.call(root.querySelectorAll(sel), fn);
+  }
 
   // ——— the strip: fade, the picked chip in view, the fold ———
   function fade(s) {
@@ -231,6 +240,13 @@
     Array.prototype.forEach.call(f.elements, function (el) { if (el.name && !el.disabled && el.value === '') { el.disabled = true; off.push(el); } });
     setTimeout(function () { off.forEach(function (el) { el.disabled = false; }); }, 0);
     f.setAttribute('aria-busy', 'true');
+    // nothing left to send: the page itself, not "/x?" (a soft nav builds its own address)
+    if (!f.hasAttribute('hx-get') && !Array.prototype.some.call(f.elements, function (el) { return el.name && !el.disabled && el.type !== 'submit'; })) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      var to = f.getAttribute('action') || location.pathname;
+      if (window.__go) window.__go(to); else location.href = to;
+      return;
+    }
     setTimeout(function () { f.removeAttribute('aria-busy'); }, 8000);
   }, true);
   document.addEventListener('change', function (e) {
@@ -245,6 +261,7 @@
     var form = input.closest('.kit-search'), timer = 0, ctl = null, last = input.value.trim();
     function go() {
       clearTimeout(timer);
+      if (!input.isConnected) return;   // a soft nav took the box away: this page's address is not ours
       var q = input.value.trim();
       if (q === last && go.ran) return;
       last = q; go.ran = true;
@@ -346,13 +363,14 @@
   function start() { mount(document); }
   function idle() { each(document, '.kit-search[aria-busy=true]', function (f) { var i = f.querySelector('input'); if (!i || !i.__kitLive) f.removeAttribute('aria-busy'); }); }
   document.addEventListener('kit:softnav', function () { idle(); mount(document); });
-  document.addEventListener('htmx:afterSettle', function () { mount(document); });
+  document.addEventListener('htmx:afterSettle', function () { idle(); mount(document); });
+  document.addEventListener('htmx:afterRequest', idle);
   addEventListener('pageshow', function () { idle(); });
   addEventListener('resize', function () { each(document, '.kit-chips', fade); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
   window.kitFilters = {
-    version: '1.0', mount: mount, live: live, url: url, reveal: reveal,
+    version: '1.1', mount: mount, live: live, url: url, reveal: reveal,
     press: function (b, on) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); },
     pick: function (b) {
       each(b.closest('.kit-chips'), '.kit-chip[aria-pressed]', function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
