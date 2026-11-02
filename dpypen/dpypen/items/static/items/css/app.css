@@ -2746,7 +2746,7 @@ a.pen-thumb { border-bottom: none; }
    The kit's bar (_install.html, kit README §4 "Install") in this app's paper,
    above the tab bar on a phone. */
 html #installbar {
-  --kit-install-bottom: 80px; --kit-install-desk-bottom: 12px; --kit-install-z: 30;
+  --kit-install-bottom: 80px; --kit-install-desk-bottom: 12px; --kit-install-z: 29; /* under the menu panel (30): the bar comes later in the page */
   background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
   color: var(--ink); border-color: var(--ink-line); font-family: "Inter", sans-serif;
 }
