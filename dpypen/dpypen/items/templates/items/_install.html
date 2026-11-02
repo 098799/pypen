@@ -1,0 +1,243 @@
+<!-- KIT-INSTALL: v1 2026-11-02
+  The install nudge: a bar that offers to put the app on the home screen, with
+  an Install button and a Not now. Spec: ~/apps/kit/README.md §4, "Install".
+  Canonical copy: ~/apps/kit/snippets/install.html. Apps carry a byte-identical
+  copy (fleet-check `kit` compares them): change this file, bump the stamp here
+  and in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: the registry asks every full-tier app for this nudge
+  and the kit named museum as the code to copy. By 2026-11-02 eleven apps had
+  (atlas, chess, health, lemma, museum, pod, pypen, tv, twitter, vac, weekends)
+  and eight full-tier apps had none. Of the eleven, only three kept to the rule
+  of not asking on the first day, four gave an iPhone no words, five never
+  stopped asking, and three used one offer twice: after a tap on the Settings
+  row the bar's Install did nothing, as an offer prompts once.
+
+  Include it once in <body> of every page, early (before the browser's offer
+  comes), with the app's name before it:
+
+    window.KITINSTALL = {app: "pod", key: "podInstall"};
+
+  A page that loads this file late puts this in its first script, and the offer
+  waits for it:
+    addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__kitInstallEvt = e; });
+
+  KITINSTALL (all optional):
+    app      the name on the bar; default the page's title
+    key      the localStorage key; default "<app>InstallNudge". An app that had
+             its own bar keeps its old key, so a Not now keeps counting.
+    delay    ms from the offer to the bar; 4000
+    days     on which day of use it may first ask; 2. 1 for an app whose guest may come only once (pypen).
+    tag      a What's new id: data-new on the Install button
+    quiet    function: true holds the bar back (a game in play, the Settings
+             page that has the Install row). Asked again every 5 s and at each
+             kit:softnav; a bar on show goes away at a soft nav into a quiet page.
+    labels   {region, title ("Keep %s on your phone"), sub, deskTitle ("Install %s"),
+             deskSub, ios, add ("Install"), no ("Not now")}; English for what is left out
+
+  When it shows: only with <link rel="manifest">, never in the installed app, not
+  on the first day of use, 4 s after the browser's offer (an iPhone or iPad has no
+  offer: 4 s after the load, the words say Share, and there is no button). Not while
+  a field has the focus. It gives way to the new-version toast (update.html),
+  an action's toast (toast.html) and an open sheet or dialog.
+  Not now: away for 14 days, then 60; after the third it is gone for good, as it is
+  after an install. State in localStorage: {lastVisit, visits, dismissed, snoozeUntil, done}.
+  ?installdemo=1 shows it at once, whatever the state (screenshots, tests).
+
+  With the Settings row (settings.html): one offer, one prompt. The bar hands the
+  offer to kitSettings; whichever is tapped, both let go of it. Nothing to wire.
+
+  Look: the app's --panel --line --fg --dim --accent --bg, its font. Place, if the
+  default is wrong:
+    --kit-install-bottom       default var(--kit-update-bottom, 76px); safe area added
+    --kit-install-desk-bottom  from 900 px; default var(--kit-update-desk-bottom, 24px)
+    --kit-install-z            default 40 (under the two toasts)
+  An app that moves the update toast to the top (--kit-update-bottom: none) sets
+  --kit-install-bottom: that fallback is no length. The root is #installbar, which
+  update.html already hides while it shows. Baby tier: never (registry rule 4).
+
+  API: kitInstall.offer(e) an offer caught by the app · kitInstall.hand() gives the offer
+  to a kitSettings loaded late (it is given at load and at kit:softnav) · kitInstall.show() again
+  after quiet ended, at once if allowed · kitInstall.hide() for this page, no
+  snooze · kitInstall.state() → {on, offer, allowed} · kitInstall.version
+-->
+<style>
+#installbar { position: fixed; left: 12px; right: 12px; z-index: var(--kit-install-z, 40); box-sizing: border-box;
+  bottom: calc(var(--kit-install-bottom, var(--kit-update-bottom, 76px)) + env(safe-area-inset-bottom, 0px));
+  display: flex; align-items: center; gap: 8px; max-width: 480px; margin: 0 auto;
+  min-height: 60px; padding: 8px 6px 8px 14px; border-radius: 14px;
+  background: var(--panel, #20242b); color: var(--fg, #e8e8e8); border: 1px solid var(--line, #3a404a);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4); font-family: inherit; font-size: 14px; line-height: 1.3;
+  transform: translateY(12px); opacity: 0; visibility: hidden; pointer-events: none;
+  transition: transform .2s ease-out, opacity .2s ease-out, visibility 0s linear .2s; }
+#installbar.on { transform: none; opacity: 1; visibility: visible; pointer-events: auto;
+  transition: transform .2s ease-out, opacity .2s ease-out; }
+#installbar .kit-install-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+#installbar strong { display: block; font-weight: 650; font-size: 14.5px; }
+#installbar small { display: block; margin-top: 1px; font-size: 12.5px; color: var(--dim, #9aa4b2); }
+#installbar button { flex: none; margin: 0; border: 0; font: inherit; cursor: pointer; }
+#installbar button[hidden] { display: none; }
+#installbar .kit-install-go { min-height: 44px; padding: 0 14px; border-radius: 10px;
+  background: var(--accent, #6aa9ff); color: var(--bg, #111); font-weight: 650; }
+#installbar .kit-install-x { width: 44px; height: 44px; padding: 0; border-radius: 10px;
+  background: transparent; color: var(--dim, #9aa4b2); }
+#installbar .kit-install-x svg { display: block; width: 18px; height: 18px; margin: auto; }
+#installbar button:focus-visible { outline: 2px solid var(--fg, #e8e8e8); outline-offset: 2px; }
+html[data-theme=light] #installbar { box-shadow: 0 6px 20px rgba(0, 0, 0, .16); }
+html.scroll-lock #installbar, html:has(dialog[open]:modal) #installbar, html:has(#kit-toast.on) #installbar { display: none; }
+@media (min-width: 900px) {
+  #installbar { bottom: calc(var(--kit-install-desk-bottom, var(--kit-update-desk-bottom, 24px)) + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { #installbar, #installbar.on { transition: none; } }
+@media print { #installbar { display: none; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitInstall) return;
+  var version = 'v1 2026-11-02';
+  var DAY = 864e5, RETRY = 5000;
+  var el = null, go = null, evt = null, on = false, wanted = false, timer = null, done = false, loaded = false;
+  var demo = /[?&]installdemo=1\b/.test(location.search);
+  var ua = navigator.userAgent || '';
+  var ios = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  function cfg() { return window.KITINSTALL || {}; }
+  function name() { return cfg().app || document.title || 'this app'; }
+  function key() { return cfg().key || name() + 'InstallNudge'; }
+  function read() { try { return JSON.parse(localStorage.getItem(key())) || {}; } catch (e) { return {}; } }
+  function save(s) { try { localStorage.setItem(key(), JSON.stringify(s)); } catch (e) {} }
+  function standalone() {
+    try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+    catch (e) { return false; }
+  }
+  function desk() { try { return matchMedia('(hover:hover) and (pointer:fine)').matches; } catch (e) { return false; } }
+  function allowed() {
+    if (demo) return true;
+    if (done || standalone() || !document.querySelector('link[rel="manifest"]')) return false;
+    var s = read();
+    if (s.done || (s.dismissed || 0) >= 3 || (s.visits || 0) < (cfg().days || 2)) return false;
+    return !(s.snoozeUntil && Date.now() < s.snoozeUntil);
+  }
+  function quiet() {
+    if (demo) return false;
+    var a = document.activeElement;
+    if (a && a.matches && a.matches('input,textarea,select,[contenteditable]')) return true;
+    try { return typeof cfg().quiet === 'function' && !!cfg().quiet(); } catch (e) { return false; }
+  }
+
+  function words() {
+    var lab = cfg().labels || {}, n = name(), d = !ios && desk();
+    el.setAttribute('aria-label', (lab.region || 'Install %s').replace('%s', n));
+    el.querySelector('strong').textContent = (d ? lab.deskTitle || 'Install %s' : lab.title || 'Keep %s on your phone').replace('%s', n);
+    el.querySelector('small').textContent = ios ? lab.ios || 'In Safari: tap Share, then “Add to Home Screen”.'
+      : d ? lab.deskSub || 'It opens in its own window, like an app.'
+      : lab.sub || 'On your home screen: full screen, no browser bars.';
+    go.textContent = lab.add || 'Install';
+    go.hidden = ios;
+    if (cfg().tag) go.setAttribute('data-new', cfg().tag);
+    el.querySelector('.kit-install-x').setAttribute('aria-label', lab.no || 'Not now');
+  }
+  function build() {
+    // A page that rewrote <body> (htmx's Back puts back a snapshot) left ours outside.
+    if (el && !el.isConnected && document.body) {
+      var old = document.querySelectorAll('#installbar');
+      for (var i = 0; i < old.length; i++) old[i].remove();
+      document.body.appendChild(el);
+    }
+    if (el || !document.body) return el;
+    el = document.createElement('div'); el.id = 'installbar'; el.setAttribute('role', 'region');
+    var t = document.createElement('div'); t.className = 'kit-install-t';
+    t.appendChild(document.createElement('strong')); t.appendChild(document.createElement('small'));
+    go = document.createElement('button'); go.type = 'button'; go.className = 'kit-install-go';
+    var x = document.createElement('button'); x.type = 'button'; x.className = 'kit-install-x';
+    x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+    el.appendChild(t); el.appendChild(go); el.appendChild(x);
+    go.addEventListener('click', tapped);
+    x.addEventListener('click', snooze);
+    document.body.appendChild(el);
+    return el;
+  }
+  function paint() { if (el) el.classList.toggle('on', on); }
+  function hide() { on = false; wanted = false; clearTimeout(timer); paint(); }
+  function snooze() {
+    hide();
+    if (demo) return;
+    var s = read();
+    s.dismissed = (s.dismissed || 0) + 1;
+    s.snoozeUntil = Date.now() + (s.dismissed >= 2 ? 60 : 14) * DAY;
+    save(s);
+  }
+  function finished() { done = true; hide(); var s = read(); s.done = true; save(s); }
+
+  // The offer prompts once, whoever taps. Its prompt is wrapped, so a tap on the
+  // Settings row (which holds the same object) takes the bar's button away too.
+  function take(e) {
+    if (!e) return;
+    if (!e.kitInstall) {
+      e.kitInstall = true;
+      var prompt = e.prompt;
+      e.prompt = function () {
+        if (evt === e) evt = null;
+        hide();
+        if (window.kitSettings && window.kitSettings.offer) window.kitSettings.offer(null);
+        return prompt.call(e);
+      };
+    }
+    evt = e;
+    give();
+    plan();
+  }
+  function give() { if (evt && window.kitSettings && window.kitSettings.offer) window.kitSettings.offer(evt); }
+  function tapped() {
+    var e = evt;
+    if (!e) { hide(); return; }
+    var p = e.prompt();
+    var c = e.userChoice || p;
+    if (c && c.then) c.then(function (r) { if (r && r.outcome === 'accepted') finished(); else snooze(); }, function () {});
+  }
+
+  function plan() {
+    if (!loaded || wanted || on || !(evt || ios || demo) || !allowed()) return;
+    wanted = true;
+    var d = demo ? 300 : cfg().delay == null ? 4000 : cfg().delay;
+    timer = setTimeout(attempt, d);
+  }
+  function attempt() {
+    if (!wanted) return;
+    if (!allowed()) { hide(); return; }
+    if (!(evt || ios || demo)) { hide(); return; }
+    if (quiet()) { timer = setTimeout(attempt, RETRY); return; }
+    if (!build()) return;
+    words(); on = true; wanted = false; paint();
+  }
+  function again() {
+    if (el) build();
+    paint(); give();
+    if (on && quiet()) { on = false; paint(); }
+    plan();
+  }
+  function start() {
+    if (loaded) return;
+    loaded = true;
+    if (!demo && !standalone()) {
+      var s = read(), today = new Date().toISOString().slice(0, 10);
+      if (s.lastVisit !== today) { s.lastVisit = today; s.visits = (s.visits || 0) + 1; save(s); }
+    }
+    if (window.__kitInstallEvt) take(window.__kitInstallEvt);
+    give();
+    plan();
+  }
+
+  addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); take(e); });
+  addEventListener('appinstalled', finished);
+  addEventListener('load', give);
+  document.addEventListener('kit:softnav', again);
+  document.addEventListener('htmx:historyRestore', again);
+  window.kitInstall = {version: version, offer: take, hand: give, hide: hide,
+    show: function () { wanted = false; clearTimeout(timer); if (allowed() && !quiet() && build() && (evt || ios || demo)) { words(); on = true; paint(); } },
+    state: function () { return {on: on, offer: !!evt, allowed: allowed()}; }};
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>

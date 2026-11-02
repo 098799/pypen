@@ -54,30 +54,15 @@ Look (Theme, Install "Grining Pens"), Grining Pens (What's new), Keyboard (Keys,
 
 ## Install nudge
 
-(PYPEN-5, kit §4 Fleet UX "Install nudge".) `templates/items/_installbar.html`,
-museum's `#installbar` in this app's paper: a bar above the tab bar ("Keep
-Grining Pens on your phone", Install, ✕), included by the shell for the owner
-and guests only, so a stranger (the front page, the public cupboard, a wall)
-never meets it.
+(PYPEN-5.) The kit's bar (`_install.html`, kit README §4 "Install") in this app's paper
+(`app.css`), included through `templates/items/_installbar.html` by the shell for the owner and
+guests only, so a stranger (the front page, the public cupboard, a wall) never meets it.
+State in `localStorage['pypenInstallNudge']`.
 
-- It shows 4 s after the browser offers an install (`beforeinstallprompt`), or
-  at once on an iPhone/iPad, where there is no such event: then it says "tap
-  Share, then Add to Home Screen" and has no Install button. Never inside the
-  installed app. On a desk it says "Install Grining Pens", "its own window".
-- ✕ puts it away for 14 days, then 60; after the third ✕, or an install, it is
-  gone for good (`localStorage['pypenInstallNudge']`).
-- **No "second day of use" rule** (museum has one): the kit's row has none,
-  and a guest on an invitation may come only once.
-- **One offer, one prompt()**: the event is kept as `window.__installEvt`;
-  the Settings page hands it to the kit's Install row (`kitSettings.offer`),
-  since that page mostly comes by a boosted tap after the event fired. A tap on
-  either lets go of it in both.
-- It steps aside for the update toast (the kit's own rule), the kit's toast and
-  an open sheet (`app.css`). Outside `#main`, so a boosted page keeps it; the
-  clicks are delegated and the bar is set again after htmx's history restore.
+- **No "second day of use" rule** (`days: 1`; the kit's default is 2): a guest on an
+  invitation may come only once.
 - Shell pages only: the walls stay standalone public pages without it.
-- `?installdemo=1` shows it at once (screenshots). Probe:
-  `python3 tools/install_probe.py` (DB copy; a made-up offer, 390×844, an iPhone).
+- `?installdemo=1` shows it at once (screenshots). Test: `kit/snippets/tests/test_install.py`.
 
 ## Photo viewer
 

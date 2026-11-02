@@ -94,16 +94,9 @@ they do not re-run when hx-boost swaps a new page in underneath them.
   var main = document.getElementById('main');
   if (window.kitTheme) kitTheme.mount(main);
   if (window.kitSettings) kitSettings.mount(main);
-  // The install nudge (_installbar.html, in the shell) may have caught the
-  // browser's offer before this page came by a boosted tap: hand it over.
-  // One offer, one prompt(): a tap on the row lets go of it in the bar too.
-  if (window.kitSettings && window.__installEvt) kitSettings.offer(window.__installEvt);
-  var irow = main.querySelector('[data-kit-install]');
-  if (irow) irow.addEventListener('click', function (e) {
-    if (!e.target.closest('.kit-set-ibtn')) return;
-    window.__installEvt = null;
-    if (window.__installBarHide) window.__installBarHide();
-  });
+  // The kit's install bar (in the shell) may have caught the browser's offer
+  // before this page came by a boosted tap: it hands it over, and takes it back.
+  if (window.kitInstall) kitInstall.hand();
 
   var keyBtns = document.querySelectorAll('.keys-choices button[data-keys]');
   function paintKeys() {

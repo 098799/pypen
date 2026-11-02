@@ -2743,45 +2743,15 @@ a.pen-thumb { border-bottom: none; }
 }
 
 /* ---- Install nudge ------------------------------------------------------
-   PYPEN-5, kit Fleet UX "Install nudge" (_installbar.html; museum's plaque,
-   in this app's paper). In the update toast's place, above the tab bar on a
-   phone; the update toast hides it (_update.html), and so does the kit's toast
-   and an open sheet, so nothing sits on top of it. */
-#installbar {
-  position: fixed; left: 12px; right: 12px; z-index: 30;
-  bottom: calc(80px + env(safe-area-inset-bottom));
-  max-width: 480px; margin: 0 auto; box-sizing: border-box;
-  display: flex; gap: 12px; align-items: center; padding: 12px 12px 12px 16px;
+   The kit's bar (_install.html, kit README §4 "Install") in this app's paper,
+   above the tab bar on a phone. */
+html #installbar {
+  --kit-install-bottom: 80px; --kit-install-desk-bottom: 12px; --kit-install-z: 30;
   background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  color: var(--ink); border: 1px solid var(--ink-line); border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
-  font-family: "Inter", sans-serif;
-  transform: translateY(140%); opacity: 0; pointer-events: none;
-  transition: transform .35s ease, opacity .35s ease;
+  color: var(--ink); border-color: var(--ink-line); font-family: "Inter", sans-serif;
 }
-@media (min-width: 900px) { #installbar { bottom: calc(12px + env(safe-area-inset-bottom)); } }
-#installbar.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-/* off screen is out of the Tab order too */
-#installbar:not(.show) { visibility: hidden; }
-html.scroll-lock #installbar,
-html:has(#kit-toast.on) #installbar { visibility: hidden; opacity: 0; pointer-events: none; }
-#installbar .ib-t { flex: 1; min-width: 0; }
-#installbar .ib-t strong {
-  display: block; font-family: "EB Garamond", Georgia, serif; font-size: 17px; font-weight: 600; line-height: 1.2;
-}
-#installbar .ib-sub { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
-#installbar .ib-go {
-  flex: none; position: relative; min-height: 36px; padding: 0 16px; border: 0; border-radius: 999px;
-  background: var(--accent); color: var(--plate-top); font: 600 13.5px/1 "Inter", sans-serif; cursor: pointer;
-}
-#installbar .ib-x {
-  flex: none; position: relative; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%;
-  background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-#installbar .ib-x svg { width: 16px; height: 16px; }
-/* both drawn at 36 px: the ::after grows each to 44+ inside the 12 px gap */
-#installbar .ib-go::after { content: ""; position: absolute; inset: -5px -5px; }
-#installbar .ib-x::after { content: ""; position: absolute; inset: -5px; }
-#installbar button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { #installbar { transition: none; } }
+html #installbar strong { font-family: "EB Garamond", Georgia, serif; font-size: 17px; }
+html #installbar small { color: var(--muted); }
+html #installbar .kit-install-go { background: var(--accent); color: var(--plate-top); border-radius: 999px; }
+html #installbar .kit-install-x { color: var(--ink); }
+html #installbar button:focus-visible { outline-color: var(--ink); }

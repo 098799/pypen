@@ -236,8 +236,8 @@ class BottomNav(TestCase):
 
 @override_settings(STORAGES=PLAIN_STATIC)
 class InstallNudge(TestCase):
-    """PYPEN-5, kit Fleet UX "Install nudge": museum's #installbar, for the
-    owner and guests, never for a stranger; one offer, one prompt()."""
+    """PYPEN-5, kit README §4 "Install": the kit's bar, for the owner and guests,
+    never for a stranger."""
 
     @classmethod
     def setUpTestData(cls):
@@ -253,38 +253,23 @@ class InstallNudge(TestCase):
         for who, c in (("owner", self.client), ("guest", guest)):
             for url in ("/dashboard/", "/pens/", "/settings/"):
                 html = c.get(url).content.decode()
-                self.assertEqual(html.count('<div id="installbar"'), 1, (who, url))
-                # outside #main: a boosted navigation keeps it
-                self.assertLess(html.index('id="installbar"'), html.index('id="main"'), (who, url))
+                self.assertEqual(html.count("KIT-INSTALL: "), 1, (who, url))
 
     def test_a_stranger_never_meets_it(self):
         for url in ("/", "/no-such-page/", "/pub/pens/wall/", "/pub/inks/"):
             html = Client().get(url, **NAVIGATE).content.decode()
-            self.assertNotIn('id="installbar"', html, url)
-            self.assertNotIn("__installEvt", html, url)
+            self.assertNotIn("KIT-INSTALL", html, url)
 
-    def test_the_rules(self):
-        js = (TPL / "_installbar.html").read_text()
-        self.assertIn('addEventListener("beforeinstallprompt"', js)
-        self.assertIn("demo ? 300 : 4000", js)  # ~4 s after the page came
-        self.assertIn("(s.dismissed >= 2 ? 60 : 14) * 864e5", js)  # 14 days, then 60
-        self.assertIn("(display-mode: standalone)", js)  # never inside the app
-        self.assertIn("Add to Home Screen", js)  # iOS: the Share words
-        # one offer, one prompt(): the bar lets go of it in the Settings row
-        self.assertIn("window.kitSettings.offer(null)", js)
-        self.assertIn("htmx:historyRestore", js)
+    def test_the_bar_is_the_kits_byte_for_byte(self):
+        copy = (TPL / "_install.html").read_bytes()
+        self.assertIn(b"KIT-INSTALL", copy)
+        canon = Path("/home/tgrining/apps/kit/snippets/install.html")
+        if canon.exists():
+            self.assertEqual(copy, canon.read_bytes())
+        self.assertIn("days: 1", (TPL / "_installbar.html").read_text())   # no second-day rule: a guest may come once
 
-    def test_settings_takes_the_offer(self):
+    def test_settings_lets_the_bar_hand_the_offer_over(self):
         self.client.force_login(self.owner)
         html = self.client.get("/settings/").content.decode()
-        self.assertIn("kitSettings.offer(window.__installEvt)", html)
-        self.assertIn("window.__installBarHide", html)
+        self.assertIn("kitInstall.hand()", html)
         self.assertIn('data-kit-install="', html)
-
-    def test_it_gives_way(self):
-        css = (HERE / "static" / "items" / "css" / "app.css").read_text()
-        self.assertIn("html:has(#kit-toast.on) #installbar", css)
-        self.assertIn("html.scroll-lock #installbar", css)
-        self.assertIn("#installbar:not(.show) { visibility: hidden; }", css)
-        update = (TPL / "_update.html").read_text()
-        self.assertIn("html.kit-update-on #installbar { display: none !important; }", update)
