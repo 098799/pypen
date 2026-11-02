@@ -111,6 +111,13 @@ def search(request):
         q_ = params.urlencode()
         return request.path + (("?" + q_) if q_ else "")
 
+    def _show_all_url():
+        params = request.GET.copy()
+        for key in ("defunct", "used_up", "samples"):
+            params[key] = "1"
+        params.pop("offset", None)
+        return request.path + "?" + params.urlencode()
+
     filters = {
         "query": q,
         "type": type_,
@@ -120,6 +127,11 @@ def search(request):
         "show_samples": show_samples,
         "sorts": SORTS,
         "types": TYPES,
+        "any_hidden": (type_ != "inks" and not show_defunct)
+                      or (type_ != "pens" and not (show_used_up and show_samples)),
+        # The no-match block's ways out (templates/items/_search_results.html).
+        "clear_url": _toggle_url("q", ""),
+        "show_all_url": _show_all_url(),
         "toggle_defunct_url": _toggle_url("defunct", "1" if not show_defunct else ""),
         "toggle_used_up_url": _toggle_url("used_up", "1" if not show_used_up else ""),
         "toggle_samples_url": _toggle_url("samples", "1" if not show_samples else ""),

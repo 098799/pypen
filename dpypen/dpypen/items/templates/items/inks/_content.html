@@ -4,7 +4,7 @@
 {% include "items/inks/_filters.html" %}
 
 {% if not sections %}
-<div class="empty">{% if filters.q %}No ink matches “{{ filters.q }}”{% if filters.color or not filters.include_samples or not filters.include_used %} with these filters{% endif %}.{% else %}No inks match this filter.{% endif %} <a href="{{ filters.clear_url }}">Clear it</a> to see all of them.</div>
+{% include "items/inks/_empty_state.html" %}
 {% endif %}
 
 {% for s in sections %}

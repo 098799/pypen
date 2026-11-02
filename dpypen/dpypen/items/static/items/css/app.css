@@ -1732,15 +1732,11 @@ html[data-theme="dark"] .switch {
   margin-bottom: 2.5rem;
 }
 
-/* -------- Empty state -------- */
-.empty {
-  padding: 2.5rem 1rem;
-  text-align: center;
-  color: var(--muted);
-  font-style: italic;
-  border: 1px dashed var(--ink-line);
-  border-radius: 4px;
-}
+/* -------- Empty state --------
+   The kit's block (templates/items/_empty.html, KIT-EMPTY): it reads the
+   paper's colours through the :root map near the end of this file. The only
+   thing of ours is room for a failed "Load more" under its button. */
+.more-nav [data-more-fail] { flex-basis: 100%; }
 
 
 /* ==========================================================================
@@ -1761,7 +1757,7 @@ html, body { overflow-x: clip; }
 .page-head h1, .section-head h1, .section-head h2 { min-width: 0; overflow-wrap: break-word; }
 
 /* Long prose is unreadable at 1300px. Cap the measure, not the container. */
-.lede, .prose, .empty, .dash-hero p { max-width: 74ch; }
+.lede, .prose, .dash-hero p { max-width: 74ch; }
 
 /* Device-specific wording: "tap" must never appear on a desktop.
    Inverted from the kit's (hover:hover) and (pointer:fine) test, which fails
@@ -1930,7 +1926,7 @@ table, td, th, time, .price, .meta-m {
 }
 
 /* Running prose gets the figures the face was cut for. */
-.lede, .dash-hero p, blockquote, .quote, footer em, .empty {
+.lede, .dash-hero p, blockquote, .quote, footer em {
   font-variant-numeric: oldstyle-nums proportional-nums;
 }
 

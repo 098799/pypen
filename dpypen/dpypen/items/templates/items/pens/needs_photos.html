@@ -143,7 +143,11 @@
   </div>
 </section>
 {% empty %}
-<div class="empty">Every pen in the collection has a photograph.</div>
+<div class="kit-empty" data-kind="none">
+  <p class="kit-empty-t">Every pen in the collection has a photograph</p>
+  <p class="kit-empty-p">A new pen without one shows up here.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'pens_list' %}">All pens</a></p>
+</div>
 {% endfor %}
 
 <script>

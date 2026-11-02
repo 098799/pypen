@@ -61,6 +61,12 @@ the server's messages (the data block in #main) into it.
 {% endcomment %}
 {% include "items/_toast.html" %}
 {% comment %}
+The kit's empty block (kit README §4 "Empty states", KIT-EMPTY, a byte copy):
+nothing yet, nothing matches, could not load, loading. The lists write its
+markup on the server; the handler below and more.js call kitEmpty().
+{% endcomment %}
+{% include "items/_empty.html" %}
+{% comment %}
 The kit's "New version ready · Refresh" toast (kit README §4 "New version",
 KIT-UPDATE, a byte copy). pypen's worker takes over at install (`takeover` in
 pwa.py), so nothing waits to be offered: the toast compares this page's build
@@ -147,6 +153,30 @@ document.addEventListener("htmx:beforeSwap", function (e) {
   d.shouldSwap = true;
   d.isError = false;
 });
+</script>
+<script>
+/* A live search or a chip (pens, inks, inkings, /search/) that gets a 5xx or
+   no answer at all: htmx swaps nothing, so the old rows stayed as if they
+   were the answer. Put the kit's "could not load" block in the target
+   instead, with Try again (the same GET again). Boosted page loads keep the
+   handler above; a POST is never repeated from here. */
+(function () {
+  if (window.__pypenSwapFail) return;
+  window.__pypenSwapFail = true;
+  function failed(e) {
+    var d = e.detail || {}, t = d.target, elt = d.elt, cfg = d.requestConfig || {};
+    if (!window.kitEmpty || !t || !elt || d.boosted || t.id === "main") return;
+    if (String(cfg.verb || "get").toLowerCase() !== "get") return;
+    var url = (d.pathInfo && d.pathInfo.finalRequestPath) || cfg.path;
+    var sel = elt.closest("[hx-select]");
+    kitEmpty.fail(t, d.xhr && d.xhr.status ? d.xhr : {name: "TypeError"}, function () {
+      htmx.ajax("GET", url, {source: elt, target: t, swap: "outerHTML",
+                             select: sel ? sel.getAttribute("hx-select") : undefined});
+    });
+  }
+  document.addEventListener("htmx:responseError", failed);
+  document.addEventListener("htmx:sendError", failed);
+})();
 </script>
 <a class="skip-link" href="#main">Skip to content</a>
 

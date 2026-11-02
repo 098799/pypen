@@ -1,0 +1,214 @@
+<!-- KIT-EMPTY: v1.1 2026-11-02
+  The block that stands where a list would be: nothing yet, nothing matches,
+  could not load, loading. Spec: ~/apps/kit/README.md §4, "Empty states".
+  Canonical copy: ~/apps/kit/snippets/empty.html. Apps carry a byte-identical
+  copy (fleet-check `kit` compares them): change this file, bump the stamp here
+  and in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 24 apps had their own (AUDIT.md, 2026-11-02), in ~14
+  looks, and a failure often read as "nothing yet" or stayed "Loading…" for ever.
+
+  Include it once, anywhere in the body (or its style part in the app's CSS
+  bundle and its script part in the app's JS, cut as for the toast). Before
+  the first block the page draws while it parses, if any. The header names no
+  tag in angle brackets but the markup below: an app that hashes its inline
+  scripts with a regex must not match the header (v1.1, lingo). Server markup:
+
+    <div class="kit-empty" data-kind="none">
+      <span class="kit-empty-i" aria-hidden="true">◎</span>        (optional)
+      <p class="kit-empty-t">No sources yet</p>                    (the answer)
+      <p class="kit-empty-p">Paste a feed's address above.</p>      (optional: what to do)
+      <p class="kit-empty-a"><a class="kit-empty-b" href="/feeds">Add a source</a></p>
+    </div>
+
+  data-kind:
+    none    nothing yet: say how it fills (a button or a link that does it)
+    match   nothing matches: name the query, and always a way out ("Clear the
+            search" → the same page without it; "Show all" for a filter)
+    bad     could not load: a ! mark before the title (never colour alone), the
+            cause in words, "Try again"; never the words of "none"
+    busy    loading: hidden for its first 0.4 s (a fast answer never flashes),
+            then a quiet pulse; aria-busy
+  Classes: `small` = one line at the left, for a panel or a card inside a
+  page; `kit-empty-b go` = the main button (accent). In a table: put the block
+  in `<tr><td colspan=…>`; kitEmpty() does it for a <tbody>.
+
+  JS (all text through textContent; returns the block):
+    kitEmpty(el, {kind, title, text, icon, small, actions: [{label, href | onClick, go}]})
+        puts the block in el (its children are replaced; a <ul>/<ol> gets an
+        <li>, a <tbody> a full-width row). JS-made blocks get role="status"
+        (role="alert" for bad), so a screen reader hears the swap.
+    kitEmpty.busy(el, text?)              "Loading…"
+    kitEmpty.fail(el, err, retry?, {title, text})
+        could not load, the cause from err: offline or a network error →
+        "p340 is not reachable — is the phone on the tailnet?" (tailnet
+        apps) / "No connection — is the phone online?"; a timeout → "No
+        answer in time"; 401 → "Logged out" + "Log in" (/login?next=); other
+        HTTP → "The server answered 502". "Try again" calls retry() (busy
+        first); no retry: the button reloads the page.
+        err: an Error, a Response, or {status}.
+    kitEmpty.load(el, url | () => promise, render, {empty, timeout, busy, title})
+        busy → fetch JSON (12 s, !ok is a failure) → render(data, el); render
+        returns false (or the data is an empty array) → kitEmpty(el, empty);
+        a throw anywhere → fail(el, err, again). Returns a promise of data|null.
+    kitEmpty.clear(el)                    removes a kit block from el
+  Words in another language: window.KITEMPTY = {labels: {loading, notLoaded,
+  retry, login, loggedOut, tailnet, offline, timeout, status: "… %s"}} before
+  the first call. KITEMPTY.tailnet = true|false overrides the host test.
+
+  Look: the app's --fg, --dim, --line, --panel, --accent, --bg, --bad (default
+  #e5484d) and its font; --on-accent (default --bg) = the main button's text,
+  for an accent that is light in the light theme. Centred, max 36em, 40 px above and below.
+
+  v1.1: no script or style tag named in this header (lingo's CSP hash).
+
+  API: kitEmpty(…) · .busy · .fail · .load · .clear · .version
+-->
+<style>
+.kit-empty { box-sizing: border-box; margin: 0 auto; padding: 40px 16px; max-width: 36em; text-align: center;
+  color: var(--dim, #9aa3ad); font-size: 14px; line-height: 1.45; }
+.kit-empty > * { margin: 0; }
+.kit-empty-i { display: block; margin: 0 0 10px; font-size: 30px; line-height: 1; opacity: .6; }
+.kit-empty-t { color: var(--fg, #e8e8e8); font-size: 16px; font-weight: 600; text-wrap: balance; overflow-wrap: anywhere; }
+.kit-empty-p { margin-top: 4px; text-wrap: pretty; overflow-wrap: anywhere; }
+.kit-empty-a { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+.kit-empty .kit-empty-b { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line, #3a404a);
+  background: var(--panel, #20242b); color: var(--fg, #e8e8e8); font: inherit; font-weight: 600;
+  text-decoration: none; cursor: pointer; }
+.kit-empty .kit-empty-b.go { background: var(--accent, #4c8dff); border-color: transparent; color: var(--on-accent, var(--bg, #111)); }
+.kit-empty .kit-empty-b:focus-visible { outline: 2px solid var(--accent, #4c8dff); outline-offset: 2px; }
+.kit-empty[data-kind=bad] .kit-empty-t::before { content: "!"; display: inline-grid; place-items: center;
+  width: 1.3em; height: 1.3em; margin-right: .45em; border-radius: 50%; vertical-align: .08em;
+  background: var(--bad, #e5484d); color: #fff; font-size: .8em; font-weight: 700; }
+.kit-empty[data-kind=busy] { animation: kit-empty-wait 0s linear .4s both, kit-empty-pulse 1.6s ease-in-out .4s infinite; }
+.kit-empty[data-kind=busy] .kit-empty-t { color: var(--dim, #9aa3ad); font-weight: 500; font-size: 14px; }
+@keyframes kit-empty-wait { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes kit-empty-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .kit-empty[data-kind=busy] { animation: kit-empty-wait 0s linear .4s both; } }
+.kit-empty.small { margin: 0; padding: 10px 0; max-width: none; text-align: left; }
+.kit-empty.small .kit-empty-i { display: none; }
+.kit-empty.small .kit-empty-t { font-size: 14px; }
+.kit-empty.small .kit-empty-a { justify-content: flex-start; margin-top: 8px; }
+li.kit-empty-row, td.kit-empty-cell { list-style: none; padding: 0; border: 0; }
+</style>
+<script>
+(function () {
+  if (window.kitEmpty && window.kitEmpty.version) return;
+  var L = {loading: "Loading…", notLoaded: "Not loaded", retry: "Try again", login: "Log in",
+    loggedOut: "Logged out — log in again to see it.", timeout: "No answer in time.",
+    tailnet: "p340 is not reachable — is the phone on the tailnet?",
+    offline: "No connection — is the phone online?", status: "The server answered %s."};
+  function lab(k) { var c = window.KITEMPTY && KITEMPTY.labels; return (c && c[k]) || L[k]; }
+  function onTailnet() {
+    var c = window.KITEMPTY;
+    if (c && typeof c.tailnet === "boolean") return c.tailnet;
+    return /(^|\.)p340\.grining\.eu$/.test(location.hostname);
+  }
+  function mk(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+  function holder(el) {
+    var tag = el.tagName;
+    if (tag === "UL" || tag === "OL") { var li = mk("li", "kit-empty-row"); el.appendChild(li); return li; }
+    if (tag === "TBODY" || tag === "TABLE") {
+      var cols = 1, t = el.closest("table"), r = t && t.querySelector("tr");
+      if (r) { cols = 0; for (var i = 0; i < r.cells.length; i++) cols += r.cells[i].colSpan || 1; }
+      var tr = document.createElement("tr"), td = mk("td", "kit-empty-cell"); td.colSpan = Math.max(cols, 1);
+      tr.appendChild(td); (tag === "TABLE" ? (el.tBodies[0] || el.appendChild(document.createElement("tbody"))) : el).appendChild(tr);
+      return td;
+    }
+    return el;
+  }
+
+  function kitEmpty(el, o) {
+    if (!el) return null;
+    o = o || {};
+    var kind = o.kind || "none";
+    while (el.firstChild) el.removeChild(el.firstChild);
+    var box = mk("div", "kit-empty" + (o.small ? " small" : ""));
+    box.dataset.kind = kind;
+    box.setAttribute("role", kind === "bad" ? "alert" : "status");
+    if (kind === "busy") box.setAttribute("aria-busy", "true");
+    if (o.icon && !o.small) { var i = mk("span", "kit-empty-i", o.icon); i.setAttribute("aria-hidden", "true"); box.appendChild(i); }
+    box.appendChild(mk("p", "kit-empty-t", o.title || (kind === "busy" ? lab("loading") : kind === "bad" ? lab("notLoaded") : "")));
+    if (o.text) box.appendChild(mk("p", "kit-empty-p", o.text));
+    var acts = o.actions || [];
+    if (acts.length) {
+      var row = mk("p", "kit-empty-a");
+      acts.forEach(function (a) {
+        var b;
+        if (a.href != null) { b = mk("a", "kit-empty-b", a.label); b.href = a.href; }
+        else { b = mk("button", "kit-empty-b", a.label); b.type = "button"; }
+        if (a.go) b.classList.add("go");
+        if (a.onClick) b.addEventListener("click", function (e) { if (a.href == null) e.preventDefault(); a.onClick(e); });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+    }
+    holder(el).appendChild(box);
+    return box;
+  }
+
+  function cause(err) {
+    var st = err && (typeof err.status === "number" ? err.status : null);
+    if (st === 401) return {text: lab("loggedOut"), login: true};
+    if (st) return {text: lab("status").replace("%s", st)};
+    if (err && (err.name === "TimeoutError" || err.name === "AbortError" || err.timeout)) return {text: lab("timeout")};
+    if (navigator.onLine === false || !err || err.name === "TypeError") return {text: onTailnet() ? lab("tailnet") : lab("offline")};
+    return {text: onTailnet() ? lab("tailnet") : lab("offline")};
+  }
+
+  kitEmpty.busy = function (el, text) { return kitEmpty(el, {kind: "busy", title: text || lab("loading")}); };
+
+  kitEmpty.fail = function (el, err, retry, o) {
+    o = o || {};
+    var c = cause(err), acts = [];
+    if (c.login) acts.push({label: lab("login"), go: true,
+      href: "/login?next=" + encodeURIComponent(location.pathname + location.search + location.hash)});
+    else acts.push({label: lab("retry"), go: true, onClick: function () {
+      if (typeof retry === "function") { kitEmpty.busy(el); retry(); } else location.reload();
+    }});
+    return kitEmpty(el, {kind: "bad", title: o.title || lab("notLoaded"), text: o.text || c.text, small: o.small, actions: acts});
+  };
+
+  kitEmpty.load = function (el, src, render, o) {
+    o = o || {};
+    var again = function () { return kitEmpty.load(el, src, render, o); };
+    if (o.busy !== false) kitEmpty.busy(el, o.busyText);
+    var p;
+    try {
+      if (typeof src === "function") p = Promise.resolve(src());
+      else {
+        var ctl = window.AbortController ? new AbortController() : null;
+        var tm = ctl && setTimeout(function () { ctl.abort(); }, o.timeout || 12000);
+        p = fetch(src, {headers: {Accept: "application/json"}, signal: ctl ? ctl.signal : undefined, credentials: "same-origin"})
+          .then(function (r) { clearTimeout(tm); if (!r.ok) throw r; return r.json(); },
+                function (e) { clearTimeout(tm); throw e; });
+      }
+    } catch (e) { p = Promise.reject(e); }
+    return p.then(function (data) {
+      kitEmpty.clear(el);
+      var shown = (Array.isArray(data) && !data.length) ? false : render(data, el);
+      if (shown === false) kitEmpty(el, o.empty || {kind: "none"});
+      return data;
+    }).catch(function (err) {
+      kitEmpty.fail(el, err, again, {title: o.title, small: o.small});
+      return null;
+    });
+  };
+
+  kitEmpty.clear = function (el) {
+    if (!el) return;
+    var n = el.querySelectorAll(".kit-empty, .kit-empty-row, td.kit-empty-cell");
+    for (var i = 0; i < n.length; i++) {
+      var x = n[i], row = x.closest("li.kit-empty-row, tr");
+      if (row && row.querySelector("td.kit-empty-cell") && el.contains(row)) row.remove();
+      else if (x.classList.contains("kit-empty-row")) x.remove();
+      else if (x.isConnected) x.remove();
+    }
+  };
+
+  kitEmpty.version = "1.1";
+  window.kitEmpty = kitEmpty;
+})();
+</script>

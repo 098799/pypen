@@ -1,7 +1,10 @@
 {% load items_extras %}
 <div id="searchResultsBody" data-listnav>
 {% if not query %}
-<p class="note">Type to search pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance. Every word has to match; accents do not matter (“zur” finds “Zürich”).</p>
+<div class="kit-empty" data-kind="none" role="status">
+  <p class="kit-empty-t">Type to search</p>
+  <p class="kit-empty-p">Pens by brand, model, finish, filler, or provenance — and inks by brand, name, line, colour, or provenance. Every word has to match; accents do not matter (“zur” finds “Zürich”).</p>
+</div>
 {% endif %}
 {% if query %}
   {% if pens %}
@@ -56,7 +59,13 @@
   {% endif %}
 
   {% if not pens and not inks %}
-  <div class="sr-empty">No {% if type == "pens" %}pen{% elif type == "inks" %}ink{% else %}pen or ink{% endif %} matches <em>“{{ query }}”</em>.{% if not filters.show_defunct or not filters.show_used_up or not filters.show_samples %} Defunct pens, used-up inks and samples are hidden — the chips above show them.{% endif %}</div>
+  {% with hidden=filters.any_hidden %}
+  <div class="kit-empty" data-kind="match" role="status">
+    <p class="kit-empty-t">No {% if type == "pens" %}pen{% elif type == "inks" %}ink{% else %}pen or ink{% endif %} matches “{{ query }}”</p>
+    <p class="kit-empty-p">{% if hidden %}Defunct pens, used-up inks and samples are hidden. {% endif %}Try fewer words, or part of a word.</p>
+    <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ filters.clear_url }}">Clear the search</a>{% if hidden %}<a class="kit-empty-b" href="{{ filters.show_all_url }}">Show the hidden ones</a>{% endif %}</p>
+  </div>
+  {% endwith %}
   {% endif %}
 {% endif %}
 </div>

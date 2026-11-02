@@ -1,0 +1,26 @@
+{% comment %}
+The ink list's empty block (kit §4 "Empty states", _empty.html), shared by the
+list and the grid. It arrives by an htmx swap, so it carries role="status".
+An empty cupboard says so; a search or a filter that hides every ink is a
+no-match with a way out (samples and used-up inks are hidden by default, so
+"Show all" turns them on).
+{% endcomment %}
+{% if filters.cupboard_empty %}
+<div class="kit-empty" data-kind="none" role="status">
+  <p class="kit-empty-t">No inks in the cupboard yet</p>
+  {% if can_edit and not public %}<p class="kit-empty-p">Add a bottle, and it shows here by colour.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'inks_create' %}">Add the first one</a></p>{% endif %}
+</div>
+{% elif filters.q %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No ink matches “{{ filters.q }}”</p>
+  <p class="kit-empty-p">{% if filters.color or not filters.include_samples or not filters.include_used %}With these filters{% if not filters.include_samples or not filters.include_used %} (samples and used-up inks are hidden){% endif %}. {% endif %}Try fewer words, or part of a word.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ filters.search_url }}">Clear the search</a>{% if filters.color or not filters.include_samples or not filters.include_used %}<a class="kit-empty-b" href="{{ filters.show_all_url }}">Show all</a>{% endif %}</p>
+</div>
+{% else %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No ink matches this filter</p>
+  {% if not filters.include_samples or not filters.include_used %}<p class="kit-empty-p">Samples and used-up inks are hidden.</p>{% endif %}
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ filters.show_all_url }}">Show all</a></p>
+</div>
+{% endif %}

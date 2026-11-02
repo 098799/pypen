@@ -9,7 +9,9 @@
    out); the others are added after it. The nav is replaced by the new one.
 
    - A second tap while one is loading does nothing.
-   - A failed load says so on the button; a tap tries again.
+   - A failed load says so in the kit's "could not load" block under the
+     button (kitEmpty.fail, templates/items/_empty.html), with the cause and
+     Try again; the button keeps its label, so a tap on it tries again too.
    - Listens on the document, so a page swapped in by hx-boost needs nothing.
    - Fires "pypen:more" when rows were added (the jump strip rebuilds). */
 (function () {
@@ -69,11 +71,13 @@
     var label = a.getAttribute("data-label") || a.textContent;
     a.setAttribute("data-label", label);
     a.textContent = "Loading…";
+    var nav = a.closest("[data-more-nav]");
+    var oldFail = nav && nav.querySelector("[data-more-fail]");
     var name = host.getAttribute("data-more-host");
 
     fetch(a.href, { headers: { "X-Pypen-More": "1" }, credentials: "same-origin" })
       .then(function (r) {
-        if (!r.ok) throw new Error(String(r.status));
+        if (!r.ok) throw r;
         return r.text();
       })
       .then(function (html) {
@@ -86,9 +90,14 @@
         if (link) link.focus({ preventScroll: true });
         document.dispatchEvent(new CustomEvent("pypen:more", { detail: { host: host } }));
       })
-      .catch(function () {
+      .catch(function (err) {
         a.removeAttribute("aria-busy");
-        a.textContent = "Could not load — try again";
+        a.textContent = label;
+        if (!nav || !window.kitEmpty) { a.textContent = "Could not load — try again"; return; }
+        var slot = oldFail || nav.appendChild(document.createElement("div"));
+        slot.setAttribute("data-more-fail", "");
+        kitEmpty.fail(slot, err, function () { a.click(); }, {title: "More rows not loaded", small: true,
+          text: err && err.message === "no rows" ? "The answer had no rows in it." : undefined});
       });
   });
 })();

@@ -69,9 +69,16 @@ come 50 at a time with Load more (kit §14, PYPEN-7; listing.py, more.js).
     {% endfor %}
   </div>
   {% elif query %}
-  <div class="empty">No past inking matches “{{ query }}”. <a href="{% url 'usages_list' %}">Clear the search</a>.</div>
+  <div class="kit-empty" data-kind="match" role="status">
+    <p class="kit-empty-t">No past inking matches “{{ query }}”</p>
+    <p class="kit-empty-p">Search by pen, ink or nib.</p>
+    <p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'usages_list' %}">Clear the search</a></p>
+  </div>
   {% else %}
-  <div class="empty">Nothing has been cleaned out yet — every inking so far is still on the desk.</div>
+  <div class="kit-empty" data-kind="none" role="status">
+    <p class="kit-empty-t">Nothing has been cleaned out yet</p>
+    <p class="kit-empty-p">Every inking so far is still on the desk.</p>
+  </div>
   {% endif %}
 </section>
 {% include "items/_more.html" %}

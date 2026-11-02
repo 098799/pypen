@@ -1,0 +1,25 @@
+{% comment %}
+The pens list's empty block (kit §4 "Empty states", _empty.html), shared by the
+list and the grid. It arrives by an htmx swap (the search box, a rotation
+chip), so it carries role="status" itself. A rotation chip with no pens is a
+no-match with a way back to all of them, never "no pens in the bureau".
+{% endcomment %}
+{% if query %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No pen matches “{{ query }}”{% if rot %} in {{ rot_title }}{% endif %}</p>
+  <p class="kit-empty-p">Try fewer words, or part of a word.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ clear_url }}">Clear the search</a>{% if rot %}<a class="kit-empty-b" href="{{ all_url }}">All pens</a>{% endif %}</p>
+</div>
+{% elif rot %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No pens in {{ rot_title }}</p>
+  <p class="kit-empty-p">This group of the rotation is empty now.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ all_url }}">All pens</a></p>
+</div>
+{% else %}
+<div class="kit-empty" data-kind="none" role="status">
+  <p class="kit-empty-t">No pens in the bureau yet</p>
+  {% if can_edit %}<p class="kit-empty-p">Add a pen, and it starts in the rotation.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'pens_create' %}">Add the first one</a></p>{% endif %}
+</div>
+{% endif %}

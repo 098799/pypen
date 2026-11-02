@@ -110,8 +110,10 @@ def build(request):
 
     rot_filters = [{"key": "", "label": "All", "title": "All pens", "count": sum(counts.values()), "url": _url_with(rot=None), "on": not active_rot}]
     for key, title, chip in GROUPS:
-        if counts.get(key):
-            rot_filters.append({"key": key, "label": chip, "title": title, "count": counts[key], "url": _url_with(rot=key), "on": active_rot == key})
+        # The chip in force stays on show at 0 (a bookmark, the last pen moved
+        # out), so the row says which filter the empty list is under.
+        if counts.get(key) or key == active_rot:
+            rot_filters.append({"key": key, "label": chip, "title": title, "count": counts.get(key, 0), "url": _url_with(rot=key), "on": active_rot == key})
 
     view = "grid" if request.GET.get("view") == "grid" else "list"
     return {
@@ -120,6 +122,10 @@ def build(request):
         "headless": bool(active_rot),
         "rot_filters": rot_filters,
         "rot": active_rot,
+        "rot_title": TITLES.get(active_rot, ""),
+        # The empty block's ways out (templates/items/pens/_empty_state.html).
+        "clear_url": _url_with(q=None),
+        "all_url": _url_with(q=None, rot=None),
         "query": q,
         "terms": listing.lists.tokens(q),
         "more": listing.more(request, offset, limit, total),

@@ -501,7 +501,10 @@ share token instead — the door that is actually open.
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty">This pen has never been inked on the record.{% if can_edit %} <a href="{% url 'usages_create' %}">Ink it up</a>.{% endif %}</div>
+  <div class="kit-empty small" data-kind="none">
+    <p class="kit-empty-t">This pen has never been inked on the record</p>
+    {% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'usages_create' %}">Ink it up</a></p>{% endif %}
+  </div>
   {% endif %}
 </section>
 

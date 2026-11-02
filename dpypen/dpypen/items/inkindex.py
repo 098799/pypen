@@ -147,6 +147,11 @@ def build(request, *, public):
         "toggle_samples_url": _url_with(samples="1" if not include_samples else None),
         "toggle_used_url": _url_with(used="1" if not include_used else None),
         "clear_url": _url_with(samples=None, used=None, color=None, q=None),
+        # The empty block (templates/items/inks/_empty_state.html): "Show all"
+        # turns the hidden samples and used-up inks on, and an empty cupboard
+        # is told apart from a filter that hides every ink.
+        "show_all_url": _url_with(samples="1", used="1", color=None, q=None),
+        "cupboard_empty": not rows and not Ink.objects.exists(),
         "view": view,
         "list_url": _url_with(view=None),
         "grid_url": _url_with(view="grid"),
