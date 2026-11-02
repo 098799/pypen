@@ -20,6 +20,24 @@ the front door are `Grining Pens` alone. Tomek left the choice to the agent:
 before keeps the old tile label until the app is added again (iOS) or Chrome
 refreshes the manifest (Android, within a day or so).
 
+## Filters and search
+
+The kit's `filters.html` (stamp `KIT-FILTERS`), copied byte for byte to
+`templates/items/_filters.html` and included by `_shell` and the inks wall: chips, box, sort on
+/inks/, /pens/, /usages/, /search/, the Gantt, /pub/inks/ and the menu. Particular to pypen:
+
+- **htmx does the requests.** A chip keeps its `href` and `hx-get`, with `hx-replace-url`, and
+  every control of a list has `hx-sync` on the search form, which stays through the swap: a chip
+  and a keystroke cannot race for one target. The filter-nav script at the end of `_shell` is the
+  joint: it builds the path at request time from the address, drops empties and each field's
+  `data-default`, and clears the kit's `aria-busy` when the answer comes.
+- **No hidden fields in the search forms**: the form stays outside the swap, so a hidden field
+  would go stale. Filter-nav adds what the address holds.
+- **/search/ keeps real radio buttons and checkboxes** inside `label.kit-chip`. The label has
+  `aria-current` for the kit's look.
+- **The List/Grid switch is not a filter**: it keeps its look, and `inksView`/`pensView`.
+- `tools/filters_probe.py` walks it in a phone browser, on a copy of the database.
+
 ## Theme
 
 The kit's `theme.js` (stamp `KIT-THEME`), copied byte for byte to

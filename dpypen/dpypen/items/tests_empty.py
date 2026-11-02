@@ -76,7 +76,7 @@ class KitEmpty(Collection):
         self.assertNotIn("bureau", b)
         self.assertIn('href="/pens/">All pens</a>', b)
         # the chip in force stays on show, at 0
-        self.assertRegex(html, r'class="rotchip on"[^>]*data-navval="p3"[^>]*>3 <b>0</b>')
+        self.assertRegex(html, r'class="kit-chip" aria-current="true"\s+data-navkey="rot" data-navval="p3"[^>]*>3 <b>0</b>')
 
     def test_an_empty_cupboard_says_so(self):
         got = blocks(self.client.get("/inks/").content.decode())

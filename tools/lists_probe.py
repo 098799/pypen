@@ -74,7 +74,7 @@ def run(page):
     # /pens/: three pages of rotation groups.
     page.goto(lp.BASE + "/pens/")
     settle(page)
-    total = int(page.locator(".rotchip").first.locator("b").text_content())
+    total = int(page.locator("#rotbar .kit-chip").first.locator("b").text_content())
     check(f"pens: the first page holds 50 of {total}", rows(page) == min(50, total))
     first_heads = heads(page)
     shot(page, "pens.png")

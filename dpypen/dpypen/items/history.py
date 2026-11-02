@@ -297,11 +297,19 @@ def calendar(request):
     })
 
 
+GANTT_ROTS = (("", "All"), ("p0", "P0"), ("p1", "P1"), ("p2", "P2"), ("p3", "P3"), ("other", "Other"), ("defunct", "Defunct"))
+
+
 @login_or_guest_required
 def gantt(request):
     data = _cached("gantt", _gantt_data)
+    # A filter the address keeps (kit §14); anything else is no filter, and "All" is lit.
+    rot = request.GET.get("rot", "")
+    if rot not in {k for k, _ in GANTT_ROTS}:
+        rot = ""
     return render(request, "items/history.html", {
         **data, "section": "gantt", "sub_nav": _sub_nav("gantt"), "nav": "history",
+        "rot": rot, "rot_chips": GANTT_ROTS,
     })
 
 

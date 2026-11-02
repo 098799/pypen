@@ -123,7 +123,7 @@ class TheHeaderRow(Collection):
 
     def test_the_toolbar_lost_the_icons_the_header_took(self):
         html = self.client.get("/pens/").content.decode()
-        bar = html[html.index('<div class="toolbar">') : html.index('class="rotbar"')]
+        bar = html[html.index('<div class="toolbar">') : html.index('id="rotbar"')]
         self.assertNotIn("icon-btn", bar)
 
     def test_the_public_cupboard_prints_no_numbers(self):

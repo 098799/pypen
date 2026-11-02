@@ -133,7 +133,7 @@ def desk(page):
     page.click("#deskFilterBtn")
     page.wait_for_timeout(300)
     check("tab: the popover heads Ink filters", js(page, "document.querySelector('#deskFilter .db-pop-head').textContent") == "Ink filters")
-    page.locator("#deskFilter button.cc").first.click()
+    page.locator("#deskFilter button:has(.kit-chip-dot)").first.click()
     page.wait_for_timeout(1200)
     check("inks: a colour filters", "color=" in page.url)
     check("inks: the button names the colour", js(page, "document.querySelector('#deskFilterBtn b').textContent") != "")

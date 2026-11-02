@@ -303,7 +303,7 @@ class Groups(Collection):
         more = self.client.get("/inks/?offset=50", **MORE).content.decode()
         self.assertEqual(heads(more), [])  # Blue goes on
         searched = self.client.get("/inks/?q=noir").content.decode()
-        self.assertRegex(searched, r'cc-label">Blue</span>\s*<span class="cc-count">3<')
+        self.assertRegex(searched, r'</i>Blue <b>3</b>')
         self.assertEqual(self.client.get("/api/inks?q=noir&color=Blue").json()["total"], 3)
 
     def test_a_flat_sort_has_no_headings(self):

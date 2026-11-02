@@ -67,6 +67,11 @@ markup on the server; the handler below and more.js call kitEmpty().
 {% endcomment %}
 {% include "items/_empty.html" %}
 {% comment %}
+The kit's controls above a list (kit README §4 "Filters and search", KIT-FILTERS, a byte copy):
+chips, search box, sort. The filter-nav script at the end of this file joins them to htmx.
+{% endcomment %}
+{% include "items/_filters.html" %}
+{% comment %}
 The kit's "New version ready · Refresh" toast (kit README §4 "New version",
 KIT-UPDATE, a byte copy). pypen's worker takes over at install (`takeover` in
 pwa.py), so nothing waits to be offered: the toast compares this page's build
@@ -215,34 +220,24 @@ menu's search field to the ⌕ popover.
 
 <div class="menu-panel" id="menuPanel" role="menu" aria-label="More">
   {% if is_owner or is_guest %}
-  <form method="get" action="{% url 'search' %}" id="menuSearchForm" class="menu-search">
-    <input type="search" name="q" id="menuSearchInput" placeholder="Search…" autocomplete="off">
+  {# Only on Enter or Go: it navigated 220 ms after two letters, away from the page, in the middle of a word. #}
+  <form method="get" action="{% url 'search' %}" id="menuSearchForm" class="kit-search menu-search" role="search" hx-boost="false">
+    <input type="search" name="q" id="menuSearchInput" placeholder="Search…" aria-label="Search pens and inks">
   </form>
   <script>
     (function () {
-      var input = document.getElementById("menuSearchInput");
       var form = document.getElementById("menuSearchForm");
-      if (!input || !form) return;
-      var timer = null;
+      if (!form) return;
       // The layer it sits in goes first, its history entry with it: the menu
       // on a phone, the desk bar's ⌕ popover on a desk (deskbar.js moves it).
-      function search(q) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        form.removeAttribute("aria-busy");
+        var q = form.querySelector("input").value.trim();
+        if (!q) return;
         var go = function () { window.location.href = "/search/?q=" + encodeURIComponent(q); };
         var panel = form.closest("#menuPanel, #deskSearch");
         if (window.kitLayer && panel && kitLayer.isOpen(panel)) kitLayer.close(panel, go); else go();
-      }
-      input.addEventListener("input", function () {
-        clearTimeout(timer);
-        var q = input.value.trim();
-        if (q.length < 2) return;
-        timer = setTimeout(function () { search(q); }, 220);
-      });
-      input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          var q = input.value.trim();
-          if (q) search(q);
-        }
       });
     })();
   </script>
@@ -388,20 +383,26 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
         a.setAttribute('href', url);
         if (a.hasAttribute('hx-get')) a.setAttribute('hx-get', url);
         var on = val === now;
-        a.classList.toggle('on', on);
-        if (a.hasAttribute('aria-selected')) a.setAttribute('aria-selected', on ? 'true' : 'false');
+        // The state is the attribute (kit: no .on on a chip); the view toggle's look still reads .on.
+        if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+        if (!a.classList.contains('kit-chip')) a.classList.toggle('on', on);
       });
     });
     selects.forEach(function (sel) {
       var key = sel.getAttribute('data-navkey');
-      var vals = [].map.call(sel.options, function (o) { return o.getAttribute('data-navval') || ''; });
-      var now = cur(key, vals);
-      [].forEach.call(sel.options, function (o) {
-        o.value = urlFor(key, o.getAttribute('data-navval') || '');
-        if ((o.getAttribute('data-navval') || '') === now) sel.value = o.value;
-      });
+      sel.value = cur(key, [].map.call(sel.options, function (o) { return o.value; }));
+    });
+    inputChips();
+  }
+  // A chip that is a real radio button or checkbox (/search/): the label says it for the kit's look.
+  function inputChips() {
+    document.querySelectorAll('label.kit-chip > input').forEach(function (i) {
+      if (i.checked) i.parentNode.setAttribute('aria-current', 'true'); else i.parentNode.removeAttribute('aria-current');
     });
   }
+  document.addEventListener('change', function (e) {
+    if (e.target.closest && e.target.closest('label.kit-chip')) inputChips();
+  });
   // Rewriting href/hx-get is not enough on its own: htmx resolves an element's
   // request path when it first processes the node and keeps it, so a later
   // attribute change is ignored and the control re-requests the URL the page
@@ -410,20 +411,51 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
   document.body.addEventListener('htmx:configRequest', function (e) {
     var el = e.detail.elt;
     if (!el || !el.getAttribute) return;
+    // The kit has put a word typed and not sent into the chip's href (in the capture phase of the click).
+    if (el.matches && el.matches('.kit-chips a[href]')) {
+      e.detail.path = el.pathname + el.search;
+      return;
+    }
     var key = el.getAttribute('data-navkey');
     if (key) {
       e.detail.path = urlFor(key, el.getAttribute('data-navval') || '');
       return;
     }
     if (el.matches && el.matches('form[data-navform]')) {
-      // The field supplies q; everything else in play comes from the URL.
+      // Each field of the form speaks for itself (the box, a sort, /search/'s chips); everything
+      // else in play comes from the URL. The path too: the form's hx-get was written with the
+      // query string of the first page, and the row has moved on since.
+      var own = {}, p = e.detail.parameters;
+      [].forEach.call(el.elements, function (f) {
+        if (!f.name) return;
+        own[f.name] = 1;
+        // No `?q=`, no default in the address (kit §14).
+        if (p[f.name] === '' || p[f.name] === f.getAttribute('data-default')) delete p[f.name];
+      });
+      e.detail.path = location.pathname;
       new URLSearchParams(location.search).forEach(function (v, k) {
-        if (k !== 'q' && k !== 'offset' && !(k in e.detail.parameters)) e.detail.parameters[k] = v;
+        if (k !== 'offset' && !own[k]) p[k] = v;
       });
     }
   });
+  // The kit marks a form busy until the page goes; here the page stays, and the answer has come.
+  function idle() {
+    document.querySelectorAll('.kit-search[aria-busy]').forEach(function (f) { f.removeAttribute('aria-busy'); });
+  }
+  document.body.addEventListener('htmx:afterRequest', idle);
+  // The ink filters are inside the swap: a new row that starts where the old one was (the kit then
+  // brings the picked chip into view).
+  var rowX = 0;
+  document.body.addEventListener('htmx:beforeSwap', function () {
+    var r = document.getElementById('inkFilters');
+    rowX = r ? r.scrollLeft : 0;
+  });
+  document.body.addEventListener('htmx:afterSwap', function () {
+    var r = document.getElementById('inkFilters');
+    if (r) r.scrollLeft = rowX;
+  });
   document.addEventListener('DOMContentLoaded', sync);
-  // hx-push-url writes location during settle, so a sync fired on afterSwap
+  // hx-replace-url writes location during settle, so a sync fired on afterSwap
   // alone reads the *previous* query string and rebuilds every URL from it —
   // which is how switching view right after a search still lost the search.
   // The history events are the ones that mean "location is now current".
@@ -748,7 +780,7 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
        of which name the same groups this strip would. Three stacked copies of
        one navigation was most of the first screen on a phone; where the page
        already navigates itself, the derived strip is pure duplication. */
-    if (document.querySelector(".rotbar, .filter-row")) return;
+    if (document.querySelector("#rotbar, #inkFilters")) return;
 
     var groups = Array.prototype.slice.call(
       host.querySelectorAll("[data-listnav-group]"));
@@ -846,8 +878,8 @@ window.__go = function (url, push) {
   // history sections; failing those, the app's own tabs.
   function tabs() {
     var sets = [
-      ["#rotbar .rotchip", "on", false],
-      [".filter-row a.cc", "on", true],      // a colour chip that is on clears itself
+      ["#rotbar .kit-chip", "aria-current", false],
+      ["#inkFilters a[data-color]", "aria-current", true],      // a colour chip that is on clears itself
       [".history-sub-nav a", "active", false],
       ["#hdr .tabbar a", "active", false]      // the desk bar's tabs
     ];
@@ -862,7 +894,7 @@ window.__go = function (url, push) {
     var t = tabs();
     if (!t) return;
     var at = -1;
-    t.els.forEach(function (el, i) { if (el.classList.contains(t.on)) at = i; });
+    t.els.forEach(function (el, i) { if (t.on === "aria-current" ? el.getAttribute(t.on) === "true" : el.classList.contains(t.on)) at = i; });
     var to = at + dir;
     if (t.toggle && to === -1 && at >= 0) { t.els[at].click(); return; }  // back to "all"
     if (to < 0 || to >= t.els.length) return;                             // clamp, no wrap

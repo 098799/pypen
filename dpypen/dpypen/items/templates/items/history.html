@@ -332,39 +332,6 @@
   .pi-pen-label { font-size: 0.8rem; padding-right: 0.35rem; }
 }
 
-.gantt-controls {
-  display: flex;
-  gap: 0.3rem;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-.gantt-controls .fb-label {
-  font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 0.35rem;
-}
-.gantt-controls button {
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--ink-line);
-  background: transparent;
-  font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  cursor: pointer;
-}
-.gantt-controls button:hover { color: var(--ink); border-color: var(--accent); }
-.gantt-controls button.active {
-  color: var(--ink);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
 .gantt-scroll {
   overflow-x: auto;
   scrollbar-width: none;
@@ -760,20 +727,17 @@
     <h2>Per-pen <em>Gantt</em></h2>
     <span class="aside">{{ total_pens }} pens with inkings</span>
   </div>
-  <div class="gantt-controls">
-    <span class="fb-label">Zoom</span>
-    <button type="button" data-zoom="1" class="active">Fit</button>
-    <button type="button" data-zoom="2">2×</button>
-    <button type="button" data-zoom="4">4×</button>
-    <span class="v-rule" aria-hidden="true"></span>
-    <span class="fb-label">Rotation</span>
-    <button type="button" data-rot="" class="active rot-filter">All</button>
-    <button type="button" data-rot="p0" class="rot-filter">P0</button>
-    <button type="button" data-rot="p1" class="rot-filter">P1</button>
-    <button type="button" data-rot="p2" class="rot-filter">P2</button>
-    <button type="button" data-rot="p3" class="rot-filter">P3</button>
-    <button type="button" data-rot="other" class="rot-filter">Other</button>
-    <button type="button" data-rot="defunct" class="rot-filter">Defunct</button>
+  {# Zoom is how it is drawn, not what: it stays out of the address. Rotation is a filter: ?rot=, read by the view. #}
+  <div class="kit-chips" role="group" aria-label="Zoom">
+    <span class="kit-chips-l">Zoom</span>
+    <button type="button" class="kit-chip" data-zoom="1" aria-pressed="true">Fit</button>
+    <button type="button" class="kit-chip" data-zoom="2" aria-pressed="false">2×</button>
+    <button type="button" class="kit-chip" data-zoom="4" aria-pressed="false">4×</button>
+  </div>
+  <div class="kit-chips" role="group" aria-label="Rotation">
+    <span class="kit-chips-l">Rotation</span>
+    {% for key, label in rot_chips %}<button type="button" class="kit-chip rot-filter" data-rot="{{ key }}" aria-pressed="{% if rot == key %}true{% else %}false{% endif %}">{{ label }}</button>
+    {% endfor %}
   </div>
   <style>.gantt-row.hidden-row { display: none; }</style>
 
@@ -865,26 +829,28 @@
   if (!inner || !popup) return;
 
   // Zoom
-  document.querySelectorAll(".gantt-controls button[data-zoom]").forEach(function (b) {
+  document.querySelectorAll('[aria-label="Zoom"] .kit-chip').forEach(function (b) {
     b.addEventListener("click", function () {
-      document.querySelectorAll(".gantt-controls button[data-zoom]").forEach(function (x) { x.classList.remove("active"); });
-      b.classList.add("active");
+      kitFilters.pick(b);
       inner.setAttribute("data-zoom", b.getAttribute("data-zoom"));
     });
   });
 
-  // Rotation filter
-  document.querySelectorAll(".gantt-controls button.rot-filter").forEach(function (b) {
+  // Rotation filter: in the address, so a reload keeps it. The view lit the chip for ?rot=.
+  function showRot(want) {
+    inner.querySelectorAll(".gantt-row").forEach(function (row) {
+      row.classList.toggle("hidden-row", !!want && row.getAttribute("data-rot") !== want);
+    });
+  }
+  document.querySelectorAll(".kit-chip.rot-filter").forEach(function (b) {
     b.addEventListener("click", function () {
-      document.querySelectorAll(".gantt-controls button.rot-filter").forEach(function (x) { x.classList.remove("active"); });
-      b.classList.add("active");
+      kitFilters.pick(b);
       var want = b.getAttribute("data-rot");
-      inner.querySelectorAll(".gantt-row").forEach(function (row) {
-        if (!want) row.classList.remove("hidden-row");
-        else row.classList.toggle("hidden-row", row.getAttribute("data-rot") !== want);
-      });
+      kitFilters.url({rot: want});
+      showRot(want);
     });
   });
+  showRot("{{ rot }}");
 
   // Popup
   var penUrlTemplate = "/pens/__id__/";

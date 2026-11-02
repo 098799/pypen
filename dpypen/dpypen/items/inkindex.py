@@ -162,8 +162,7 @@ def build(request, *, public):
         "sort": sort,
         "sort_label": SORTS[sort][0],
         "sort_options": [
-            {"key": k, "label": v[0], "on": k == sort,
-             "url": _url_with(sort=None if k == "color" else k)}
+            {"key": k, "label": v[0], "on": k == sort}
             for k, v in SORTS.items()
         ],
     }

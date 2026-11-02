@@ -50,15 +50,14 @@
     // its count ("Blue 12" → "Blue").
     var t = c.getAttribute("title");
     if (t) return t.split(" · ")[0].trim();
-    var l = c.querySelector(".cc-label");
-    return (l ? l.textContent : c.textContent).replace(/\s*\d+\s*$/, "").trim();
+    return c.textContent.replace(/\s*\d+\s*$/, "").trim();
   }
   function chipsOf(host) {
     return [].slice.call(host.querySelectorAll("a, button"));
   }
   function isOn(c) {
     // "All" is on when nothing is: it is not a filter, so it names nothing.
-    return c.classList.contains("on") && c.getAttribute("data-navval") !== "";
+    return c.getAttribute("aria-current") === "true" && c.getAttribute("data-navval") !== "";
   }
 
   function fold() {
@@ -108,7 +107,7 @@
     head.textContent = btn.__name;
     var wrap = document.createElement("div");
     // the host's own classes, so the chips look as they do on a phone
-    wrap.className = host.className + " db-chips";
+    wrap.className = host.className + " wrap db-chips";
     chipsOf(host).forEach(function (c) {
       var x = document.createElement("button");
       x.type = "button";
@@ -116,7 +115,9 @@
       if (c.getAttribute("style")) x.setAttribute("style", c.getAttribute("style"));
       x.innerHTML = c.innerHTML;
       x.setAttribute("role", "menuitemcheckbox");
-      x.setAttribute("aria-checked", c.classList.contains("on") ? "true" : "false");
+      var on = c.getAttribute("aria-current") === "true";
+      if (on) x.setAttribute("aria-current", "true");
+      x.setAttribute("aria-checked", on ? "true" : "false");
       if (c.getAttribute("title")) x.title = c.getAttribute("title");
       x.addEventListener("click", function () {
         kitLayer.close(pop, function () { if (c.isConnected) c.click(); });
@@ -125,7 +126,7 @@
     });
     pop.appendChild(head);
     pop.appendChild(wrap);
-    open(pop, btn, wrap.querySelector(".on") || wrap.firstChild);
+    open(pop, btn, wrap.querySelector("[aria-current=true]") || wrap.firstChild);
   }
 
   function open(pop, btn, focusEl, after) {

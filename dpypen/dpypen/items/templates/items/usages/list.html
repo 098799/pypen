@@ -28,16 +28,17 @@
 </div>
 
 <div class="toolbar">
-  <form id="usageFilterForm" onsubmit="return false;" data-navform
+  <form id="usageFilterForm" role="search" method="get" action="{% url 'usages_list' %}" data-navform
         hx-get="{% url 'usages_list' %}"
         hx-trigger="input changed delay:300ms from:#usageQ, submit"
         hx-target="#usageContentBody"
         hx-swap="outerHTML"
         hx-select="#usageContentBody"
-        hx-push-url="true"
-        class="toolbar-search">
+        hx-replace-url="true"
+        hx-sync="this:replace"
+        class="kit-search toolbar-search">
     <input type="search" id="usageQ" name="q" placeholder="Search inkings — pen, ink, nib…" value="{{ query }}"
-           autocomplete="off" aria-label="Search inkings" data-new="inkings-search">
+           aria-label="Search inkings" data-new="inkings-search">
   </form>
 </div>
 

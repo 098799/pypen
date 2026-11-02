@@ -161,6 +161,6 @@ class NoFixedInlineStyle(_Collection):
     def test_templates(self):
         fixed = re.compile(r'style="[^"{]*"')
         for t in TEMPLATES.rglob("*.html"):
-            if t.name == "_keys.html":  # the kit's keyboard layer, its own markup
+            if t.name in ("_keys.html", "_filters.html"):  # the kit's own markup (a header that shows it)
                 continue
             self.assertEqual(fixed.findall(t.read_text()), [], t.relative_to(TEMPLATES))

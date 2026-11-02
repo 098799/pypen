@@ -24,6 +24,7 @@ KIT = Path("/home/tgrining/apps/kit")
 COPIES = {
     TPL / "_pullrefresh.html": KIT / "snippets" / "pullrefresh.html",
     TPL / "_update.html": KIT / "snippets" / "update.html",
+    TPL / "_filters.html": KIT / "snippets" / "filters.html",
     TPL / "_whatsnew.html": KIT / "snippets" / "whatsnew.html",
     HERE / "errors.py": KIT / "py" / "errors.py",
     HERE / "whatsnew.py": KIT / "py" / "whatsnew.py",

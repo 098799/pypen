@@ -1,0 +1,363 @@
+<!-- KIT-FILTERS: v1.0 2026-11-02
+  The controls above a list: filter chips, the search box, the sort. Spec:
+  ~/apps/kit/README.md §4, "Filters and search", and §14. Canonical copy:
+  ~/apps/kit/snippets/filters.html. Apps carry a byte-identical copy (fleet-check
+  `kit` compares them): change this file, bump the stamp here and in `version`
+  below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 18 apps had their own (AUDIT.md, pass 7), ~25 chip
+  designs from 25 to 44 px; 9 search boxes zoomed the page on an iPhone, and on
+  every GET form the native x emptied the box and left the list filtered.
+
+  Include it once, anywhere in the body (or its style part in the app's CSS
+  bundle and its script part in the app's JS, cut as for the toast). The header
+  names no tag in angle brackets but the markup below, and holds no double braces.
+
+  CHIPS. The state IS the ARIA attribute: there is no "on" class to forget.
+
+    (a link: a server filter)
+    <nav class="kit-chips" aria-label="Status">
+      <a class="kit-chip" href="?" aria-current="true">All <b>120</b></a>
+      <a class="kit-chip" href="?s=open">Open <b>4</b></a>
+    </nav>
+    (a button: a filter in the page)
+    <div class="kit-chips" role="group" aria-label="Status">
+      <button type="button" class="kit-chip" aria-pressed="true">All</button>
+    </div>
+
+  Strip classes and attributes:
+    wrap            rows in place of a strip that scrolls sideways
+    data-fold="6"   on a phone: the first 6 + the picked one + "N more"
+    data-push       a chip here adds a history entry (default: it replaces it)
+  Inside it:
+    span.kit-chips-l        a word before the row ("Sort")
+    b                       a count (dimmer, tabular)
+    small                   a second line (a price under a date)
+    i.kit-chip-dot          a colour dot (style="background:…"): an ink, a type
+    span.kit-chip-x         the × inside a picked chip that takes it off
+    a.kit-chip.kit-chip-clear  "Clear": dashed, shown only when a filter is on
+  A chip whose colour means something: style="--kit-chip-on:#c33;--kit-chip-on-fg:#fff".
+
+  Extra rows, closed: details.kit-more, summary = "Filters" and a b with the count of
+  those that are on. The server writes `open` only if the app wants them shown.
+
+  SEARCH. A GET form (a soft nav takes it, as any form):
+    <form class="kit-search" role="search" action="/x" method="get">
+      <input type="search" name="q" value="…" aria-label="Search sources" placeholder="…">
+      <input type="hidden" name="brand" value="…">    (each filter it must keep)
+    </form>
+  The snippet makes it 44 px and 16 px (a smaller box zooms the page on an iPhone), sets
+  autocomplete, autocapitalize, spellcheck, enterkeyhint and maxlength where missing,
+  draws its own ×, and drops empty fields on submit. × empties the box and, when the
+  address has that word, submits: the list follows the box. `/` focuses the first box
+  (window.KITFILTERS.slash = false if the app does it), Esc empties it, then blurs.
+
+  A live box (a list in the page):
+    kitFilters.live(input, {
+      ms: 300,                     debounce; × and Enter go at once
+      param: "q",                  written with replaceState, dropped when empty; null = no URL
+      run: function (q, signal) {  fetch with the signal, draw, return the promise
+        return fetch(url(q), {signal}).then(…);
+      },
+      fail: function (err) {},     not called for a call a newer one overtook
+    });
+  An answer a newer call overtook cannot draw: `signal` aborts, and a run that does not
+  use it must check signal.aborted before it draws. The box has aria-busy while it runs.
+
+  SORT. Up to 5 ways: a chip row with span.kit-chips-l "Sort". More: a select.
+    <label class="kit-sort"><span>Sort</span><select name="sort">…</select></label>
+  In a form, a change submits it through requestSubmit (a soft nav sees it; a plain
+  form.submit() does not). A row of box and sort: div.kit-listbar around them.
+
+  Filters are in the URL, defaults dropped, read on load and validated on the server.
+
+  JS: kitFilters.mount(root?)    after the page draws chips or a box itself. It also runs
+                                 at load, on kit:softnav, and after an htmx swap
+      kitFilters.pick(button)    one choice in a strip of buttons: this one pressed, the rest not
+      kitFilters.press(button, on)  several choices
+      kitFilters.reveal(strip)   the picked chip into view
+      kitFilters.url(params)     replaceState: params {k: v}, an empty v is dropped
+
+  A word typed in the box and not sent goes with a chip tapped (not with kit-chip-clear).
+  A chip's link on the same path replaces the history entry (a filter is a state of the
+  list, not a place: 5 chips were 6 presses of Back), and the row stays where it was on
+  the screen. An app with its own soft nav handles the click first (preventDefault) and
+  must itself replace for `.kit-chips a`. Offline, the list stays and a toast says why.
+
+  Look: --accent --on-accent --panel --line --fg --dim --bg, the app's font.
+  --kit-chip-h (32px) for a child's big chips only. Words: window.KITFILTERS = {labels:
+  {clear, more, fewer, offline}}; the app's strings before this file's script runs.
+  Baby-tier apps may carry it (no settings, no keys in it).
+  Not a filter: a preset that starts something, a game's control, a link to a place.
+  Those keep their own look. Test: kit/snippets/tests/test_filters.py.
+-->
+<style>
+.kit-chips { display: flex; align-items: center; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 6px 0;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; min-width: 0; }
+.kit-chips::-webkit-scrollbar { display: none; }
+.kit-chips.wrap { flex-wrap: wrap; overflow-x: visible; row-gap: 12px; }
+.kit-chips[data-kit-fade=r] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+.kit-chips[data-kit-fade=l] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); }
+.kit-chips[data-kit-fade=lr] { -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
+.kit-chips-l { flex: none; font-size: 12px; color: var(--dim); }
+.kit-chip { position: relative; flex: none; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  gap: 5px; min-height: var(--kit-chip-h, 32px); padding: 3px 12px; margin: 0; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel, transparent); color: var(--dim); font: inherit; font-size: 13.5px; font-weight: 600; line-height: 1.15;
+  letter-spacing: 0; text-transform: none; text-decoration: none; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.kit-chip::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: max(100%, 44px); transform: translateY(-50%); }
+.kit-chip b { font-weight: 500; opacity: .8; font-variant-numeric: tabular-nums; }
+.kit-chip small { display: block; font-size: 11px; font-weight: 500; opacity: .85; }
+.kit-chip:has(small) { flex-direction: column; gap: 0; border-radius: 16px; padding: 4px 12px; }
+.kit-chip-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+.kit-chip-x { font-weight: 700; margin-left: 1px; }
+.kit-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kit-chip[aria-current=true], .kit-chip[aria-pressed=true] { background: var(--kit-chip-on, var(--accent)); border-color: var(--kit-chip-on, var(--accent));
+  color: var(--kit-chip-on-fg, var(--on-accent, var(--bg))); font-weight: 700; }
+.kit-chip-clear { border-style: dashed; background: transparent; }
+.kit-chips .kit-fold { display: none; }
+@media (hover: hover) and (pointer: fine) { .kit-chip:not([aria-current=true]):not([aria-pressed=true]):hover { color: var(--fg); border-color: var(--dim); } }
+.kit-more { display: block; }
+.kit-more > summary { display: inline-flex; align-items: center; gap: 5px; position: relative; min-height: 32px; margin: 6px 0; padding: 3px 12px; box-sizing: border-box;
+  border: 1px solid var(--line); border-radius: 999px; color: var(--dim); font-size: 13.5px; font-weight: 600; cursor: pointer; list-style: none; }
+.kit-more > summary::-webkit-details-marker { display: none; }
+.kit-more > summary::after { content: "▾"; }
+.kit-more[open] > summary::after { content: "▴"; }
+.kit-more > summary b { font-weight: 700; color: var(--accent); }
+.kit-listbar { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kit-listbar > .kit-search { flex: 1; min-width: 0; }
+.kit-search { position: relative; display: block; margin: 0; min-width: 0; }
+.kit-search input[type=search], .kit-search input.kit-search-i { box-sizing: border-box; display: block; width: 100%; height: 44px; margin: 0; padding: 0 44px 0 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel, transparent); color: var(--fg); font: inherit; font-size: 16px; line-height: 1.2;
+  text-transform: none; letter-spacing: 0; -webkit-appearance: none; appearance: none; outline-offset: 0; }
+.kit-search input::placeholder { color: var(--dim); opacity: 1; }
+.kit-search input:focus-visible { outline: 2px solid var(--accent); border-color: transparent; }
+.kit-search input::-webkit-search-cancel-button, .kit-search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.kit-search-x { position: absolute; right: 0; top: 0; width: 44px; height: 44px; padding: 0; margin: 0; border: 0; background: none; color: var(--dim); font: inherit; font-size: 18px; line-height: 44px; text-align: center; cursor: pointer; }
+.kit-search-x[hidden] { display: none; }
+.kit-search[aria-busy=true]::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 1px; height: 2px; border-radius: 2px; background: var(--accent); animation: kit-search-busy 1s ease-in-out infinite; pointer-events: none; }
+@keyframes kit-search-busy { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .kit-search[aria-busy=true]::after { animation: none; opacity: .6; } }
+.kit-sort { position: relative; flex: none; display: inline-flex; align-items: center; min-height: 44px; }
+.kit-sort > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.kit-sort select { box-sizing: border-box; height: 44px; max-width: 46vw; margin: 0; padding: 0 26px 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel, transparent); color: var(--fg);
+  font: inherit; font-size: 16px; line-height: 1.2; -webkit-appearance: none; appearance: none; text-overflow: ellipsis; cursor: pointer; }
+.kit-sort select:focus-visible { outline: 2px solid var(--accent); border-color: transparent; }
+.kit-sort::after { content: "▾"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: 12px; pointer-events: none; }
+</style>
+<script>
+(function () {
+  if (window.kitFilters) return;
+  var cfg = window.KITFILTERS || {};
+  var L = Object.assign({clear: 'Clear the search', more: '%d more', fewer: 'Fewer', offline: 'Not loaded — no connection'}, cfg.labels || {});
+  var KEY = 'kitFiltersRow';
+  var ACTIVE = '[aria-current=true],[aria-pressed=true]';
+
+  function each(root, sel, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
+
+  // ——— the strip: fade, the picked chip in view, the fold ———
+  function fade(s) {
+    if (s.classList.contains('wrap') || s.dataset.kitOpen === '1') { s.removeAttribute('data-kit-fade'); return; }
+    var l = s.scrollLeft > 1, r = s.scrollWidth - s.scrollLeft - s.clientWidth > 1;
+    var v = (l ? 'l' : '') + (r ? 'r' : '');
+    if (v) s.setAttribute('data-kit-fade', v); else s.removeAttribute('data-kit-fade');
+  }
+  function reveal(s) {
+    var on = s.querySelector('.kit-chip[aria-current=true],.kit-chip[aria-pressed=true]');
+    if (on && s.scrollWidth > s.clientWidth) {
+      var box = s.getBoundingClientRect(), r = on.getBoundingClientRect();
+      if (r.left < box.left + 8 || r.right > box.right - 32) {
+        var want = s.scrollLeft + r.left - box.left - (s.clientWidth - r.width) / 2;
+        // the first chip is the row's "all": keep it in view when the picked one is near it
+        s.scrollLeft = want < 60 ? 0 : want;
+      }
+    }
+    fade(s);
+  }
+  function foldStrip(s) {
+    var n = +s.dataset.fold || 0;
+    if (!n || s.dataset.kitFolded === '1' || matchMedia('(hover: hover)').matches) return;
+    var chips = s.querySelectorAll('.kit-chip');
+    if (chips.length <= n + 2) return;
+    s.dataset.kitFolded = '1';
+    var hidden = [], picked = s.querySelector('.kit-chip[aria-current=true],.kit-chip[aria-pressed=true]');
+    if (picked && Array.prototype.indexOf.call(chips, picked) >= n) { s.insertBefore(picked, chips[1]); chips = s.querySelectorAll('.kit-chip'); }
+    Array.prototype.forEach.call(chips, function (c, i) { if (i >= n && !c.matches(ACTIVE)) { c.classList.add('kit-fold'); hidden.push(c); } });
+    var more = document.createElement('button');
+    more.type = 'button'; more.className = 'kit-chip'; more.setAttribute('aria-expanded', 'false');
+    more.textContent = L.more.replace('%d', hidden.length);
+    more.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = more.getAttribute('aria-expanded') !== 'true';
+      hidden.forEach(function (c) { c.classList.toggle('kit-fold', !open); });
+      s.classList.toggle('wrap', open); s.dataset.kitOpen = open ? '1' : '';
+      more.setAttribute('aria-expanded', String(open));
+      more.textContent = open ? L.fewer : L.more.replace('%d', hidden.length);
+      fade(s);
+    });
+    s.appendChild(more);
+  }
+
+  // ——— the box ———
+  function urlHas(input) { return !!new URLSearchParams(location.search).get(input.name || 'q'); }
+  function mountBox(form) {
+    var input = form.querySelector('input[type=search],input.kit-search-i');
+    if (!input || input.dataset.kitBox === '1') return;
+    input.dataset.kitBox = '1';
+    var attrs = {autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'search', maxlength: '255'};
+    Object.keys(attrs).forEach(function (k) { if (!input.hasAttribute(k)) input.setAttribute(k, attrs[k]); });
+    var x = document.createElement('button');
+    x.type = 'button'; x.className = 'kit-search-x'; x.textContent = '×'; x.setAttribute('aria-label', L.clear);
+    function sync() { x.hidden = !input.value; }
+    input.addEventListener('input', sync);
+    x.addEventListener('click', function () { clearBox(input, form); input.focus(); });
+    input.after(x); sync();
+    input.__kitSync = sync;
+  }
+  function clearBox(input, form) {
+    input.value = '';
+    if (input.__kitSync) input.__kitSync();
+    if (input.__kitLive) { input.__kitLive(true); return; }
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+    // a GET form: the list follows the box
+    if (form && form.requestSubmit && urlHas(input)) form.requestSubmit();
+  }
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches('form.kit-search') || (f.getAttribute('method') || 'get').toLowerCase() !== 'get') return;
+    var input = f.querySelector('input[type=search],input.kit-search-i');
+    if (input && input.__kitLive) { e.preventDefault(); e.stopImmediatePropagation(); input.__kitLive(true); input.blur(); return; }
+    // empty fields stay out of the address; the form data is built after this event
+    var off = [];
+    Array.prototype.forEach.call(f.elements, function (el) { if (el.name && !el.disabled && el.value === '') { el.disabled = true; off.push(el); } });
+    setTimeout(function () { off.forEach(function (el) { el.disabled = false; }); }, 0);
+    f.setAttribute('aria-busy', 'true');
+    setTimeout(function () { f.removeAttribute('aria-busy'); }, 8000);
+  }, true);
+  document.addEventListener('change', function (e) {
+    var sel = e.target;
+    if (!sel.closest || !sel.closest('.kit-sort') || !sel.form) return;
+    if (sel.form.requestSubmit) sel.form.requestSubmit(); else sel.form.submit();
+  });
+
+  // ——— live search ———
+  function live(input, opt) {
+    var ms = opt.ms === undefined ? 300 : opt.ms, param = opt.param === undefined ? 'q' : opt.param;
+    var form = input.closest('.kit-search'), timer = 0, ctl = null, last = input.value.trim();
+    function go() {
+      clearTimeout(timer);
+      var q = input.value.trim();
+      if (q === last && go.ran) return;
+      last = q; go.ran = true;
+      if (param) url(Object.fromEntries([[param, q]]));
+      if (ctl) ctl.abort();
+      var me = ctl = new AbortController();
+      if (form) form.setAttribute('aria-busy', 'true');
+      function done() { if (me === ctl && form) form.removeAttribute('aria-busy'); }
+      var p;
+      try { p = opt.run(q, me.signal); } catch (err) { p = Promise.reject(err); }
+      Promise.resolve(p).then(done, function (err) {
+        done();
+        if (me === ctl && !me.signal.aborted && err && err.name !== 'AbortError' && opt.fail) opt.fail(err);
+      });
+    }
+    input.__kitLive = function (now) { if (now) { go.ran = go.ran || last !== input.value.trim(); go(); } };
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      if (!input.value) { go(); return; }
+      timer = setTimeout(go, ms);
+    });
+    return {go: function () { go.ran = false; go(); }};
+  }
+  function url(params) {
+    var u = new URL(location.href);
+    Object.keys(params).forEach(function (k) {
+      var v = params[k];
+      if (v === '' || v === null || v === undefined) u.searchParams.delete(k); else u.searchParams.set(k, v);
+    });
+    history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+  }
+
+  // ——— mount ———
+  function mount(root) {
+    each(root, '.kit-chips', function (s) {
+      foldStrip(s);
+      if (s.dataset.kitStrip !== '1') {
+        s.dataset.kitStrip = '1';
+        s.addEventListener('scroll', function () { fade(s); }, {passive: true});
+      }
+      reveal(s);
+    });
+    each(root, 'form.kit-search,.kit-search', mountBox);
+    restoreRow();
+  }
+  // A chip that reloaded the page: its row stays where it was on the screen.
+  function restoreRow() {
+    var raw; try { raw = sessionStorage.getItem(KEY); } catch (e) { return; }
+    if (!raw) return;
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
+    var st = JSON.parse(raw), rows = document.querySelectorAll('.kit-chips');
+    if (st.path !== location.pathname || !rows[st.i]) return;
+    rows[st.i].scrollLeft = st.x; fade(rows[st.i]);
+    window.scrollTo(0, Math.max(0, scrollY + rows[st.i].getBoundingClientRect().top - st.top));
+  }
+
+  // On window: an app's soft nav listens on document and goes first.
+  window.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('.kit-chips a[href]');
+    if (!a || a.target && a.target !== '_self' || a.hasAttribute('download') || a.closest('[data-push]')) return;
+    if (a.origin !== location.origin || a.pathname !== location.pathname) return;
+    e.preventDefault();
+    if (a.search === location.search) return;
+    if (navigator.onLine === false) { if (window.kitToast) window.kitToast(L.offline, {kind: 'bad'}); return; }
+    var s = a.closest('.kit-chips');
+    try {
+      sessionStorage.setItem(KEY, JSON.stringify({path: location.pathname, i: Array.prototype.indexOf.call(document.querySelectorAll('.kit-chips'), s), top: s.getBoundingClientRect().top, x: s.scrollLeft}));
+    } catch (err) {}
+    location.replace(a.href);
+  });
+
+  // A word typed and not sent goes with the chip tapped (a filter never loses it). In the capture
+  // phase: every handler after this, an app's soft nav too, reads the link as it is now.
+  window.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.kit-chips a[href]');
+    if (!a || a.matches('.kit-chip-clear') || a.pathname !== location.pathname) return;
+    var box = Array.prototype.find.call(document.querySelectorAll('form.kit-search input[name],.kit-search input[name]'), function (i) { return i.offsetParent; });
+    if (!box) return;
+    var u = new URL(a.href), v = box.value.trim();
+    if ((u.searchParams.get(box.name) || '') === v) return;
+    if (v) u.searchParams.set(box.name, v); else u.searchParams.delete(box.name);
+    a.href = u.href;
+  }, true);
+
+  // `/` focuses the box; Esc empties it, then leaves it.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && e.target.closest && e.target.closest('.kit-search') && e.target.tagName === 'INPUT') {
+      if (e.target.value) clearBox(e.target, e.target.form); else e.target.blur();
+      e.stopPropagation();
+      return;
+    }
+    if (e.key !== '/' || cfg.slash === false || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || document.documentElement.classList.contains('scroll-lock')) return;
+    var box = Array.prototype.find.call(document.querySelectorAll('.kit-search input[type=search],.kit-search input.kit-search-i'), function (i) { return i.offsetParent; });
+    if (box) { e.preventDefault(); box.focus(); box.select(); }
+  });
+
+  function start() { mount(document); }
+  function idle() { each(document, '.kit-search[aria-busy=true]', function (f) { var i = f.querySelector('input'); if (!i || !i.__kitLive) f.removeAttribute('aria-busy'); }); }
+  document.addEventListener('kit:softnav', function () { idle(); mount(document); });
+  document.addEventListener('htmx:afterSettle', function () { mount(document); });
+  addEventListener('pageshow', function () { idle(); });
+  addEventListener('resize', function () { each(document, '.kit-chips', fade); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+
+  window.kitFilters = {
+    version: '1.0', mount: mount, live: live, url: url, reveal: reveal,
+    press: function (b, on) { b.setAttribute('aria-pressed', on ? 'true' : 'false'); },
+    pick: function (b) {
+      each(b.closest('.kit-chips'), '.kit-chip[aria-pressed]', function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); });
+      reveal(b.closest('.kit-chips'));
+    },
+  };
+})();
+</script>

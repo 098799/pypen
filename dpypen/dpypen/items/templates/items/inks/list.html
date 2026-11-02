@@ -1,106 +1,6 @@
 {% extends "items/_shell.html" %}
 {% block title %}Inks · {{ app_name }}{% endblock %}
 
-{% block extra_css %}
-/* -------- Filter row --------------------------------------------------------
-   Show/samples/used-up used to be its own rounded plate on its own line, and
-   the colours another line under it: two rows of chrome, ~150px, before the
-   first ink on a phone. They are all the same kind of thing — one filter each
-   — so they are one scrolling row now, and the plate is gone with the rest of
-   the raised-plastic look. */
-.filter-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 0 0.8rem;
-  padding-bottom: 0.15rem;
-}
-.filter-row::-webkit-scrollbar { display: none; }
-/* Hiding the scrollbar is right on a phone and a trap with a mouse: at 1440px
-   the last colours sat well past the right edge with no affordance at all.
-   Where there is room to wrap, wrap. */
-@media (min-width: 900px) {
-  .filter-row { flex-wrap: wrap; overflow-x: visible; }
-}
-.filter-row .fb-toggle,
-.filter-row .cc {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  background: none;
-  box-shadow: none;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.filter-row .fb-toggle {
-  padding: 0.3rem 0.7rem;
-  font-family: "Inter", sans-serif;
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.filter-row .fb-toggle:hover { color: var(--ink); border-color: var(--accent); }
-.filter-row .fb-toggle.on {
-  color: var(--ink);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-.filter-row .fb-sep {
-  flex: 0 0 auto;
-  width: 1px; height: 20px;
-  background: var(--ink-line);
-  margin: 0 0.25rem;
-}
-.filter-row .cc {
-  --cc: var(--ink-unknown);
-  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
-}
-.filter-row .cc:hover { border-color: color-mix(in srgb, var(--cc) 55%, var(--ink-line)); }
-.filter-row .cc .cc-dot {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  background: var(--cc);
-  border: 1px solid color-mix(in srgb, #000 18%, transparent);
-}
-.filter-row .cc .cc-label {
-  font-family: "Inter", sans-serif;
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.filter-row .cc .cc-count {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 0.9rem;
-  color: var(--ink);
-}
-.filter-row .cc.on {
-  border-color: var(--cc);
-  background: color-mix(in srgb, var(--cc) 12%, transparent);
-}
-.filter-row .cc.on .cc-label { color: var(--ink); font-weight: 500; }
-.filter-row .fb-clear {
-  flex: 0 0 auto;
-  padding: 0.3rem 0.5rem;
-  font-family: "Inter", sans-serif;
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  border: none;
-}
-.filter-row .fb-clear:hover { color: var(--accent); border: none; }
-
-{% endblock %}
-
 {% block content %}
 
 {# The header row (kit Fleet UX "Header", PYPEN-6); the public cupboard says no numbers. #}
@@ -128,39 +28,37 @@ A peek at the ink cupboard. Browse by colour.
 {% endif %}
 
 <div class="toolbar">
-  <form id="inkFilterForm" onsubmit="return false;" data-navform
+  <form id="inkFilterForm" role="search" method="get" action="{{ filters.search_url }}" data-navform
         hx-get="{{ filters.search_url }}"
-        hx-trigger="input changed delay:200ms from:#inkQ, submit"
+        hx-trigger="input changed delay:300ms from:#inkQ, submit"
         hx-target="#inkContentBody"
         hx-swap="outerHTML"
         hx-select="#inkContentBody"
-        hx-push-url="true"
-        class="toolbar-search">
-    <input type="search" id="inkQ" name="q" placeholder="Search inks…" value="{{ filters.q }}" autocomplete="off">
+        hx-replace-url="true"
+        hx-sync="this:replace"
+        class="kit-search toolbar-search">
+    <input type="search" id="inkQ" name="q" placeholder="Search inks…" value="{{ filters.q }}" aria-label="Search inks">
   </form>
   {% comment %}
-  A native select, not another chip row: the toolbar is already carrying a
-  search field, a view toggle and two icon buttons on a 390px phone. The option
-  values are whole URLs, rebuilt from the live query string by the shell's
-  filter-nav script, so sorting keeps whatever is already filtered or typed.
+  A select, not another chip row: seven ways, and the toolbar is already carrying
+  a search field and a view toggle on a 390px phone. It belongs to the form, so a
+  change goes through htmx (the kit's requestSubmit), keeping what is filtered or typed.
   {% endcomment %}
-  <select class="sort-select" data-navkey="sort" aria-label="Sort inks"
-          onchange="if(this.value)window.location.assign(this.value)">
+  <label class="kit-sort"><span>Sort inks</span><select name="sort" form="inkFilterForm" data-navkey="sort">
     {% for o in filters.sort_options %}
-    <option value="{{ o.url }}" data-navval="{% if o.key != 'color' %}{{ o.key }}{% endif %}"
-            {% if o.on %}selected{% endif %}>{{ o.label }}</option>
+    <option value="{% if o.key != 'color' %}{{ o.key }}{% endif %}" {% if o.on %}selected{% endif %}>{{ o.label }}</option>
     {% endfor %}
-  </select>
-  <div class="view-toggle" role="tablist" aria-label="View">
+  </select></label>
+  <div class="view-toggle" role="group" aria-label="View">
     <a href="{{ filters.list_url }}" hx-get="{{ filters.list_url }}"
-       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
+       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace"
        class="vt-btn{% if filters.view == 'list' %} on{% endif %}"
-       role="tab" aria-selected="{% if filters.view == 'list' %}true{% else %}false{% endif %}"
+       {% if filters.view == 'list' %}aria-current="true"{% endif %}
        data-view="list" data-navkey="view" data-navval="">List</a>
     <a href="{{ filters.grid_url }}" hx-get="{{ filters.grid_url }}"
-       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-push-url="true"
+       hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace"
        class="vt-btn{% if filters.view == 'grid' %} on{% endif %}"
-       role="tab" aria-selected="{% if filters.view == 'grid' %}true{% else %}false{% endif %}"
+       {% if filters.view == 'grid' %}aria-current="true"{% endif %}
        data-view="grid" data-navkey="view" data-navval="grid">Grid</a>
   </div>
   <script>
