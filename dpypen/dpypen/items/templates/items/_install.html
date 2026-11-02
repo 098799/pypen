@@ -1,4 +1,4 @@
-<!-- KIT-INSTALL: v1 2026-11-02
+<!-- KIT-INSTALL: v1.1 2026-11-02
   The install nudge: a bar that offers to put the app on the home screen, with
   an Install button and a Not now. Spec: ~/apps/kit/README.md §4, "Install".
   Canonical copy: ~/apps/kit/snippets/install.html. Apps carry a byte-identical
@@ -8,10 +8,10 @@
   Why a piece of our own: the registry asks every full-tier app for this nudge
   and the kit named museum as the code to copy. By 2026-11-02 eleven apps had
   (atlas, chess, health, lemma, museum, pod, pypen, tv, twitter, vac, weekends)
-  and eight full-tier apps had none. Of the eleven, only three kept to the rule
-  of not asking on the first day, four gave an iPhone no words, five never
-  stopped asking, and three used one offer twice: after a tap on the Settings
-  row the bar's Install did nothing, as an offer prompts once.
+  and eight full-tier apps had none. Of the eleven, five kept to the rule
+  of not asking on the first day (pypen left it out on purpose), five gave an iPhone
+  no words, five never stopped asking, and three used one offer twice: after a tap on
+  the Settings row the bar's Install did nothing, as an offer prompts once.
 
   Include it once in <body> of every page, early (before the browser's offer
   comes), with the app's name before it:
@@ -95,7 +95,7 @@ html.scroll-lock #installbar, html:has(dialog[open]:modal) #installbar, html:has
 (function () {
   'use strict';
   if (window.kitInstall) return;
-  var version = 'v1 2026-11-02';
+  var version = 'v1.1 2026-11-02';
   var DAY = 864e5, RETRY = 5000;
   var el = null, go = null, evt = null, on = false, wanted = false, timer = null, done = false, loaded = false;
   var demo = /[?&]installdemo=1\b/.test(location.search);
