@@ -106,9 +106,77 @@ def desk(b):
     ctx.close()
 
 
+NEXT_SCREENS = [("/next/", "next-desk"), ("/next/pens/", "next-pens"), ("/next/pens/?view=grid", None), ("/next/inks/", "next-inks"),
+                ("/next/inks/?view=list", None), ("/next/usages/", "next-inkings"), ("/next/pick/", "next-pick"), ("/next/search/?q=blue", None),
+                ("/next/settings/", "next-settings"), ("/next/stats/", "next-stats"), ("/next/stats/inkings/", "next-stats-inkings"),
+                ("/next/stats/collection/", "next-stats-collection"), ("/next/stats/cupboard/", "next-stats-cupboard"),
+                ("/next/stats/rotation/", "next-stats-rotation"), ("/next/stats/timeline/", None), ("/next/stats/calendar/", "next-stats-calendar"),
+                ("/next/stats/pairs/", None), ("/next/stats/records/", None), ("/next/usages/add/", "next-add-inking"),
+                ("/next/pens/add/", None), ("/next/inks/add/", None), ("/next/pens/needs-photos/", None), ("/next/import/", None)]
+
+
+def next_walk(b):
+    """The new version (PYPEN-11), reading only: tools/next_probe.py does the writes on a copy."""
+    ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, service_workers="block")
+    ctx.add_init_script(READ_ONLY)
+    ctx.add_cookies([{"name": "sessionid", "value": SESSION, "url": BASE}])
+    page = ctx.new_page()
+    js = page.evaluate
+    failed = []
+    page.on("response", lambda r: failed.append(f"{r.status} {r.url}") if r.status >= 400 and "/next/" in r.url else None)
+    for path, name in NEXT_SCREENS:
+        visit(page, path, name)
+    check("next: fonts loaded", js("document.fonts.check('600 20px Alegreya') && document.fonts.check('16px \"Alegreya Sans\"')"))
+    check("next: nothing failed to load", not failed)
+    print(failed[:5])
+    visit(page, "/next/")
+    check("next: the desk draws swabs", js("document.querySelectorAll('.swab').length") > 0)
+    page.locator(".tabbar [data-menu-btn]").tap()
+    page.wait_for_timeout(300)
+    check("next: More opens", js("document.getElementById('menuPanel').classList.contains('open')"))
+    shot(page, "next-menu")
+    page.go_back()
+    page.wait_for_timeout(300)
+    check("next: Back closes it", not js("document.getElementById('menuPanel').classList.contains('open')"))
+    page.locator(".fill-photo").first.tap()
+    page.wait_for_url("**/next/pens/*/")
+    page.wait_for_load_state("networkidle")
+    check("next: the pen page is in this version", js("!!document.querySelector('.rec-title')"))
+    shot(page, "next-pen")
+    page.locator(".tabbar a", has_text="Inks").tap()
+    page.wait_for_url("**/next/inks/")
+    page.wait_for_load_state("networkidle")
+    page.locator("#inkFilters a[data-color]").first.tap()
+    page.wait_for_timeout(1200)
+    check("next: a colour chip filters", "color=" in page.url)
+    page.locator(".card-ink").first.tap()
+    page.wait_for_url("**/next/inks/*/")
+    page.wait_for_load_state("networkidle")
+    check("next: the ink page has its closest inks", js("document.querySelectorAll('.card-ink').length") > 0)
+    shot(page, "next-ink")
+    visit(page, "/next/stats/")
+    box = page.locator(".river-plot").bounding_box()
+    page.touchscreen.tap(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.6)
+    page.wait_for_timeout(200)
+    check("next: the river reads a month", "pens inked" in js("document.querySelector('.river-read').textContent"))
+    shot(page, "next-river")
+    # Dark.
+    js("window.kitTheme && kitTheme.set('dark')")
+    page.wait_for_timeout(200)
+    shot(page, "next-stats-dark")
+    visit(page, "/next/inks/", "next-inks-dark")
+    js("window.kitTheme && kitTheme.set('auto')")
+    ctx.close()
+
+
 def main():
     with sync_playwright() as p:
         b = p.chromium.launch()
+        if os.environ.get("NEXT") == "only":
+            next_walk(b)
+            b.close()
+            print("all passed" if not failures else f"{len(failures)} FAILED: {failures}")
+            sys.exit(1 if failures else 0)
         if os.environ.get("DESK") == "only":
             desk(b)
             b.close()
@@ -174,7 +242,7 @@ def main():
             "/history/gantt/",
             "/history/matrix/",
             "/records/",
-            "/next/",
+            "/pick/",
             "/search/?q=lamy",
             "/import/",
             "/pens/needs-photos/",

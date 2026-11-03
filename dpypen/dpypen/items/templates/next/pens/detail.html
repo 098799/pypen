@@ -7,7 +7,7 @@
   <div>
     <div class="rec-photo{% if not photos %} is-none{% endif %}" id="photoMain">
       {% if photos %}
-      <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}" data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}"{% endif %}>
+      <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}" fetchpriority="high" data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}"{% endif %}>
       {% else %}<span class="nophoto">No photo yet</span>{% endif %}
     </div>
     {% if photos|length > 1 %}

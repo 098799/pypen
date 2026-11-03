@@ -18,7 +18,7 @@
   <div class="river-axis">{% for t in river.ticks %}<span style="left: {{ t.left|unlocalize }}%">{{ t.label }}</span>{% endfor %}</div>
   <p class="river-read" aria-live="polite"><span class="t-touch">Touch</span><span class="t-desk">Point at</span> the chart to read a month.</p>
   <div class="river-key" role="group" aria-label="Show one ink colour">
-    {% for c in river.legend %}<button type="button" data-river-key="{{ c.name }}" aria-pressed="false"><i style="--c: {{ c.hex }}"></i>{{ c.name }} {{ c.share }}%</button>{% endfor %}
+    {% for c in river.legend %}<button type="button" data-river-key="{{ c.name }}" aria-pressed="false"><i style="--c: {{ c.hex }}"></i>{{ c.name }}&ensp;{{ c.share }}%</button>{% endfor %}
   </div>
   <script type="application/json">{{ river.data|json_script_safe }}</script>
 </section>
