@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "inking-charts", "date": "2026-11-03", "title": "Charts of your inkings",
+   "use": "When you wonder how often you ink up, and with what: open History, then Inkings. It shows your inkings per year in ink colours, a square for each month, how many pens were inked at once, how long a fill stays, your colours and your most used pens and inks. Tap a chip to see one year. Tap a bar or a square for its numbers, and See them opens those inkings. A pen's and an ink's own page now show their inkings per year too.",
+   "shots": ["/static/items/whatsnew/2026-11-03-inking-charts.png"], "try": "/history/inkings/"},
   {"id": "install-nudge", "date": "2026-11-01", "title": "Put Grining Pens on your home screen",
    "use": "When you open the collection in a phone's browser: a few seconds in, a bar above the tab bar offers to add Grining Pens to your home screen, where it opens full screen like an app. Tap Install (on an iPhone: Share, then Add to Home Screen), or tap the cross and it stays away for two weeks. Settings, Install does the same at any time.",
    "shots": ["/static/items/whatsnew/2026-11-01-install-nudge.png"], "try": "/settings/"},

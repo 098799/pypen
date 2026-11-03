@@ -38,6 +38,30 @@ The kit's `filters.html` (stamp `KIT-FILTERS`), copied byte for byte to
 - **The List/Grid switch is not a filter**: it keeps its look, and `inksView`/`pensView`.
 - `tools/filters_probe.py` walks it in a phone browser, on a copy of the database.
 
+## Inking charts
+
+(PYPEN-10, "ink up history charts etc.".) Read as: charts of the history of ink-ups, how often,
+how long, in what, plus small ones where a record has a history. `/history/inkings/` (a tab of
+History), `?y=` narrows every chart to a year; `items/inkings.py` computes,
+`templates/items/history_inkings.html` draws, `static/items/js/charts.js` answers.
+
+- **An ink-up counts on the day it began.** A fill over New Year counts once. The one chart of
+  days, "Pens inked at once", still sees a fill from the year before.
+- **Sixteen ink colours fold into eight families in a stack** (`FAMILIES`, `.fam-*` in `app.css`, a
+  step per theme, checked with the dataviz validator against both papers): a 20 px column of 16
+  real ink colours is mud, and four of them are near black. "Colours" lists the 16 as they are.
+- **No chart library**: HTML columns and one SVG line, from the server. Nothing waits for a script
+  to draw; the script gives the tips, the line's reading and the key.
+- **One tip** (`charts.js`, any `data-tip-title`): hover on a desk; a tap stays, as a kit layer, so
+  Back, Esc and a tap elsewhere close it. The calendar's day and the matrix's cell use it too: they
+  were mouse-only `title`s, a tap on a matrix cell left the page. Stored names go in as text.
+- **See them**: a mark opens `/usages/?began=2024-08` (or `2024`), a colour `?color=Blue`, exact, so
+  Blue is not Blue Black. `crud.usage_scope`; `/api/usages` takes them too; a wrong value is no filter.
+- **A pen's and an ink's page** have `_year_bars.html`, signed-in only, from two years up.
+- **History's cache key carries a stamp of the inkings** (`history._stamp`): the cache is per worker,
+  so a new inking used to take up to 4 minutes to show, depending on the worker.
+- Probe: `python3 tools/charts_probe.py` (DB copy; 390×844, then a desk). Tests: `tests_inkings.py`.
+
 ## Theme
 
 The kit's `theme.js` (stamp `KIT-THEME`), copied byte for byte to
