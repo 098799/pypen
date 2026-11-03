@@ -1,0 +1,130 @@
+{% extends "items/_shell.html" %}
+{% load l10n %}
+{% block title %}Inkings over time · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "items/_history_head.html" %}
+
+{% if not inkings_total %}
+<div class="kit-empty" data-kind="none">
+  <p class="kit-empty-t">No inkings to chart yet</p>
+  <p class="kit-empty-p">The charts start with the first pen you ink.</p>
+  {% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'usages_create' %}">Ink a pen</a></p>{% endif %}
+</div>
+{% else %}
+
+{# A year narrows every chart below. It stays in the address. #}
+<nav class="kit-chips" aria-label="Year">
+  <a class="kit-chip" href="{% url 'history_inkings' %}"{% if not scope %} aria-current="true"{% endif %}>All</a>
+  {% for y in chart_years %}<a class="kit-chip" href="{% url 'history_inkings' %}?y={{ y|unlocalize }}"{% if scope == y %} aria-current="true"{% endif %}>{{ y|unlocalize }}</a>
+  {% endfor %}
+</nav>
+
+<div class="ink-stats">
+  <div><b>{{ stats.inkings }}</b><span>inking{{ stats.inkings|pluralize }}</span></div>
+  <div><b>{{ stats.pace }}</b><span>a month</span></div>
+  <div><b>{% if stats.median is not None %}{{ stats.median }}<small> d</small>{% else %}—{% endif %}</b><span>typical fill</span></div>
+  <div><b>{{ stats.pens }}<small> / {{ stats.inks }}</small></b><span>pens / inks</span></div>
+</div>
+
+<div class="ink-charts">
+  {% if stats.inkings %}
+  <section class="chart-box is-wide">
+    <h4>{% if scope %}Inkings by month{% else %}Inkings by year{% endif %}</h4>
+    <div class="chart-sub">{% if scope %}{{ scope|unlocalize }}, in ink colours{% else %}{{ scope_label }}, in ink colours. Tap a year for its months.{% endif %}</div>
+    {% include "items/_stack_bars.html" with columns=columns legend=legend %}
+  </section>
+  {% endif %}
+
+  {% if heatmap %}
+  <section class="chart-box is-wide">
+    <h4>Month by month</h4>
+    <div class="chart-sub">the darkest square is {{ heatmap.peak }} inkings in one month</div>
+    <div class="heat" role="group" aria-label="Inkings per month and year">
+      <span></span>{% for h in heatmap.heads %}<span class="heat-h">{{ h }}</span>{% endfor %}<span class="heat-h">All</span>
+      {% for r in heatmap.rows %}
+      <a class="heat-y" href="{% url 'history_inkings' %}?y={{ r.year|unlocalize }}">{{ r.year|unlocalize }}</a>
+      {% for c in r.cells %}{% if c.ahead %}<span class="heat-c is-ahead"></span>{% else %}<button type="button" class="heat-c" style="--a: {{ c.a|unlocalize }}" data-tip-title="{{ c.title }}" data-tip-lead="{{ c.tip }}"{% if c.links %} data-tip-links="{{ c.links }}"{% endif %} aria-label="{{ c.title }}: {{ c.tip }}"></button>{% endif %}{% endfor %}
+      <span class="heat-t">{{ r.total }}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="chart-box is-wide">
+    <h4>Pens inked at once</h4>
+    <div class="chart-sub line-read" data-line-read>most {{ desk.peak }}; now {{ desk.now }}</div>
+    <div class="line-chart" data-line data-values="{{ desk.values }}" data-start="{{ desk.start }}" data-step="{{ desk.step }}" tabindex="0" role="img" aria-label="Pens inked at once: at most {{ desk.peak }}, at the end {{ desk.now }}. Arrow keys read the line.">
+      <div class="line-plot">
+        {% for g in desk.grid %}<span class="line-grid" style="bottom: {{ g.bottom|unlocalize }}%"><b>{{ g.v }}</b></span>{% endfor %}
+        <svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
+          <polygon points="0,100 {{ desk.points }} 1000,100"></polygon>
+          <polyline points="{{ desk.points }}" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        <i class="line-cross" data-line-cross hidden></i>
+      </div>
+      <div class="line-axis">{% for t in desk.ticks %}<span style="left: {{ t.left|unlocalize }}%">{{ t.label }}</span>{% endfor %}</div>
+    </div>
+  </section>
+
+  {% if stats.inkings %}
+  <section class="chart-box">
+    <h4>How long a fill stays</h4>
+    <div class="chart-sub">{{ durations.ended }} ended fill{{ durations.ended|pluralize }}{% if durations.median is not None %}, half of them under {{ durations.median }} days{% endif %}</div>
+    <div class="bars is-plain">
+      {% for b in durations.bars %}
+      <div class="bar-col"><span class="bar-plot" style="--h: {{ b.pct|unlocalize }}">{% if b.n %}<span class="bar-n">{{ b.n }}</span>{% endif %}<span class="bar-stack"><i></i></span></span><span class="bar-label">{{ b.label }}</span></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="chart-box">
+    <h4>Day of the week</h4>
+    <div class="chart-sub">the day each fill began</div>
+    <div class="bars is-plain">
+      {% for b in weekdays %}
+      <div class="bar-col"><span class="bar-plot" style="--h: {{ b.pct|unlocalize }}">{% if b.n %}<span class="bar-n">{{ b.n }}</span>{% endif %}<span class="bar-stack"><i></i></span></span><span class="bar-label">{{ b.label }}</span></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="chart-box is-tall">
+    <h4>Colours</h4>
+    <div class="chart-sub">inkings, and days on the page</div>
+    {% for c in colors %}
+    <a class="rank-row" href="{{ c.url }}">
+      <span class="rank-name"><i class="rank-dot" style="--c: {{ c.hex }}"></i>{{ c.name }}</span>
+      <span class="rank-track"><i style="--c: {{ c.hex }}; width: {{ c.pct|unlocalize }}%"></i></span>
+      <span class="rank-v"><b>{{ c.n }}</b> {{ c.days }}d</span>
+    </a>
+    {% endfor %}
+  </section>
+
+  <section class="chart-box">
+    <h4>Pens inked most</h4>
+    <div class="chart-sub">inkings, and days on the page</div>
+    {% for p in top_pens %}
+    <a class="rank-row is-named" href="{% url 'pens_detail' p.id %}">
+      <span class="rank-name">{{ p.name }}</span>
+      <span class="rank-track"><i class="is-accent" style="width: {{ p.pct|unlocalize }}%"></i></span>
+      <span class="rank-v"><b>{{ p.n }}</b> {{ p.days }}d</span>
+    </a>
+    {% endfor %}
+  </section>
+
+  <section class="chart-box">
+    <h4>Inks used most</h4>
+    <div class="chart-sub">inkings, and days on the page</div>
+    {% for i in top_inks %}
+    <a class="rank-row is-named" href="{% url 'inks_detail' i.id %}">
+      <span class="rank-name"><i class="rank-dot" style="--c: {{ i.hex }}; background: {{ i.bg }}"></i>{{ i.name }}</span>
+      <span class="rank-track"><i style="--c: {{ i.hex }}; width: {{ i.pct|unlocalize }}%"></i></span>
+      <span class="rank-v"><b>{{ i.n }}</b> {{ i.days }}d</span>
+    </a>
+    {% endfor %}
+  </section>
+  {% else %}
+  <div class="kit-empty is-wide" data-kind="match"><p class="kit-empty-t">No pen was inked in {{ scope|unlocalize }}</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'history_inkings' %}">All years</a></p></div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

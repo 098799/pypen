@@ -42,6 +42,13 @@
   </form>
 </div>
 
+{% if scope.label %}
+{# What a chart's mark opened (?began=, ?color=). It stays through a search. #}
+<nav class="kit-chips" aria-label="Part of the inkings">
+  <a class="kit-chip" aria-current="true" href="{% url 'usages_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}" aria-label="Show all the inkings, not only {{ scope.label }}">{{ scope.label }} <span aria-hidden="true">×</span></a>
+</nav>
+{% endif %}
+
 {% include "items/usages/_content.html" %}
 
 {% endblock %}

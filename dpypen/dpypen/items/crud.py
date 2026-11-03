@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
@@ -8,7 +9,7 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from dpypen.items import inkindex, listing, penindex, undo
+from dpypen.items import inkindex, inkings, listing, penindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -22,10 +23,39 @@ logger = logging.getLogger(__name__)
 USAGE_ROWS = ("pen__brand", "ink__brand", "nib")
 
 
+BEGAN = re.compile(r"([1-9]\d{3})(?:-(0[1-9]|1[0-2]))?")
+
+
+def usage_scope(request):
+    """{"began", "color", "label"}: the part of the inkings a chart's mark
+    opens (`?began=2024` or `2024-08`, `?color=Blue`). A value that is no such
+    thing is no filter (kit §4), so the list shows what is really on."""
+    m = BEGAN.fullmatch(request.GET.get("began", ""))
+    began = m.group(0) if m else ""
+    color = request.GET.get("color", "")
+    if color not in INK_COLOR_HEX:
+        color = ""
+    words = []
+    if color:
+        words.append(color)
+    if m:
+        words.append(date(int(m.group(1)), int(m.group(2)), 1).strftime("%b %Y") if m.group(2) else m.group(1))
+    return {"began": began, "color": color, "label": " · ".join(words)}
+
+
 def usage_search(request):
     """(queryset, q): the inkings the search keeps (/usages/, /api/usages)."""
     q = (request.GET.get("q") or "").strip()
-    return listing.search(Usage.objects.select_related(*USAGE_ROWS), q, listing.USAGE_FIELDS), q
+    qs = listing.search(Usage.objects.select_related(*USAGE_ROWS), q, listing.USAGE_FIELDS)
+    scope = usage_scope(request)
+    if scope["began"]:
+        y, _, mo = scope["began"].partition("-")
+        qs = qs.filter(begin__year=int(y))
+        if mo:
+            qs = qs.filter(begin__month=int(mo))
+    if scope["color"]:
+        qs = qs.filter(ink__color=scope["color"])
+    return qs, q
 
 
 def usage_rows(request):
@@ -68,6 +98,7 @@ def usages_list(request):
         "past_head": not more_only,
         "total": total,
         "query": q,
+        "scope": usage_scope(request),
         "more": listing.more(request, offset, limit, total),
         "nav": "usages",
     }))
@@ -282,6 +313,7 @@ def pens_detail(request, pk):
     return render(request, "items/pens/detail.html", {
         "pen": pen,
         "photos": photos,
+        "year_bars": inkings.year_bars(usages),
         "current": current,
         "past": past,
         "total_days": total_days,
@@ -542,7 +574,7 @@ def inks_detail(request, pk):
     today = date.today()
     usages = list(
         Usage.objects.filter(ink=ink)
-        .select_related("pen__brand", "nib")
+        .select_related("pen__brand", "ink", "nib")
         .order_by("-begin")
     )
     for u in usages:
@@ -560,6 +592,7 @@ def inks_detail(request, pk):
 
     return render(request, "items/inks/detail.html", {
         "ink": ink,
+        "year_bars": inkings.year_bars(usages),
         "ink_hex": INK_COLOR_HEX.get(ink.color, "#333"),
         "ink_bg": ink.swatch_bg,
         "current": current,

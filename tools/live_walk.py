@@ -167,6 +167,9 @@ def main():
         visit(page, ink, "ink")
         for u in (
             "/history/",
+            "/history/inkings/",
+            "/history/inkings/?y=2024",
+            "/usages/?began=2024-08",
             "/history/calendar/",
             "/history/gantt/",
             "/history/matrix/",

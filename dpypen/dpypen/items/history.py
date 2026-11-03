@@ -2,8 +2,10 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from django.core.cache import cache
+from django.db.models import Count, Max
 from django.shortcuts import render
 
+from dpypen.items import inkings as inking_charts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Usage
 from dpypen.items.public import INK_COLOR_HEX
@@ -35,6 +37,7 @@ def _bounds():
 def _sub_nav(active):
     return [
         {"key": "overview", "label": "Overview", "url": "/history/", "active": active == "overview"},
+        {"key": "inkings", "label": "Inkings", "url": "/history/inkings/", "active": active == "inkings"},
         {"key": "calendar", "label": "Calendar", "url": "/history/calendar/", "active": active == "calendar"},
         {"key": "gantt", "label": "Per-pen Gantt", "url": "/history/gantt/", "active": active == "gantt"},
         {"key": "matrix", "label": "Pen × Ink", "url": "/history/matrix/", "active": active == "matrix"},
@@ -156,8 +159,8 @@ def _calendar_data():
             if inks: active_days += 1
             weeks[week_idx][day_idx] = {
                 "date": d, "bg": bg,
-                "inks_summary": " · ".join(p["ink"] for p in inks),
-                "pens_summary": " · ".join(p["pen"] for p in inks),
+                # One line for each pen on the day (charts.js shows them).
+                "tip": "\n".join(f"{p['ink']} — {p['pen']}" for p in inks),
                 "count": len(inks),
                 "label": d.strftime("%b %-d, %Y"),
             }
@@ -271,8 +274,16 @@ def _matrix_data():
     return {"matrix_rows": matrix_rows, "matrix_cols": matrix_cols}
 
 
+def _stamp():
+    """What the charts were drawn from. The cache is per gunicorn worker, so a
+    write cannot clear it in all of them; a key that changes with the data can.
+    A pen just inked shows at once, and a new day starts a new chart."""
+    a = Usage.objects.aggregate(n=Count("pk"), last=Max("pk"), began=Max("begin"), ended=Max("end"))
+    return f"{date.today()}:{a['n']}:{a['last']}:{a['began']}:{a['ended']}"
+
+
 def _cached(kind, fn):
-    key = f"history:{kind}"
+    key = f"history:{kind}:{_stamp()}"
     data = cache.get(key)
     if data is not None:
         return data
@@ -286,6 +297,20 @@ def overview(request):
     data = _cached("overview", _overview_data)
     return render(request, "items/history.html", {
         **data, "section": "overview", "sub_nav": _sub_nav("overview"), "nav": "history",
+    })
+
+
+@login_or_guest_required
+def inkings(request):
+    """Charts of the ink-ups (PYPEN-10). `?y=` a year with ink-ups in it;
+    anything else is no filter, and "All" is lit (kit §4)."""
+    raw = request.GET.get("y", "")
+    year = int(raw) if raw.isascii() and raw.isdigit() and len(raw) == 4 else None
+    data = _cached(f"inkings:{year}", lambda: inking_charts.build(year))
+    if year and year not in data["chart_years"]:
+        data = _cached("inkings:None", lambda: inking_charts.build(None))
+    return render(request, "items/history_inkings.html", {
+        **data, "section": "inkings", "sub_nav": _sub_nav("inkings"), "nav": "history",
     })
 
 

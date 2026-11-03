@@ -1,0 +1,28 @@
+{% load l10n %}
+{% comment %}
+Columns stacked by ink family, with their count on top; a tap or a hover gives
+the breakdown (charts.js). `columns`, `legend` from inkings.py; `small` for a
+record page.
+{% endcomment %}
+<div class="stack-chart" data-stack-chart>
+  <div class="bars{% if small %} is-small{% endif %}">
+    {% for c in columns %}
+    <button type="button" class="bar-col{% if c.ahead %} is-ahead{% endif %}"
+            data-tip-title="{{ c.title }}" data-tip-lead="{{ c.n }} inking{{ c.n|pluralize }}" data-tip="{% if c.n %}{{ c.tip }}{% endif %}"{% if c.links %} data-tip-links="{{ c.links }}"{% endif %}
+            aria-label="{{ c.title }}: {{ c.n }} inking{{ c.n|pluralize }}">
+      <span class="bar-plot" style="--h: {{ c.pct|unlocalize }}">
+        {% if c.n %}<span class="bar-n">{{ c.n }}</span>{% endif %}
+        <span class="bar-stack">{% for s in c.segs %}<i class="fam-{{ s.fam }}" data-fam="{{ s.fam }}" style="flex-grow: {{ s.n }}"></i>{% endfor %}</span>
+      </span>
+      <span class="bar-label">{{ c.label }}</span>
+    </button>
+    {% endfor %}
+  </div>
+  {% if legend|length > 1 %}
+  <div class="fam-legend" role="group" aria-label="Show one ink family">
+    {% for f in legend %}
+    <button type="button" class="fam-key" data-fam="{{ f.fam }}" aria-pressed="false"><i class="fam-{{ f.fam }}"></i>{{ f.name }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

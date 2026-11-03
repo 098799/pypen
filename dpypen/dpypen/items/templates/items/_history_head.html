@@ -1,0 +1,9 @@
+<div class="page-head">
+  <h1>The <em>history</em></h1>
+</div>
+
+<nav class="history-sub-nav" aria-label="History sections">
+  {% for tab in sub_nav %}
+  <a href="{{ tab.url }}"{% if tab.active %} class="active" aria-current="page"{% endif %}{% if tab.key == "inkings" %} data-new="inking-charts"{% endif %}>{{ tab.label }}</a>
+  {% endfor %}
+</nav>

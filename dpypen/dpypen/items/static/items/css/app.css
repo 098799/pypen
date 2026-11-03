@@ -2704,3 +2704,308 @@ html #installbar small { color: var(--muted); }
 html #installbar .kit-install-go { background: var(--accent); color: var(--plate-top); border-radius: 999px; }
 html #installbar .kit-install-x { color: var(--ink); }
 html #installbar button:focus-visible { outline-color: var(--ink); }
+
+/* ===== Charts (PYPEN-10, `/history/inkings/`, the bars on a record page) =====
+   HTML and one SVG line, drawn by the server, read by static/items/js/charts.js.
+   Ink families: eight steps a theme, run through the dataviz check against the
+   paper and the dark panel (no adjacent pair under ΔE 15, or 8 for colour-blind
+   eyes). Black and brown stay low in chroma because they are those inks. */
+:root, html[data-theme="light"] {
+  --fam-black: #3b3a39; --fam-blue: #2a5caa; --fam-teal: #14a9c4; --fam-green: #2f7a3a;
+  --fam-amber: #e0a11f; --fam-red: #c93b3b; --fam-violet: #9a4fb5; --fam-brown: #7a4a22;
+  --fam-other: #8a8578;
+}
+html[data-theme="dark"] {
+  --fam-black: #a8a49c; --fam-blue: #5f8fe0; --fam-teal: #3fd0e6; --fam-green: #4c9e58;
+  --fam-amber: #e6b23a; --fam-red: #e8605c; --fam-violet: #b878d8; --fam-brown: #a87848;
+  --fam-other: #8a8578;
+}
+.fam-black { --fam: var(--fam-black); } .fam-blue { --fam: var(--fam-blue); }
+.fam-teal { --fam: var(--fam-teal); } .fam-green { --fam: var(--fam-green); }
+.fam-amber { --fam: var(--fam-amber); } .fam-red { --fam: var(--fam-red); }
+.fam-violet { --fam: var(--fam-violet); } .fam-brown { --fam: var(--fam-brown); }
+.fam-other { --fam: var(--fam-other); }
+
+.history-sub-nav {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 0 1.2rem;
+  padding-bottom: 0.15rem;
+}
+.history-sub-nav::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .history-sub-nav { flex-wrap: wrap; overflow-x: visible; } }
+.history-sub-nav a {
+  flex: 0 0 auto;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.3rem 0.7rem;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.history-sub-nav a:hover { color: var(--ink); border-color: var(--accent); background: none; }
+.history-sub-nav a.active {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.chart-box {
+  padding: 1rem 1.1rem;
+  background: linear-gradient(160deg, var(--chip-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  min-width: 0;
+}
+.chart-box h4 {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.2rem;
+}
+.chart-box .chart-sub {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0 0 0.7rem;
+}
+
+.ink-charts { display: grid; gap: 1rem; margin-bottom: 2.5rem; }
+.ink-charts > section { margin: 0; }
+@media (min-width: 900px) {
+  .ink-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .ink-charts .is-wide { grid-column: 1 / -1; }
+  .ink-charts .is-tall { grid-row: span 2; }
+}
+
+.ink-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.5rem; margin: 0.9rem 0 1rem; }
+.ink-stats > div { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.ink-stats b {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.7rem;
+  line-height: 1.05;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ink-stats small { font-size: 0.95rem; color: var(--ink-soft); }
+.ink-stats span {
+  font-family: "Inter", sans-serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Columns. The count sits on the column; the top of the plot is kept free for it. */
+.bars {
+  --plot: 150px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+.bars.is-small { --plot: 84px; margin-bottom: 0.4rem; }
+.bars.is-plain { --plot: 110px; gap: 3px; }
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-radius: 3px;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+button.bar-col { cursor: pointer; }
+button.bar-col:hover .bar-stack { filter: brightness(1.12); }
+button.bar-col:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.bar-plot { position: relative; display: block; height: var(--plot); }
+.bar-stack {
+  position: absolute;
+  left: 50%; bottom: 0;
+  width: min(78%, 52px);
+  transform: translateX(-50%);
+  height: max(3px, calc((var(--plot) - 1.05rem) * var(--h) / 100));
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1px;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+}
+.bar-stack i { display: block; min-height: 1px; flex: 1 1 0; background: var(--fam, var(--accent)); }
+.bars.is-plain .bar-stack { width: min(84%, 52px); }
+.bar-n {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: calc(max(3px, (var(--plot) - 1.05rem) * var(--h) / 100) + 2px);
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.bar-label {
+  display: block;
+  text-align: center;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--ink-line);
+  font-family: "Inter", sans-serif;
+  font-size: 0.64rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.bars.is-plain .bar-label { font-size: 0.58rem; }
+.bar-col.is-ahead .bar-label { opacity: 0.45; }
+.is-picked .bar-stack i:not(.is-lit) { opacity: 0.16; }
+
+.fam-legend { display: flex; flex-wrap: wrap; gap: 0.15rem 0.35rem; margin-top: 0.6rem; }
+.fam-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 30px;
+  padding: 0.1rem 0.45rem 0.1rem 0.3rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.fam-key i { width: 10px; height: 10px; border-radius: 2px; background: var(--fam); flex: none; }
+.fam-key[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); }
+
+/* The month grid: one hue, light to dark. */
+.heat {
+  display: grid;
+  grid-template-columns: 2.1rem repeat(12, minmax(0, 1fr)) 1.7rem;
+  gap: 2px;
+  align-items: center;
+}
+.heat-h, .heat-y, .heat-t {
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  border: 0;
+}
+.heat-y { text-align: left; color: var(--ink-soft); }
+.heat-t { text-align: right; }
+.heat-c {
+  display: block;
+  height: 20px;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 2px;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--accent) calc(var(--a, 0) * 100%), color-mix(in srgb, var(--paper-dark) 70%, transparent));
+}
+.heat-c:hover, .heat-c:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.heat-c.is-ahead { background: none; cursor: default; outline: none; }
+
+/* The line. The plot leaves room on the left for the grid's numbers. */
+.line-chart { outline: none; touch-action: pan-y; cursor: crosshair; }
+.line-chart:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.line-plot { position: relative; height: 130px; margin-top: 0.9rem; border-bottom: 1px solid var(--ink-line); }
+.line-plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.line-plot polygon { fill: color-mix(in srgb, var(--accent) 14%, transparent); }
+.line-plot polyline { fill: none; stroke: var(--accent); stroke-width: 2px; stroke-linejoin: round; }
+.line-grid { position: absolute; left: 0; right: 0; border-top: 1px dashed color-mix(in srgb, var(--ink-line) 70%, transparent); }
+.line-grid b {
+  position: absolute;
+  left: 0; top: -1.05em;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+.line-cross { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink-soft); pointer-events: none; }
+.line-axis { position: relative; height: 1.2rem; }
+.line-axis span {
+  position: absolute;
+  top: 0.2rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+
+/* Ranked rows: name, bar, number. A colour's own bar wears that colour; a black
+   ink on dark paper keeps a hairline so the bar is there. */
+.rank-row {
+  display: grid;
+  grid-template-columns: 6.2rem minmax(0, 1fr) 4.6rem;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 30px;
+  border: 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink-line) 60%, transparent);
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.rank-row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); border-bottom-color: var(--ink-line); }
+.rank-row.is-named { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 4.6rem; }
+.rank-name { display: flex; align-items: center; gap: 0.4rem; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-row.is-named .rank-name { display: block; line-height: 1.2; }
+.rank-row.is-named .rank-dot { display: inline-block; vertical-align: -1px; margin-right: 0.35rem; }
+.rank-dot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1px var(--ink-line); }
+.rank-track { display: block; height: 10px; }
+.rank-track i { display: block; height: 100%; min-width: 2px; border-radius: 0 3px 3px 0; background: var(--c); box-shadow: inset 0 0 0 1px var(--ink-line); }
+.rank-track i.is-accent { background: var(--accent); box-shadow: none; }
+.rank-v { text-align: right; white-space: nowrap; font-family: "Inter", sans-serif; font-size: 0.66rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rank-v b { font-weight: 600; font-size: 0.78rem; color: var(--ink); }
+
+.chart-tip {
+  position: fixed;
+  z-index: 50;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
+  border: 1px solid var(--ink-line);
+  border-radius: 4px;
+  box-shadow: var(--card-shadow);
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.1s;
+  left: 0; top: 0;
+}
+.chart-tip.open { visibility: visible; opacity: 1; }
+.chart-tip .ct-title { color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.62rem; }
+.chart-tip .ct-lead { font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.1rem; color: var(--ink); line-height: 1.2; margin-top: 0.1rem; }
+.chart-tip .ct-line { color: var(--ink-soft); margin-top: 0.15rem; }
+.chart-tip .ct-links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+.chart-tip .ct-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--ink-line);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  color: var(--ink);
+}
+.chart-tip .ct-links a:hover { border-color: var(--accent); color: var(--accent); }

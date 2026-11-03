@@ -48,7 +48,7 @@ come 50 at a time with Load more (kit §14, PYPEN-7; listing.py, more.js).
   {% if past_head %}
   <div class="section-head" data-more-head>
     <h2>Past <em>inkings</em></h2>
-    <span class="aside">{{ total }}{% if query %} matching{% endif %}</span>
+    <span class="aside">{{ total }}{% if query or scope.label %} matching{% endif %} · <a href="{% url 'history_inkings' %}">Charts</a></span>
   </div>
   {% endif %}
   {% if past %}
@@ -67,6 +67,11 @@ come 50 at a time with Load more (kit §14, PYPEN-7; listing.py, more.js).
       {% endif %}
     </div>
     {% endfor %}
+  </div>
+  {% elif scope.label and not query %}
+  <div class="kit-empty" data-kind="match" role="status">
+    <p class="kit-empty-t">No past inking in {{ scope.label }}</p>
+    <p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'usages_list' %}">Show all</a></p>
   </div>
   {% elif query %}
   <div class="kit-empty" data-kind="match" role="status">

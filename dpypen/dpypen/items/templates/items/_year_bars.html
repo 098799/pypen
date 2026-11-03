@@ -1,0 +1,9 @@
+{% load l10n %}
+{% comment %}A pen's or an ink's ink-ups per year (inkings.year_bars). Signed-in pages only.{% endcomment %}
+<section>
+  <div class="section-head">
+    <h2>Inked <em>per year</em></h2>
+    <a class="aside" href="{% url 'history_inkings' %}">All the charts</a>
+  </div>
+  {% include "items/_stack_bars.html" with columns=year_bars.columns legend=year_bars.legend small=True %}
+</section>

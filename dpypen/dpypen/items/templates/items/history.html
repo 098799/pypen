@@ -120,47 +120,12 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
 }
 .cal-cell.is-blank { visibility: hidden; }
-.cal-cell[data-ink]:hover { transform: scale(1.4); z-index: 3; cursor: help; outline: 1px solid var(--accent); }
+.cal-cell[data-tip]:hover { transform: scale(1.4); z-index: 3; cursor: help; outline: 1px solid var(--accent); }
+.cal-cell[data-tip-title] { cursor: pointer; }
 
-.cal-tip {
-  position: fixed;
-  z-index: 50;
-  padding: 0.5rem 0.75rem;
-  background: linear-gradient(180deg, var(--plate-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 4px;
-  box-shadow: var(--card-shadow);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.1s;
-  font-family: "Inter", sans-serif;
-  font-size: 0.72rem;
-  max-width: 260px;
-}
-.cal-tip.open { opacity: 1; }
-.cal-tip .tip-date {
-  color: var(--muted);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 0.62rem;
-}
-.cal-tip .tip-ink {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 0.95rem;
-  color: var(--ink);
-  margin-top: 0.2rem;
-  line-height: 1.1;
-  font-style: italic;
-}
-.cal-tip .tip-pen {
-  color: var(--ink-soft);
-  margin-top: 0.15rem;
-  font-size: 0.7rem;
-}
 @media (max-width: 560px) {
   .cal-year { grid-template-columns: 44px 1fr; gap: 0.4rem; }
   .cal-year-label { font-size: 1.1rem; }
-  .cal-grid { --cell: 9px; --gap: 2px; }
 }
 
 .yearly-grid {
@@ -174,27 +139,6 @@
 }
 @media (min-width: 1000px) {
   .yearly-grid { grid-template-columns: repeat(4, 1fr); }
-}
-.chart-box {
-  padding: 1rem 1.1rem;
-  background: linear-gradient(160deg, var(--chip-top), var(--paper-dark));
-  border: 1px solid var(--ink-line);
-  border-radius: 4px;
-}
-.chart-box h4 {
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 0.2rem;
-}
-.chart-box .chart-sub {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-style: italic;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-  margin: 0 0 0.7rem;
 }
 .chart-box .chart-row {
   display: grid;
@@ -522,49 +466,7 @@
 
 {% block content %}
 
-<div class="page-head">
-  <h1>The <em>history</em></h1>
-</div>
-
-<nav class="history-sub-nav" aria-label="History sections">
-  {% for tab in sub_nav %}
-  <a href="{{ tab.url }}"{% if tab.active %} class="active"{% endif %}>{{ tab.label }}</a>
-  {% endfor %}
-</nav>
-<style>
-.history-sub-nav {
-  display: flex;
-  gap: 0.35rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 0 1.2rem;
-  padding-bottom: 0.15rem;
-}
-.history-sub-nav::-webkit-scrollbar { display: none; }
-@media (min-width: 900px) { .history-sub-nav { flex-wrap: wrap; overflow-x: visible; } }
-.history-sub-nav a {
-  flex: 0 0 auto;
-  font-family: "Inter", sans-serif;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0.3rem 0.7rem;
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--ink-line);
-  border-radius: 999px;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.history-sub-nav a:hover { color: var(--ink); border-color: var(--accent); background: none; }
-.history-sub-nav a.active {
-  color: var(--ink);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-}
-</style>
+{% include "items/_history_head.html" %}
 
 {% if year_list %}
 <section>
@@ -668,11 +570,12 @@
         </div>
         {% for cell in row.cells %}
           {% if cell %}
-            <a class="pi-cell {% if not cell.days %}is-blank{% endif %}"
-               href="{% url 'pens_detail' row.pen_id %}"
+            <button type="button" class="pi-cell {% if not cell.days %}is-blank{% endif %}"
                style="--c: {{ cell.hex }}; --a: {{ cell.opacity }};"
                data-days="{{ cell.days }}"
-               title="{{ row.pen }} · {{ cell.ink_label }} — {{ cell.days }} day{{ cell.days|pluralize }} · {{ cell.fills }} fill{{ cell.fills|pluralize }}"></a>
+               aria-label="{{ row.pen }} · {{ cell.ink_label }}: {{ cell.days }} day{{ cell.days|pluralize }}, {{ cell.fills }} fill{{ cell.fills|pluralize }}"
+               data-tip-title="{{ row.pen }}" data-tip-lead="{{ cell.days }} day{{ cell.days|pluralize }}{% if cell.fills %} · {{ cell.fills }} fill{{ cell.fills|pluralize }}{% endif %}" data-tip="{{ cell.ink_label }}"
+               data-tip-links="See pen|{% url 'pens_detail' row.pen_id %}&#10;See ink|{% url 'inks_detail' cell.ink_id %}"></button>
           {% else %}
             <span class="pi-cell is-blank"></span>
           {% endif %}
@@ -703,11 +606,9 @@
             {% if cell %}
               {% if cell.bg %}
               <span class="cal-cell is-inked" style="background: {{ cell.bg }};"
-                    data-date="{{ cell.label }}"
-                    data-ink="{{ cell.inks_summary }}"
-                    data-pen="{{ cell.pens_summary }}"></span>
+                    data-tip-title="{{ cell.label }}" data-tip="{{ cell.tip }}"></span>
               {% else %}
-              <span class="cal-cell" data-date="{{ cell.label }}"></span>
+              <span class="cal-cell" data-tip-title="{{ cell.label }}" data-tip-lead="no pen inked"></span>
               {% endif %}
             {% else %}
               <span class="cal-cell is-blank"></span>
@@ -776,41 +677,6 @@
   </div>
 </section>
 {% endif %}
-
-<div class="cal-tip" id="calTip" role="tooltip" aria-hidden="true">
-  <div class="tip-date"></div>
-  <div class="tip-ink"></div>
-  <div class="tip-pen"></div>
-</div>
-<script>
-(function () {
-  var tip = document.getElementById("calTip");
-  if (!tip) return;
-  var dateEl = tip.querySelector(".tip-date");
-  var inkEl = tip.querySelector(".tip-ink");
-  var penEl = tip.querySelector(".tip-pen");
-  document.querySelectorAll(".cal-cell").forEach(function (cell) {
-    if (!cell.hasAttribute("data-date")) return;
-    cell.addEventListener("mouseenter", function () {
-      var r = cell.getBoundingClientRect();
-      dateEl.textContent = cell.getAttribute("data-date");
-      var ink = cell.getAttribute("data-ink") || "";
-      var pen = cell.getAttribute("data-pen") || "";
-      inkEl.textContent = ink;
-      inkEl.style.display = ink ? "block" : "none";
-      penEl.textContent = pen;
-      penEl.style.display = pen ? "block" : "none";
-      var left = r.left + r.width / 2 - 120;
-      left = Math.max(8, Math.min(window.innerWidth - 250, left));
-      var top = r.bottom + 8;
-      tip.style.left = left + "px";
-      tip.style.top = top + "px";
-      tip.classList.add("open");
-    });
-    cell.addEventListener("mouseleave", function () { tip.classList.remove("open"); });
-  });
-})();
-</script>
 
 <div class="gantt-popup" id="ganttPopup" role="dialog" aria-label="Inking details">
   <div class="gp-pen"></div>

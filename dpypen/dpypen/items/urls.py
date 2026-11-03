@@ -8,6 +8,7 @@ urlpatterns = [
     path('robots.txt', public.robots, name='robots'),
     path('dashboard/', public.dashboard, name='dashboard'),
     path('history/', history.overview, name='history'),
+    path('history/inkings/', history.inkings, name='history_inkings'),
     path('history/calendar/', history.calendar, name='history_calendar'),
     path('history/gantt/', history.gantt, name='history_gantt'),
     path('history/matrix/', history.matrix, name='history_matrix'),

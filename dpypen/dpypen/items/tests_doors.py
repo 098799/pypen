@@ -46,6 +46,7 @@ OPEN_TO_ANYONE = {
 GUEST_READS = {
     "dashboard",
     "history",
+    "history_inkings",
     "history_calendar",
     "history_gantt",
     "history_matrix",

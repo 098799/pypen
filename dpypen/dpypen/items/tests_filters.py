@@ -1,9 +1,11 @@
 """The kit's list controls in pypen (kit README §4 "Filters and search", AUDIT pass 7).
 What htmx does with them is walked in a browser: tools/filters_probe.py."""
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from dpypen.items.models import Brand, Ink, Rotation
+from dpypen.items.models import Brand, Ink, Nib, Pen, Rotation, Usage
 from dpypen.items.tests import PLAIN_STATIC
 
 
@@ -66,6 +68,10 @@ class KitControls(TestCase):
         self.assertIn('"submit"', menu)
 
     def test_the_gantt_rotation_is_in_the_address(self):
+        # The chips stand with the chart, so it needs one inked pen.
+        b, rot, ink = Brand.objects.get(), Rotation.objects.get(), Ink.objects.get()
+        pen = Pen.objects.create(obtained=date(2020, 1, 1), brand=b, model="74", filling="Piston", age="Modern", obtained_from="s", out=False, price=1, rotation=rot)
+        Usage.objects.create(pen=pen, ink=ink, nib=Nib.objects.create(width="F", cut="Round", material="Gold"), begin=date(2020, 1, 1))
         html = self.page("/history/gantt/?rot=p1")
         self.assertRegex(html, r'data-rot="p1" aria-pressed="true"')
         self.assertIn('showRot("p1")', html)
