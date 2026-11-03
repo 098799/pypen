@@ -1,7 +1,7 @@
 from django.db.models import Count, F, OuterRef, Subquery
 from django.db.models.functions import Coalesce
-from django.shortcuts import render
 
+from dpypen.items.skin import render
 from dpypen.items import listing
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Usage

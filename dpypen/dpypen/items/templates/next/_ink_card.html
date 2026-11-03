@@ -1,0 +1,7 @@
+{% comment %}A swatch card: `i` an ink, `sub` an optional line under the name.{% endcomment %}
+<a class="card-ink" href="{% url 'nx_inks_detail' i.pk %}" style="--sw: {{ i.swatch_bg }}" {% if listnav %}data-listnav-item{% endif %}>
+  <span class="swab" aria-hidden="true"></span>
+  <span class="card-ink-name">{{ i.name }}</span>
+  <span class="card-ink-brand">{{ i.brand.name }}{% if i.line %} {{ i.line }}{% endif %}</span>
+  {% if sub %}<span class="card-ink-sub">{{ sub }}</span>{% endif %}
+</a>

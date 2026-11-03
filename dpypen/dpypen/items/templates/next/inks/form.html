@@ -1,0 +1,38 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% if ink %}{% url 'nx_inks_detail' ink.pk %}{% else %}{% url 'nx_inks_list' %}{% endif %}">{% if ink %}Back to the ink{% else %}All inks{% endif %}</a>
+<header class="head"><div class="head-t"><h1>{{ title }}</h1></div></header>
+<form method="post" class="form-nx" autocomplete="off">
+  {% csrf_token %}
+  <div class="f2">{% include "next/_field.html" with f=form.brand %}{% include "next/_field.html" with f=form.line %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.name %}{% include "next/_field.html" with f=form.color label="Colour" %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.obtained %}{% include "next/_field.html" with f=form.obtained_from label="Bought from" %}</div>
+  <div class="f2">{% include "next/_seg.html" with f=form.how label="How it came" %}{% include "next/_field.html" with f=form.volume label="Volume, ml" %}</div>
+  <div class="f2">{% include "next/_money.html" with f=form.price %}{% include "next/_field.html" with f=form.rotation %}</div>
+  <label class="switch-nx">{{ form.used_up }}<span class="track"></span><span>Used up or thrown out</span></label>
+  {% include "next/_field.html" with f=form.used_up_when label="Used up when" id="usedRow" shown_by=form.used_up.id_for_label %}
+  <div class="f"><label for="id_moi_url">Mountain of Ink link</label><input type="url" name="moi_url" id="id_moi_url" value="{{ form.instance.moi_url|default:'' }}" placeholder="https://mountainofink.com/blog/…">{% for e in form.moi_url.errors %}<div class="f-err">{{ e }}</div>{% endfor %}<div class="f-hint">Found by itself when the ink is imported. Paste it here if it is wrong.</div></div>
+  {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+  <div class="btn-row"><button type="submit" class="btn is-go">{{ submit_label }}</button><a class="btn is-ghost" href="{% if ink %}{% url 'nx_inks_detail' ink.pk %}{% else %}{% url 'nx_inks_list' %}{% endif %}">Cancel</a></div>
+</form>
+{% if ink %}
+<div class="sec-head"><h2>Swatches</h2><span>{{ swatches|length }}</span></div>
+{% if swatches %}
+<div class="thumbs-edit">
+  {% for s in swatches %}
+  <div class="th-e" data-busy-host>
+    <img src="{{ s.tile_url }}" alt="Swatch" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="Swatch">
+    <div class="th-acts">
+      {% if not s.image_clean %}<form method="post" action="{% url 'nx_swatches_extract' s.pk %}" data-busy-on-submit>{% csrf_token %}<button class="btn" type="submit">Clean up</button></form>{% endif %}
+      <form method="post" action="{% url 'nx_swatches_delete' s.pk %}" data-confirm="Delete this swatch?">{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+<form method="post" action="{% url 'nx_inks_swatch_add' ink.pk %}" enctype="multipart/form-data" hx-boost="false">
+  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph a swatch</span><input type="file" name="image" accept="image/*" capture="environment" multiple data-autosubmit></label>
+</form>
+{% endif %}
+{% endblock %}

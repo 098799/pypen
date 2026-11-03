@@ -1,0 +1,4 @@
+<header class="head"><div class="head-t"><h1>{{ title }}</h1>{% if sub %}<p>{{ sub }}</p>{% endif %}</div></header>
+<nav class="kit-chips" id="statsNav" aria-label="Stats" data-push>
+  {% for t in tabs %}<a class="kit-chip" href="{{ t.url }}"{% if t.on %} aria-current="true"{% endif %}>{{ t.label }}</a>{% endfor %}
+</nav>

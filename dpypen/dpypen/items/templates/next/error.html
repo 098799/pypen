@@ -1,0 +1,13 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ err.title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<header class="head"><div class="head-t"><h1>{{ err.title }}</h1></div></header>
+<div class="error-box">
+  <p>{{ err.text }}</p>
+  <div class="btn-row">
+    <a class="btn" href="javascript:history.back()" hx-boost="false" data-error-back>Back</a>
+    {% if is_owner or is_guest %}<a class="btn is-go" href="{% url 'nx_desk' %}">The desk</a><a class="btn" href="{% url 'nx_search' %}">Search</a>{% else %}<a class="btn is-go" href="{% url 'home' %}">The front page</a>{% endif %}
+  </div>
+  <p class="code">Error {{ err.status }}</p>
+</div>
+{% endblock %}

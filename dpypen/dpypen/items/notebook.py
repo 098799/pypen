@@ -4,9 +4,10 @@ from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 
+from dpypen.items.skin import render
 from dpypen.items.importer import extract_from_image
 from dpypen.items.models import BadImage, Ink, Nib, Pen, Usage, normalised_jpeg
 

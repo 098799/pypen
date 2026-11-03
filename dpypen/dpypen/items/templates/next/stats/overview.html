@@ -1,0 +1,45 @@
+{% extends "next/_shell.html" %}
+{% load l10n items_extras %}
+{% block title %}Stats · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Stats" sub="" %}
+{% if empty %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inkings yet</p><p class="kit-empty-p">The charts start with the first pen you ink.</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}">New inking</a></p>{% endif %}</div>
+{% else %}
+<section class="plate river" data-river aria-labelledby="riverH">
+  <h2 id="riverH">Every fill since {{ since|date:"F Y" }}</h2>
+  <p>How many pens held each colour, month by month.</p>
+  <div class="river-plot" tabindex="0" role="img" aria-label="Stacked chart of pens inked per month, by ink colour. Drag or use the arrow keys to read a month.">
+    <svg viewBox="0 0 {{ river.w }} {{ river.h }}" preserveAspectRatio="none" aria-hidden="true">
+      {% for s in river.shapes %}<path d="{{ s.d }}" fill="{{ s.hex }}" data-c="{{ s.name }}"></path>{% endfor %}
+    </svg>
+    <i class="river-cross" hidden></i>
+  </div>
+  <div class="river-axis">{% for t in river.ticks %}<span style="left: {{ t.left|unlocalize }}%">{{ t.label }}</span>{% endfor %}</div>
+  <p class="river-read" aria-live="polite"><span class="t-touch">Touch</span><span class="t-desk">Point at</span> the chart to read a month.</p>
+  <div class="river-key" role="group" aria-label="Show one ink colour">
+    {% for c in river.legend %}<button type="button" data-river-key="{{ c.name }}" aria-pressed="false"><i style="--c: {{ c.hex }}"></i>{{ c.name }} {{ c.share }}%</button>{% endfor %}
+  </div>
+  <script type="application/json">{{ river.data|json_script_safe }}</script>
+</section>
+
+<p class="sentence" id="lede">You have logged <b>{{ inkings }}</b> inkings over {{ tracked }}, about <b>{{ pace }}</b> a month. <b>{{ pens_used }}</b> of your {{ pens_total }} pens and <b>{{ inks_used }}</b> of your {{ inks_total }} inks have been used, in <b>{{ pairs }}</b> different pairings. Pens have held ink for <b>{{ ink_years }}</b> years in all.</p>
+
+<div class="facts">
+  <div><b>{{ fill_median }} days</b><small>a typical fill</small></div>
+  <div><b>{{ longest_days }} days</b><small>the longest fill</small></div>
+  <div><b>{{ peak }} pens</b><small>inked at once at most, {{ peak_day|date:"M Y" }}</small></div>
+  <div><b>{% if dry %}{{ dry }} days{% else %}None{% endif %}</b><small>the longest time with no pen inked{% if dry %}, until {{ dry_end|date:"M Y" }}{% endif %}</small></div>
+</div>
+
+<div class="sec-head"><h2>{{ year }} against {{ last_year }}</h2><span>Both up to today's date</span></div>
+<section class="plate">
+  <table class="versus">
+    <thead><tr><th scope="col"></th><th scope="col">{{ year|unlocalize }}</th><th scope="col">{{ last_year|unlocalize }}</th><th scope="col">Change</th></tr></thead>
+    <tbody>
+      {% for v in versus %}<tr><td>{{ v.label }}</td><td class="now">{{ v.now }}</td><td>{{ v.then }}</td><td class="d">{% if v.up %}+{{ v.delta }}{% elif v.down %}{{ v.delta }}{% elif v.delta is None %}{% else %}same{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

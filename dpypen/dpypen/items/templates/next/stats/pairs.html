@@ -1,0 +1,23 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}Pairings · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Pairings" sub="Which ink goes back into which pen" %}
+<p class="sentence"><b>{{ pairs_n }}</b> different pairings, <b>{{ repeat_n }}</b> of them used more than once.</p>
+<div class="plates" id="pairCharts">
+  <section class="plate">
+    <h2>The favourites</h2><p>Filled most often, then days.</p>
+    <ul class="rows">{% for b in best %}<li class="row" style="--sw: {{ b.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_pens_detail' b.pen.pk %}">{{ b.pen }}</a><small>{{ b.ink }}</small></div><span class="row-v">{{ b.n }} fills<br>{{ b.days }} d</span></li>{% endfor %}</ul>
+  </section>
+  <section class="plate">
+    <h2>Most-used pens against most-used inks</h2><p>A darker square held ink longer. Swipe across.</p>
+    <div class="mx"><div class="mx-grid" style="--cols: {{ matrix_cols|length }}">
+      <span></span>{% for c in matrix_cols %}<a class="mx-h" href="{% url 'nx_inks_detail' c.ink_id %}" style="--sw: {{ c.bg }}" title="{{ c.label }}" aria-label="{{ c.label }}"></a>{% endfor %}
+      {% for r in matrix_rows %}
+      <a class="mx-p" href="{% url 'nx_pens_detail' r.pen_id %}">{{ r.pen }}</a>
+      {% for c in r.cells %}{% if c and c.days %}<button type="button" class="mx-c" style="--c: {{ c.hex }}; --a: {{ c.opacity|unlocalize }}" data-tip-title="{{ r.pen }}" data-tip-lead="{{ c.ink_label }}" data-tip="{{ c.fills }} fill{{ c.fills|pluralize }}, {{ c.days }} days" aria-label="{{ r.pen }} with {{ c.ink_label }}"></button>{% else %}<span class="mx-c"></span>{% endif %}{% endfor %}
+      {% endfor %}
+    </div></div>
+  </section>
+</div>
+{% endblock %}

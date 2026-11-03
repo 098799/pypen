@@ -1,0 +1,82 @@
+<script>
+/* On each full load and after each htmx swap: the messages not yet shown.
+   The kit shows one toast at a time, so several messages at once (a notebook
+   import: a warning per bad row, then "Saved n inkings") become one toast,
+   joined in order: none is lost, a failure among them makes it kind "bad",
+   and it carries the Undo of the last message that has one. */
+(function () {
+  if (window.__kitMsgs) return;
+  window.__kitMsgs = true;
+  function read() {
+    document.querySelectorAll("[data-kit-msgs]:not([data-done])").forEach(function (box) {
+      box.setAttribute("data-done", "");
+      var words = [], bad = false, form = null;
+      box.querySelectorAll("[data-msg]").forEach(function (m) {
+        var t = (m.querySelector("[data-text]").textContent || "").trim();
+        if (t) words.push(t);
+        if (m.hasAttribute("data-bad")) bad = true;
+        form = m.querySelector("form[data-undo]") || form;
+      });
+      if (!words.length) return;
+      var o = {kind: bad ? "bad" : null};
+      if (form) {
+        o.action = "Undo";
+        o.onAction = function () {
+          // A soft navigation may have taken the form out with the old #main.
+          if (!form.isConnected) { form.hidden = true; document.body.appendChild(form); }
+          form.submit();
+        };
+      }
+      kitToast(words.join(" "), o);
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", read);
+  else read();
+  document.addEventListener("htmx:afterSettle", read);
+  /* Back/forward from htmx's history cache rewrites <body> from a snapshot
+     that holds a copy of #kit-toast: drop the copy (the kit re-attaches its
+     own element at the next toast). */
+  document.addEventListener("htmx:historyRestore", function () {
+    document.querySelectorAll("#kit-toast").forEach(function (n) { n.remove(); });
+    read();
+  });
+})();
+</script>
+<script>
+/* htmx swaps no 4xx or 5xx answer, so a boosted link to a page that is not
+   there did nothing at all. The error pages (items/error_pages.py) are pages
+   with a #main: take them for a boosted navigation, as a load would. A fetch
+   of a fragment keeps htmx's way (its answer is JSON or a partial). */
+document.addEventListener("htmx:beforeSwap", function (e) {
+  var d = e.detail, x = d.xhr;
+  if (!d.boosted || !x || x.status < 400) return;
+  if (!/text\/html/.test(x.getResponseHeader("Content-Type") || "")) return;
+  if (x.responseText.indexOf('id="main"') < 0) return;
+  d.shouldSwap = true;
+  d.isError = false;
+});
+</script>
+<script>
+/* A live search or a chip (pens, inks, inkings, /search/) that gets a 5xx or
+   no answer at all: htmx swaps nothing, so the old rows stayed as if they
+   were the answer. Put the kit's "could not load" block in the target
+   instead, with Try again (the same GET again). Boosted page loads keep the
+   handler above; a POST is never repeated from here. */
+(function () {
+  if (window.__pypenSwapFail) return;
+  window.__pypenSwapFail = true;
+  function failed(e) {
+    var d = e.detail || {}, t = d.target, elt = d.elt, cfg = d.requestConfig || {};
+    if (!window.kitEmpty || !t || !elt || d.boosted || t.id === "main") return;
+    if (String(cfg.verb || "get").toLowerCase() !== "get") return;
+    var url = (d.pathInfo && d.pathInfo.finalRequestPath) || cfg.path;
+    var sel = elt.closest("[hx-select]");
+    kitEmpty.fail(t, d.xhr && d.xhr.status ? d.xhr : {name: "TypeError"}, function () {
+      htmx.ajax("GET", url, {source: elt, target: t, swap: "outerHTML",
+                             select: sel ? sel.getAttribute("hx-select") : undefined});
+    });
+  }
+  document.addEventListener("htmx:responseError", failed);
+  document.addEventListener("htmx:sendError", failed);
+})();
+</script>

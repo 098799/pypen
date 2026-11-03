@@ -1,0 +1,47 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}The cupboard · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Cupboard" sub="Every open bottle, and how much of it you use" %}
+{% if empty %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inks yet</p></div>
+{% else %}
+<section class="plate is-wide">
+  <h2>Your spectrum</h2>
+  <p>{{ bottles }} open bottles in colour order, narrowed to one strip. Tap a colour for the ink.</p>
+  <div class="spectrum" role="group" aria-label="Open inks in colour order">
+    {% for i in spectrum %}<a href="{{ i.url }}" style="--sw: {{ i.bg }}" title="{{ i.name }}" aria-label="{{ i.name }}"></a>{% endfor %}
+  </div>
+</section>
+<p class="sentence" id="lede"><b>{{ bottles }}</b> bottles with <b>{{ ml }}</b> ml in them, {{ in_pen }} in a pen now. <b>{{ never_n }}</b> never inked, <b>{{ samples }}</b> sample{{ samples|pluralize }} on the side, <b>{{ used_up }}</b> used up.</p>
+<div class="plates" id="cupboardCharts">
+  <section class="plate is-wide">
+    <h2>What you own against what you use</h2>
+    <p>Share of open bottles and share of all inkings, for each colour. Up to {{ share_scale }}%.</p>
+    <div class="db-legend"><span><i></i>Inkings</span><span><i class="is-own"></i>Bottles</span></div>
+    <div class="dumbbell">
+      {% for s in share %}
+      <button class="db-row" type="button" data-tip-title="{{ s.name }}" data-tip-lead="{{ s.use }}% of inkings, {{ s.own }}% of bottles" data-tip="{{ s.fills }} fills, {{ s.bottles }} bottles, {{ s.ml }} ml" data-tip-links="See the inkings|/next/usages/?color={{ s.name|urlencode }}">
+        <span><i class="rank-dot" style="--c: {{ s.hex }}"></i>{{ s.name }}</span>
+        <span class="db-track" style="--c: {{ s.hex }}">
+          <i class="db-link" style="left: {{ s.lo_x|unlocalize }}%; width: {{ s.gap_x|unlocalize }}%"></i>
+          <i class="db-own" style="left: {{ s.own_x|unlocalize }}%"></i>
+          <i class="db-use" style="left: {{ s.use_x|unlocalize }}%"></i>
+        </span>
+      </button>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="plate">
+    <h2>Never inked</h2><p>The longest in the cupboard first.</p>
+    <ul class="rows">{% for i in never %}<li class="row" style="--sw: {{ i.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_inks_detail' i.pk %}">{{ i }}</a><small>{% if i.obtained %}Since {{ i.obtained|date:"M Y" }}{% else %}No date{% endif %}</small></div></li>{% empty %}<li class="row">Every bottle has been used.</li>{% endfor %}</ul>
+  </section>
+  <section class="plate">
+    <h2>Resting longest</h2><p>Out of a pen the longest.</p>
+    <ul class="rows">{% for r in resting %}<li class="row" style="--sw: {{ r.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_inks_detail' r.ink.pk %}">{{ r.ink }}</a></div><span class="row-v">{{ r.span }}</span></li>{% endfor %}</ul>
+  </section>
+  <section class="plate"><h2>Ink makers</h2><p>Open bottles.</p>{% include "next/stats/_hbars.html" with rows=brands %}</section>
+  <section class="plate"><h2>How they came</h2>{% include "next/stats/_hbars.html" with rows=how %}</section>
+</div>
+{% endif %}
+{% endblock %}

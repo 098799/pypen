@@ -20,9 +20,9 @@ with DEBUG on it shows its own debug pages instead.
 """
 
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.template import loader
 
+from dpypen.items.skin import render
 from dpypen.items import errors, pwa
 
 API = ("/api/", "/whatsnew.json", "/manifest.json")

@@ -20,8 +20,9 @@ import random
 from dataclasses import dataclass, field
 from datetime import date
 
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 
+from dpypen.items.skin import render
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 

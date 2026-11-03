@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "next-version", "date": "2026-11-03", "title": "A new version to try",
+   "use": "When you want to see the collection as ink: open More, then The new version (or Settings, Try the new version). The desk shows each inked pen with a swab of its real ink colour, how long it has been in, and what to ink next. Inks are a wall of swatch cards. Stats is new: a river of every fill since the first, what you own against what you use, whether each pen earns its keep, and whether the rotation keeps up. Everything can be edited there too, and it is the same data. Settings there can make it the version the app opens with, or take you back.",
+   "shots": ["/static/items/whatsnew/2026-11-03-next-version.png"], "try": "/next/"},
   {"id": "inking-charts", "date": "2026-11-03", "title": "Charts of your inkings",
    "use": "When you wonder how often you ink up, and with what: open History, then Inkings. It shows your inkings per year in ink colours, a square for each month, how many pens were inked at once, how long a fill stays, your colours and your most used pens and inks. Tap a chip to see one year. Tap a bar or a square for its numbers, and See them opens those inkings. A pen's and an ink's own page now show their inkings per year too.",
    "shots": ["/static/items/whatsnew/2026-11-03-inking-charts.png"], "try": "/history/inkings/"},

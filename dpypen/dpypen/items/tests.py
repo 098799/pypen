@@ -74,8 +74,8 @@ class KeysLayerRenders(TestCase):
             f"/inks/{self.ink.pk}/",
             f"/inks/{self.ink.pk}/edit/",
             "/import/",
-            "/next/",
-            f"/next/?pen={self.pen.pk}",
+            "/pick/",
+            f"/pick/?pen={self.pen.pk}",
         ]
 
     def test_the_layer_template_compiles(self):

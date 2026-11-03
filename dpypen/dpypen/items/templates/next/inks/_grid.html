@@ -1,0 +1,21 @@
+{% load items_extras %}
+<div id="inkContentBody" data-listnav data-more-host="inks">
+{% include "next/inks/_filters.html" %}
+{% if not sections %}{% include "next/inks/_empty_state.html" %}{% endif %}
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+  {% if s.head and not s.flat %}<div class="group-nx" data-more-head><h2><i class="dab" style="--sw: {{ s.hex }}"></i>{{ s.color }}</h2><span>{{ s.count }} ink{{ s.count|pluralize }}</span></div>{% endif %}
+  <div class="ink-grid-nx" data-more-rows>
+    {% for i in s.rows %}
+    <a class="card-ink{% if i.used_up %} is-out{% endif %}" href="{% url 'nx_inks_detail' i.pk %}" style="--sw: {{ i.swatch_bg }}" data-listnav-item>
+      <span class="swab" aria-hidden="true"></span>
+      <span class="card-ink-name">{{ i.name|highlight:filters.q }}</span>
+      <span class="card-ink-brand">{{ i.brand.name|highlight:filters.q }}{% if i.line %} {{ i.line|highlight:filters.q }}{% endif %}</span>
+      <span class="card-ink-sub">{% if i.in_pens %}In {{ i.in_pens.0.model }}{% elif i.used_up %}Used up{% elif i.volume <= 5 %}Sample{% elif i.fills %}{{ i.fills }} fill{{ i.fills|pluralize }}{% if i.last_end %}, {{ i.last_end }}{% endif %}{% else %}Never inked{% endif %}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% include "items/_more.html" %}
+</div>

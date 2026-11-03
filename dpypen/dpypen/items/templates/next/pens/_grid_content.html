@@ -1,0 +1,21 @@
+{% load items_extras %}
+<div id="penContentBody" data-listnav data-more-host="pens">
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+  {% if s.head and not headless %}<div class="group-nx" data-more-head><h2>{{ s.title }}</h2><span>{{ s.count }} pen{{ s.count|pluralize }}{% if s.subtitle %}, {{ s.subtitle }}{% endif %}</span></div>{% endif %}
+  <div class="pen-wall-nx" data-more-rows>
+    {% for p in s.rows %}
+    <a class="pen-tile-nx" href="{% url 'nx_pens_detail' p.pk %}" data-listnav-item>
+      <span class="pic">{% if p.list_thumb_url %}<img src="{{ p.list_thumb_url }}" alt="" loading="lazy">{% endif %}</span>
+      <small>{{ p.brand.name|highlight:query }}</small>
+      <b>{{ p.model|highlight:query }}{% if p.finish %} {{ p.finish|highlight:query }}{% endif %}</b>
+      {% if p.trail %}<div class="trail" aria-hidden="true">{% for t in p.trail %}<i style="--sw: {{ t.bg }}"></i>{% endfor %}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% empty %}
+{% include "next/pens/_empty_state.html" %}
+{% endfor %}
+{% include "items/_more.html" %}
+</div>

@@ -1,0 +1,86 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}Inkings over time · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Inkings" sub="How often, how long, in what" %}
+{% if not inkings_total %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inkings to chart yet</p><p class="kit-empty-p">The charts start with the first pen you ink.</p></div>
+{% else %}
+<nav class="kit-chips" aria-label="Year">
+  <a class="kit-chip" href="{% url 'nx_stats_inkings' %}"{% if not scope %} aria-current="true"{% endif %}>All</a>
+  {% for y in chart_years %}<a class="kit-chip" href="{% url 'nx_stats_inkings' %}?y={{ y|unlocalize }}"{% if scope == y %} aria-current="true"{% endif %}>{{ y|unlocalize }}</a>{% endfor %}
+</nav>
+<div class="facts">
+  <div><b>{{ stats.inkings }}</b><small>inking{{ stats.inkings|pluralize }}</small></div>
+  <div><b>{{ stats.pace }}</b><small>a month</small></div>
+  <div><b>{% if stats.median is not None %}{{ stats.median }} days{% else %}None ended{% endif %}</b><small>a typical fill</small></div>
+  <div><b>{{ stats.pens }} and {{ stats.inks }}</b><small>pens and inks used</small></div>
+</div>
+<div class="plates" id="inkCharts">
+  {% if stats.inkings %}
+  <section class="plate is-wide chart-box">
+    <h2>{% if scope %}Inkings by month{% else %}Inkings by year{% endif %}</h2>
+    <p>{% if scope %}{{ scope|unlocalize }}, in ink families.{% else %}{{ scope_label }}, in ink families. Tap a year for its months.{% endif %}</p>
+    {% include "items/_stack_bars.html" with columns=columns legend=legend %}
+  </section>
+  {% endif %}
+  {% if heatmap %}
+  <section class="plate is-wide chart-box">
+    <h2>Month by month</h2>
+    <p>The darkest square is {{ heatmap.peak }} inkings in one month.</p>
+    <div class="heat" role="group" aria-label="Inkings per month and year">
+      <span></span>{% for h in heatmap.heads %}<span class="heat-h">{{ h }}</span>{% endfor %}<span class="heat-h">All</span>
+      {% for r in heatmap.rows %}
+      <a class="heat-y" href="{% url 'nx_stats_inkings' %}?y={{ r.year|unlocalize }}">{{ r.year|unlocalize }}</a>
+      {% for c in r.cells %}{% if c.ahead %}<span class="heat-c is-ahead"></span>{% else %}<button type="button" class="heat-c" style="--a: {{ c.a|unlocalize }}" data-tip-title="{{ c.title }}" data-tip-lead="{{ c.tip }}"{% if c.links %} data-tip-links="{{ c.links }}"{% endif %} aria-label="{{ c.title }}: {{ c.tip }}"></button>{% endif %}{% endfor %}
+      <span class="heat-t">{{ r.total }}</span>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  <section class="plate is-wide chart-box">
+    <h2>Pens inked at once</h2>
+    <p class="line-read" data-line-read>At most {{ desk.peak }}, now {{ desk.now }}.</p>
+    <div class="line-chart" data-line data-values="{{ desk.values }}" data-start="{{ desk.start }}" data-step="{{ desk.step }}" tabindex="0" role="img" aria-label="Pens inked at once: at most {{ desk.peak }}, now {{ desk.now }}. Arrow keys read the line.">
+      <div class="line-plot">
+        {% for g in desk.grid %}<span class="line-grid" style="bottom: {{ g.bottom|unlocalize }}%"><b>{{ g.v }}</b></span>{% endfor %}
+        <svg viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="0,100 {{ desk.points }} 1000,100"></polygon><polyline points="{{ desk.points }}" vector-effect="non-scaling-stroke"></polyline></svg>
+        <i class="line-cross" data-line-cross hidden></i>
+      </div>
+      <div class="line-axis">{% for t in desk.ticks %}<span style="left: {{ t.left|unlocalize }}%">{{ t.label }}</span>{% endfor %}</div>
+    </div>
+  </section>
+  {% if stats.inkings %}
+  <section class="plate chart-box">
+    <h2>How long a fill stays</h2>
+    <p>{{ durations.ended }} ended fill{{ durations.ended|pluralize }}{% if durations.median is not None %}, half of them under {{ durations.median }} days{% endif %}.</p>
+    <div class="bars is-plain">{% for b in durations.bars %}<div class="bar-col"><span class="bar-plot" style="--h: {{ b.pct|unlocalize }}">{% if b.n %}<span class="bar-n">{{ b.n }}</span>{% endif %}<span class="bar-stack"><i></i></span></span><span class="bar-label is-tiny">{{ b.label }}</span></div>{% endfor %}</div>
+  </section>
+  <section class="plate chart-box">
+    <h2>Day of the week</h2><p>The day each fill began.</p>
+    <div class="bars is-plain">{% for b in weekdays %}<div class="bar-col"><span class="bar-plot" style="--h: {{ b.pct|unlocalize }}">{% if b.n %}<span class="bar-n">{{ b.n }}</span>{% endif %}<span class="bar-stack"><i></i></span></span><span class="bar-label">{{ b.label }}</span></div>{% endfor %}</div>
+  </section>
+  {% if habits %}
+  <section class="plate chart-box"><h2>Time of year</h2><p>The month each fill began, over all years.</p>{% include "next/stats/_cols.html" with rows=habits.seasons show_n=True unit="" %}</section>
+  <section class="plate chart-box"><h2>Trying something new</h2><p>Share of each year's inkings that were a first time for that pen and ink.</p>{% include "next/stats/_cols.html" with rows=habits.explore show_n=True unit="%" %}</section>
+  <section class="plate chart-box"><h2>A typical fill, by year</h2><p>Days, for fills that began that year.</p>{% include "next/stats/_cols.html" with rows=habits.fill_trend show_n=True unit=" days" %}</section>
+  <section class="plate chart-box"><h2>Nibs in use</h2><p>Width, counted by inkings.</p>{% include "next/stats/_hbars.html" with rows=habits.nib_width %}<p class="fine">Gold or steel, counted the same way:</p>{% include "next/stats/_hbars.html" with rows=habits.nib_material %}</section>
+  {% endif %}
+  <section class="plate chart-box">
+    <h2>Colours</h2><p>Inkings, then days on the page.</p>
+    <div>{% for c in colors %}<a class="rank-row" href="{{ c.url }}"><span class="rank-name"><i class="rank-dot" style="--c: {{ c.hex }}"></i>{{ c.name }}</span><span class="rank-track"><i style="--c: {{ c.hex }}; width: {{ c.pct|unlocalize }}%"></i></span><span class="rank-v"><b>{{ c.n }}</b> {{ c.days }} d</span></a>{% endfor %}</div>
+  </section>
+  <section class="plate chart-box">
+    <h2>Pens inked most</h2><p>Inkings, then days on the page.</p>
+    <div>{% for p in top_pens %}<a class="rank-row" href="{% url 'nx_pens_detail' p.id %}"><span class="rank-name">{{ p.name }}</span><span class="rank-track"><i style="width: {{ p.pct|unlocalize }}%"></i></span><span class="rank-v"><b>{{ p.n }}</b> {{ p.days }} d</span></a>{% endfor %}</div>
+  </section>
+  <section class="plate chart-box">
+    <h2>Inks used most</h2><p>Inkings, then days on the page.</p>
+    <div>{% for i in top_inks %}<a class="rank-row" href="{% url 'nx_inks_detail' i.id %}"><span class="rank-name"><i class="rank-dot" style="--c: {{ i.hex }}; background: {{ i.bg }}"></i>{{ i.name }}</span><span class="rank-track"><i style="--c: {{ i.hex }}; width: {{ i.pct|unlocalize }}%"></i></span><span class="rank-v"><b>{{ i.n }}</b> {{ i.days }} d</span></a>{% endfor %}</div>
+  </section>
+  {% else %}
+  <div class="kit-empty is-wide" data-kind="match"><p class="kit-empty-t">No pen was inked in {{ scope|unlocalize }}</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_stats_inkings' %}">All years</a></p></div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

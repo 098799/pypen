@@ -1,0 +1,25 @@
+{% extends "next/_shell.html" %}
+{% block title %}Check the entries · {{ app_name }}{% endblock %}
+{% block content %}
+<header class="head"><div class="head-t"><h1>Check the entries</h1><p>{{ rows|length }} found. An amber edge is a low-confidence reading, a red edge a poor match.</p></div>
+  <div class="head-a"><a class="btn" href="{% url 'nx_notebook_upload' %}">Start over</a></div></header>
+<form method="post" class="form-nx">
+  {% csrf_token %}
+  {% for row in rows %}{% with idx=forloop.counter0 %}
+  <div class="review{% if row.confidence < 0.5 %} is-poor{% elif row.confidence < 0.8 %} is-low{% endif %}">
+    <p>As written: <strong>{{ row.pen_raw }}</strong>, <strong>{{ row.ink_raw }}</strong>{% if row.nib_raw %}, <strong>{{ row.nib_raw }}</strong>{% endif %}. Confidence {{ row.confidence|floatformat:2 }}.{% if row.notes %} Note: {{ row.notes }}{% endif %}</p>
+    <div class="f"><label for="pen_{{ idx }}">Pen</label><select id="pen_{{ idx }}" name="pen_{{ idx }}"><option value="0">Choose</option>{% for p in pens %}<option value="{{ p.pk }}"{% if p.pk == row.pen_id %} selected{% endif %}>{{ p }}</option>{% endfor %}</select></div>
+    <div class="f2">
+      <div class="f"><label for="ink_{{ idx }}">Ink</label><select id="ink_{{ idx }}" name="ink_{{ idx }}"><option value="0">Choose</option>{% for i in inks %}<option value="{{ i.pk }}"{% if i.pk == row.ink_id %} selected{% endif %}>{{ i }}</option>{% endfor %}</select></div>
+      <div class="f"><label for="nib_{{ idx }}">Nib</label><select id="nib_{{ idx }}" name="nib_{{ idx }}"><option value="0">Choose</option>{% for n in nibs %}<option value="{{ n.pk }}"{% if n.pk == row.nib_id %} selected{% endif %}>{{ n }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="f2">
+      <div class="f"><label for="begin_{{ idx }}">Inked on</label><input type="date" id="begin_{{ idx }}" name="begin_{{ idx }}" value="{{ row.begin|default:today }}"></div>
+      <div class="f"><label for="end_{{ idx }}">Finished on</label><input type="date" id="end_{{ idx }}" name="end_{{ idx }}" value="{{ row.end|default:'' }}"></div>
+    </div>
+    <label class="switch-nx"><input type="checkbox" name="skip_{{ idx }}"><span class="track"></span><span>Skip this one</span></label>
+  </div>
+  {% endwith %}{% endfor %}
+  <div class="btn-row"><button type="submit" class="btn is-go">Save all</button><a class="btn is-ghost" href="{% url 'nx_notebook_upload' %}">Cancel</a></div>
+</form>
+{% endblock %}

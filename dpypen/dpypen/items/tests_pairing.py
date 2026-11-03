@@ -121,7 +121,7 @@ class NextInking(TestCase):
         self.assertEqual([s.ink.pk for s in pick(ranked, 3)], [s.ink.pk for s in pick(ranked, 3)])
 
     def test_the_page_opens_on_the_pen_most_due(self):
-        r = self.client.get("/next/")
+        r = self.client.get("/pick/")
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.context["pen"], self.piston)
         html = r.content.decode()
@@ -129,17 +129,17 @@ class NextInking(TestCase):
         self.assertIn("Past their <em>turn</em>", html)
 
     def test_any_pen_can_be_asked_for(self):
-        r = self.client.get(f"/next/?pen={self.desk.pk}")
+        r = self.client.get(f"/pick/?pen={self.desk.pk}")
         self.assertEqual(r.context["pen"], self.desk)
         self.assertIn("Inked now with", r.content.decode())
-        self.assertEqual(self.client.get("/next/?pen=99999").status_code, 404)
-        self.assertEqual(self.client.get(f"/next/?pen={self.cc.pk}&shuffle=2").status_code, 200)
+        self.assertEqual(self.client.get("/pick/?pen=99999").status_code, 404)
+        self.assertEqual(self.client.get(f"/pick/?pen={self.cc.pk}&shuffle=2").status_code, 200)
 
     def test_the_dashboard_rows_lead_here(self):
         html = self.client.get("/dashboard/").content.decode()
-        self.assertIn(f'href="/next/?pen={self.piston.pk}"', html)
+        self.assertIn(f'href="/pick/?pen={self.piston.pk}"', html)
 
     def test_strangers_are_sent_to_sign_in(self):
         self.client.logout()
-        r = self.client.get("/next/")
+        r = self.client.get("/pick/")
         self.assertNotEqual(r.status_code, 200)

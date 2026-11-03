@@ -22,6 +22,16 @@ def highlight(text, terms):
     return mark_safe(lists.highlight(text, q))
 
 
+@register.filter
+def json_script_safe(value):
+    """JSON for a <script type="application/json"> in the page: nothing in it
+    can close the tag (the river's data; no stored names in it anyway)."""
+    import json
+
+    text = json.dumps(value, separators=(",", ":"))
+    return mark_safe(text.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
+
+
 _KIT_THEME_JS = None
 
 

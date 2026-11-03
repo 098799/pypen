@@ -1,8 +1,8 @@
 from collections import Counter
 from datetime import date, timedelta
 
-from django.shortcuts import render
 
+from dpypen.items.skin import render
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Brand, Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
@@ -219,5 +219,6 @@ def records(request):
 
     return render(request, "items/records.html", {
         "cards": cards,
-        "nav": "records",
+        "tabs": getattr(request, "nx_tabs", None),
+        "nav": "history" if getattr(request, "nx_tabs", None) else "records",
     })

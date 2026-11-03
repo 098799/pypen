@@ -1,0 +1,125 @@
+{% comment %}
+Filter controls that sit outside the region htmx swaps — the view toggle, the
+sort select, the rotation chips — keep whatever URL the server gave them at
+first render. Type a search and they still point at the pre-search URL, so
+switching view or sort silently threw the search away, and the rotation chips'
+pressed state never moved off "All". Rebuilding each control's URL from the
+live query string means it can only ever set or clear its own key, and the
+pressed state follows from the same comparison. Done in place rather than by
+re-rendering, so a horizontally scrolled bar keeps its scroll position.
+{% endcomment %}
+<script>
+(function () {
+  if (window.__filterNav) return;        // hx-boost re-runs page scripts
+  window.__filterNav = true;
+  function urlFor(key, val) {
+    var p = new URLSearchParams(location.search);
+    p.delete('offset');   // a new filter or sort starts at the first row (kit §14)
+    if (val) p.set(key, val); else p.delete(key);
+    var qs = p.toString();
+    return location.pathname + (qs ? '?' + qs : '');
+  }
+  function cur(key, allowed) {
+    var v = new URLSearchParams(location.search).get(key) || '';
+    // A value naming nothing on offer is ignored by the view, which falls back
+    // to the default — so the default is what should look selected.
+    return allowed.indexOf(v) === -1 ? '' : v;
+  }
+  function sync() {
+    var links = {}, selects = document.querySelectorAll('select[data-navkey]');
+    document.querySelectorAll('a[data-navkey]').forEach(function (a) {
+      (links[a.getAttribute('data-navkey')] = links[a.getAttribute('data-navkey')] || []).push(a);
+    });
+    Object.keys(links).forEach(function (key) {
+      var group = links[key];
+      var vals = group.map(function (a) { return a.getAttribute('data-navval') || ''; });
+      var now = cur(key, vals);
+      group.forEach(function (a) {
+        var val = a.getAttribute('data-navval') || '';
+        var url = urlFor(key, val);
+        a.setAttribute('href', url);
+        if (a.hasAttribute('hx-get')) a.setAttribute('hx-get', url);
+        var on = val === now;
+        // The state is the attribute (kit: no .on on a chip); the view toggle's look still reads .on.
+        if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+        if (!a.classList.contains('kit-chip')) a.classList.toggle('on', on);
+      });
+    });
+    selects.forEach(function (sel) {
+      var key = sel.getAttribute('data-navkey');
+      sel.value = cur(key, [].map.call(sel.options, function (o) { return o.value; }));
+    });
+    inputChips();
+  }
+  // A chip that is a real radio button or checkbox (/search/): the label says it for the kit's look.
+  function inputChips() {
+    document.querySelectorAll('label.kit-chip > input').forEach(function (i) {
+      if (i.checked) i.parentNode.setAttribute('aria-current', 'true'); else i.parentNode.removeAttribute('aria-current');
+    });
+  }
+  document.addEventListener('change', function (e) {
+    if (e.target.closest && e.target.closest('label.kit-chip')) inputChips();
+  });
+  // Rewriting href/hx-get is not enough on its own: htmx resolves an element's
+  // request path when it first processes the node and keeps it, so a later
+  // attribute change is ignored and the control re-requests the URL the page
+  // was rendered with. configRequest is the supported seam — the path is built
+  // here, at request time, from the query string as it stands.
+  document.body.addEventListener('htmx:configRequest', function (e) {
+    var el = e.detail.elt;
+    if (!el || !el.getAttribute) return;
+    // The kit has put a word typed and not sent into the chip's href (in the capture phase of the click).
+    if (el.matches && el.matches('.kit-chips a[href]')) {
+      e.detail.path = el.pathname + el.search;
+      return;
+    }
+    var key = el.getAttribute('data-navkey');
+    if (key) {
+      e.detail.path = urlFor(key, el.getAttribute('data-navval') || '');
+      return;
+    }
+    if (el.matches && el.matches('form[data-navform]')) {
+      // Each field of the form speaks for itself (the box, a sort, /search/'s chips); everything
+      // else in play comes from the URL. The path too: the form's hx-get was written with the
+      // query string of the first page, and the row has moved on since.
+      var own = {}, p = e.detail.parameters;
+      [].forEach.call(el.elements, function (f) {
+        if (!f.name) return;
+        own[f.name] = 1;
+        // No `?q=`, no default in the address (kit §14).
+        if (p[f.name] === '' || p[f.name] === f.getAttribute('data-default')) delete p[f.name];
+      });
+      e.detail.path = location.pathname;
+      new URLSearchParams(location.search).forEach(function (v, k) {
+        if (k !== 'offset' && !own[k]) p[k] = v;
+      });
+    }
+  });
+  // The kit marks a form busy until the page goes; here the page stays, and the answer has come.
+  function idle() {
+    document.querySelectorAll('.kit-search[aria-busy]').forEach(function (f) { f.removeAttribute('aria-busy'); });
+  }
+  document.body.addEventListener('htmx:afterRequest', idle);
+  // The ink filters are inside the swap: a new row that starts where the old one was (the kit then
+  // brings the picked chip into view).
+  var rowX = 0;
+  document.body.addEventListener('htmx:beforeSwap', function () {
+    var r = document.getElementById('inkFilters');
+    rowX = r ? r.scrollLeft : 0;
+  });
+  document.body.addEventListener('htmx:afterSwap', function () {
+    var r = document.getElementById('inkFilters');
+    if (r) r.scrollLeft = rowX;
+  });
+  document.addEventListener('DOMContentLoaded', sync);
+  // hx-replace-url writes location during settle, so a sync fired on afterSwap
+  // alone reads the *previous* query string and rebuilds every URL from it —
+  // which is how switching view right after a search still lost the search.
+  // The history events are the ones that mean "location is now current".
+  document.body.addEventListener('htmx:pushedIntoHistory', sync);
+  document.body.addEventListener('htmx:replacedInHistory', sync);
+  document.body.addEventListener('htmx:afterSettle', sync);
+  window.addEventListener('popstate', function () { setTimeout(sync, 0); });
+  sync();
+})();
+</script>

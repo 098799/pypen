@@ -69,6 +69,25 @@ GUEST_READS = {
     "share_inks_gallery",
     "share_inks_wall",
     "share_pens_wall",
+    # The new version's pages (nextui/urls.py).
+    "nx_desk",
+    "nx_settings",
+    "nx_pick",
+    "nx_search",
+    "nx_stats",
+    "nx_stats_inkings",
+    "nx_stats_collection",
+    "nx_stats_cupboard",
+    "nx_stats_rotation",
+    "nx_stats_timeline",
+    "nx_stats_calendar",
+    "nx_stats_pairs",
+    "nx_records",
+    "nx_usages_list",
+    "nx_pens_list",
+    "nx_pens_detail",
+    "nx_inks_list",
+    "nx_inks_detail",
 }
 
 # Rows that are the collection. InviteCode is left out on purpose: a guest's
@@ -130,7 +149,10 @@ class TheDoor(_Collection):
         out = []
         for pattern in item_urls.urlpatterns:
             route = str(pattern.pattern)
-            params = by_prefix.get(route.split("/")[0], {})
+            # next/usages/samples/<pk>/... is a sample: the last word before the <.
+            words = [w for w in route.split("<")[0].split("/") if w and w != "next"]
+            head = (words[-1] if words and words[-1] in ("samples", "swatches") else words[0]) if words else ""
+            params = by_prefix.get(head, {})
 
             def fill(m):
                 name = m.group(1)
@@ -168,7 +190,7 @@ class TheDoor(_Collection):
         guest.post(f"/i/{self.invite.token}/")
         before = _collection_state()
         for name, url in self.routes():
-            if name in ("invite_activate", "invite_deactivate"):
+            if name in ("invite_activate", "invite_deactivate", "nx_prefer"):
                 continue  # these move the guest's own session, not the collection
             with self.subTest(route=name, method="get"):
                 response = guest.get(url)

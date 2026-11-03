@@ -1,0 +1,9 @@
+{% if filters.cupboard_empty %}
+<div class="kit-empty" data-kind="none" role="status"><p class="kit-empty-t">No inks yet</p><p class="kit-empty-p">Add the first bottle and it shows here.</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_inks_create' %}">Add an ink</a></p>{% endif %}</div>
+{% else %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">{% if filters.q %}No ink matches “{{ filters.q }}”{% else %}No ink fits these filters{% endif %}</p>
+  <p class="kit-empty-p">Samples and used-up inks are hidden unless you ask for them.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ filters.clear_url }}">Clear</a><a class="kit-empty-b" href="{{ filters.show_all_url }}">Show all</a></p>
+</div>
+{% endif %}

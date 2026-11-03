@@ -1,0 +1,27 @@
+{% extends "next/_shell.html" %}
+{% block title %}Edit photo, {{ pen }} · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_pens_edit' pen.pk %}">Back to {{ pen.model }}</a>
+<header class="head"><div class="head-t"><h1>Edit photo</h1><p>{{ pen }}</p></div></header>
+<div class="compare" data-busy-host>
+  <figure><img src="{{ photo.image.url }}" alt="Original" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Original"><figcaption>Original</figcaption></figure>
+  {% if photo.image_styled %}
+  <figure><img src="{{ photo.image_styled.url }}" alt="Polished" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Polished"><figcaption>Polished by AI</figcaption></figure>
+  {% else %}
+  <div class="blank">Not polished yet. The button below makes a clean shot of it.</div>
+  {% endif %}
+</div>
+<form method="post" action="{% url 'nx_pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm">
+  {% csrf_token %}
+  <div class="btn-row"><button type="submit" class="btn is-go">{% if photo.image_styled %}Polish again{% else %}Polish with AI{% endif %}</button></div>
+  <div class="f"><label for="promptEditor" class="f-label">What Gemini is asked</label>
+  <textarea class="prompt" id="promptEditor" name="prompt" spellcheck="false">{{ prompt_value }}</textarea></div>
+  <p class="fine">The prompt names the pen's brand, model, finish, filling and era, so the pen stays that pen. Change it if a result drifts.</p>
+</form>
+<div class="btn-row">
+  {% if photo.image_styled %}<form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk photo.pk %}" data-confirm="Discard the polished shot?">{% csrf_token %}<button type="submit" class="btn">Back to the original</button></form>{% endif %}
+  <form method="post" action="{% url 'nx_pens_photo_rotate' pen.pk photo.pk %}">{% csrf_token %}<input type="hidden" name="degrees" value="90"><button type="submit" class="btn">Turn 90°</button></form>
+  {% if photo != photo.pen.photos.first %}<form method="post" action="{% url 'nx_pens_photo_primary' pen.pk photo.pk %}">{% csrf_token %}<button type="submit" class="btn">Make it the first photo</button></form>{% endif %}
+  <form method="post" action="{% url 'nx_pens_photo_delete' pen.pk photo.pk %}" data-confirm="Delete this photo?">{% csrf_token %}<button type="submit" class="btn is-bad">Delete photo</button></form>
+</div>
+{% endblock %}

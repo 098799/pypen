@@ -1,0 +1,5 @@
+<div class="f seg-nx">
+  <span class="f-label">{{ label|default:f.label }}</span>
+  {{ f }}
+  {% for e in f.errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+</div>

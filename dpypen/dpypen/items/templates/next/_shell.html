@@ -1,0 +1,146 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}{{ app_name }}{% endblock %}</title>
+<meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
+{% comment %}
+The new version's page (PYPEN-11, README "The new version"): its own look, the
+kit's and the old shell's behaviour. The kit's pieces and _shell_early,
+_shell_filternav, _shell_behave are the same files the old shell includes.
+{% endcomment %}
+<script>{% include "items/_layer.js" %}</script>
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'items/next/fonts/alegreya-sans-400.woff2' %}">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'items/next/fonts/alegreya.woff2' %}">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="{% static 'items/icons/apple-touch-icon.png' %}">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131927" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="{{ app_name }}">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
+<link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
+<script src="{% static 'items/vendor/tom-select-2.4.3.complete.min.js' %}" defer></script>
+<script src="{% static 'items/js/viewer.js' %}" defer></script>
+<script src="{% static 'items/js/share.js' %}" defer></script>
+<script src="{% static 'items/js/charts.js' %}" defer></script>
+<script src="{% static 'items/js/more.js' %}" defer></script>
+<script src="{% static 'items/js/deskbar.js' %}" defer></script>
+<script src="{% static 'items/next/next.js' %}" defer></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js", {scope: "/"}).catch(function () {}); });
+}
+</script>
+{% include "items/_theme_boot.html" with theme_dark="#131927" theme_light="#f4f5f7" %}
+<link rel="stylesheet" href="{% static 'items/next/next.css' %}">
+<link rel="stylesheet" href="{% static 'items/css/viewer.css' %}">
+{% if nx_accent %}<style>:root{--accent:{{ nx_accent.dark }};--on-accent:{{ nx_accent.on_dark }}}html[data-theme=light]{--accent:{{ nx_accent.light }};--on-accent:{{ nx_accent.on_light }}}</style>{% endif %}
+</head>
+<body{% if can_edit %} class="can-edit"{% endif %} data-new-seen="next-version" hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
+{% include "items/_toast.html" %}
+{% include "items/_empty.html" %}
+{% include "items/_filters.html" %}
+<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
+{% include "items/_update.html" %}
+{% include "items/_pullrefresh.html" %}
+{% if is_owner or is_guest %}
+<script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};</script>
+{% include "items/_whatsnew.html" %}
+{% include "items/_installbar.html" %}
+<script>
+document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
+</script>
+{% endif %}
+{% include "items/_shell_early.html" %}
+
+<a class="nx-skip" href="#main">Skip to the page</a>
+<div class="nx-frame">
+<header class="deskbar" id="hdr">
+  <a class="db-brand" href="{% if is_owner or is_guest %}{% url 'nx_desk' %}{% else %}{% url 'home' %}{% endif %}" aria-label="{{ app_name }}">
+    <img src="/icon.svg" width="24" height="24" alt="">
+    <span>Grining Pens</span>
+  </a>
+  {% include "next/_tabbar.html" %}
+  <span class="db-space"></span>
+  {% if is_owner or is_guest %}
+  <button type="button" class="db-btn" id="deskSearchBtn" aria-label="Search" aria-haspopup="true" aria-expanded="false" aria-controls="deskSearch">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>
+  </button>
+  <div class="desk-pop" id="deskSearch" role="dialog" aria-label="Search"></div>
+  <div class="desk-pop" id="deskFilter" role="menu" aria-label="Filter"></div>
+  {% endif %}
+</header>
+
+<div class="menu-panel" id="menuPanel" role="menu" aria-label="More">
+  {% if is_owner or is_guest %}
+  <form method="get" action="{% url 'nx_search' %}" id="menuSearchForm" class="kit-search menu-search" role="search" hx-boost="false">
+    <input type="search" name="q" id="menuSearchInput" placeholder="Search pens and inks" aria-label="Search pens and inks">
+  </form>
+  <script>
+    (function () {
+      var form = document.getElementById("menuSearchForm");
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        form.removeAttribute("aria-busy");
+        var q = form.querySelector("input").value.trim();
+        if (!q) return;
+        var go = function () { window.location.href = form.getAttribute("action") + "?q=" + encodeURIComponent(q); };
+        var panel = form.closest("#menuPanel, #deskSearch");
+        if (window.kitLayer && panel && kitLayer.isOpen(panel)) kitLayer.close(panel, go); else go();
+      });
+    })();
+  </script>
+  <nav class="menu-nav" aria-label="More">
+    <a href="{% url 'nx_usages_list' %}" class="menu-link">Inkings</a>
+    <a href="{% url 'nx_pick' %}" class="menu-link">What to ink next</a>
+    <a href="{% url 'nx_records' %}" class="menu-link">Records</a>
+    {% if is_owner %}
+    <a href="{% url 'nx_pens_needs_photos' %}" class="menu-link">Pens needing a photo</a>
+    <a href="{% url 'nx_notebook_upload' %}" class="menu-link">Read a notebook page</a>
+    {% endif %}
+    <a href="{% url 'share_pens_wall' %}" class="menu-link" hx-boost="false">Pen wall</a>
+    <a href="{% url 'share_inks_wall' %}" class="menu-link" hx-boost="false">Ink wall</a>
+  </nav>
+  {% if is_guest %}
+  <div class="menu-guest">
+    <span>Visiting{% if invite_label %}, {{ invite_label }}{% endif %}</span>
+    <form method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET');">
+      {% csrf_token %}<button type="submit" class="nx-link">Leave</button>
+    </form>
+  </div>
+  {% endif %}
+  <a href="{% url 'nx_settings' %}" class="menu-item"><span class="wn-host" data-whatsnew-dot>Settings</span></a>
+  {% else %}
+  <a href="{% url 'home' %}" class="menu-link">Front page</a>
+  <a href="{% url 'google_login' %}?next={{ request.get_full_path|urlencode }}" class="menu-item" hx-boost="false">Sign in with Google</a>
+  {% endif %}
+</div>
+
+<main id="main">
+{% include "items/_msgs.html" %}
+{% block content %}{% endblock %}
+{% include "items/_shell_filternav.html" %}
+</main>
+</div>
+{% include "items/_shell_behave.html" %}
+<script>
+/* The palette's places and its hits are the old pages' addresses (one list for
+   both shells, _keys.html). Here each one means its twin. */
+window.__nextUrl = function (url) {
+  if (/^\/(next|accounts|admin)\b|^#/.test(url)) return url;
+  if (url === "/dashboard/") return "/next/";
+  if (url === "/history/") return "/next/stats/";
+  if (url === "/records/") return "/next/stats/records/";
+  if (url.indexOf("/history/") === 0) return url.replace("/history/gantt/", "/next/stats/timeline/").replace("/history/matrix/", "/next/stats/pairs/").replace("/history/", "/next/stats/");
+  if (/^\/(pens|inks|usages|search|settings|import|pick)\//.test(url)) return "/next" + url;
+  return url;
+};
+</script>
+{% include "items/_keys.html" %}
+</body>
+</html>

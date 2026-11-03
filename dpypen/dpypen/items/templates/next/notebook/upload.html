@@ -1,0 +1,12 @@
+{% extends "next/_shell.html" %}
+{% block title %}Read a notebook page · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_usages_list' %}">All inkings</a>
+<header class="head"><div class="head-t"><h1>Read a notebook page</h1></div></header>
+<p class="fine">Photograph a page of your inking journal. Claude reads the handwriting, matches the pens and inks, and shows you the entries to check. Nothing is saved until you say so.</p>
+<form method="post" enctype="multipart/form-data" class="form-nx" hx-boost="false" data-busy-on-submit>
+  {% csrf_token %}
+  <label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Take or choose the photo</span><input type="file" name="image" accept="image/*" capture="environment" required></label>
+  <div class="btn-row"><button type="submit" class="btn is-go">Read it</button></div>
+</form>
+{% endblock %}

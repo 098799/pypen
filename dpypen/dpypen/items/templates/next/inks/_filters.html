@@ -1,0 +1,11 @@
+<nav class="kit-chips" id="inkFilters" aria-label="Ink filters" data-fold="Ink filters">
+  <a href="{{ filters.toggle_samples_url }}" class="kit-chip"{% if filters.include_samples %} aria-current="true"{% endif %} hx-get="{{ filters.toggle_samples_url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace">Samples</a>
+  <a href="{{ filters.toggle_used_url }}" class="kit-chip"{% if filters.include_used %} aria-current="true"{% endif %} hx-get="{{ filters.toggle_used_url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace">Used up</a>
+  {% if filters.color_chips %}<span class="fb-sep"></span>{% endif %}
+  {% for c in filters.color_chips %}
+  <a href="{{ c.url }}" class="kit-chip" data-color{% if filters.color == c.color %} aria-current="true"{% endif %} hx-get="{{ c.url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace"><i class="kit-chip-dot" style="background: {{ c.hex }};"></i>{{ c.color }} <b>{{ c.count }}</b></a>
+  {% endfor %}
+  {% if filters.include_samples or filters.include_used or filters.color or filters.q %}
+  <a href="{{ filters.clear_url }}" class="kit-chip kit-chip-clear" hx-get="{{ filters.clear_url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace">Clear</a>
+  {% endif %}
+</nav>

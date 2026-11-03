@@ -4,13 +4,15 @@ from collections import defaultdict
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Brand, Ink, Pen, Rotation, Usage
 from dpypen.items.pairing import due_pens
 
+
+UI_COOKIE = "pypen_ui"
 
 INK_COLOR_HEX = {
     "Black": "#1f1d1a",
@@ -65,6 +67,11 @@ def robots(request):
 
 @login_or_guest_required
 def dashboard(request):
+    # Who chose the new version as the one to open (PYPEN-11): a server-side
+    # redirect, so Back from it leaves the app. A soft navigation stays.
+    if request.COOKIES.get(UI_COOKIE) == "next" and not request.headers.get("HX-Request"):
+        return HttpResponseRedirect("/next/", status=307)
+
     today = date.today()
     year = today.year
 
@@ -170,7 +177,7 @@ def dashboard(request):
     active_ink_count = Ink.objects.filter(used_up=False, volume__gt=5).count()
 
     # "What should I ink next": the pens past their turn. The ink half of the
-    # question is answered on /next/ (dpypen.items.pairing).
+    # question is answered on /pick/ (dpypen.items.pairing).
     ready = due_pens(today, usages, rots, pens_by_rotation)
     next_up = ready[:6]
 

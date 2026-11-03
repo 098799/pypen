@@ -1,0 +1,25 @@
+{% extends "next/_shell.html" %}
+{% block title %}{% if query %}Search, {{ query }}{% else %}Search{% endif %} · {{ app_name }}{% endblock %}
+{% block content %}
+<header class="head"><div class="head-t"><h1>Search</h1></div></header>
+<div class="kit-listbar">
+  <form method="get" action="{% url 'nx_search' %}" id="searchForm" role="search" class="kit-search" data-navform
+        hx-get="{% url 'nx_search' %}" hx-trigger="input changed delay:300ms from:#searchQ, change from:#searchFilters, submit"
+        hx-target="#searchResultsBody" hx-swap="outerHTML" hx-select="#searchResultsBody" hx-replace-url="true" hx-sync="this:replace">
+    <input type="search" name="q" id="searchQ" aria-label="Search pens and inks" placeholder="Pen, ink, brand, colour, filler" value="{{ query }}" autofocus>
+  </form>
+  <label class="kit-sort"><span>Sort</span><select name="sort" form="searchForm" data-default="alpha">
+    {% for k, label in filters.sorts.items %}<option value="{{ k }}"{% if filters.sort == k %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}
+  </select></label>
+</div>
+<div class="kit-chips" id="searchFilters" role="group" aria-label="Search filters">
+  <span class="chip-set" role="radiogroup" aria-label="Type">
+    {% for k, label in filters.types.items %}<label class="kit-chip"{% if filters.type == k %} aria-current="true"{% endif %}><input type="radio" form="searchForm" name="type" value="{{ k }}"{% if filters.type == k %} checked{% endif %} data-default="both" hidden>{{ label|capfirst }}</label>{% endfor %}
+  </span>
+  <span class="fb-sep"></span>
+  <label class="kit-chip"{% if filters.show_defunct %} aria-current="true"{% endif %}><input type="checkbox" form="searchForm" name="defunct" value="1"{% if filters.show_defunct %} checked{% endif %} hidden>Out of rotation</label>
+  <label class="kit-chip"{% if filters.show_used_up %} aria-current="true"{% endif %}><input type="checkbox" form="searchForm" name="used_up" value="1"{% if filters.show_used_up %} checked{% endif %} hidden>Used up</label>
+  <label class="kit-chip"{% if filters.show_samples %} aria-current="true"{% endif %}><input type="checkbox" form="searchForm" name="samples" value="1"{% if filters.show_samples %} checked{% endif %} hidden>Samples</label>
+</div>
+{% include "next/_search_results.html" %}
+{% endblock %}

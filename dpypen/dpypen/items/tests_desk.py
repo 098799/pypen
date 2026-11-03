@@ -81,7 +81,7 @@ class TheDeskBar(Collection):
         panel = html[html.index('id="menuPanel"') : html.index("</nav>", html.index('class="menu-nav"'))]
         for place in ("/dashboard/", "/history/", "/records/", "/usages/", "/pens/", "/inks/"):
             self.assertRegex(panel, r'href="%s" class="menu-link[^"]*" data-tab>' % place)
-        for place in ("/next/", "/import/", "/pens/needs-photos/"):
+        for place in ("/pick/", "/import/", "/pens/needs-photos/"):
             self.assertNotRegex(panel, r'href="%s" class="menu-link[^"]*" data-tab>' % place)
 
 

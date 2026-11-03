@@ -1,0 +1,82 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ ink }} · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_inks_list' %}">All inks</a>
+<div class="rec-hero">
+  <div class="ink-big" style="--sw: {{ ink_bg }}">
+    <span class="swab" aria-hidden="true"></span>
+    <small>{{ ink.brand.name }}{% if ink.line %} {{ ink.line }}{% endif %}</small>
+    <h1>{{ ink.name }}</h1>
+    {% if x.hex %}<div class="hexes" role="img" aria-label="The colours sampled from its swatch">{% for h in x.hex %}<i style="background: {{ h }}" title="{{ h }}"></i>{% endfor %}</div>{% endif %}
+  </div>
+  <div>
+    <div class="rec-facts">
+      <span>{{ ink.color }}</span>
+      <span>{{ ink.volume }} ml</span>
+      {% if ink.obtained %}<span>Since {{ ink.obtained|date:"M Y" }}</span>{% endif %}
+      {% if ink.how %}<span>{{ ink.how }}</span>{% endif %}
+      {% if ink.used_up %}<span class="is-late">Used up{% if ink.used_up_when %} {{ ink.used_up_when|date:"M Y" }}{% endif %}</span>{% endif %}
+      {% if x.rested %}<span>Resting {{ x.rested }}</span>{% endif %}
+    </div>
+    <div class="rec-verbs">
+      {% if can_edit %}<a class="btn is-go" href="{% url 'nx_usages_create' %}?ink={{ ink.pk }}">Use this ink</a>{% endif %}
+      {% if ink.moi_url %}<a class="btn" href="{{ ink.moi_url }}" target="_blank" rel="noopener" hx-boost="false">Mountain of Ink review</a>{% endif %}
+      {% if can_edit %}
+      <a class="btn" href="{% url 'nx_inks_edit' ink.pk %}" data-kbd="edit">Edit</a>
+      <button class="btn" type="button" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">Share</button>
+      <form method="post" action="{% url 'nx_inks_delete' ink.pk %}" data-confirm="Delete {{ ink }}? Its inkings go too. This cannot be undone.">{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+      {% endif %}
+    </div>
+    <div class="tally">
+      <div><b>{{ total_usages }}</b><small>fill{{ total_usages|pluralize }}</small></div>
+      <div><b>{{ distinct_pens }}</b><small>pen{{ distinct_pens|pluralize }}</small></div>
+      <div><b>{{ total_days }}</b><small>days on the page</small></div>
+      {% if x.median_fill is not None %}<div><b>{{ x.median_fill }}</b><small>days, a typical fill</small></div>{% endif %}
+      {% if x.per_ml %}<div><b>{{ x.per_ml }}</b><small>PLN per ml</small></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+{% if close %}
+<div class="sec-head"><h2>Closest in the cupboard</h2></div>
+<div class="ink-grid-nx">{% for i in close %}{% include "next/_ink_card.html" %}{% endfor %}</div>
+{% endif %}
+
+{% if open_to and not ink.used_up %}
+<div class="sec-head"><h2>Pens due that never held it</h2></div>
+<ul class="rows">
+  {% for d in open_to %}
+  <li class="row">
+    <div class="row-t"><a href="{% url 'nx_pens_detail' d.pen_id %}">{{ d.pen }}</a><small>Priority {{ d.priority }}{% if d.never %}, never inked{% else %}, resting {{ d.rested }} days{% endif %}</small></div>
+    {% if can_edit %}<a class="btn is-small" href="{% url 'nx_usages_create' %}?pen={{ d.pen_id }}&amp;ink={{ ink.pk }}">Ink it</a>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if swatches %}
+<div class="sec-head"><h2>Swatches</h2><span>{{ swatches|length }}</span></div>
+<div class="gallery">{% for s in swatches %}<figure><img src="{{ s.tile_url }}" alt="Swatch of {{ ink }}" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="{{ ink }}, swatch"></figure>{% endfor %}</div>
+{% endif %}
+{% if samples %}
+<div class="sec-head"><h2>Writing samples</h2><span>{{ samples|length }}</span></div>
+<div class="gallery">
+  {% for s in samples %}
+  <figure><img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.pen }}{% if s.notes %}, {{ s.notes }}{% endif %}"><figcaption>{{ s.usage.pen }}</figcaption>{% if can_edit %}<a class="pencil" href="{% url 'nx_usages_edit' s.usage_id %}" aria-label="Edit this fill">✎</a>{% endif %}</figure>
+  {% endfor %}
+</div>
+{% endif %}
+{% if year_bars %}
+<div class="sec-head"><h2>Inked per year</h2><a href="{% url 'nx_stats_inkings' %}">All the charts</a></div>
+<div class="plate">{% include "items/_stack_bars.html" with columns=year_bars.columns legend=year_bars.legend small=True %}</div>
+{% endif %}
+<div class="sec-head"><h2>Where it has been</h2></div>
+{% if current or past %}
+<ul class="rows">
+  {% for u in current %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>Since {{ u.begin|date:"j M Y" }}, {{ u.nib }}</small></div><span class="row-v"><span class="pip">Now</span> {{ u.days }} d</span></li>{% endfor %}
+  {% for u in past %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}, {{ u.nib }}</small></div><span class="row-v">{{ u.days }} d</span></li>{% endfor %}
+</ul>
+{% else %}
+<div class="kit-empty small" data-kind="none"><p class="kit-empty-t">This ink has never been in a pen</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}?ink={{ ink.pk }}">Use this ink</a></p>{% endif %}</div>
+{% endif %}
+{% endblock %}

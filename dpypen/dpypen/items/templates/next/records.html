@@ -1,0 +1,16 @@
+{% extends "next/_shell.html" %}
+{% block title %}Records · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Records" sub="The collection's superlatives" %}
+<div class="rec-cards">
+  {% for c in cards %}
+  <div class="rec-c"{% if c.bg or c.color %} style="--sw: {{ c.bg|default:c.color }}"{% endif %} data-listnav-item>
+    <h3>{{ c.title }}</h3>
+    <p>{{ c.subtitle|capfirst }}</p>
+    {% if c.bg %}<div class="plated"><span class="swab" aria-hidden="true"></span></div>{% endif %}
+    <strong>{% if c.link.0 == 'pen' %}<a href="{% url 'nx_pens_detail' c.link.1 %}">{{ c.primary }}</a>{% elif c.link.0 == 'ink' %}<a href="{% url 'nx_inks_detail' c.link.1 %}">{{ c.primary }}</a>{% else %}{{ c.primary }}{% endif %}</strong>
+    {% if c.extra %}<p>{{ c.extra }}</p>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

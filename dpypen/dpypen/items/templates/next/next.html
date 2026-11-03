@@ -1,0 +1,52 @@
+{% extends "next/_shell.html" %}
+{% block title %}What to ink next · {{ app_name }}{% endblock %}
+{% block content %}
+<header class="head"><div class="head-t"><h1>What to ink next</h1><p>{{ due|length }} pen{{ due|length|pluralize }} past their turn</p></div></header>
+{% if not pen %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No pen is past its turn</p><p class="kit-empty-p">Every pen in rotation is inked or still resting.</p><p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'nx_pens_list' %}">All pens</a></p></div>
+{% else %}
+<a class="next-pen" href="{% url 'nx_pens_detail' pen.pk %}">
+  {% if photo %}<img src="{{ photo.grid_url }}" alt="" loading="lazy">{% endif %}
+  <span>
+    <small>{{ pen.brand.name }}</small>
+    <b>{{ pen.model }}{% if pen.finish %} {{ pen.finish }}{% endif %}</b>
+    <em>{{ pen.filling }}{% if pen.rotation.priority is not None %}, priority {{ pen.rotation.priority }}{% endif %}{% if this_due %}{% if this_due.never %}, never inked{% else %}, resting {{ this_due.span }}, its turn is {{ this_due.turn }}{% endif %}{% endif %}</em>
+  </span>
+</a>
+{% if inked_now %}<p class="fine">Inked now with {{ inked_now.ink }} since {{ inked_now.begin|date:"j M Y" }}. These are for its next fill.</p>{% endif %}
+<div class="sec-head"><h2>Inks that suit it</h2><span>{% if shuffle %}A shuffle of the best {{ pool }}{% else %}Best first{% endif %}</span></div>
+{% if suggestions %}
+<div>
+  {% for s in suggestions %}
+  <div class="pick-row" style="--sw: {{ s.ink.swatch_bg }}" data-listnav-item>
+    <a class="plated" href="{% url 'nx_inks_detail' s.ink.pk %}" aria-label="{{ s.ink }}"><span class="swab"></span></a>
+    <div>
+      <h3><a href="{% url 'nx_inks_detail' s.ink.pk %}">{{ s.ink }}</a></h3>
+      <div class="fine">{{ s.ink.color }}, {{ s.ink.volume }} ml</div>
+      <div class="why">{% for t in s.good %}<span class="is-good">{{ t }}</span>{% endfor %}{% for t in s.plain %}<span>{{ t }}</span>{% endfor %}{% for t in s.warn %}<span class="is-warn">{{ t }}</span>{% endfor %}</div>
+      {% if can_edit and not inked_now %}<a class="btn is-small is-go" href="{% url 'nx_usages_create' %}?pen={{ pen.pk }}&amp;ink={{ s.ink.pk }}">Ink it</a>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="kit-empty small" data-kind="none"><p class="kit-empty-t">No open bottle to suggest</p><p class="kit-empty-p">Every ink in rotation is in a pen or used up.</p></div>
+{% endif %}
+<div class="btn-row" id="pickTools">
+  <a class="btn" href="{% url 'nx_pick' %}?pen={{ pen.pk }}&amp;shuffle={{ next_shuffle }}">Shuffle</a>
+  {% if shuffle %}<a class="btn" href="{% url 'nx_pick' %}?pen={{ pen.pk }}">Best first</a>{% endif %}
+  {% if can_edit %}<a class="btn is-ghost" href="{% url 'nx_usages_create' %}?pen={{ pen.pk }}">Choose myself</a>{% endif %}
+</div>
+{% endif %}
+{% if due %}
+<div class="sec-head"><h2>Past their turn</h2><span>{{ due|length }}</span></div>
+<div class="due-list">
+  {% for d in due|slice:":12" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>{% endfor %}
+</div>
+{% if due|length > 12 %}
+<details class="more-due"><summary>{{ due|length|add:"-12" }} more</summary><div class="due-list">
+  {% for d in due|slice:"12:" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>{% endfor %}
+</div></details>
+{% endif %}
+{% endif %}
+{% endblock %}

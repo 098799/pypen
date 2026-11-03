@@ -1,0 +1,22 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}Timeline · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Timeline" sub="Each pen, each fill" %}
+<div class="kit-chips" role="group" aria-label="Rotation" id="tlChips">
+  {% for k, label in rot_chips %}<a class="kit-chip" href="{% url 'nx_stats_timeline' %}{% if k %}?rot={{ k }}{% endif %}"{% if rot == k %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+</div>
+<section class="plate">
+  <div class="tl-axis">{% for t in year_ticks %}<span style="left: {{ t.left|unlocalize }}%">’{{ t.year|stringformat:"d"|slice:"2:" }}</span>{% endfor %}</div>
+  {% for r in rows %}
+  <div class="tl-row" data-listnav-item>
+    <a class="nm" href="{% url 'nx_pens_detail' r.pen.pk %}">{{ r.pen.brand.name }} {{ r.pen.model }}{% if r.pen.finish %} {{ r.pen.finish }}{% endif %}</a>
+    <div class="tl-track">
+      {% for b in r.bars %}<button type="button" class="{% if b.current %}is-now{% endif %}" style="left: {{ b.left|unlocalize }}%; width: {{ b.width|unlocalize }}%; --sw: {{ b.bg }}" data-tip-title="{{ b.begin|date:'j M Y' }} to {% if b.end %}{{ b.end|date:'j M Y' }}{% else %}now{% endif %}" data-tip-lead="{{ b.ink }}" data-tip="{{ b.nib }}, {{ b.days }} day{{ b.days|pluralize }}" data-tip-links="Open the ink|{% url 'nx_inks_detail' b.ink_id %}" aria-label="{{ b.ink }}, {{ b.days }} days"></button>{% endfor %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="kit-empty small" data-kind="match"><p class="kit-empty-t">No fills in this group</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_stats_timeline' %}">All pens</a></p></div>
+  {% endfor %}
+</section>
+{% endblock %}

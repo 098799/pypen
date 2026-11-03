@@ -1,0 +1,34 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_usages_list' %}">All inkings</a>
+<header class="head"><div class="head-t"><h1>{{ title }}</h1></div></header>
+<form method="post" class="form-nx" autocomplete="off">
+  {% csrf_token %}
+  {% include "next/_field.html" with f=form.pen %}
+  <div class="f2">{% include "next/_field.html" with f=form.nib %}{% include "next/_field.html" with f=form.ink %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.begin label="Inked on" %}{% include "next/_field.html" with f=form.end label="Finished on (blank while inked)" %}</div>
+  {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+  <div class="btn-row"><button type="submit" class="btn is-go">{{ submit_label }}</button><a class="btn is-ghost" href="{% url 'nx_usages_list' %}">Cancel</a></div>
+</form>
+{% if usage %}
+<div class="sec-head"><h2>Writing samples</h2><span>{{ samples|length }}</span></div>
+{% if samples %}
+<div class="thumbs-edit">
+  {% for s in samples %}
+  <div class="th-e" data-busy-host>
+    <img src="{{ s.tile_url }}" alt="Writing sample" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="Writing sample{% if s.notes %}, {{ s.notes }}{% endif %}">
+    <div class="th-acts">
+      {% if not s.image_clean %}<form method="post" action="{% url 'nx_samples_extract' s.pk %}" data-busy-on-submit>{% csrf_token %}<button class="btn" type="submit">Lift the ink</button></form>{% endif %}
+      <form method="post" action="{% url 'nx_samples_delete' s.pk %}" data-confirm="Delete this sample?">{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+<form method="post" action="{% url 'nx_usages_sample_add' usage.pk %}" enctype="multipart/form-data" hx-boost="false">
+  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph the written page</span><input type="file" name="image" accept="image/*" capture="environment" multiple data-autosubmit></label>
+</form>
+<form method="post" action="{% url 'nx_usages_delete' usage.pk %}" data-confirm="Delete this inking? You can take it back from the note that follows." class="sec-head"><button class="btn is-bad" type="submit">Delete this inking</button>{% csrf_token %}</form>
+{% endif %}
+{% endblock %}

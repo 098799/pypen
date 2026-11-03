@@ -1,0 +1,19 @@
+{% if query %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No pen matches “{{ query }}”{% if rot %} in {{ rot_title }}{% endif %}</p>
+  <p class="kit-empty-p">Try fewer words, or part of a word.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ clear_url }}">Clear the search</a>{% if rot %}<a class="kit-empty-b" href="{{ all_url }}">All pens</a>{% endif %}</p>
+</div>
+{% elif rot %}
+<div class="kit-empty" data-kind="match" role="status">
+  <p class="kit-empty-t">No pens in {{ rot_title }}</p>
+  <p class="kit-empty-p">This group of the rotation is empty now.</p>
+  <p class="kit-empty-a"><a class="kit-empty-b go" href="{{ all_url }}">All pens</a></p>
+</div>
+{% else %}
+<div class="kit-empty" data-kind="none" role="status">
+  <p class="kit-empty-t">No pens yet</p>
+  <p class="kit-empty-p">Add the first one and it shows here.</p>
+  {% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_pens_create' %}">Add a pen</a></p>{% endif %}
+</div>
+{% endif %}

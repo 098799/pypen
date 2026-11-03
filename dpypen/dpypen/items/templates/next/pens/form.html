@@ -1,0 +1,44 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% if pen %}{% url 'nx_pens_detail' pen.pk %}{% else %}{% url 'nx_pens_list' %}{% endif %}">{% if pen %}Back to the pen{% else %}All pens{% endif %}</a>
+<header class="head"><div class="head-t"><h1>{{ title }}</h1></div></header>
+<form method="post" class="form-nx" autocomplete="off">
+  {% csrf_token %}
+  <div class="f2">{% include "next/_field.html" with f=form.brand %}{% include "next/_field.html" with f=form.model %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.finish %}{% include "next/_field.html" with f=form.obtained %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.filling %}{% include "next/_seg.html" with f=form.age %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.rotation %}{% include "next/_field.html" with f=form.obtained_from label="Bought from" %}</div>
+  {% include "next/_money.html" with f=form.price %}
+  <label class="switch-nx">{{ form.out }}<span class="track"></span><span>Sold or given away</span></label>
+  {% include "next/_money.html" with f=form.price_out label="Sold for" id="soldRow" shown_by=form.out.id_for_label %}
+  {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+  <div class="btn-row"><button type="submit" class="btn is-go">{{ submit_label }}</button><a class="btn is-ghost" href="{% if pen %}{% url 'nx_pens_detail' pen.pk %}{% else %}{% url 'nx_pens_list' %}{% endif %}">Cancel</a></div>
+</form>
+{% if pen %}
+<div class="sec-head"><h2>Photos</h2><span>{{ photos|length }}</span></div>
+{% if photos %}
+<div class="thumbs-edit">
+  {% for ph in photos %}
+  <div class="th-e" data-busy-host>
+    <a href="{% url 'nx_pens_photo_edit' pen.pk ph.pk %}"><img src="{{ ph.grid_url }}" alt="Photo {{ forloop.counter }} of {{ pen }}" loading="lazy"></a>
+    <div class="th-acts">
+      {% if not forloop.first %}<form method="post" action="{% url 'nx_pens_photo_primary' pen.pk ph.pk %}">{% csrf_token %}<button class="btn" type="submit">Make first</button></form>{% endif %}
+      <form method="post" action="{% url 'nx_pens_photo_rotate' pen.pk ph.pk %}">{% csrf_token %}<input type="hidden" name="degrees" value="90"><button class="btn" type="submit">Turn</button></form>
+      {% if ph.image_styled %}
+      <form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk ph.pk %}" data-confirm="Go back to the original photo? The polished shot is discarded.">{% csrf_token %}<button class="btn" type="submit">Original</button></form>
+      {% else %}
+      <form method="post" action="{% url 'nx_pens_photo_enhance' pen.pk ph.pk %}" data-busy-on-submit>{% csrf_token %}<button class="btn" type="submit">Polish</button></form>
+      {% endif %}
+      <form method="post" action="{% url 'nx_pens_photo_delete' pen.pk ph.pk %}" data-confirm="Delete this photo?">{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+<form method="post" action="{% url 'nx_pens_photo_add' pen.pk %}" enctype="multipart/form-data" hx-boost="false">
+  {% csrf_token %}
+  <label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Take or choose a photo</span><input type="file" name="image" accept="image/*" capture="environment" multiple data-autosubmit></label>
+</form>
+{% endif %}
+{% endblock %}

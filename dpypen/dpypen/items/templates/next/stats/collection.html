@@ -1,0 +1,39 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}The collection · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Collection" sub="What you own, and what it cost" %}
+{% if empty %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No pens yet</p></div>
+{% else %}
+<p class="sentence"><b>{{ pens }}</b> pens from <b>{{ brands_n }}</b> brands. They cost about <b>{{ spent }}</b> PLN, a typical one <b>{{ typical }}</b>, the dearest <b>{{ dearest }}</b>. The inks cost about <b>{{ ink_spent }}</b> more.</p>
+<div class="plates" id="collectionCharts">
+  <section class="plate is-wide">
+    <h2>Is each pen earning its keep?</h2>
+    <p>Each dot is a pen. Further right cost more, higher up has held ink longer. Tap one for its name.</p>
+    <div class="scatter dotted" role="group" aria-label="Pens by price and days inked">
+      {% for t in scatter.yticks %}<span class="sc-y" style="bottom: {{ t.y|unlocalize }}%">{{ t.label }}</span>{% endfor %}
+      {% for t in scatter.xticks %}<span class="sc-x" style="left: {{ t.x|unlocalize }}%">{{ t.label }}</span>{% endfor %}
+      {% for p in scatter.points %}<button type="button" style="left: {{ p.x|unlocalize }}%; bottom: {{ p.y|unlocalize }}%" data-tip-title="{{ p.price }} PLN" data-tip-lead="{{ p.name }}" data-tip="{{ p.days }} days inked, {{ p.fills }} fill{{ p.fills|pluralize }}" data-tip-links="Open the pen|{{ p.url }}" aria-label="{{ p.name }}, {{ p.price }} PLN, {{ p.days }} days"></button>{% endfor %}
+    </div>
+    <p class="sc-x-t">Price in PLN. Height is days inked.</p>
+  </section>
+  <section class="plate">
+    <h2>Earning it</h2><p>Least paid per day inked.</p>
+    <ul class="rows">{% for v in earning %}<li class="row"><div class="row-t"><a href="{{ v.url }}">{{ v.name }}</a><small>{{ v.price }} PLN, {{ v.days }} days</small></div><span class="row-v">{{ v.cost }} PLN a day</span></li>{% endfor %}</ul>
+  </section>
+  <section class="plate">
+    <h2>Waiting for you</h2><p>The dearest pens with under 30 days of ink.</p>
+    <ul class="rows">{% for v in waiting %}<li class="row"><div class="row-t"><a href="{{ v.url }}">{{ v.name }}</a><small>{{ v.days }} day{{ v.days|pluralize }} inked</small></div><span class="row-v">{{ v.price }} PLN</span></li>{% empty %}<li class="row">Every pen has had its time.</li>{% endfor %}</ul>
+  </section>
+  <section class="plate"><h2>Pens added per year</h2>{% include "next/stats/_cols.html" with rows=per_year show_n=True unit=" pens" %}</section>
+  <section class="plate"><h2>Spent on pens per year</h2><p>PLN, other currencies at rough rates.</p>{% include "next/stats/_cols.html" with rows=spend_year unit=" PLN" %}</section>
+  <section class="plate"><h2>The collection growing</h2><p>Pens owned at the end of each year.</p>{% include "next/stats/_cols.html" with rows=cumulative show_n=True unit=" pens" %}</section>
+  <section class="plate"><h2>Price of a pen</h2><p>PLN paid.</p>{% include "next/stats/_hbars.html" with rows=bands %}</section>
+  <section class="plate"><h2>Brands</h2>{% include "next/stats/_hbars.html" with rows=brands %}</section>
+  <section class="plate"><h2>Where they come from</h2>{% include "next/stats/_hbars.html" with rows=countries %}</section>
+  <section class="plate"><h2>How they fill</h2>{% include "next/stats/_hbars.html" with rows=filling %}</section>
+  <section class="plate"><h2>Modern or vintage</h2>{% include "next/stats/_hbars.html" with rows=age %}</section>
+</div>
+{% endif %}
+{% endblock %}

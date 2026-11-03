@@ -1,0 +1,29 @@
+{% comment %}One pen on the desk. `f` from nextui.views._desk_data.{% endcomment %}
+<article class="fill" style="--sw: {{ f.u.ink.swatch_bg }}" data-listnav-item>
+  <a class="fill-photo" href="{% url 'nx_pens_detail' f.u.pen_id %}" aria-label="{{ f.u.pen }}">
+    {% if f.photo %}<img src="{{ f.photo.grid_url }}" alt="" loading="lazy">{% else %}<span class="nophoto">No photo yet</span>{% endif %}
+  </a>
+  <div class="fill-pen">
+    <small>{{ f.u.pen.brand.name }}</small>
+    <h3><a href="{% url 'nx_pens_detail' f.u.pen_id %}">{{ f.u.pen.model }}{% if f.u.pen.finish %} {{ f.u.pen.finish }}{% endif %}</a></h3>
+    <p>{{ f.u.nib }}</p>
+  </div>
+  <a class="fill-ink" href="{% url 'nx_inks_detail' f.u.ink_id %}">
+    <span class="swab is-long" aria-hidden="true"></span>
+    <span class="fill-ink-name">{{ f.u.ink.brand.name }} {% if f.u.ink.line %}{{ f.u.ink.line }} {% endif %}{{ f.u.ink.name }}</span>
+  </a>
+  <div class="fill-foot">
+    <div class="gauge{% if f.long %} is-long{% endif %}" role="img" aria-label="{{ f.days }} days in. Usually {{ f.usual }}.">
+      <i style="width: {{ f.pct }}%"></i><u></u>
+    </div>
+    <p class="gauge-t">
+      {% if f.days == 0 %}Inked today{% elif f.days == 1 %}1 day in{% else %}{{ f.days }} days in{% endif %}{% if f.usual %}, {% if f.own %}this pen's fills last{% else %}a fill lasts{% endif %} about {{ f.usual }}{% endif %}{% if f.long %}. Time to flush it?{% endif %}
+    </p>
+    {% if can_edit %}
+    <div class="fill-acts">
+      <a class="btn is-ghost" href="{% url 'nx_usages_edit' f.u.pk %}">Edit</a>
+      <form method="post" action="{% url 'nx_usages_end' f.u.pk %}">{% csrf_token %}<button class="btn" type="submit">Finish</button></form>
+    </div>
+    {% endif %}
+  </div>
+</article>

@@ -1,0 +1,81 @@
+{% extends "next/_shell.html" %}
+{% block title %}Settings · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_desk' %}">The desk</a>
+<header class="head"><div class="head-t"><h1>Settings</h1></div></header>
+{% include "items/_settings.html" %}
+<div class="kit-set">
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Look</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row"><span class="kit-set-k">Theme</span><div data-kit-theme></div></div>
+    <div class="kit-set-row" data-kit-install="{{ app_name }}"><span class="kit-set-k">Install</span></div>
+    <div class="kit-set-row"><span class="kit-set-k">Accent<small class="kit-set-sub">{% if nx_accent.ink %}The newest coloured ink on the desk, now {{ nx_accent.ink }}{% else %}Royal blue while no coloured ink is on the desk{% endif %}</small></span><span class="dab" style="--sw: var(--accent)"></span></div>
+  </div>
+</section>
+<section class="kit-set-g">
+  <h2 class="kit-set-h">This version</h2>
+  <div class="kit-set-card">
+    <form class="kit-set-form" method="post" action="{% url 'nx_prefer' %}" hx-boost="false">
+      {% csrf_token %}
+      <input type="hidden" name="first" value="{% if ui_first %}old{% else %}next{% endif %}">
+      <button class="kit-set-row kit-set-go" type="submit"><span class="kit-set-k">{% if ui_first %}Stop opening this version first{% else %}Open this version first{% endif %}<small class="kit-set-sub">{% if ui_first %}On this device the app now opens here{% else %}On this device the app still opens the old version{% endif %}</small></span></button>
+    </form>
+    <form class="kit-set-form" method="post" action="{% url 'nx_prefer' %}" hx-boost="false">
+      {% csrf_token %}<input type="hidden" name="first" value="old"><input type="hidden" name="leave" value="1">
+      <button class="kit-set-row kit-set-go kit-set-out" type="submit"><span class="kit-set-k">Back to the old version<small class="kit-set-sub">Same pens and inks, same data</small></span></button>
+    </form>
+    <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open><span class="kit-set-k"><span class="wn-host" data-whatsnew-dot>What's new</span><small class="kit-set-sub">New things the app can do</small></span></button>
+  </div>
+</section>
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Keyboard</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row">
+      <span class="kit-set-k">Keys<small class="kit-set-sub">Shortcuts on a desk</small></span>
+      <div class="keys-choices" role="radiogroup" aria-label="Keyboard layer">
+        <button type="button" data-keys="full"><span>Full</span></button>
+        <button type="button" data-keys="leader"><span>m&nbsp;only</span></button>
+        <button type="button" data-keys="off"><span>Off</span></button>
+      </div>
+    </div>
+    <details class="kit-set-more"><summary class="kit-set-row kit-set-go"><span class="kit-set-k">What “m only” is for<small class="kit-set-sub">Vimium and this app on one page</small></span></summary>
+      <div class="kit-set-text"><p>“m only” is for a browser where Vimium is already driving: the app keeps its own m-… commands and hands back every other key.</p></div></details>
+  </div>
+</section>
+{% if user.is_authenticated %}
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Account</h2>
+  <div class="kit-set-card">
+    <a class="kit-set-row kit-set-go kit-set-out" href="/admin/" hx-boost="false"><span class="kit-set-k">Admin<small class="kit-set-sub">Django admin</small></span></a>
+    <form class="kit-set-form" method="post" action="{% url 'account_logout' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET');">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Sign out</span></button></form>
+  </div>
+</section>
+{% elif is_guest %}
+<section class="kit-set-g">
+  <h2 class="kit-set-h">Visiting</h2>
+  <div class="kit-set-card">
+    <div class="kit-set-row"><span class="kit-set-k">Invitation<small class="kit-set-sub">You are here on an invitation{% if invite_label %}: {{ invite_label }}{% endif %}</small></span></div>
+    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET');">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
+  </div>
+</section>
+{% endif %}
+</div>
+<script>
+(function () {
+  var main = document.getElementById('main');
+  if (window.kitTheme) kitTheme.mount(main);
+  if (window.kitSettings) kitSettings.mount(main);
+  if (window.kitInstall) kitInstall.hand();
+  var keyBtns = document.querySelectorAll('.keys-choices button[data-keys]');
+  function paintKeys() {
+    if (!window.__keysMode) return;
+    var cur = window.__keysMode();
+    keyBtns.forEach(function (b) { var on = b.getAttribute('data-keys') === cur; b.classList.toggle('active', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  }
+  keyBtns.forEach(function (b) { b.addEventListener('click', function () { if (window.__keysSetMode) window.__keysSetMode(b.getAttribute('data-keys')); paintKeys(); }); });
+  paintKeys();
+  if (!window.__keysMode) document.addEventListener('DOMContentLoaded', paintKeys, {once: true});
+})();
+</script>
+{% endblock %}

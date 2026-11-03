@@ -1,0 +1,74 @@
+{% extends "next/_shell.html" %}
+{% block title %}{{ app_name }}{% endblock %}
+{% block content %}
+<header class="head">
+  <div class="head-t">
+    <h1>{% if fills %}{{ fills|length }} pen{{ fills|length|pluralize }} inked{% else %}The desk is clear{% endif %}</h1>
+    <p>{{ due_n }} past their turn{% if shelf.fresh %}, last inked {{ shelf.fresh }}{% endif %}</p>
+  </div>
+  <div class="head-a">
+    {% if can_edit and no_photo %}<a class="ibtn" href="{% url 'nx_pens_needs_photos' %}" aria-label="{{ no_photo }} pens need a photo" title="{{ no_photo }} pens need a photo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      <b>{{ no_photo }}</b></a>{% endif %}
+    {% if can_edit %}<a class="ibtn is-go" href="{% url 'nx_usages_create' %}" data-kbd="new" aria-label="New inking" title="New inking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>{% endif %}
+  </div>
+</header>
+
+<div class="desk-grid">
+<section class="desk-fills" aria-label="Inked now">
+  {% for f in fills %}{% include "next/_fill.html" %}{% empty %}
+  <div class="kit-empty" data-kind="none">
+    <p class="kit-empty-t">No pen is inked</p>
+    <p class="kit-empty-p">Pick a pen below, or start one by hand.</p>
+    {% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}">New inking</a></p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+<aside class="desk-side">
+  {% if up_next %}
+  <section class="next-up" aria-labelledby="nextH">
+    <div class="sec-head"><h2 id="nextH">Ink next</h2><a href="{% url 'nx_pick' %}">All {{ due_n }} due</a></div>
+    <a class="next-pen" href="{% url 'nx_pens_detail' up_next.pen.pk %}">
+      {% if up_next.photo %}<img src="{{ up_next.photo.grid_url }}" alt="" loading="lazy">{% endif %}
+      <span>
+        <small>{{ up_next.pen.brand.name }}</small>
+        <b>{{ up_next.pen.model }}{% if up_next.pen.finish %} {{ up_next.pen.finish }}{% endif %}</b>
+        <em>{% if up_next.never %}Never inked{% else %}Resting {{ up_next.span }}, its turn is {{ up_next.turn }}{% endif %}</em>
+      </span>
+    </a>
+    <div class="next-inks">
+      {% for s in up_next.picks %}
+      <a class="card-ink" href="{% if can_edit %}{% url 'nx_usages_create' %}?pen={{ up_next.pen.pk }}&amp;ink={{ s.ink.pk }}{% else %}{% url 'nx_inks_detail' s.ink.pk %}{% endif %}" style="--sw: {{ s.ink.swatch_bg }}">
+        <span class="swab" aria-hidden="true"></span>
+        <span class="card-ink-name">{{ s.ink.name }}</span>
+        <span class="card-ink-brand">{{ s.ink.brand.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="fine">{% if can_edit %}Tap an ink to start that inking. {% endif %}<a href="{% url 'nx_pick' %}?pen={{ up_next.pen.pk }}">See why these</a></p>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="yearH">
+    <div class="sec-head"><h2 id="yearH">{{ year }} so far</h2><a href="{% url 'nx_stats' %}">Stats</a></div>
+    <p class="sentence"><b>{{ year_n }}</b> inking{{ year_n|pluralize }}, in <b>{{ year_pens }}</b> pen{{ year_pens|pluralize }}, with <b>{{ year_inks }}</b> ink{{ year_inks|pluralize }}.</p>
+  </section>
+
+  {% if recent %}
+  <section aria-labelledby="recentH">
+    <div class="sec-head"><h2 id="recentH">Just finished</h2><a href="{% url 'nx_usages_list' %}">All inkings</a></div>
+    <ul class="rows">
+      {% for u in recent %}
+      <li class="row" style="--sw: {{ u.ink.swatch_bg }}">
+        <span class="dab" aria-hidden="true"></span>
+        <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen }}</a><small>{{ u.ink.brand.name }} {{ u.ink.name }}</small></div>
+        <span class="row-v">{{ u.days }} d</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</aside>
+</div>
+{% endblock %}

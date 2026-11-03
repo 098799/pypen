@@ -1,0 +1,31 @@
+{% extends "next/_shell.html" %}
+{% block title %}Inks · {{ app_name }}{% endblock %}
+{% block content %}
+<header class="head">
+  <div class="head-t">
+    <h1>{{ shelf.inks }} inks</h1>
+    <p>{{ shelf.inked }} in pens{% if shelf.fresh %}, last inked {{ shelf.fresh }}{% endif %}</p>
+  </div>
+  {% if can_edit %}<div class="head-a">
+    <button type="button" class="ibtn" data-share-url="{% url 'share_inks_gallery' %}" data-share-label="Inks" aria-label="Share the inks" title="Share the inks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg></button>
+    <a class="ibtn is-go" href="{% url 'nx_inks_create' %}" data-kbd="new" aria-label="Add an ink" title="Add an ink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+  </div>{% endif %}
+</header>
+<div class="toolbar-nx">
+  <form id="inkFilterForm" role="search" method="get" action="{{ filters.search_url }}" data-navform
+        hx-get="{{ filters.search_url }}" hx-trigger="input changed delay:300ms from:#inkQ, submit"
+        hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="this:replace" class="kit-search">
+    <input type="search" id="inkQ" name="q" placeholder="Search inks" value="{{ filters.q }}" aria-label="Search inks">
+  </form>
+  <div class="view-switch" role="group" aria-label="View">
+    <a href="{{ filters.grid_url }}" hx-get="{{ filters.grid_url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace"
+       class="vt-btn{% if filters.view == 'grid' %} on{% endif %}"{% if filters.view == 'grid' %} aria-current="true"{% endif %} data-navkey="view" data-navval="" aria-label="Swatch cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></a>
+    <a href="{{ filters.list_url }}" hx-get="{{ filters.list_url }}" hx-target="#inkContentBody" hx-swap="outerHTML" hx-select="#inkContentBody" hx-replace-url="true" hx-sync="#inkFilterForm:replace"
+       class="vt-btn{% if filters.view == 'list' %} on{% endif %}"{% if filters.view == 'list' %} aria-current="true"{% endif %} data-navkey="view" data-navval="list" aria-label="List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></a>
+  </div>
+</div>
+<label class="kit-sort"><span>Sort</span><select name="sort" form="inkFilterForm" data-navkey="sort">
+  {% for o in filters.sort_options %}<option value="{% if o.key != 'color' %}{{ o.key }}{% endif %}"{% if o.on %} selected{% endif %}>{{ o.label }}</option>{% endfor %}
+</select></label>
+{% if filters.view == 'grid' %}{% include "next/inks/_grid.html" %}{% else %}{% include "next/inks/_content.html" %}{% endif %}
+{% endblock %}

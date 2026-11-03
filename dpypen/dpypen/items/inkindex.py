@@ -27,7 +27,7 @@ visitor to Google.
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Subquery, Value, When
 from django.db.models.functions import Coalesce
 
-from dpypen.items import listing
+from dpypen.items import listing, skin
 from dpypen.items.models import Ink, Usage
 from dpypen.items.public import INK_COLOR_HEX
 
@@ -136,7 +136,12 @@ def build(request, *, public):
         if color_counts.get(c, 0) > 0 or c == color_filter
     ]
 
-    view = "grid" if request.GET.get("view") == "grid" else "list"
+    # The new version opens on the wall, the old one on the list (PYPEN-11):
+    # each one's default stays out of the address (kit §14).
+    wall_first = skin.is_next(request)
+    view = request.GET.get("view")
+    if view not in ("grid", "list"):
+        view = "grid" if wall_first else "list"
     filters = {
         "include_samples": include_samples,
         "include_used": include_used,
@@ -153,8 +158,8 @@ def build(request, *, public):
         "show_all_url": _url_with(samples="1", used="1", color=None, q=None),
         "cupboard_empty": not rows and not Ink.objects.exists(),
         "view": view,
-        "list_url": _url_with(view=None),
-        "grid_url": _url_with(view="grid"),
+        "list_url": _url_with(view="list" if wall_first else None),
+        "grid_url": _url_with(view=None if wall_first else "grid"),
         # htmx appends the form's own `q` to this, so it must carry every
         # *other* live param and nothing else — hardcoding a route here is
         # what sent the public cupboard's search to the private one.

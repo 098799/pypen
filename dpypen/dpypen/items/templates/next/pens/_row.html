@@ -1,0 +1,11 @@
+{% load items_extras %}
+<div class="pen-row-nx" data-listnav-item>
+  <a class="pen-thumb-nx" href="{% url 'nx_pens_detail' p.pk %}" tabindex="-1" aria-hidden="true">{% if p.list_thumb_url %}<img src="{{ p.list_thumb_url }}" alt="" loading="lazy">{% endif %}</a>
+  <div>
+    <h3><a href="{% url 'nx_pens_detail' p.pk %}">{{ p.brand.name|highlight:query }} {{ p.model|highlight:query }}{% if p.finish %} <span>{{ p.finish|highlight:query }}</span>{% endif %}</a></h3>
+    {% if p.now %}<p class="is-now">Inked with {{ p.now.ink.name }}</p>
+    {% elif p.rested %}<p>Resting {{ p.rested }}{% if query %}, from {{ p.obtained_from|highlight:query }}{% endif %}</p>
+    {% elif not p.fills %}<p>Never inked{% if query %}, from {{ p.obtained_from|highlight:query }}{% endif %}</p>{% endif %}
+    {% if p.trail %}<div class="trail" role="img" aria-label="Last inks: {% for t in p.trail %}{{ t.name }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% for t in p.trail %}<i style="--sw: {{ t.bg }}"></i>{% endfor %}{% if p.fills > 7 %}<small>{{ p.fills }} fills</small>{% endif %}</div>{% endif %}
+  </div>
+</div>

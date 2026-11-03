@@ -1,0 +1,26 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}Calendar · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Calendar" sub="Every day, in the colours on the desk" %}
+{% if not cal %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inkings yet</p></div>
+{% else %}
+<nav class="kit-chips" aria-label="Year">
+  {% for y in years %}<a class="kit-chip" href="{% url 'nx_stats_calendar' %}?y={{ y|unlocalize }}"{% if y == cal_year %} aria-current="true"{% endif %}>{{ y|unlocalize }}</a>{% endfor %}
+</nav>
+<section class="plate">
+  <h2>{{ cal_year|unlocalize }}</h2><p>{{ cal.active_days }} days with ink. Each row is a week, Monday first. A tap names what was inked.</p>
+  <div class="cal-months">
+    {% for m in months %}
+    <div class="cal-m">
+      <h3>{{ m.name }}</h3>
+      <div class="cal" role="group" aria-label="{{ m.name }} {{ cal_year|unlocalize }}">
+        {% for _ in m.blanks %}<span></span>{% endfor %}{% for d in m.days %}<button type="button"{% if d.bg %} style="background: {{ d.bg }}"{% endif %} data-tip-title="{{ d.label }}" data-tip-lead="{{ d.count }} pen{{ d.count|pluralize }}" data-tip="{{ d.tip }}" aria-label="{{ d.label }}, {{ d.count }} pens"></button>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

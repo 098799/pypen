@@ -1,0 +1,14 @@
+{% load items_extras %}
+<div id="penContentBody" data-listnav data-more-host="pens">
+{% for s in sections %}
+<section data-listnav-group data-more-section data-group="{{ s.key }}">
+  {% if s.head and not headless %}<div class="group-nx" data-more-head><h2>{{ s.title }}</h2><span>{{ s.count }} pen{{ s.count|pluralize }}{% if s.subtitle %}, {{ s.subtitle }}{% endif %}</span></div>{% endif %}
+  <div data-more-rows>
+    {% for p in s.rows %}{% include "next/pens/_row.html" %}{% endfor %}
+  </div>
+</section>
+{% empty %}
+{% include "next/pens/_empty_state.html" %}
+{% endfor %}
+{% include "items/_more.html" %}
+</div>

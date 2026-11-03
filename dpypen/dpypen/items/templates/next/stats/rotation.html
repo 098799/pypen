@@ -1,0 +1,30 @@
+{% extends "next/_shell.html" %}
+{% load l10n %}
+{% block title %}The rotation · {{ app_name }}{% endblock %}
+{% block content %}
+{% include "next/stats/_head.html" with title="Rotation" sub="Are the pens getting their turn?" %}
+<p class="sentence"><b>{{ in_rotation }}</b> pens in rotation, <b>{{ per_year }}</b> inkings in the last 12 months.{% if round_years %} At that pace a full round takes about <b>{{ round_years }}</b> years.{% endif %}</p>
+<div class="plates" id="rotationCharts">
+  <section class="plate">
+    <h2>Each priority</h2>
+    {% for g in groups %}
+    <div class="rot-row">
+      <h3>Priority {{ g.priority }} <span>{{ g.n }} pens, a turn every {{ g.turn_words }}</span></h3>
+      <div class="segbar" role="img" aria-label="{% for s in g.segments %}{{ s.n }} {{ s.label|lower }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% for s in g.segments %}<i class="seg-{{ s.key }}" style="width: {{ s.pct|unlocalize }}%" title="{{ s.label }}: {{ s.n }}"></i>{% endfor %}</div>
+      <p>{{ g.on_time }}% on time.{% if g.gap %} A pen typically rests {{ g.gap }} between fills.{% endif %}</p>
+    </div>
+    {% endfor %}
+    <div class="seg-key"><span><i class="seg-inked"></i>Inked</span><span><i class="seg-within"></i>Resting in turn</span><span><i class="seg-over"></i>Past their turn</span><span><i class="seg-never"></i>Never inked</span></div>
+  </section>
+  <section class="plate">
+    <h2>First in the queue</h2><p>{{ due_n }} past their turn, highest priority first.</p>
+    <ul class="rows">{% for d in due %}<li class="row"><div class="row-t"><a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}">{{ d.pen }}</a><small>Priority {{ d.priority }}{% if d.never %}, never inked{% else %}, resting {{ d.span }}{% endif %}</small></div></li>{% empty %}<li class="row">No pen is past its turn.</li>{% endfor %}</ul>
+  </section>
+  {% if bottle_rows %}
+  <section class="plate is-wide">
+    <h2>The bottles' turns</h2><p>Open bottles out of a pen longer than their turn.</p>
+    <div class="hbars">{% for b in bottle_rows %}<div class="hbar"><span>{{ b.name }}</span><span class="tr"><i style="width: {{ b.pct }}%"></i></span><b>{{ b.late }} of {{ b.n }}</b></div>{% endfor %}</div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

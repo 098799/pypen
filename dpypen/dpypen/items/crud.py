@@ -6,9 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.files.base import ContentFile
 from django.http import HttpResponseNotAllowed
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_POST
 
+from dpypen.items.skin import render
 from dpypen.items import inkindex, inkings, listing, penindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm

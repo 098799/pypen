@@ -1,5 +1,6 @@
 from django.urls import path
 
+from dpypen.items.nextui import urls as nextui_urls
 from dpypen.items import api_lists, crud, history, invite, notebook, pairing, palette, public, pwa, records, search, share, undo, views
 
 
@@ -13,7 +14,7 @@ urlpatterns = [
     path('history/gantt/', history.gantt, name='history_gantt'),
     path('history/matrix/', history.matrix, name='history_matrix'),
     path('records/', records.records, name='records'),
-    path('next/', pairing.next_inking, name='next_inking'),
+    path('pick/', pairing.next_inking, name='next_inking'),
     path('search/', search.search, name='search'),
     path('settings/', public.settings_page, name='settings'),
     path('api/palette', palette.palette, name='api_palette'),
@@ -79,3 +80,6 @@ urlpatterns = [
     path('suink/<int:rotation>', views.suink, dict(order=2)),
     path('suink/<int:rotation>/<int:order>', views.suink),
 ]
+
+# The new version (PYPEN-11). In this list, so tests_doors walks it too.
+urlpatterns += nextui_urls.urlpatterns

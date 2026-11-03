@@ -1,0 +1,26 @@
+{% extends "next/_shell.html" %}
+{% block title %}Pens needing a photo · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_pens_list' %}">All pens</a>
+<header class="head"><div class="head-t"><h1>{{ missing_count }} pens need a photo</h1><p>{{ done }} of {{ total }} have one</p></div></header>
+<div class="progress" role="img" aria-label="{{ done }} of {{ total }}"><i style="width: {% widthratio done total 100 %}%"></i></div>
+<label class="switch-nx"><input type="checkbox" id="polishAll" checked><span class="track"></span><span>Polish new photos: clean backdrop, soft shadow</span></label>
+{% for g in groups %}
+<section data-listnav-group>
+  <div class="group-nx"><h2>{{ g.label }}</h2><span>{{ g.pens|length }} pen{{ g.pens|length|pluralize }}</span></div>
+  <ul class="rows">
+    {% for p in g.pens %}
+    <li class="row" data-listnav-item>
+      <div class="row-t"><a href="{% url 'nx_pens_detail' p.pk %}">{{ p.brand.name }} {{ p.model }}{% if p.finish %} {{ p.finish }}{% endif %}</a><small>{{ p.filling }}{% if p.obtained %}, since {{ p.obtained|date:"Y" }}{% endif %}</small></div>
+      <form method="post" action="{% url 'nx_pens_photo_add' p.pk %}" enctype="multipart/form-data" hx-boost="false">
+        {% csrf_token %}<input type="hidden" name="next" value="queue"><input type="checkbox" name="enhance" value="1" class="polish-flag" checked hidden>
+        <label class="ibtn" aria-label="Choose a photo of {{ p.model }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" name="image" accept="image/*" capture="environment" data-autosubmit hidden></label>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% empty %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">Every pen has a photo</p><p class="kit-empty-p">A new pen without one shows up here.</p><p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'nx_pens_list' %}">All pens</a></p></div>
+{% endfor %}
+{% endblock %}

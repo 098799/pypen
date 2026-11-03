@@ -1,0 +1,5 @@
+<div class="f"{% if id %} id="{{ id }}"{% endif %}{% if shown_by %} data-shown-by="{{ shown_by }}"{% endif %}>
+  <label for="{{ f.id_for_label }}">{{ label|default:f.label }}</label>
+  {{ f }}
+  {% for e in f.errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+</div>
