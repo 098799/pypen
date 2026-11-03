@@ -20,6 +20,50 @@ the front door are `Grining Pens` alone. Tomek left the choice to the agent:
 before keeps the old tile label until the app is added again (iOS) or Chrome
 refreshes the manifest (Android, within a day or so).
 
+## The new version
+
+(PYPEN-11, "Fully implement a new version of pypen /next". Goals: beauty, functionality, statistics, reusing the
+kit.) Read as: the whole app again, at the address `/next/`, next to the old one, on the same data, so Tomek can
+try it before it takes over. The old page that had that address, Next inking, is now `/pick/`; `/next/?pen=` and
+`?shuffle=` land on the new picker, `/next/pick/`. Settings there has "Open this version first" (a cookie per
+device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "Back to the old version".
+
+- **One set of views, two faces** (`items/skin.py`). Everything that reads or writes the collection is the same
+  view on both addresses, so a door, an undo, a photo's clean-up lands once. `skin.render` swaps `items/x.html`
+  for `next/x.html` under `/next/`; `rehome` in `nextui/urls.py` keeps the view's redirects in the new version.
+  The routes are a plain list added to `items/urls.py`, so `tests_doors` walks them too. Cutting over later means
+  moving the paths and deleting the old templates.
+- **What only the new version shows** is in `items/nextui/`: `enrich.py` (added on the way to a template: a list's
+  history from one IN query, never per row), `views.py` (the desk, Stats), `stats.py` (the numbers), `color.py`.
+- **Ink on paper.** Page: the bottle (dark) or a white pad (light). Every ink colour and chart sits on a paper
+  plate in both themes (`--plate`): a black ink on a dark page vanishes, and real ink colours are data, so they
+  are not re-stepped per theme as a chart palette would be. The one loud thing is the swab: a band of the ink's
+  sampled colours through an SVG mask (`.swab`). Fonts: Alegreya and Alegreya Sans, self-hosted
+  (`static/items/next/fonts`); Alegreya's old-style 1 reads as an I, so its digits come from the sister face.
+- **The accent is an ink**: the newest coloured ink on the desk (`nextui/context.py`), lightened or darkened per
+  theme to 4.6:1 against both papers (`color.accent`). A black or a grey has no colour to lend; then the next ink,
+  then royal blue. A test holds the contrast for any ink.
+- **The kit, unchanged**: layer, toast, empty, filters, update, pull to refresh, What's new, install, theme, settings,
+  keys, worker. Both shells include the same `_shell_early`, `_shell_filternav`, `_shell_behave`, `_msgs` (cut out of
+  the old shell), `deskbar.js`, `charts.js`, `more.js`, `viewer.js`. The palette keeps the old addresses, one list
+  for both; `window.__nextUrl` in the new shell maps each to its twin.
+- **Five tabs**: Desk, Pens, Inks, Stats, More. Inkings moved behind More to give the charts a place; the desk's
+  Finish and New inking are what is used daily.
+- **The desk's gauge**: days in against the median of this pen's own ended fills (the collection's while it has
+  under two). Past twice that it asks whether to flush the pen.
+- **Stats** (no chart library: HTML and SVG from the server, kept four minutes under a key that changes with the data):
+  - The river (`stats.river`): pens per ink colour per month, stacked, 16 real colours. The shape is smoothed over three
+    months (raw it is all spikes); a finger reads the true month. One colour lights from its key.
+  - A year against the last *up to today's date*, so a running year compares fairly.
+  - Is each pen earning its keep: price (log) against days inked (root), PLN per day inked.
+  - What you own against what you use, per colour; the cupboard's spectrum in OKLCH hue order; never inked; resting longest.
+  - Rotation: per priority, how many are on time; how long a full round takes at this year's pace.
+  - The calendar is twelve month blocks: the old strip of 53 weeks leaves a phone 6 px a day.
+- `CH` in `constants.NATIONALITIES` means both Swiss and Chinese. Stats counts a brand Swiss only if it is
+  Caran d'Ache (`stats.SWISS_BRANDS`).
+- Probe: `python3 tools/next_probe.py` (DB copy; 390×844, then a desk; it writes, so never the live site).
+  Tests: `tests_next.py`.
+
 ## Filters and search
 
 The kit's `filters.html` (stamp `KIT-FILTERS`), copied byte for byte to
