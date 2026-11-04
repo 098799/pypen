@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "pen-photos", "date": "2026-11-04", "title": "Every pen has a photo",
+   "use": "When you open a pen that never had a photo: it has one now, found on the web and, for most, cleaned up onto the same paper as your own shots. A few are drawn from the pen's name, and the note under the photo says so. To check them: in the new version, open the desk's photo badge, or Pens, Pens needing a photo. Tap Right if it is your pen. Tap Wrong if it is not: the photo goes, and the next search tries another one.",
+   "shots": ["/static/items/whatsnew/2026-11-04-pen-photos.png"], "try": "/next/pens/photos/check/"},
   {"id": "next-version", "date": "2026-11-03", "title": "A new version to try",
    "use": "When you want to see the collection as ink: open More, then The new version (or Settings, Try the new version). The desk shows each inked pen with a swab of its real ink colour, how long it has been in, and what to ink next. Inks are a wall of swatch cards. Stats is new: a river of every fill since the first, what you own against what you use, whether each pen earns its keep, and whether the rotation keeps up. Everything can be edited there too, and it is the same data. Settings there can make it the version the app opens with, or take you back.",
    "shots": ["/static/items/whatsnew/2026-11-03-next-version.png"], "try": "/next/"},
