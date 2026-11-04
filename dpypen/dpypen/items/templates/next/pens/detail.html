@@ -10,6 +10,13 @@
       <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}" fetchpriority="high" data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}"{% endif %}>
       {% else %}<span class="nophoto">No photo yet</span>{% endif %}
     </div>
+    {% if can_edit and photos and photos.0.review == "check" %}
+    <form class="check-band" method="post" action="{% url 'nx_pens_photo_verdict' pen.pk photos.0.pk %}">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <p>{{ photos.0.source_note }}{% if photos.0.source_url %} (<a href="{{ photos.0.source_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">original</a>){% endif %}. Is this your pen?</p>
+      <span class="btn-row"><button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button><button class="btn is-small is-bad" type="submit" name="verdict" value="wrong">Wrong</button></span>
+    </form>
+    {% endif %}
     {% if photos|length > 1 %}
     <div class="rec-thumbs">
       {% for ph in photos %}

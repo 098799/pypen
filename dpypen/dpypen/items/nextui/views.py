@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from dpypen.items import history, inkings, pairing
 from dpypen.items.auth import login_or_guest_required
-from dpypen.items.models import Pen, Usage
+from dpypen.items.models import Pen, PenPhoto, Usage
 from dpypen.items.nextui import stats
 from dpypen.items.public import UI_COOKIE
 
@@ -105,6 +105,7 @@ def _desk_data(today):
         "year_pens": len({u.pen_id for u in this_year}),
         "year_inks": len({u.ink_id for u in this_year}),
         "no_photo": Pen.objects.filter(photos__isnull=True).count(),
+        "to_check": PenPhoto.objects.filter(review="check").count(),
     }
 
 

@@ -230,3 +230,108 @@ def _normalise(raw: bytes, max_size: int = 2400, quality: int = 88) -> bytes:
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=quality, optimize=True, progressive=True)
     return buf.getvalue()
+
+
+# ---- Filling in the pens nobody photographed (pen_photo_fill) -------------------
+# A web search hands back a few photos per pen; most are the right model, some are
+# its sibling in another colour, a box, a nib alone or a page of six pens. A cheap
+# text model picks the one that shows this pen whole, or none; only then does the
+# image model spend a pro render on it.
+JUDGE_MODEL = os.getenv("PYPEN_JUDGE_MODEL") or "gemini-3.8-flash"
+
+JUDGE_PROMPT = """You pick a reference photo for a fountain-pen catalogue.
+
+The pen: {title}
+  Filling: {filling}. Era: {era}.
+
+Below are {n} candidate photos from a web search, numbered from 0. Choose the ONE
+that best shows this exact pen: same maker, same model, and the same colour or
+finish when one is named. Prefer a photo of the whole pen (uncapped or capped),
+on a plain background, sharp, with no other pens and no packaging in front of it.
+Reject a different model, a different colour, a drawing, a box alone, a nib alone,
+a collage, or a photo with large watermarks.
+
+Answer only JSON: {{"best": <index or -1 if none fits>, "why": "<one short sentence>"}}"""
+
+
+def pick_reference(pen, images: list[bytes]) -> tuple[int, str]:
+    """Index of the candidate that shows this pen, or -1, with the model's reason."""
+    import json
+
+    if not images:
+        return -1, "no candidates"
+    client = genai.Client(api_key=_api_key())
+    contents = [JUDGE_PROMPT.format(title=_pen_title(pen), filling=pen.filling or "unknown",
+                                    era=pen.age or "unknown", n=len(images))]
+    for i, data in enumerate(images):
+        contents += [f"Candidate {i}:", types.Part.from_bytes(data=data, mime_type="image/jpeg")]
+    response = client.models.generate_content(
+        model=JUDGE_MODEL, contents=contents,
+        config=types.GenerateContentConfig(response_mime_type="application/json"),
+    )
+    try:
+        answer = json.loads(response.text)
+        best = int(answer.get("best", -1))
+    except (TypeError, ValueError, AttributeError):
+        return -1, f"unreadable answer: {(response.text or '')[:120]}"
+    if not -1 <= best < len(images):
+        best = -1
+    return best, str(answer.get("why", ""))[:200]
+
+
+WEB_REFERENCE_PROMPT = """You are given a product photo of a fountain pen, found on
+the web: {title} ({era}, {filling}).
+
+Make a clean catalogue photograph of THIS pen from it.
+""" + _COMMON_RULES + """
+  • Show the pen whole, laid horizontally or at a slight diagonal, uncapped with the
+    cap beside it if the photo shows it so, otherwise as the photo shows it.
+  • Remove every watermark, shop logo, price tag, text overlay, box, hand and any
+    other object. Keep only the pen (and its cap).
+  • Output a crisp 4:3 image, warmly lit.
+
+Do not change the pen's design, colour or proportions."""
+
+
+TEXT_ONLY_PROMPT = """A catalogue photograph of a real fountain pen: {title}.
+Filling: {filling}. Era: {era}.
+
+Show the pen as this maker really makes this model — its true shape, colour,
+clip, trim and nib — as faithfully as you know it. If the model is a
+demonstrator, the body is clear or tinted see-through plastic.
+Lay it horizontally, uncapped, with the cap beside it, on a warm off-white paper
+backdrop (#f2ead4) with a soft natural gradient, subtle grain and a soft drop
+shadow. Warm, even light; crisp 4:3; no text, no logos added, no other objects."""
+
+
+def web_reference_prompt(pen) -> str:
+    return WEB_REFERENCE_PROMPT.format(title=_pen_title(pen), filling=pen.filling or "unknown",
+                                       era=pen.age or "unknown")
+
+
+def generate_from_name(pen, attempts: int = 2) -> bytes:
+    """A shot with no photo to start from: the image model draws the pen from what
+    it knows of the model. Stored with review="check" and said so on the page."""
+    client = genai.Client(api_key=_api_key())
+    prompt = TEXT_ONLY_PROMPT.format(title=_pen_title(pen), filling=pen.filling or "unknown",
+                                     era=pen.age or "unknown")
+    last = "no image"
+    for _ in range(attempts):
+        response = client.models.generate_content(
+            model=MODEL, contents=[prompt],
+            config=types.GenerateContentConfig(
+                image_config=types.ImageConfig(**_image_config_kwargs("4:3"))),
+        )
+        for candidate in (response.candidates or []):
+            for part in ((candidate.content and candidate.content.parts) or []):
+                if getattr(part, "inline_data", None) and part.inline_data.data:
+                    return _normalise(part.inline_data.data)
+        last = (response.text or "no image")[:300] if hasattr(response, "text") else last
+    raise RuntimeError("Gemini returned no image. " + last)
+
+
+def _api_key() -> str:
+    key = os.getenv("GEMINI_API_KEY")
+    if not key:
+        raise RuntimeError("GEMINI_API_KEY not configured")
+    return key

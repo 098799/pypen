@@ -182,6 +182,13 @@ class PenPhoto(models.Model):
     kind = models.CharField(max_length=8, choices=KINDS, default="other")
     # Where the base image came from, when it was not the owner's own camera.
     source_note = models.CharField(max_length=200, blank=True, default="")
+    # The web photo the shot was made from (pen_photo_fill). Kept so a photo the
+    # owner marks wrong can be blocked from the next run.
+    source_url = models.URLField(max_length=1000, blank=True, default="")
+    # "" is the owner's own photo. "check" is one a machine found or made, which
+    # waits on the owner's verdict at /next/pens/photos/check/; "ok" passed it.
+    REVIEWS = [("", "Owner's"), ("check", "To check"), ("ok", "Checked")]
+    review = models.CharField(max_length=8, choices=REVIEWS, blank=True, default="")
     position = models.IntegerField(default=0)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -248,6 +255,21 @@ class PenPhoto(models.Model):
             self.image = ContentFile(large, name="photo.jpg")
             self.thumbnail = ContentFile(thumb, name="thumb.jpg")
         super().save(*args, **kwargs)
+
+
+class RejectedPenPhoto(models.Model):
+    """A machine-found photo the owner said was not this pen. pen_photo_fill
+    never offers the same source again; `GENERATED` stands for a shot made from
+    the pen's name alone, so a wrong one is not just drawn again."""
+
+    GENERATED = "gemini:text"
+
+    pen = models.ForeignKey(Pen, on_delete=models.CASCADE, related_name="rejected_photos")
+    source_url = models.CharField(max_length=1000)
+    rejected_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Not {self.pen}: {self.source_url[:60]}"
 
 
 def writing_sample_path(instance, filename):

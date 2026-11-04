@@ -3,7 +3,8 @@
 {% block content %}
 <a class="back" href="{% url 'nx_pens_list' %}">All pens</a>
 <header class="head"><div class="head-t"><h1>{{ missing_count }} pens need a photo</h1><p>{{ done }} of {{ total }} have one</p></div></header>
-<div class="progress" role="img" aria-label="{{ done }} of {{ total }}"><i style="width: {% widthratio done total 100 %}%"></i></div>
+{% if to_check %}<p class="check-link"><a href="{% url 'nx_pens_photo_check' %}">{{ to_check }} photo{{ to_check|pluralize }} found for you to check</a></p>
+{% endif %}<div class="progress" role="img" aria-label="{{ done }} of {{ total }}"><i style="width: {% widthratio done total 100 %}%"></i></div>
 <label class="switch-nx"><input type="checkbox" id="polishAll" checked><span class="track"></span><span>Polish new photos: clean backdrop, soft shadow</span></label>
 {% for g in groups %}
 <section data-listnav-group>

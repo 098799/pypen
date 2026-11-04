@@ -448,6 +448,7 @@ def pens_needs_photos(request):
         "done": done,
         "total": total,
         "missing_count": total - done,
+        "to_check": PenPhoto.objects.filter(review="check").count(),
         "nav": "pens",
     })
 

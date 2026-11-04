@@ -1,0 +1,29 @@
+{% extends "next/_shell.html" %}
+{% block title %}Photos to check · {{ app_name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'nx_pens_list' %}">All pens</a>
+<header class="head"><div class="head-t">
+  <h1>{% if photos %}{{ photos|length }} photo{{ photos|length|pluralize }} to check{% else %}Nothing to check{% endif %}</h1>
+  <p>Found on the web or drawn by Gemini. Is it your pen?{% if checked or rejected %} {{ checked }} right, {{ rejected }} wrong so far.{% endif %}</p>
+</div></header>
+{% if photos %}
+<ul class="check-grid">
+  {% for ph in photos %}
+  <li class="check-card" id="check-{{ ph.pk }}" data-listnav-item>
+    <div class="check-img"><img src="{{ ph.grid_url }}" alt="{{ ph.pen }}" loading="lazy" data-zoom="{{ ph.full_url }}" data-zoom-group="check" data-zoom-item="pen" data-zoom-cap="{{ ph.pen }}"></div>
+    <div class="check-t">
+      <a href="{% url 'nx_pens_detail' ph.pen.pk %}"><b>{{ ph.pen.brand.name }} {{ ph.pen.model }}</b>{% if ph.pen.finish %} {{ ph.pen.finish }}{% endif %}</a>
+      <small>{{ ph.source_note }}{% if ph.source_url %} · <a href="{{ ph.source_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">original</a>{% endif %}</small>
+    </div>
+    <form class="check-verbs" method="post" action="{% url 'nx_pens_photo_verdict' ph.pen.pk ph.pk %}">{% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'nx_pens_photo_check' %}">
+      <button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button>
+      <button class="btn is-small is-bad" type="submit" name="verdict" value="wrong">Wrong</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">Every photo is checked</p><p class="kit-empty-p">A photo the app finds for a pen shows up here until you say whether it is right.</p><p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'nx_pens_list' %}">All pens</a></p></div>
+{% endif %}
+{% endblock %}

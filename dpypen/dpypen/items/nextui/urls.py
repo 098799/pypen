@@ -7,7 +7,7 @@ stranger and as a guest. Names start with `nx_`.
 from django.urls import path
 
 from dpypen.items import crud, notebook, pairing, search
-from dpypen.items.nextui import views
+from dpypen.items.nextui import photocheck, views
 from dpypen.items.skin import rehome as r
 
 urlpatterns = [
@@ -42,6 +42,8 @@ urlpatterns = [
     path("next/pens/", r(crud.pens_list), name="nx_pens_list"),
     path("next/pens/add/", r(crud.pens_create), name="nx_pens_create"),
     path("next/pens/needs-photos/", r(crud.pens_needs_photos), name="nx_pens_needs_photos"),
+    path("next/pens/photos/check/", photocheck.check, name="nx_pens_photo_check"),
+    path("next/pens/<int:pk>/photos/<int:photo_pk>/verdict/", photocheck.verdict, name="nx_pens_photo_verdict"),
     path("next/pens/<int:pk>/", r(crud.pens_detail), name="nx_pens_detail"),
     path("next/pens/<int:pk>/edit/", r(crud.pens_edit), name="nx_pens_edit"),
     path("next/pens/<int:pk>/delete/", r(crud.pens_delete), name="nx_pens_delete"),

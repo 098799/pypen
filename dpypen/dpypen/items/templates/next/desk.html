@@ -10,6 +10,9 @@
     {% if can_edit and no_photo %}<a class="ibtn" href="{% url 'nx_pens_needs_photos' %}" aria-label="{{ no_photo }} pens need a photo" title="{{ no_photo }} pens need a photo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
       <b>{{ no_photo }}</b></a>{% endif %}
+    {% if can_edit and to_check %}<a class="ibtn" href="{% url 'nx_pens_photo_check' %}" aria-label="{{ to_check }} photo{{ to_check|pluralize }} to check" title="{{ to_check }} photo{{ to_check|pluralize }} to check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m8 12.5 2.6 2.5L16 9.5"/></svg>
+      <b>{{ to_check }}</b></a>{% endif %}
     {% if can_edit %}<a class="ibtn is-go" href="{% url 'nx_usages_create' %}" data-kbd="new" aria-label="New inking" title="New inking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>{% endif %}
   </div>
 </header>

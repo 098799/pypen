@@ -64,6 +64,28 @@ device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "B
 - Probe: `python3 tools/next_probe.py` (DB copy; 390×844, then a desk; it writes, so never the live site).
   Tests: `tests_next.py`.
 
+## Photos found for the pens nobody photographed
+
+(Nov 2026.) 91 of 126 pens had no photo. `manage.py pen_photo_fill` gives each one a catalogue shot, with no
+owner input; the owner checks them afterwards.
+
+- **Two halves.** The image search needs `ddgs` (DuckDuckGo images), which the site does not; Gemini's key lives
+  only on bae. So: `pen_photo_fill --list` on bae (the pens with no photo, and each one's rejected sources) →
+  `tools/pen_refs.py pens.json refs/` on p340 (up to 6 candidate photos per pen, in a venv with `ddgs` and Pillow)
+  → copy `refs/` to bae → `pen_photo_fill --refs refs/` there.
+- **Per pen:** a text model (`JUDGE_MODEL`, gemini-3.8-flash) sees all candidates and picks the one that shows
+  this model in this colour, whole, or none. Then the image model restyles it on the house paper
+  (`WEB_REFERENCE_PROMPT`: watermarks, boxes and shop text go). The web photo is `image`, the shot is
+  `image_styled`, as with an own photo and its catalogue shot. No fitting candidate: the image model draws the pen
+  from its name (`generate_from_name`), and the note says it is not a photo.
+- **Every one waits for a check.** `PenPhoto.review` is `""` for the owner's own photos, `"check"` for a found or
+  drawn one, `"ok"` once checked. `/next/pens/photos/check/` lists them with Right and Wrong; the pen's page in the
+  new version shows the same two buttons under a found photo, and the desk counts them. Wrong deletes the photo
+  and its files and records the source in `RejectedPenPhoto` (a drawing as `gemini:text`), so `--list` hands the
+  rejects to the next search and the next fill neither offers the same photo nor draws the pen again.
+- Only the main shot is made. `pen_photos --pen N` can derive the nib and capped shots from a checked one.
+- Tests: `tests_photocheck.py`.
+
 ## Filters and search
 
 The kit's `filters.html` (stamp `KIT-FILTERS`), copied byte for byte to
