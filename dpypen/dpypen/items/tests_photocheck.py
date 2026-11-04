@@ -175,3 +175,52 @@ class FillCommand(Base):
             call_command("pen_photo_fill", "--refs", str(root), "--pen", str(self.pen.pk), stdout=io.StringIO(), stderr=io.StringIO())
         draw.assert_not_called()
         self.assertFalse(self.pen.photos.exists())
+
+
+class FillWithoutGemini(Base):
+    """Gemini out of credit: Claude picks, the web photo is kept as it is, --restyle styles it later."""
+
+    refs = FillCommand.refs
+
+    def test_claude_judge_and_no_style_keep_the_web_photo(self):
+        root = self.refs(self.pen, ["https://a.example/1.jpg"])
+        with mock.patch.object(enhance, "pick_reference_claude", return_value=(0, "fits")) as judge, \
+             mock.patch.object(enhance, "pick_reference") as gemini_judge, \
+             mock.patch.object(enhance, "generate_catalog_shot") as gen, \
+             mock.patch.object(enhance, "generate_from_name") as draw:
+            call_command("pen_photo_fill", "--refs", str(root), "--judge", "claude", "--no-style",
+                         stdout=io.StringIO(), stderr=io.StringIO())
+        judge.assert_called()
+        gemini_judge.assert_not_called()
+        gen.assert_not_called()
+        draw.assert_not_called()
+        ph = self.pen.photos.get()
+        self.assertEqual((ph.review, ph.source_note), ("check", "Web photo from shop.example"))
+        self.assertFalse(ph.image_styled)
+
+    def test_no_style_never_draws(self):
+        root = self.refs(self.pen, ["https://a.example/1.jpg"])
+        with mock.patch.object(enhance, "pick_reference_claude", return_value=(-1, "none")), \
+             mock.patch.object(enhance, "generate_from_name") as draw:
+            call_command("pen_photo_fill", "--refs", str(root), "--judge", "claude", "--no-style",
+                         stdout=io.StringIO(), stderr=io.StringIO())
+        draw.assert_not_called()
+        self.assertFalse(self.pen.photos.exists())
+
+    def test_restyle_styles_only_unstyled_web_photos(self):
+        plain = PenPhoto(pen=self.pen, kind="main", review="check", source_url="https://a.example/1.jpg",
+                         source_note="Web photo from shop.example")
+        plain.image = ContentFile(jpeg(), name="p.jpg")
+        plain.save()
+        styled = self.machine_photo(pen=self.other)
+        own = PenPhoto(pen=self.other, kind="other")
+        own.image = ContentFile(jpeg(), name="o.jpg")
+        own.save()
+        with mock.patch.object(enhance, "generate_catalog_shot", return_value=jpeg("teal")) as gen:
+            out = io.StringIO()
+            call_command("pen_photo_fill", "--restyle", stdout=out, stderr=io.StringIO())
+        self.assertEqual(gen.call_count, 1)
+        self.assertIn("restyled 1, failed 0, of 1", out.getvalue())
+        plain.refresh_from_db()
+        self.assertTrue(plain.image_styled and plain.styled_thumbnail)
+        self.assertEqual(plain.source_note, "Web photo from shop.example, restyled by Gemini")

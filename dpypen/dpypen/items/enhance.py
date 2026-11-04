@@ -335,3 +335,45 @@ def _api_key() -> str:
     if not key:
         raise RuntimeError("GEMINI_API_KEY not configured")
     return key
+
+
+# Claude as the judge: the same question, for when Gemini is out of credit
+# (pen_photo_fill --judge claude). Only the pick moves; the restyle stays Gemini's.
+CLAUDE_JUDGE_MODEL = os.getenv("PYPEN_CLAUDE_JUDGE_MODEL") or "claude-opus-5-5"
+
+
+def pick_reference_claude(pen, images: list[bytes]) -> tuple[int, str]:
+    import base64
+    import json
+    import re
+
+    import anthropic
+
+    if not images:
+        return -1, "no candidates"
+    key = os.getenv("ANTHROPIC_API_KEY")
+    if not key:
+        raise RuntimeError("ANTHROPIC_API_KEY not configured")
+    content = []
+    for i, data in enumerate(images):
+        content += [{"type": "text", "text": f"Candidate {i}:"},
+                    {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg",
+                                                 "data": base64.standard_b64encode(data).decode()}}]
+    content.append({"type": "text", "text": JUDGE_PROMPT.format(
+        title=_pen_title(pen), filling=pen.filling or "unknown", era=pen.age or "unknown", n=len(images))})
+    response = anthropic.Anthropic(api_key=key).messages.create(
+        model=CLAUDE_JUDGE_MODEL, max_tokens=16000, output_config={"effort": "low"},
+        messages=[{"role": "user", "content": content}],
+    )
+    if response.stop_reason == "refusal":
+        return -1, "the judge declined"
+    text = "".join(b.text for b in response.content if b.type == "text")
+    match = re.search(r"\{.*\}", text, re.S)
+    try:
+        answer = json.loads(match.group(0)) if match else {}
+        best = int(answer.get("best", -1))
+    except (TypeError, ValueError):
+        return -1, f"unreadable answer: {text[:120]}"
+    if not -1 <= best < len(images):
+        best = -1
+    return best, str(answer.get("why", ""))[:200]

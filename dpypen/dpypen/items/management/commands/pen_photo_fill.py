@@ -43,10 +43,15 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=0, help="Stop after N pens.")
         parser.add_argument("--no-draw", action="store_true", help="Never draw a pen from its name; leave it without a photo.")
         parser.add_argument("--dry-run", action="store_true", help="Judge only; save nothing.")
+        parser.add_argument("--judge", choices=["gemini", "claude"], default="gemini", help="Which model picks the candidate.")
+        parser.add_argument("--no-style", action="store_true", help="Keep the chosen web photo as it is (no Gemini); --restyle later.")
+        parser.add_argument("--restyle", action="store_true", help="Make the catalogue shot for found web photos that have none yet.")
 
     def handle(self, *args, **o):
         if o["list"]:
             return self._list(o)
+        if o["restyle"]:
+            return self._restyle(o)
         if not o["refs"]:
             raise CommandError("give --list or --refs DIR")
         self._fill(Path(o["refs"]), o)
@@ -99,7 +104,8 @@ class Command(BaseCommand):
                 cands = [c for c in meta["candidates"] if c["url"] not in rejected]
             images = [(root / str(pen.pk) / c["file"]).read_bytes() for c in cands]
             try:
-                best, why = enhance.pick_reference(pen, images)
+                judge = enhance.pick_reference_claude if o["judge"] == "claude" else enhance.pick_reference
+                best, why = judge(pen, images)
             except Exception as exc:  # noqa: BLE001
                 best, why = -1, f"judge failed: {exc}"
             self.stderr.write(f"  {pen.pk:>4} {pen}: {len(cands)} cand, best={best} — {why}")
@@ -108,11 +114,14 @@ class Command(BaseCommand):
             try:
                 if best >= 0:
                     c = cands[best]
-                    out = enhance.generate_catalog_shot(images[best], prompt=enhance.web_reference_prompt(pen))
                     host = urlparse(c.get("page") or c["url"]).netloc.removeprefix("www.")
-                    self._save(pen, images[best], out, source_url=c["url"], note=f"Web photo from {host}, restyled by Gemini"[:200])
+                    if o["no_style"]:
+                        self._save(pen, images[best], None, source_url=c["url"], note=f"Web photo from {host}"[:200])
+                    else:
+                        out = enhance.generate_catalog_shot(images[best], prompt=enhance.web_reference_prompt(pen))
+                        self._save(pen, images[best], out, source_url=c["url"], note=f"Web photo from {host}, restyled by Gemini"[:200])
                     web += 1
-                elif not o["no_draw"] and RejectedPenPhoto.GENERATED not in rejected:
+                elif not o["no_draw"] and not o["no_style"] and RejectedPenPhoto.GENERATED not in rejected:
                     out = enhance.generate_from_name(pen)
                     self._save(pen, out, None, source_url="", note="Drawn by Gemini from the pen's name: not a photo of it")
                     drawn += 1
@@ -122,6 +131,30 @@ class Command(BaseCommand):
                 failed += 1
                 self.stderr.write(f"       FAILED {exc}")
         self.stdout.write(f"web {web}, drawn {drawn}, left without {none}, failed {failed}")
+
+    def _restyle(self, o):
+        """The web photos kept as they are (--no-style) get their catalogue shot."""
+        qs = PenPhoto.objects.filter(review__in=["check", "ok"], image_styled="").exclude(source_url="").select_related("pen__brand")
+        if o["pens"]:
+            qs = qs.filter(pen_id__in=o["pens"])
+        photos = list(qs[: o["limit"]] if o["limit"] else qs)
+        made = failed = 0
+        for ph in photos:
+            self.stderr.write(f"  {ph.pen_id:>4} {ph.pen}")
+            if o["dry_run"]:
+                continue
+            try:
+                with ph.image.open("rb") as f:
+                    raw = f.read()
+                out = enhance.generate_catalog_shot(raw, prompt=enhance.web_reference_prompt(ph.pen))
+                ph.set_styled(out, save=False)
+                ph.source_note = (ph.source_note + ", restyled by Gemini")[:200]
+                ph.save(update_fields=["image_styled", "styled_thumbnail", "source_note"])
+                made += 1
+            except Exception as exc:  # noqa: BLE001
+                failed += 1
+                self.stderr.write(f"       FAILED {exc}")
+        self.stdout.write(f"restyled {made}, failed {failed}, of {len(photos)}")
 
     def _save(self, pen, base: bytes, styled: bytes | None, *, source_url: str, note: str):
         photo = PenPhoto(pen=pen, kind="main", position=0, review="check", source_url=source_url, source_note=note)

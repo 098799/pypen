@@ -83,6 +83,9 @@ owner input; the owner checks them afterwards.
   new version shows the same two buttons under a found photo, and the desk counts them. Wrong deletes the photo
   and its files and records the source in `RejectedPenPhoto` (a drawing as `gemini:text`), so `--list` hands the
   rejects to the next search and the next fill neither offers the same photo nor draws the pen again.
+- **Without Gemini credit** (its prepay ran out on 4 Nov 2026 after 49 pens): `--judge claude --no-style` lets
+  Claude (`CLAUDE_JUDGE_MODEL`, claude-opus-5-5 at low effort) pick, and keeps the web photo as it is, unstyled and
+  never drawn. `pen_photo_fill --restyle` makes the catalogue shot for those later (checked ones too).
 - Only the main shot is made. `pen_photos --pen N` can derive the nib and capped shots from a checked one.
 - Tests: `tests_photocheck.py`.
 
