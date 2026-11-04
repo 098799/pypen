@@ -224,3 +224,17 @@ class FillWithoutGemini(Base):
         plain.refresh_from_db()
         self.assertTrue(plain.image_styled and plain.styled_thumbnail)
         self.assertEqual(plain.source_note, "Web photo from shop.example, restyled by Gemini")
+
+    def test_picks_file_chooses_by_file_name_without_a_judge(self):
+        RejectedPenPhoto.objects.create(pen=self.pen, source_url="https://a.example/0.jpg")
+        root = self.refs(self.pen, ["https://a.example/0.jpg", "https://a.example/1.jpg"])
+        picks = root / "picks.json"
+        picks.write_text(json.dumps({str(self.pen.pk): "c1.jpg", str(self.other.pk): "c9.jpg"}))
+        with mock.patch.object(enhance, "pick_reference") as judge, \
+             mock.patch.object(enhance, "pick_reference_claude") as judge2:
+            call_command("pen_photo_fill", "--refs", str(root), "--picks", str(picks), "--no-style",
+                         stdout=io.StringIO(), stderr=io.StringIO())
+        judge.assert_not_called()
+        judge2.assert_not_called()
+        self.assertEqual(self.pen.photos.get().source_url, "https://a.example/1.jpg")
+        self.assertFalse(self.other.photos.exists())

@@ -44,6 +44,7 @@ class Command(BaseCommand):
         parser.add_argument("--no-draw", action="store_true", help="Never draw a pen from its name; leave it without a photo.")
         parser.add_argument("--dry-run", action="store_true", help="Judge only; save nothing.")
         parser.add_argument("--judge", choices=["gemini", "claude"], default="gemini", help="Which model picks the candidate.")
+        parser.add_argument("--picks", help='JSON {"<pen id>": "<candidate file>"}: the choice made by hand, no judge.')
         parser.add_argument("--no-style", action="store_true", help="Keep the chosen web photo as it is (no Gemini); --restyle later.")
         parser.add_argument("--restyle", action="store_true", help="Make the catalogue shot for found web photos that have none yet.")
 
@@ -94,6 +95,7 @@ class Command(BaseCommand):
             pens = pens[: o["limit"]]
         self.stderr.write(f"{len(pens)} pen(s) without a photo; judge={enhance.JUDGE_MODEL} image={enhance.MODEL}")
 
+        picks = json.loads(Path(o["picks"]).read_text()) if o["picks"] else None
         web = drawn = none = failed = 0
         for pen in pens:
             rejected = set(pen.rejected_photos.values_list("source_url", flat=True))
@@ -104,8 +106,14 @@ class Command(BaseCommand):
                 cands = [c for c in meta["candidates"] if c["url"] not in rejected]
             images = [(root / str(pen.pk) / c["file"]).read_bytes() for c in cands]
             try:
-                judge = enhance.pick_reference_claude if o["judge"] == "claude" else enhance.pick_reference
-                best, why = judge(pen, images)
+                if picks is not None:
+                    # Chosen by looking at the contact sheets: {pen id: candidate file}.
+                    files = [c["file"] for c in cands]
+                    chosen = picks.get(str(pen.pk))
+                    best, why = (files.index(chosen), "picked from the contact sheet") if chosen in files else (-1, "no pick")
+                else:
+                    judge = enhance.pick_reference_claude if o["judge"] == "claude" else enhance.pick_reference
+                    best, why = judge(pen, images)
             except Exception as exc:  # noqa: BLE001
                 best, why = -1, f"judge failed: {exc}"
             self.stderr.write(f"  {pen.pk:>4} {pen}: {len(cands)} cand, best={best} — {why}")

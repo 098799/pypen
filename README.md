@@ -86,6 +86,8 @@ owner input; the owner checks them afterwards.
 - **Without Gemini credit** (its prepay ran out on 4 Nov 2026 after 49 pens): `--judge claude --no-style` lets
   Claude (`CLAUDE_JUDGE_MODEL`, claude-opus-5-5 at low effort) pick, and keeps the web photo as it is, unstyled and
   never drawn. `pen_photo_fill --restyle` makes the catalogue shot for those later (checked ones too).
+  Both Anthropic keys were invalid that day too, so the last 42 were picked by eye from contact sheets:
+  `--picks picks.json` (`{"<pen id>": "c3.jpg"}`, the candidate's file, so a reject cannot shift it).
 - Only the main shot is made. `pen_photos --pen N` can derive the nib and capped shots from a checked one.
 - Tests: `tests_photocheck.py`.
 
