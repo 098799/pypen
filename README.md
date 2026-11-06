@@ -64,6 +64,26 @@ device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "B
 - Probe: `python3 tools/next_probe.py` (DB copy; 390×844, then a desk; it writes, so never the live site).
   Tests: `tests_next.py`.
 
+## supen and suink, as a page
+
+(PYPEN-12, "Something like supen suink commands for the pen.grining.eu/next".) Read as: the two terminal
+commands' tables (`dpypen/supen.py`, run as `supen` and `suink` from `~/bin`) as a page of the new version, with
+the commands' own names, so the phone shows what the terminal shows. `/next/supen/` and `/next/suink/`
+(`nextui/turns.py`, `templates/next/turns.html`). Reached from More ("Turns: supen, suink"), the palette (type
+`supen` or `suink`), the desk's "N past their turn", and Stats, Rotation.
+
+- **The same table**: per rotation, each pen (or open bottle: more than 5 ml, not used up) with its fills, its days
+  inked (an open fill counts to today) and the days since its last fill ended: 0, "now", while inked; "never" sorts
+  last, as `math.inf` does there. Default order is supen's `-o 2`, smallest first.
+- **The same colours** as `colorize`: within 3/4 of the rotation's turn green, to 5/4 amber, past it red. Fixed
+  colours, since they sit on the paper plate in both themes; the weight steps with them.
+- **Groups**: Tomek's P0 to P3 (supen printed P2, P1, P0 only; P3 came later), then Ozlem's. supen's `-r out`, the
+  pens out of rotation, is the chip Out and not part of All, as in supen. Inks: easy, then hard to fill from.
+- **What the page adds**: a pen inked now shows its ink and an ink in a pen shows the pen; each row opens its page.
+- One query for the inkings, one per list: the cost does not grow with the rows (a test holds it).
+- The old `/supen` and `/suink` addresses (plain text, signed-in only) stay for the old version and its bookmarks.
+- Tests: `tests_turns.py`.
+
 ## Photos found for the pens nobody photographed
 
 (Nov 2026.) 91 of 126 pens had no photo. `manage.py pen_photo_fill` gives each one a catalogue shot, with no

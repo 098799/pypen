@@ -98,6 +98,7 @@ document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsN
   <nav class="menu-nav" aria-label="More">
     <a href="{% url 'nx_usages_list' %}" class="menu-link">Inkings</a>
     <a href="{% url 'nx_pick' %}" class="menu-link">What to ink next</a>
+    <a href="{% url 'nx_supen' %}" class="menu-link" data-new="supen">Turns: supen, suink</a>
     <a href="{% url 'nx_records' %}" class="menu-link">Records</a>
     {% if is_owner %}
     <a href="{% url 'nx_pens_needs_photos' %}" class="menu-link">Pens needing a photo</a>

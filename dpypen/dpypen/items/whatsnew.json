@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "supen", "date": "2026-11-06", "title": "supen and suink in the app",
+   "use": "When you want the terminal's supen or suink table on your phone: in the new version open More, then Turns: supen, suink (or press Ctrl-K and type supen). Each rotation is a table of its pens: how many fills, how many days inked, and the days since the last fill ended, green while in turn, amber near it, red past it. A pen inked now shows its ink. Inks shows the same for the open bottles. The chips pick one rotation (Out is supen -r out) and the order. The desk's \"past their turn\" opens it too.",
+   "shots": ["/static/items/whatsnew/2026-11-06-supen.png"], "try": "/next/supen/"},
   {"id": "pen-photos", "date": "2026-11-04", "title": "Every pen has a photo",
    "use": "When you open a pen that never had a photo: it has one now, found on the web and, for most, cleaned up onto the same paper as your own shots. A few are drawn from the pen's name, and the note under the photo says so. To check them: in the new version, open the desk's photo badge, or Pens, Pens needing a photo. Tap Right if it is your pen. Tap Wrong if it is not: the photo goes, and the next search tries another one.",
    "shots": ["/static/items/whatsnew/2026-11-04-pen-photos.png"], "try": "/next/pens/photos/check/"},

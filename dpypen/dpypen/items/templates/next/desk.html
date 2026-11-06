@@ -4,7 +4,7 @@
 <header class="head">
   <div class="head-t">
     <h1>{% if fills %}{{ fills|length }} pen{{ fills|length|pluralize }} inked{% else %}The desk is clear{% endif %}</h1>
-    <p>{{ due_n }} past their turn{% if shelf.fresh %}, last inked {{ shelf.fresh }}{% endif %}</p>
+    <p><a class="head-link" href="{% url 'nx_supen' %}">{{ due_n }} past their turn</a>{% if shelf.fresh %}, last inked {{ shelf.fresh }}{% endif %}</p>
   </div>
   <div class="head-a">
     {% if can_edit and no_photo %}<a class="ibtn" href="{% url 'nx_pens_needs_photos' %}" aria-label="{{ no_photo }} pens need a photo" title="{{ no_photo }} pens need a photo">
