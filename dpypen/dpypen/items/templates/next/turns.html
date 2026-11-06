@@ -1,0 +1,64 @@
+{% extends "next/_shell.html" %}
+{% block title %}{% if kind == "pens" %}Pens' turns{% else %}Bottles' turns{% endif %} · {{ app_name }}{% endblock %}
+{% block content %}
+{% comment %}
+supen and suink of the terminal, as a page (PYPEN-12, nextui/turns.py): per
+rotation, every pen or open bottle, its fills, its days inked, and the days
+since its last fill ended, coloured against the rotation's turn.
+{% endcomment %}
+<header class="head"><div class="head-t">
+  <h1>{% if kind == "pens" %}Pens' turns{% else %}Bottles' turns{% endif %}</h1>
+  <p>{% if kind == "pens" %}supen: every pen in rotation, and how long since its last fill{% else %}suink: every open bottle, and how long since it was last in a pen{% endif %}</p>
+</div></header>
+<nav class="kit-chips" id="turnsKind" aria-label="Pens or inks">
+  <a class="kit-chip" href="{% url 'nx_supen' %}"{% if kind == "pens" %} aria-current="true"{% endif %}>Pens</a>
+  <a class="kit-chip" href="{% url 'nx_suink' %}"{% if kind == "inks" %} aria-current="true"{% endif %}>Inks</a>
+</nav>
+<div class="kit-chips" role="group" aria-label="Rotation" id="turnsRot">
+  {% for c in rot_chips %}<a class="kit-chip" href="{{ c.url }}"{% if c.on %} aria-current="true"{% endif %}>{{ c.label }}</a>{% endfor %}
+</div>
+<div class="kit-chips turns-sort" role="group" aria-label="Sort" id="turnsSort">
+  <span class="turns-sort-l">Sort</span>
+  {% for c in sort_chips %}<a class="kit-chip" href="{{ c.url }}"{% if c.on %} aria-current="true"{% endif %}>{{ c.label }}</a>{% endfor %}
+</div>
+<div class="plates turns-plates">
+  {% for g in groups %}
+  <section class="plate is-wide turns" id="turns-{{ g.key }}">
+    <h2>{{ g.title }} <span>{% if g.turn_words %}a turn every {{ g.turn_words }}{% else %}no turn{% endif %}</span></h2>
+    <p>{{ g.n }} {% if kind == "pens" %}pen{% else %}bottle{% endif %}{{ g.n|pluralize }}{% if g.inked %}, {{ g.inked }} in a pen now{% endif %}{% if g.late %}, {{ g.late }} past {% if g.late == 1 %}its{% else %}their{% endif %} turn{% endif %}{% if g.never %}, {{ g.never }} never inked{% endif %}.</p>
+    <table class="turns-t">
+      <thead><tr>
+        <th scope="col">{% if kind == "pens" %}Pen{% else %}Ink{% endif %}</th>
+        <th scope="col" title="How many times inked"><abbr title="How many times inked">Fills</abbr></th>
+        <th scope="col" title="Days inked, all fills together"><abbr title="Days inked, all fills together">Days</abbr></th>
+        <th scope="col" title="Days since the last fill ended"><abbr title="Days since the last fill ended">Since</abbr></th>
+      </tr></thead>
+      <tbody>
+      {% for r in g.rows %}
+      <tr data-listnav-item>
+        <th scope="row">
+          {% if kind == "pens" %}<a href="{% url 'nx_pens_detail' r.item.pk %}">{{ r.item }}</a>
+          {% for u in r.now %}<small class="turns-now" style="--sw: {{ u.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span>{{ u.ink }}</small>{% endfor %}
+          {% else %}<a href="{% url 'nx_inks_detail' r.item.pk %}"><span class="dab" style="--sw: {{ r.item.swatch_bg }}" aria-hidden="true"></span>{{ r.item }}</a>
+          {% for u in r.now %}<small class="turns-now">in {{ u.pen }}</small>{% endfor %}
+          {% endif %}
+        </th>
+        <td>{{ r.fills }}</td>
+        <td>{{ r.days }}</td>
+        <td class="st st-{{ r.state }}">{% if r.state == "now" %}now{% elif r.state == "never" %}never{% else %}{{ r.since }}{% endif %}<span class="sr">{% if r.state == "late" %}, past its turn{% elif r.state == "due" %}, near its turn{% elif r.state == "fresh" %}, in turn{% endif %}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% empty %}
+  <div class="kit-empty small" data-kind="match"><p class="kit-empty-t">Nothing in this rotation</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% if kind == "pens" %}{% url 'nx_supen' %}{% else %}{% url 'nx_suink' %}{% endif %}">All rotations</a></p></div>
+  {% endfor %}
+</div>
+{% if groups %}
+<div class="turns-key" aria-label="What the colours mean">
+  <span><i class="st-fresh"></i>within ¾ of the turn</span><span><i class="st-due"></i>up to 1¼ turns</span><span><i class="st-late"></i>past that</span>
+</div>
+<p class="fine">Days since: the days since the last fill ended; now is a {% if kind == "pens" %}pen inked now{% else %}bottle in a pen now{% endif %}. Days: every fill's days together. The same tables as <code>{% if kind == "pens" %}supen{% else %}suink{% endif %}</code> in the terminal. {% if kind == "pens" %}How the rotation keeps up: <a href="{% url 'nx_stats_rotation' %}">Stats, Rotation</a>.{% endif %}</p>
+{% endif %}
+{% endblock %}

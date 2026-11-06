@@ -8,12 +8,12 @@ from statistics import median
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_safe
 
 from dpypen.items import history, inkings, pairing
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Pen, PenPhoto, Usage
-from dpypen.items.nextui import stats
+from dpypen.items.nextui import stats, turns as turns_data
 from dpypen.items.public import UI_COOKIE
 
 
@@ -178,6 +178,37 @@ def stats_cupboard(request):
 @login_or_guest_required
 def stats_rotation(request):
     return _stat(request, "nx_stats_rotation", "next/stats/rotation.html", stats.cached("rotation", stats.rotation))
+
+
+def _turns(request, kind):
+    data = turns_data.build(kind, request.GET.get("rot", ""), request.GET.get("sort", "last"))
+    for g in data["groups"]:
+        g["turn_words"] = stats.span(g["turn"]) if g["turn"] > 0 else None
+    here = reverse("nx_supen" if kind == "pens" else "nx_suink")
+
+    def url(rot, sort):
+        # the address keeps the choice (kit §14); a default is left out
+        q = "&".join(f"{k}={v}" for k, v in (("rot", rot), ("sort", sort if sort != "last" else "")) if v)
+        return here + ("?" + q if q else "")
+
+    data["rot_chips"] = [{"label": label, "url": url(k, data["sort"]), "on": k == data["rot"]} for k, label in data["chips"]]
+    data["sort_chips"] = [{"label": label, "url": url(data["rot"], k), "on": k == data["sort"]} for k, label in data["sorts"]]
+    return render(request, "next/turns.html", {**data, "nav": "turns"})
+
+
+@login_or_guest_required
+@require_safe
+def turns_pens(request):
+    """`supen` on a page: every pen in rotation, its fills, its days inked, and
+    how long since its last fill, against its rotation's turn (PYPEN-12)."""
+    return _turns(request, "pens")
+
+
+@login_or_guest_required
+@require_safe
+def turns_inks(request):
+    """`suink`: the same for the open bottles, per how easy they are to fill from."""
+    return _turns(request, "inks")
 
 
 def _in_group(pen, rot: str) -> bool:

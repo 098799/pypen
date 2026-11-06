@@ -83,6 +83,8 @@ GUEST_READS = {
     "nx_stats_calendar",
     "nx_stats_pairs",
     "nx_records",
+    "nx_supen",
+    "nx_suink",
     "nx_usages_list",
     "nx_pens_list",
     "nx_pens_detail",

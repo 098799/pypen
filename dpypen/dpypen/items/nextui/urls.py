@@ -16,6 +16,8 @@ urlpatterns = [
     path("next/prefer/", views.prefer, name="nx_prefer"),
     path("next/pick/", r(pairing.next_inking), name="nx_pick"),
     path("next/search/", r(search.search), name="nx_search"),
+    path("next/supen/", views.turns_pens, name="nx_supen"),
+    path("next/suink/", views.turns_inks, name="nx_suink"),
 
     path("next/stats/", views.stats_overview, name="nx_stats"),
     path("next/stats/inkings/", views.stats_inkings, name="nx_stats_inkings"),

@@ -21,6 +21,7 @@ PAGES = (
     "/next/stats/collection/", "/next/stats/cupboard/", "/next/stats/rotation/", "/next/stats/timeline/",
     "/next/stats/timeline/?rot=p1", "/next/stats/calendar/", "/next/stats/pairs/", "/next/stats/records/",
     "/next/pens/add/", "/next/inks/add/", "/next/usages/add/", "/next/pens/needs-photos/", "/next/import/",
+    "/next/supen/", "/next/supen/?rot=p1&sort=fills", "/next/supen/?rot=out", "/next/suink/", "/next/suink/?rot=easy&sort=name",
 )
 # The old pages' addresses, which a page of the new version must not lead to.
 OLD_LINK = re.compile(r'(?:href|action)="(/(?:pens|inks|usages|dashboard|history|records|search|settings|import|pick)/[^"]*)"')
