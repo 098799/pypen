@@ -112,7 +112,8 @@ NEXT_SCREENS = [("/next/", "next-desk"), ("/next/pens/", "next-pens"), ("/next/p
                 ("/next/stats/collection/", "next-stats-collection"), ("/next/stats/cupboard/", "next-stats-cupboard"),
                 ("/next/stats/rotation/", "next-stats-rotation"), ("/next/stats/timeline/", None), ("/next/stats/calendar/", "next-stats-calendar"),
                 ("/next/stats/pairs/", None), ("/next/stats/records/", None), ("/next/usages/add/", "next-add-inking"),
-                ("/next/pens/add/", None), ("/next/inks/add/", None), ("/next/pens/needs-photos/", None), ("/next/import/", None)]
+                ("/next/pens/add/", None), ("/next/inks/add/", None), ("/next/pens/needs-photos/", None), ("/next/import/", None),
+                ("/next/supen/", "next-supen"), ("/next/supen/?rot=out&sort=fills", None), ("/next/suink/", "next-suink")]
 
 
 def next_walk(b):
@@ -131,6 +132,8 @@ def next_walk(b):
     print(failed[:5])
     visit(page, "/next/")
     check("next: the desk draws swabs", js("document.querySelectorAll('.swab').length") > 0)
+    # PYPEN-12: supen and suink are a page; the desk's count of due pens opens it.
+    check("next: the desk's due count opens supen", js("document.querySelector('.head-link').getAttribute('href')") == "/next/supen/")
     page.locator(".tabbar [data-menu-btn]").tap()
     page.wait_for_timeout(300)
     check("next: More opens", js("document.getElementById('menuPanel').classList.contains('open')"))
