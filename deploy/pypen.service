@@ -29,6 +29,7 @@ ExecStart=/opt/pypen/.venv/bin/gunicorn \
     dpypen.wsgi:application
 Restart=always
 RestartSec=5
+SuccessExitStatus=143
 KillSignal=SIGTERM
 TimeoutStopSec=30
 
