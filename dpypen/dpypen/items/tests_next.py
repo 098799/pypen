@@ -98,6 +98,22 @@ class Pages(Seeded):
             html = self.client.get("/next/no-such-page/", headers={"Accept": "text/html"}).content.decode()
         self.assertIn("next/next.css", html)
 
+    def test_the_tab_bar_lights_the_place_of_each_page(self):
+        """The kit's tab bar (KIT-TABS): one tab marked, sub-pages too, and a page
+        behind More (Inkings, the picker, search, settings) lights More."""
+        more = 'data-phone data-menu-btn'
+        cases = {"/next/": "Desk", "/next/pens/": "Pens", "/next/pens/needs-photos/": "Pens", "/next/inks/": "Inks",
+                 "/next/stats/": "Stats", "/next/stats/records/": "Stats", "/next/stats/pairs/": "Stats",
+                 "/next/usages/": more, "/next/pick/": more, "/next/search/?q=blue": more, "/next/settings/": more}
+        for url, tab in cases.items():
+            html = self.client.get(url).content.decode()
+            html = html[html.index('<nav class="kit-tabs"') : html.index("</nav>", html.index('<nav class="kit-tabs"'))]
+            with self.subTest(url=url):
+                self.assertEqual(html.count('aria-current="page"'), 1)
+                lit = html[: html.index('aria-current="page"')]
+                lit = lit[lit.rindex('class="kit-tab"') :] + html[html.index('aria-current="page"') :][:400]
+                self.assertIn(tab if tab == more else "<span>%s</span>" % tab, lit)
+
     def test_list_rows_cost_no_query_per_row(self):
         with self.assertNumQueries(self._queries_for("/next/pens/")):
             self.client.get("/next/pens/")

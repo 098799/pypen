@@ -45,12 +45,15 @@ html[data-theme="light"] {
   --fg: var(--text);
   --line: color-mix(in srgb, var(--text) 22%, transparent);
 }
-/* The bar in tabbar.css reads these; both themes define --bg and --text. */
+/* The kit's tab bar (_tabs.html, for the owner and guests) reads the fleet's
+   names: the wall's paper under it, --dim (7:1 and more on it in both themes),
+   --accent and --on-accent from the themes above. */
 html {
-  --tabbar-paper: var(--bg);
-  --tabbar-line: color-mix(in srgb, var(--text) 22%, transparent);
-  --tabbar-muted: var(--muted);
-  --tabbar-accent: var(--accent);
+  --panel: var(--bg);
+  --fg: var(--text);
+  --line: color-mix(in srgb, var(--text) 22%, transparent);
+  --kit-tabs-case: uppercase;
+  --kit-tabs-track: .1em;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {

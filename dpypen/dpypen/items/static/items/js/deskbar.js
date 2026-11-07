@@ -2,10 +2,10 @@
 
    On a screen 900 px and wider the app's chrome is one 52 px bar (#hdr in
    _shell.html): the brand, the places as tabs, then what the page can do —
-   Filter ▾, ⌕, ⋯ — on the right. The markup is the phone's, once. The tab
-   bar sits in #hdr and app.css draws it both ways (the bar's tabs here, the
-   fixed bottom bar on a phone), with its More button as the bar's ⋯. This
-   script does the two things CSS cannot:
+   Filter ▾, ⌕, ⋯ — on the right. The markup is the phone's, once. The tabs
+   are the kit's tab bar (_tabs.html), which moves itself into the bar's slot
+   (#desktabs) from 900 px and back to the bottom of the screen under it. This
+   script does the two things the kit and CSS do not:
 
    - the page's chip row, marked [data-fold="<name>"] (the pens' rotation, the
      inks' filters), stays in the page but hidden, and a Filter button stands

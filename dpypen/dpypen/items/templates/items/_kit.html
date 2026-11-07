@@ -14,7 +14,8 @@ member.js, the owner and guests only (a stranger never meets them): What's new
 (KIT-WHATSNEW; the log is whatsnew.json, opened from Settings and the palette;
 the dot sits on More and on Settings), the install nudge (KIT-INSTALL, PYPEN-5;
 it asks on the first day, days: 1: a guest on an invitation may come only
-once) and Settings' rows (KIT-SETTINGS).
+once), Settings' rows (KIT-SETTINGS) and the tab bar (KIT-TABS: its script
+mounts the nav, which _tabbar.html draws after #hdr, at DOMContentLoaded).
 {% endcomment %}
 <script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
 <script src="{% kit_shell 'shell.js' %}"></script>

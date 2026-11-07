@@ -152,7 +152,7 @@ class ErrorPages(TestCase):
         self.assertEqual(r.status_code, 404)
         html = r.content.decode()
         self.assertIn('<main id="main">', html)
-        self.assertIn('class="tabbar"', html)
+        self.assertIn('<nav class="kit-tabs"', html)
         self.assertIn("Not here", html)
         self.assertIn('href="/dashboard/"', html)
         self.assertIn("<title>Not here · Grining Pens</title>", html)
@@ -174,7 +174,7 @@ class ErrorPages(TestCase):
     def test_a_stranger_gets_the_front_page_way(self):
         html = self.client.get("/no-such-page/", **NAVIGATE).content.decode()
         self.assertIn('href="/"', html)
-        self.assertNotIn('class="tabbar"', html)
+        self.assertNotIn('<nav class="kit-tabs"', html)
 
     def test_a_fetch_and_the_api_get_json(self):
         self.client.force_login(self.owner)
@@ -229,11 +229,19 @@ class Icons(TestCase):
             self.assertIn('rel="apple-touch-icon" href="/static/items/icons/apple-touch-icon.png"', html)
 
 
-class BottomNav(TestCase):
-    def test_kit_sizes(self):
-        css = (HERE / "static" / "items" / "css" / "tabbar.css").read_text()
-        self.assertIn("min-height: 56px;", css)
-        self.assertIn("font-size: 11px;", css)
+class TabBar(TestCase):
+    """The kit's (KIT-TABS, kit README §4 "Tab bar"), a byte copy that
+    fleet-check compares; no bar of pypen's own beside it."""
+
+    def test_the_kit_s_copy_and_no_own_bar(self):
+        copy = (HERE / "templates" / "items" / "_tabs.html").read_text()
+        self.assertTrue(copy.startswith("<!-- KIT-TABS: v1.0"))
+        self.assertFalse((HERE / "static" / "items" / "css" / "tabbar.css").exists())
+        for css in ("css/app.css", "css/wall.css", "next/next.css"):
+            text = (HERE / "static" / "items" / css).read_text()
+            with self.subTest(css=css):
+                self.assertNotIn(".tabbar", text)
+                self.assertNotIn("nav.kit-tabs", text)  # the kit's look, tokens only
 
 
 @override_settings(STORAGES=PLAIN_STATIC)

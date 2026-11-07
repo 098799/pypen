@@ -18,8 +18,10 @@ Files, in the order the pages had the snippets:
   shell.css/.js      both shells: the layer, toast, empty, filters, update,
                      pull to refresh
   member.css/.js     both shells, the owner and guests only (as before): What's
-                     new, the install bar, Settings' rows
+                     new, the install bar, Settings' rows, the tab bar (KIT-TABS;
+                     a stranger has no bar)
   wall.css/.js       the public walls: pull to refresh, update, filters
+  tabs.css/.js       the walls, the owner and guests only: the tab bar
 
 The scripts are NOT `defer`: the shells' own inline scripts (_shell_early,
 _shell_behave, the What's new repaint, the settings page) call kitToast,
@@ -46,12 +48,17 @@ KIT.js("shell.js", "_layer.js", *SHELL)
 # _settings.html sat inside #main on the settings page; its rows exist for the
 # owner and guests only, and its script takes the browser's install offer, which
 # a stranger's page must keep.
-MEMBER = ("_whatsnew.html", "_install.html", "_settings.html")
+# The tab bar (_tabs.html) is drawn for them only too (_tabbar.html); its script
+# mounts the nav at DOMContentLoaded, so it may load before the nav's markup.
+MEMBER = ("_whatsnew.html", "_install.html", "_settings.html", "_tabs.html")
 KIT.css("member.css", *MEMBER)
 KIT.js("member.js", *MEMBER)
 WALL = ("_pullrefresh.html", "_update.html", "_filters.html")
 KIT.css("wall.css", *WALL)
 KIT.js("wall.js", *WALL)
+# A wall's tab bar, for the owner and guests (most of a wall's audience is signed out).
+KIT.css("tabs.css", "_tabs.html")
+KIT.js("tabs.js", "_tabs.html")
 
 
 def url(name: str) -> str:

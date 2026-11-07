@@ -1,8 +1,9 @@
 """The desk bar and the header row (PYPEN-6; kit README §4 Fleet UX "Desk"
 and "Header").
 
-One markup for both shapes: the tab bar sits in #hdr, which app.css draws as
-the 52 px desk bar from 900 px and as nothing but the fixed tab bar below.
+One markup for both shapes: the tab bar (the kit's _tabs.html) follows #hdr,
+and the kit moves it into the 52 px desk bar's slot (#desktabs) from 900 px;
+below, the header is not there and the bar is fixed to the bottom.
 The pill nav and the floating menu button are gone. A list screen's first row
 says what it answers and how fresh, with at most two icon buttons. The
 browser half (the bar's height, Filter ▾, ⌕, ⋯, a narrowed window) is
@@ -26,6 +27,12 @@ def header(html):
     return html[html.index('<header class="deskbar" id="hdr">') : html.index("</header>", html.index('id="hdr"'))]
 
 
+def tabs(html):
+    """The tab bar's nav (the kit's comment in _tabs.html shows the markup too)."""
+    at = html.index('<nav class="kit-tabs"')
+    return html[at : html.index("</nav>", at)]
+
+
 def head_row(html):
     """The screen's header row, up to what follows it (the toolbar, a section)."""
     m = re.search(r'<(div|header) class="[^"]*page-head hrow[^"]*">', html)
@@ -37,21 +44,27 @@ def head_row(html):
 
 @override_settings(STORAGES=PLAIN_STATIC)
 class TheDeskBar(Collection):
-    def test_one_header_with_the_tab_bar_in_it(self):
+    def test_one_header_with_the_tab_bar_s_slot_in_it(self):
         html = self.client.get("/pens/").content.decode()
         self.assertEqual(html.count('id="hdr"'), 1)
         hdr = header(html)
-        self.assertIn('class="tabbar"', hdr)  # included once, here
-        self.assertEqual(html.count('class="tabbar"'), 1)
+        self.assertIn('<div class="desktabs" id="desktabs"></div>', hdr)
+        self.assertNotIn("kit-tabs", hdr)  # one nav, outside the header
+        self.assertEqual(html.count('<nav class="kit-tabs" aria-label="Sections" data-desk-into="#desktabs">'), 1)
+        # The kit's script and style come in member.js/.css (kitshell.py), not inline.
+        self.assertNotIn("KIT-TABS", html)
+        self.assertIn('<script src="/kit/member.js', html)
+        self.assertNotIn("tabbar", html)
         self.assertIn("db-brand", hdr)
         self.assertIn('id="deskSearchBtn"', hdr)
         self.assertIn('id="deskSearch"', hdr)
         self.assertIn('id="deskFilter"', hdr)
-        # the places a phone has no room for are tabs on a desk
+        # the places a phone has no room for are tabs on a desk only
         for place in ("/history/", "/records/"):
-            self.assertRegex(hdr, r'<a class="desk-tab[^"]*" href="%s"' % place)
-        # the More button is the bar's ⋯
-        self.assertIn('class="gl-dots"', hdr)
+            self.assertRegex(html, r'<a class="kit-tab" data-desk href="%s">' % place)
+        # More is the bar's on a phone; the desk bar has ⋯
+        self.assertRegex(html, r'<button type="button" class="kit-tab" data-phone data-menu-btn')
+        self.assertIn('aria-label="More" aria-controls="menuPanel" data-menu-btn', hdr)
         self.assertIn("items/js/deskbar.js", html)
 
     def test_the_pill_nav_and_the_floating_button_are_gone(self):
@@ -64,8 +77,27 @@ class TheDeskBar(Collection):
                 self.assertNotIn('aria-labelledby="menuBtn"', html)  # it named no element
 
     def test_the_tab_lights_where_you_are(self):
-        html = self.client.get("/records/").content.decode()
-        self.assertIn('<a class="desk-tab active" href="/records/" aria-current="page">', header(html))
+        cases = {"/pens/": "/pens/", "/inks/": "/inks/", "/usages/": "/usages/", "/dashboard/": "/dashboard/"}
+        for url, tab in cases.items():
+            html = tabs(self.client.get(url).content.decode())
+            with self.subTest(url=url):
+                self.assertEqual(html.count('aria-current="page"'), 1)
+                self.assertRegex(html, r'<a class="kit-tab" href="%s" aria-current="page">' % tab)
+
+    def test_a_page_behind_more_lights_more(self):
+        """AUDIT pass 8 T3: on a phone /history/, /records/, /pick/, search and
+        settings lit no tab you could see (History and Records are desk-only
+        tabs, the rest have none). They light More, where a phone has them; a
+        desk-only tab is lit with it."""
+        more = r'<button type="button" class="kit-tab" data-phone data-menu-btn[^>]* aria-current="page">'
+        for url, desk in (("/history/", "/history/"), ("/history/inkings/", "/history/"), ("/records/", "/records/"),
+                          ("/pick/", None), ("/search/?q=blue", None), ("/settings/", None)):
+            html = tabs(self.client.get(url).content.decode())
+            with self.subTest(url=url):
+                self.assertRegex(html, more)
+                if desk:
+                    self.assertIn('<a class="kit-tab" data-desk href="%s" aria-current="page">' % desk, html)
+                self.assertEqual(html.count('aria-current="page"'), 2 if desk else 1)
 
     def test_chip_rows_fold_into_filter(self):
         self.pens(2)
@@ -143,7 +175,7 @@ class AStranger(Collection):
         self.assertIn("menu-corner", html)
         hdr = header(html)
         self.assertIn("data-menu-btn", hdr)
-        self.assertNotIn('class="tabbar"', hdr)
+        self.assertNotIn('<nav class="kit-tabs"', html)
         self.assertNotIn("deskSearchBtn", hdr)
 
     def test_a_guest_finds_leave_in_the_menu(self):

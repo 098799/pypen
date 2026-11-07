@@ -1,0 +1,253 @@
+<!-- KIT-TABS: v1.0 2026-11-03
+  The tab bar: the app's sections, fixed at the bottom of a phone, a row in the
+  header on a desk. Spec: ~/apps/kit/README.md §4, "Tab bar". Canonical copy:
+  ~/apps/kit/snippets/tabs.html. Apps carry a byte-identical copy (fleet-check
+  `kit` compares them): change this file, bump the stamp here and in `version`
+  below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 17 apps had their own (AUDIT.md, pass 8): bars from
+  43 to 68 px, labels from 9.3 to 12.5 px, the current tab marked for a screen
+  reader in 4 of them, a second copy of the same links for the desk in 9, and
+  inactive labels under 4.5:1 in three.
+
+  Include it once in the body (or its style part in the app's CSS bundle and
+  its script part in the app's JS). The header names no tag in angle brackets
+  but the markup below, and holds no double braces.
+
+    <nav class="kit-tabs" aria-label="Sections" data-desk-into="#desktabs">
+      <a class="kit-tab" href="/" aria-current="page">(svg)<span>Today</span></a>
+      <a class="kit-tab" href="/review">(svg)<span>Review</span><b>12</b></a>
+      <a class="kit-tab" href="/since" data-desk><span>Since</span></a>
+      <a class="kit-tab" href="/settings" data-whatsnew-dot>(svg)<span>Settings</span></a>
+    </nav>
+
+  One nav, outside any header (a blurred header would hold a fixed bar inside it).
+  The STATE IS THE ATTRIBUTE: aria-current="page" on the tab of the section the
+  screen is in, sub-pages too (/item/5 lights Items). The server writes it. A
+  page whose server wrote none gets the tab whose href, or one of whose
+  `data-match` prefixes ("/since /quota"), is the longest start of the path.
+  An app that routes in the page calls kitTabs.set(href or element).
+
+  Inside a tab:
+    svg (viewBox 0 0 24 24)   the icon: drawn with stroke currentColor, 24 px.
+                              Never an emoji or a font glyph (they change by platform
+                              and ignore the colour). aria-hidden is set for it.
+    span                      the label, 11.5 px, one line
+    b                         a count (kitTabs.count sets it; over 99 reads 99+)
+    i.kit-tab-dot             a dot (something is due), with a title for a reader
+    data-whatsnew-dot         the kit What's new dot, placed on the icon
+  A tab may be a button (a More that opens a sheet): button.kit-tab.
+  data-desk on a tab: only in the desk row. data-phone: only in the bar.
+
+  The bar: 56 px + the safe area, a hairline on top, the app's --panel under it.
+  The page gets the room it takes (body padding-bottom), and loses it when the
+  nav is hidden. The current tab: --accent, bold, a 3 px bar on its top edge
+  (never colour alone). Tap the current tab again: the page goes to its top
+  (the `kit:tab-again` event fires on the tab first; preventDefault() on it stops
+  that). A tap lights the tab at once, before the next page answers.
+  While a text field has the focus on a touch screen the bar hides (an iPhone
+  floats a fixed bar above its keyboard).
+  Hide it on a screen that needs the whole height (a game, a full-screen player):
+  nav[hidden], or html.kit-tabs-off.
+
+  The desk (900 px and wider): with data-desk-into="<selector>" the nav moves into
+  that element (a slot in the app's header) and becomes a row of words; under
+  900 px it goes back. data-desk-after="<selector>": the same, placed right after
+  that element (the brand: the tabs never move when a title changes width).
+  Until its script has placed it, such a nav is not shown on a desk (no flash at
+  the bottom); on a page without the slot it stays at the bottom. With no data-desk-into it stays at the bottom, its tabs
+  at most 168 px wide.
+
+  Look: --accent --panel --line --fg --dim --bg and the app's font. An app's own
+  letter case and spacing: --kit-tabs-case (uppercase), --kit-tabs-track (.08em),
+  --kit-tabs-variant (small-caps). --kit-tabs-fg when --dim is under 4.5:1 on
+  --panel, --kit-tabs-bg for another bar colour, --kit-tabs-z (30).
+  The room it takes is --kit-tabs-room (read it, never set it): for a bar of the
+  app's own above the tabs, bottom: var(--kit-tabs-room).
+  Words: window.KITTABS = {labels: {more: '99+'}} before this file's script.
+
+  JS: kitTabs.set(href | element)   the current tab (an app that routes in the page)
+      kitTabs.count(href | element, n)   the count on a tab; 0 or null removes it
+      kitTabs.mount()               after the page drew a new nav itself
+  Test: kit/snippets/tests/test_tabs.py.
+-->
+<style>
+:root { --kit-tabs-h: 56px; --kit-tabs-room: 0px; }
+:root:has(nav.kit-tabs:not([hidden]):not(.kit-tabs-in)):not(.kit-tabs-off) { --kit-tabs-room: calc(var(--kit-tabs-h) + 1px + env(safe-area-inset-bottom, 0px)); }
+:root:has(nav.kit-tabs:not([hidden]):not(.kit-tabs-in)):not(.kit-tabs-off) body { padding-bottom: calc(var(--kit-tabs-room) + 16px); }
+nav.kit-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--kit-tabs-z, 30); display: flex; justify-content: center; align-items: stretch;
+  box-sizing: content-box; height: var(--kit-tabs-h); margin: 0; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  background: var(--kit-tabs-bg, var(--panel)); border: 0; border-top: 1px solid var(--line); box-shadow: none; font: inherit; color: var(--fg);
+  transform: none; -webkit-tap-highlight-color: transparent; }
+nav.kit-tabs[hidden], html.kit-tabs-off nav.kit-tabs, html.kit-kb nav.kit-tabs:not(.kit-tabs-in) { display: none; }
+.kit-tab { position: relative; flex: 1 1 0; min-width: 0; max-width: 168px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px; height: auto; margin: 0; padding: 5px 2px 4px; border: 0; border-radius: 0; background: none; box-shadow: none;
+  color: var(--kit-tabs-fg, var(--dim)); font: inherit; font-size: 11.5px; font-weight: 500; line-height: 1.1; text-align: center; text-decoration: none;
+  letter-spacing: 0; text-transform: none; cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+.kit-tab > svg { flex: none; width: 24px; height: 24px; margin: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.kit-tab > span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: inherit;
+  letter-spacing: var(--kit-tabs-track, 0); text-transform: var(--kit-tabs-case, none); font-variant: var(--kit-tabs-variant, normal); }
+.kit-tab[aria-current=page] { color: var(--accent); font-weight: 700; }
+.kit-tab[aria-current=page]::before { content: ""; position: absolute; top: -1px; left: 50%; width: min(56%, 48px); height: 3px; transform: translateX(-50%);
+  border-radius: 0 0 3px 3px; background: var(--accent); }
+.kit-tab > b { position: absolute; top: 3px; left: calc(50% + 5px); box-sizing: border-box; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: var(--kit-tabs-badge, var(--accent)); color: var(--on-accent, var(--bg)); box-shadow: 0 0 0 2px var(--kit-tabs-bg, var(--panel));
+  font: 700 11px/18px system-ui, -apple-system, sans-serif; letter-spacing: 0; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+.kit-tab > .kit-tab-dot { position: absolute; top: 5px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 0 2px var(--kit-tabs-bg, var(--panel)); pointer-events: none; }
+.kit-tab > .kit-wn-dot { top: 5px; right: auto; left: calc(50% + 8px); }
+.kit-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 12px; }
+.kit-tab[data-desk], .kit-tabs-in .kit-tab[data-phone] { display: none; }
+@media (hover: hover) and (pointer: fine) { .kit-tab:not([aria-current=page]):hover { color: var(--fg); } }
+/* the desk row, inside the app's header */
+nav.kit-tabs.kit-tabs-in { position: static; z-index: auto; height: auto; padding: 0; gap: 2px; justify-content: flex-start; flex-wrap: wrap;
+  background: none; border: 0; min-width: 0; }
+.kit-tabs-in .kit-tab { flex: none; max-width: none; flex-direction: row; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 8px; font-size: 14px; }
+.kit-tabs-in .kit-tab[data-desk] { display: flex; }
+.kit-tabs-in .kit-tab > svg { display: none; }
+.kit-tabs-in .kit-tab[aria-current=page] { background: color-mix(in srgb, var(--accent) 15%, transparent); font-weight: 600; }
+.kit-tabs-in .kit-tab[aria-current=page]::before { top: auto; bottom: 0; width: calc(100% - 24px); height: 2px; border-radius: 2px; }
+.kit-tabs-in .kit-tab > b, .kit-tabs-in .kit-tab > .kit-tab-dot { position: static; box-shadow: none; }
+.kit-tabs-in .kit-tab > .kit-wn-dot { position: static; flex: none; }
+@media (min-width: 900px) { nav.kit-tabs:not(.kit-tabs-in) .kit-tab { padding-top: 6px; }
+  nav.kit-tabs[data-desk-into]:not(.kit-tabs-in):not(.kit-tabs-home), nav.kit-tabs[data-desk-after]:not(.kit-tabs-in):not(.kit-tabs-home) { visibility: hidden; } }
+</style>
+<script>
+(function () {
+  if (window.kitTabs) return;
+  var cfg = window.KITTABS || {};
+  var L = Object.assign({more: '99+'}, cfg.labels || {});
+  var DESK = window.matchMedia ? matchMedia('(min-width: 900px)') : {matches: false, addEventListener: function () {}};
+  var TOUCH = window.matchMedia ? matchMedia('(pointer: coarse)') : {matches: false};
+
+  function navs() { return document.querySelectorAll('nav.kit-tabs'); }
+  function path(u) { try { return new URL(u, location.href).pathname.replace(/\/+$/, '') || '/'; } catch (e) { return ''; } }
+  function same(a, b) { return a.origin === b.origin && a.pathname.replace(/\/+$/, '') === b.pathname.replace(/\/+$/, '') && a.search === b.search; }
+
+  // the key a tab answers to: its href, and its data-match prefixes
+  function keys(t) {
+    var k = [];
+    if (t.getAttribute('href')) k.push(path(t.href));
+    (t.dataset.match || '').split(/\s+/).forEach(function (m) { if (m) k.push(path(m)); });
+    return k;
+  }
+  function score(t, p) {
+    var best = -1;
+    keys(t).forEach(function (k) {
+      var hit = k === p || (k !== '/' && p.indexOf(k + '/') === 0);
+      if (hit && k.length > best) best = k.length;
+    });
+    return best;
+  }
+  function tabsOf(nav) { return Array.prototype.slice.call(nav.querySelectorAll('.kit-tab')); }
+  function light(nav, tab) {
+    tabsOf(nav).forEach(function (t) {
+      if (t === tab) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+    });
+  }
+  function byPath(nav, p) {
+    var best = null, top = -1;
+    tabsOf(nav).forEach(function (t) { var s = score(t, p); if (s > top) { top = s; best = t; } });
+    return best;
+  }
+  function find(nav, x) {
+    if (x && x.nodeType === 1) return nav.contains(x) ? x : null;
+    var p = path(x), hit = null;
+    tabsOf(nav).forEach(function (t) { if (!hit && t.getAttribute('href') && path(t.href) === p) hit = t; });
+    return hit || byPath(nav, p);
+  }
+
+  function set(x) {
+    Array.prototype.forEach.call(navs(), function (nav) { var t = find(nav, x); if (t) light(nav, t); });
+  }
+  function count(x, n) {
+    Array.prototype.forEach.call(navs(), function (nav) {
+      var t = find(nav, x); if (!t) return;
+      var b = t.querySelector(':scope > b');
+      n = +n || 0;
+      if (n <= 0) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('b'); t.appendChild(b); }
+      b.textContent = n > 99 ? L.more : String(n);
+    });
+  }
+
+  // ——— the desk row: the nav moves into the app's header slot and back ———
+  function place(nav) {
+    var into = nav.dataset.deskInto, after = nav.dataset.deskAfter;
+    var slot = into ? document.querySelector(into) : after ? document.querySelector(after) : null;
+    if (!nav.__kitHome) {
+      nav.__kitHome = document.createComment('kit-tabs');
+      nav.parentNode.insertBefore(nav.__kitHome, nav);
+    }
+    if (DESK.matches && slot) {
+      if (into && nav.parentNode !== slot) slot.appendChild(nav);
+      if (!into && slot.nextElementSibling !== nav) slot.parentNode.insertBefore(nav, slot.nextSibling);
+      nav.classList.add('kit-tabs-in'); nav.classList.remove('kit-tabs-home');
+    } else {
+      if (nav.__kitHome.parentNode && nav.previousSibling !== nav.__kitHome) nav.__kitHome.parentNode.insertBefore(nav, nav.__kitHome.nextSibling);
+      nav.classList.remove('kit-tabs-in');
+      nav.classList.toggle('kit-tabs-home', DESK.matches);
+    }
+  }
+
+  function mount() {
+    Array.prototype.forEach.call(navs(), function (nav) {
+      tabsOf(nav).forEach(function (t) {
+        Array.prototype.forEach.call(t.querySelectorAll(':scope > svg'), function (s) { s.setAttribute('aria-hidden', 'true'); s.setAttribute('focusable', 'false'); });
+      });
+      if (!nav.querySelector('.kit-tab[aria-current=page]')) { var t = byPath(nav, path(location.href)); if (t && score(t, path(location.href)) >= 0) light(nav, t); }
+      place(nav);
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('nav.kit-tabs .kit-tab');
+    if (!t || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var nav = t.closest('nav.kit-tabs');
+    if (t.tagName === 'A' && t.href) {
+      var u = new URL(t.href, location.href);
+      if (u.origin !== location.origin || t.target || t.hasAttribute('download')) return;
+      if (t.getAttribute('aria-current') === 'page' && same(u, location)) {
+        var ev = new CustomEvent('kit:tab-again', {bubbles: true, cancelable: true});
+        e.preventDefault();
+        if (t.dispatchEvent(ev)) {
+          var smooth = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+          window.scrollTo({top: 0, behavior: smooth ? 'smooth' : 'auto'});
+        }
+        return;
+      }
+      // at once: the next page may take a moment. An app's leave guard that keeps the
+      // page (beforeunload, the browser asks) gives the old tab back.
+      var prev = nav.querySelector('.kit-tab[aria-current=page]');
+      var kept = function (ev) { if (ev.defaultPrevented || ev.returnValue) setTimeout(function () { if (prev) light(nav, prev); }, 0); };
+      window.addEventListener('beforeunload', kept);
+      setTimeout(function () { window.removeEventListener('beforeunload', kept); }, 1500);
+      light(nav, t);
+    }
+  }, true);
+
+  // the keyboard of a phone: the bar would float above it
+  function editable(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.isContentEditable) return true;
+    if (el.tagName === 'TEXTAREA') return true;
+    if (el.tagName !== 'INPUT') return false;
+    return !/^(button|checkbox|radio|range|color|file|submit|reset|image|hidden)$/i.test(el.type);
+  }
+  var kbTimer = 0;
+  document.addEventListener('focusin', function (e) {
+    if (!TOUCH.matches || !editable(e.target)) return;
+    clearTimeout(kbTimer); document.documentElement.classList.add('kit-kb');
+  });
+  document.addEventListener('focusout', function () {
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(function () { if (!editable(document.activeElement)) document.documentElement.classList.remove('kit-kb'); }, 120);
+  });
+
+  if (DESK.addEventListener) DESK.addEventListener('change', function () { Array.prototype.forEach.call(navs(), place); });
+  document.addEventListener('kit:softnav', mount);
+  window.addEventListener('popstate', function () { setTimeout(mount, 0); });
+  window.kitTabs = {version: '1.0', set: set, count: count, mount: mount};
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+})();
+</script>

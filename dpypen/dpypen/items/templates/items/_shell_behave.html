@@ -239,55 +239,65 @@
 </script>
 <script>
 /* The tab bar and the hamburger panel both live outside #main, which hx-boost
-   swaps, so neither gets its active state back from the server — the
+   swaps, so neither gets its current place back from the server — the
    panel was still lighting "Pens" after you had used it to navigate to
    Records. Re-derive both from the URL after every swap.
 
    The panel also disagreed with the server on hard loads: /pens/needs-photos/
    renders with nav="pens", so it lit "Pens" while sitting on the page its own
    entry names. Longest-prefix wins here, which resolves that too — and being
-   derived rather than declared, it stays right for any route added later. */
+   derived rather than declared, it stays right for any route added later.
+
+   The tab bar is the kit's (_tabs.html): kitTabs.set() lights the tab whose
+   href or data-match is the longest start of the path, none when no tab owns
+   the page. History and Records are desk-only tabs; on a phone those pages
+   live behind More, so More is lit with them (as the server marks it). */
 (function () {
-  var GROUPS = [
-    { root: ".tabbar",     sel: "a[href]",              cls: "active", current: true  },
-    { root: ".menu-panel", sel: ".menu-link, .menu-item", cls: "on",   current: false },
-  ];
+  var panel = document.querySelector(".menu-panel");
+  var links = panel ? Array.prototype.slice.call(panel.querySelectorAll(".menu-link, .menu-item")) : [];
 
-  var groups = GROUPS.map(function (g) {
-    var root = document.querySelector(g.root);
-    return root ? { cfg: g, links: Array.prototype.slice.call(root.querySelectorAll(g.sel)) } : null;
-  }).filter(Boolean);
-  if (!groups.length) return;
-
-  function sync() {
-    var here = location.pathname;
-    groups.forEach(function (group) {
-      var best = null;
-      group.links.forEach(function (a) {
-        var href = (a.getAttribute("href") || "").split("?")[0];
-        if (!href) return;
-        // Longest matching prefix wins, so /pens/189/ lights Pens,
-        // /pens/needs-photos/ lights its own entry rather than Pens, and the
-        // dashboard's "/" never claims every page.
-        if (here === href || (href !== "/" && here.indexOf(href) === 0)) {
-          if (!best || href.length > best.__href.length) { best = a; a.__href = href; }
-        }
-      });
-      group.links.forEach(function (a) {
-        var on = a === best;
-        a.classList.toggle(group.cfg.cls, on);
-        if (group.cfg.current) {
-          if (on) a.setAttribute("aria-current", "page");
-          else a.removeAttribute("aria-current");
-        }
-      });
+  function syncMenu(here) {
+    var best = null, bestLen = -1;
+    links.forEach(function (a) {
+      var href = (a.getAttribute("href") || "").split("?")[0];
+      if (!href) return;
+      // Longest matching prefix wins, so /pens/189/ lights Pens,
+      // /pens/needs-photos/ lights its own entry rather than Pens, and the
+      // dashboard's "/" never claims every page.
+      if ((here === href || (href !== "/" && here.indexOf(href) === 0)) && href.length > bestLen) {
+        best = a; bestLen = href.length;
+      }
     });
+    links.forEach(function (a) { a.classList.toggle("on", a === best); });
   }
+
+  function syncTabs() {
+    var nav = document.querySelector("nav.kit-tabs");
+    if (!nav || !window.kitTabs) return;
+    Array.prototype.forEach.call(nav.querySelectorAll(".kit-tab[aria-current]"), function (t) { t.removeAttribute("aria-current"); });
+    kitTabs.set(location.href);
+    var cur = nav.querySelector(".kit-tab[aria-current=page]"), more = nav.querySelector(".kit-tab[data-phone]");
+    if (cur && more && cur.hasAttribute("data-desk")) more.setAttribute("aria-current", "page");
+  }
+
+  function sync() { syncMenu(location.pathname); syncTabs(); }
 
   sync();
   document.body.addEventListener("htmx:afterSettle", sync);
   document.body.addEventListener("htmx:pushedIntoHistory", sync);
   window.addEventListener("popstate", sync);
+  /* Back from htmx's cache rewrites <body> from a snapshot taken on a desk
+     with the nav inside the desk bar's slot: put it back where it lives (after
+     #hdr) before the kit places it again, or a narrowed window keeps it in
+     the hidden header. The panel's links are new nodes too. */
+  document.addEventListener("htmx:historyRestore", function () {
+    var nav = document.querySelector("nav.kit-tabs"), hdr = document.getElementById("hdr");
+    if (nav && hdr && hdr.contains(nav)) hdr.parentNode.insertBefore(nav, hdr.nextSibling);
+    panel = document.querySelector(".menu-panel");
+    links = panel ? Array.prototype.slice.call(panel.querySelectorAll(".menu-link, .menu-item")) : [];
+    if (window.kitTabs) kitTabs.mount();
+    sync();
+  });
 })();
 </script>
 <script>
@@ -414,7 +424,7 @@ window.__go = function (url, push) {
       ["#inkFilters a[data-color]", "aria-current", true],      // a colour chip that is on clears itself
       [".history-sub-nav a", "active", false],
       ["#statsNav .kit-chip", "aria-current", false],
-      ["#hdr .tabbar a", "active", false]      // the desk bar's tabs
+      ["#hdr nav.kit-tabs .kit-tab", "aria-current", false]      // the desk bar's tabs
     ];
     for (var i = 0; i < sets.length; i++) {
       var els = [].slice.call(document.querySelectorAll(sets[i][0]))
@@ -427,7 +437,7 @@ window.__go = function (url, push) {
     var t = tabs();
     if (!t) return;
     var at = -1;
-    t.els.forEach(function (el, i) { if (t.on === "aria-current" ? el.getAttribute(t.on) === "true" : el.classList.contains(t.on)) at = i; });
+    t.els.forEach(function (el, i) { if (t.on === "aria-current" ? /^(true|page)$/.test(el.getAttribute(t.on)) : el.classList.contains(t.on)) at = i; });
     var to = at + dir;
     if (t.toggle && to === -1 && at >= 0) { t.els[at].click(); return; }  // back to "all"
     if (to < 0 || to >= t.els.length) return;                             // clamp, no wrap

@@ -24,11 +24,12 @@ From the shell and the kit: the theme boot, the icons, pull to refresh, the
 <link rel="stylesheet" href="{% static 'items/css/fonts.css' %}">
 <link rel="stylesheet" href="{% static 'items/css/wall.css' %}">
 <style>{% block wall_css %}{% endblock %}</style>
-<link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 {# The kit's pull to refresh, update and filters (kitshell.py): after the wall's sheets, where they were inline. #}
 <link rel="stylesheet" href="{% kit_shell 'wall.css' %}">
+{# The kit's tab bar (KIT-TABS) for the owner and guests: _tabbar.html draws it for them only. #}
+{% if is_owner or is_guest %}<link rel="stylesheet" href="{% kit_shell 'tabs.css' %}">{% endif %}
 </head>
-<body{% if is_owner or is_guest %} class="has-tabbar"{% endif %}>
+<body>
 {% comment %}
 The kit's snippets as one cached file (kitshell.py), blocking where they were: pull to refresh
 (a wall on a home-screen app has no reload), New version (a wall left open is told when a deploy
@@ -36,6 +37,7 @@ made it old) and the filters the ink wall's header carries (on the pen wall it f
 {% endcomment %}
 <script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
 <script src="{% kit_shell 'wall.js' %}"></script>
+{% if is_owner or is_guest %}<script src="{% kit_shell 'tabs.js' %}"></script>{% endif %}
 
 <header class="wall-head">
   <div class="wall-title">{% block wall_title %}{% endblock %}</div>

@@ -52,7 +52,7 @@ class ThePagesAreLight(TestCase):
                 html = r.content.decode()
                 self.assertLess(len(r.content), budget, url)
                 for stamp in ("KIT-LAYER", "KIT-TOAST", "KIT-EMPTY", "KIT-FILTERS", "KIT-UPDATE", "KIT-PULLREFRESH",
-                              "KIT-WHATSNEW", "KIT-INSTALL", "KIT-SETTINGS", "KIT-THEME"):
+                              "KIT-WHATSNEW", "KIT-INSTALL", "KIT-SETTINGS", "KIT-THEME", "KIT-TABS"):
                     self.assertNotIn(stamp, html, (url, stamp))
 
     def test_a_stranger_gets_light_pages_and_no_member_file(self):
@@ -63,6 +63,37 @@ class ThePagesAreLight(TestCase):
                 self.assertLess(len(r.content), budget, url)
                 self.assertNotIn("KIT-", r.content.decode())
                 self.assertNotIn("/kit/member.", r.content.decode())
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class TheTabBarComesInAFile(TestCase):
+    """KIT-TABS (kit README §4 "Tab bar"): in member.js/.css for the shells,
+    tabs.js/.css for the walls; the owner and guests only, as the bar is."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user("owner", password="x")
+
+    def test_the_files_carry_the_kit_s_tab_bar(self):
+        for name in ("member.css", "member.js", "tabs.css", "tabs.js"):
+            with self.subTest(name=name):
+                self.assertIn(b"KIT-TABS: v1", kitshell.KIT.files[name][0])
+        self.assertIn(b"window.kitTabs", kitshell.KIT.files["member.js"][0])
+        self.assertIn(b"--kit-tabs-room", kitshell.KIT.files["member.css"][0])
+
+    def test_a_wall_loads_the_bar_for_the_owner_only(self):
+        for url in ("/pub/pens/wall/", "/pub/inks/wall/"):
+            with self.subTest(url=url):
+                stranger = Client().get(url).content.decode()
+                self.assertNotIn("kit-tabs", stranger)
+                self.assertNotIn("/kit/tabs.", stranger)
+                self.client.force_login(self.owner)
+                html = self.client.get(url).content.decode()
+                self.client.logout()
+                self.assertEqual(html.count('<nav class="kit-tabs"'), 1)
+                self.assertIn('<link rel="stylesheet" href="/kit/tabs.css?v=', html)
+                self.assertIn('<script src="/kit/tabs.js?v=', html)
+                self.assertNotIn("KIT-TABS", html)
 
 
 @override_settings(STORAGES=PLAIN_STATIC)

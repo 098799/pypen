@@ -29,7 +29,6 @@
   --accent: #88a4de; --on-accent: #131927;
   --plate-shade: 0 1px 0 #0006;
   --photo: brightness(.94);
-  --bar-h: 56px;
   --edge: 16px;
   --fam-black: #3b3a39; --fam-blue: #2a5caa; --fam-teal: #14a9c4; --fam-green: #2f7a3a;
   --fam-amber: #e0a11f; --fam-red: #c93b3b; --fam-violet: #9a4fb5; --fam-brown: #7a4a22; --fam-other: #8a8578;
@@ -77,7 +76,7 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 /* ---- the frame ---- */
 #main {
   display: block; max-width: 1180px; margin: 0 auto;
-  padding: calc(10px + env(safe-area-inset-top)) var(--edge) calc(var(--bar-h) + 28px + env(safe-area-inset-bottom));
+  padding: calc(10px + env(safe-area-inset-top)) var(--edge) 12px;   /* the kit's tab bar adds its room */
 }
 .head { display: flex; align-items: center; gap: 12px; min-height: 56px; margin-bottom: 10px; }
 .head-t { flex: 1; min-width: 0; }
@@ -579,19 +578,9 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 /* ---- the bars ---- */
 .deskbar { display: contents; }
 .db-brand, .db-btn, .db-space, .desk-pop { display: none; }
-.tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
-  padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--bg) 92%, transparent);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
-}
-.tabbar a, .tabbar button {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: var(--bar-h);
-  border: 0; background: none; color: var(--dim); font: 500 12px/1.1 "Alegreya Sans", sans-serif; cursor: pointer; padding: 6px 2px;
-}
-.tabbar svg { width: 22px; height: 22px; }
-.tabbar .gl-dots { display: none; }
-.tabbar a.active { color: var(--accent); font-weight: 700; }
-.tabbar a.active::before { content: ""; position: absolute; top: 0; width: 30px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+/* the tab bar is the kit's (items/_tabs.html); its place on a desk: */
+.desktabs { display: none; }
+.desktabs:has(.kit-tabs-in) { display: block; min-width: 0; }
 .wn-host { position: relative; display: inline-block; }
 .menu-panel {
   position: fixed; z-index: 30; display: none; width: min(300px, calc(100vw - 16px)); max-height: 70vh; overflow-y: auto; padding: 8px; border-radius: 14px;
@@ -605,7 +594,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 .menu-guest { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--dim); padding: 8px 10px; border-top: 1px solid var(--line); margin-top: 6px; }
 .menu-guest form { margin: 0; }
 .kit-msgs[hidden] { display: none; }
-:root { --kit-update-bottom: calc(var(--bar-h) + 12px + env(safe-area-inset-bottom)); --kit-toast-bottom: calc(var(--bar-h) + 12px + env(safe-area-inset-bottom)); --kit-install-bottom: calc(var(--bar-h) + 12px + env(safe-area-inset-bottom)); --kit-update-desk-bottom: 16px; --kit-toast-desk-bottom: 16px; }
+:root { --kit-update-bottom: calc(var(--kit-tabs-room) + 12px); --kit-toast-bottom: calc(var(--kit-tabs-room) + 12px); --kit-install-bottom: calc(var(--kit-tabs-room) + 12px); --kit-update-desk-bottom: 16px; --kit-toast-desk-bottom: 16px; }
 
 @media (min-width: 900px) {
   body { font-size: 17.5px; }
@@ -620,16 +609,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
   .db-btn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: none; border: 0; color: var(--fg); cursor: pointer; }
   .db-btn svg { width: 20px; height: 20px; }
   .db-btn:hover { background: var(--panel-2); }
-  .tabbar { position: static; display: flex; gap: 2px; background: none; border: 0; padding: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .tabbar a { flex-direction: row; min-height: 36px; padding: 0 12px; border-radius: 9px; font: 500 1rem/1 "Alegreya Sans", sans-serif; }
-  .tabbar a svg { display: none; }
-  .tabbar a:hover { background: var(--panel-2); color: var(--fg); }
-  .tabbar a.active::before { top: auto; bottom: -8px; }
-  .tabbar [data-menu-btn] { position: fixed; top: 6px; right: 16px; width: 40px; height: 40px; min-height: 0; flex-direction: row; border-radius: 10px; color: var(--fg); }
-  .tabbar [data-menu-btn]:hover { background: var(--panel-2); }
-  .tabbar .gl-bars, .tabbar .tb-label { display: none; }
-  .tabbar .gl-dots { display: block; }
-  #deskSearchBtn { margin-right: 44px; }
+  .db-btn .wn-host { display: block; }
   .desk-pop {
     position: fixed; z-index: 30; display: none; max-width: min(520px, calc(100vw - 16px)); padding: 10px; border-radius: 14px;
     background: var(--panel); border: 1px solid var(--line); box-shadow: 0 18px 44px -18px #000b;

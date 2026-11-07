@@ -181,9 +181,10 @@ offline (`pwa.KITSW["files"]`).
 
 - `theme.js` (head, blocking); `shell.css`/`shell.js` (both shells: layer,
   toast, empty, filters, update, pull to refresh); `member.css`/`member.js`
-  (owner and guests: What's new, install bar, Settings' rows); `wall.css`/`wall.js`
-  (the walls: pull to refresh, update, filters). `_kit.html` and `_kit_css.html`
-  link them.
+  (owner and guests: What's new, install bar, Settings' rows, the tab bar);
+  `wall.css`/`wall.js` (the walls: pull to refresh, update, filters);
+  `tabs.css`/`tabs.js` (a wall's tab bar, owner and guests only). `_kit.html`
+  and `_kit_css.html` link them.
 - **Blocking at the top of `<body>`, not `defer`**: `_shell_early`,
   `_shell_behave`, the What's new repaint and the settings page call the kit
   as they run. A cached file costs one fetch per deploy.
@@ -326,15 +327,21 @@ Inks, History, Records), then Filter ▾, ⌕ and ⋯. Below 900 px it is the bo
 tab bar (it was below 720; the old 720–899 pill nav is gone, and with it the
 floating menu button that showed on scroll).
 
-- **One markup, no move**: `_tabbar.html` is included once, inside `#hdr`.
-  `app.css` "Desk bar" draws it as the bar's tabs (its More button, wearing ⋯,
-  absolute at the bar's right end; `.desk-tab` History and Records shown only
-  there) and below 900 px gives `#hdr` no box, so the bar is the fixed tab bar
-  of `tabbar.css`. Taken over pod's way (a script moves the nav in): nothing
-  waits for a script, so the first paint has its tabs, and htmx's history
-  snapshot cannot catch a half-moved bar. Nothing may give `#hdr` a
-  transform, filter or backdrop-filter: the fixed tab bar and the popovers
-  would be measured from it.
+- **The tab bar is the kit's** (`_tabs.html`, KIT-TABS, kit §4 "Tab bar"; its
+  style and script in `member.css`/`member.js`, `tabs.css`/`tabs.js` on a
+  wall). `_tabbar.html` (and `next/_tabbar.html`) is one `nav.kit-tabs`, after
+  `#hdr`, with `data-desk-into="#desktabs"`: fixed at the bottom of a phone,
+  and from 900 px the kit moves it into the bar's slot as a row of words.
+  History and Records are `data-desk` tabs; on a phone they sit behind More
+  (`data-phone`, a button that opens the menu), which the server lights for
+  them and for What to ink next, Search, Settings and Import. On a desk More
+  is the bar's ⋯. `_shell_behave.html` re-lights the tabs after an htmx swap
+  (`kitTabs.set`) and puts the nav back after `#hdr` when htmx restores a
+  snapshot taken on a desk. The kit hides the bar until it has placed it, so
+  a desk never flashes it at the bottom. pypen has no tab bar CSS of its own
+  (`tests_kit.TabBar`); the wall maps its paper and ink onto the kit's
+  tokens and asks for upper case (`--kit-tabs-case`). Nothing may give `#hdr`
+  a transform, filter or backdrop-filter: the popovers are measured from it.
 - **Filter ▾** (`static/items/js/deskbar.js`): a page marks its chip row
   `data-fold="<name>"` (the pens' rotation, the inks' filters). On a desk the
   row hides and the button opens the same chips in a popover; a chip there

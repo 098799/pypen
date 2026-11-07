@@ -1786,12 +1786,7 @@ main { max-width: 1320px; padding: var(--main-pt) clamp(0.9rem, 3vw, 1.75rem) 3r
 
 /* --- 1. Phone: bottom tab bar ------------------------------------------- */
 
-/* The tab bar is the phone's (and a narrow window's) navigation below 900 px;
-   from there it is the desk bar's tabs. Clear it so the last row is never
-   trapped under it. */
-@media (max-width: 899px) {
-  body:has(.tabbar) main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
-}
+/* The kit's (_tabs.html): it gives the page the room under the bar itself. */
 
 @media (max-width: 719px) {
 
@@ -1961,7 +1956,7 @@ html[data-theme="dark"] ::selection {
   outline-offset: 3px;
   border-radius: 4px;
 }
-:where(.tabbar a, .tabbar button, .jumpbar a, .menu-btn,
+:where(.jumpbar a, .menu-btn,
        .user-nav a, .btn, .vt-btn):focus-visible {
   outline-offset: 2px;
   border-radius: 999px;
@@ -2413,18 +2408,19 @@ a.pen-thumb { border-bottom: none; }
 }
 
 /* ---- Desk bar (kit README §4 Fleet UX "Desk", PYPEN-6) ---------------------
-   _shell.html's #hdr holds the brand, the tab bar (_tabbar.html, included
-   once), ⌕ and the popovers; static/items/js/deskbar.js adds Filter ▾ for a
-   page with a chip row. Below 900 px the header has no box: only the tab bar
-   in it shows, fixed to the bottom of the screen by tabbar.css (nothing here
-   may give #hdr a transform, filter or backdrop-filter there, or the fixed
-   bar would hang off it). */
+   _shell.html's #hdr holds the brand, the slot the kit moves the tab bar into
+   (#desktabs, _tabbar.html + the kit's _tabs.html), ⌕, ⋯ and the popovers;
+   static/items/js/deskbar.js adds Filter ▾ for a page with a chip row. Below
+   900 px the header is not there: the tab bar is at the bottom of the screen. */
 @media (max-width: 899px) {
-  #hdr { position: static; height: 0; margin: 0; padding: 0; border: 0; }
-  #hdr > :not(.tabbar) { display: none; }
+  #hdr { display: none; }
 }
-.tabbar .desk-tab, .tabbar .gl-dots { display: none; }
 .desk-pop { display: none; }
+/* The tab bar: the kit's look, pypen's letter case (the tabs were small
+   tracked capitals on both shapes). */
+:root { --kit-tabs-case: uppercase; --kit-tabs-track: .1em; }
+.desktabs { display: none; }
+.desktabs:has(.kit-tabs-in) { display: block; min-width: 0; flex: none; }
 
 @media (min-width: 900px) {
   :root { --hdrh: 52px; --hdr-pad: max(clamp(0.9rem, 3vw, 1.75rem), calc((100% - 1320px) / 2 + 1.75rem)); }
@@ -2435,7 +2431,7 @@ a.pen-thumb { border-bottom: none; }
     position: sticky; top: 0; z-index: 25;
     height: var(--hdrh);
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0 calc(var(--hdr-pad) + 44px) 0 var(--hdr-pad);
+    padding: 0 var(--hdr-pad);
     background: color-mix(in srgb, var(--paper) 96%, var(--plate-top));
     border-bottom: 1px solid var(--ink-line);
     box-shadow: 0 8px 22px -20px #00000066;
@@ -2453,28 +2449,8 @@ a.pen-thumb { border-bottom: none; }
   .db-brand:hover { color: var(--ink); border: none; }
   .db-space { flex: 1 1 auto; min-width: 0.5rem; }
 
-  /* The tabs: the tab bar's links, in a row, lit by a rule under the label
-     (not colour alone), as the pill nav's hover rule was. */
-  #hdr .tabbar {
-    display: flex; position: static; align-self: stretch; flex: none;
-    gap: 0; padding: 0; margin: 0; background: none; border: 0; box-shadow: none;
-    backdrop-filter: none; -webkit-backdrop-filter: none;
-  }
-  #hdr .tabbar a {
-    display: flex; align-items: center; height: 100%;
-    padding: 0 0.8rem; position: relative;
-    font-family: "Inter", sans-serif; font-size: 0.7rem; letter-spacing: 0.15em;
-    text-transform: uppercase; white-space: nowrap;
-    color: var(--muted); border: none; text-decoration: none;
-    transition: color 0.15s, box-shadow 0.15s;
-  }
-  #hdr .tabbar a svg { display: none; }
-  #hdr .tabbar a:hover { color: var(--ink); box-shadow: inset 0 -1.5px 0 var(--ink-line); }
-  #hdr .tabbar a.active { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
-  #hdr .tabbar .desk-tab { display: flex; }
-
-  /* The right side: Filter ▾, ⌕, and More as ⋯ at the end of the bar. */
-  .db-btn, #hdr .tabbar [data-menu-btn] {
+  /* The right side: Filter ▾, ⌕, and the menu as ⋯ at the end of the bar. */
+  .db-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; padding: 0; flex: none;
     border: 1px solid var(--ink-line); border-radius: 6px;
@@ -2485,17 +2461,11 @@ a.pen-thumb { border-bottom: none; }
   .db-btn { position: relative; }
   .db-btn .db-new { position: absolute; top: -9px; right: -14px; pointer-events: none; }
   .db-btn .db-new .kit-new-tag { margin: 0; background: var(--paper); }
-  .db-btn svg, #hdr .tabbar [data-menu-btn] svg { width: 17px; height: 17px; display: block; }
-  .db-btn:hover, #hdr .tabbar [data-menu-btn]:hover,
-  .db-btn[aria-expanded="true"], #hdr .tabbar [data-menu-btn][aria-expanded="true"] {
+  .db-btn svg { width: 17px; height: 17px; display: block; }
+  .db-btn:hover, .db-btn[aria-expanded="true"] {
     color: var(--ink); border-color: var(--accent); background: var(--chip-top);
   }
-  #hdr .tabbar [data-menu-btn] {
-    position: absolute; right: var(--hdr-pad); top: calc((var(--hdrh) - 34px) / 2);
-  }
-  #hdr .tabbar [data-menu-btn] .gl-bars, #hdr .tabbar [data-menu-btn] .tb-label { display: none; }
-  #hdr .tabbar [data-menu-btn] .gl-dots { display: block; }
-  #hdr .tabbar [data-menu-btn] .wn-host { display: block; }
+  .db-btn .wn-host { display: block; }
   .db-filter {
     display: inline-flex; align-items: center; gap: 0.45rem; flex: 0 1 auto; min-width: 0;
     max-width: 320px; height: 34px; padding: 0 0.75rem;
@@ -2514,7 +2484,6 @@ a.pen-thumb { border-bottom: none; }
      Filter says less before it cuts with an ellipsis. */
   @media (max-width: 1099px) {
     .db-brand span { display: none; }
-    #hdr .tabbar a { padding: 0 0.6rem; }
     .db-filter { max-width: 220px; }
   }
   .db-filter:hover, .db-filter[aria-expanded="true"] { color: var(--ink); border-color: var(--accent); background: var(--chip-top); }
