@@ -420,8 +420,11 @@ own CONFIG).
   and no static manifest. htmx swaps no 4xx/5xx, so the shell's
   `htmx:beforeSwap` takes these pages for a boosted navigation.
 - **Icons**: committed PNGs in `static/items/icons/` (192, 512, 512
-  maskable, 180 apple-touch), drawn from the SVGs in `pwa.py` with
-  `rsvg-convert`. iOS takes only a PNG apple-touch-icon.
+  maskable, 180 apple-touch), drawn from the SVGs in `pwa.py` by
+  `python3 tools/make_icons.py`. A flat navy nib on the paper `#f4ecd8`
+  edge to edge: that is the manifest's `background_color`, the phone's
+  splash, so no tile shows there; the maskable's nib lies inside the middle
+  third Android 12+ keeps. iOS takes only a PNG apple-touch-icon.
 - Probe: `python3 tools/kit_probe.py` (DB copy, DEBUG off, 390×844 touch).
 
 ## Security
