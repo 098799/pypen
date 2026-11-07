@@ -44,7 +44,7 @@ KITSW = {
         "light": {"bg": "#f4ecd8", "fg": "#1b2a4a", "dim": "#5a4b2e", "accent": "#7a1f2b", "line": "#d6c9a5"},
         "dark": {"bg": "#13161c", "fg": "#ece2c8", "dim": "#b9ad92", "accent": "#e08a94", "line": "#2b303b"},
     },
-    "files": ["/static/"],
+    "files": ["/static/", "/kit/"],
     "skip": ["/accounts/", "/admin/", "/api/", "/media/", "/i/", "/undo/"],
     "takeover": True,
 }

@@ -1,0 +1,6 @@
+{% load items_extras %}{% comment %}
+The kit snippets' styles (kitshell.py): after the shell's own sheets, where
+they were when inline in <body>, so on a tie the kit's rule wins as before.
+{% endcomment %}
+<link rel="stylesheet" href="{% kit_shell 'shell.css' %}">
+{% if is_owner or is_guest %}<link rel="stylesheet" href="{% kit_shell 'member.css' %}">{% endif %}

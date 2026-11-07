@@ -1,7 +1,0 @@
-{% comment %}
-The install nudge (kit README §4 "Install": _install.html is the kit's byte copy). The shell
-includes this for the owner and guests only: a stranger never meets it. It asks on the first day
-(days: 1): a guest on an invitation may come only once.
-{% endcomment %}
-<script>window.KITINSTALL = {app: "{{ app_name|escapejs }}", key: "pypenInstallNudge", days: 1, tag: "install-nudge"};</script>
-{% include "items/_install.html" %}

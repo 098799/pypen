@@ -1,4 +1,4 @@
-{% load static %}<!doctype html>
+{% load static items_extras %}<!doctype html>
 {% comment %}
 The walls' page (PYPEN-3): pens/wall.html and inks/wall.html extend it.
 Public, standalone (no shell, no #main: a boosted link to one comes up empty,
@@ -25,13 +25,17 @@ From the shell and the kit: the theme boot, the icons, pull to refresh, the
 <link rel="stylesheet" href="{% static 'items/css/wall.css' %}">
 <style>{% block wall_css %}{% endblock %}</style>
 <link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
+{# The kit's pull to refresh, update and filters (kitshell.py): after the wall's sheets, where they were inline. #}
+<link rel="stylesheet" href="{% kit_shell 'wall.css' %}">
 </head>
 <body{% if is_owner or is_guest %} class="has-tabbar"{% endif %}>
-{# Pull to refresh (kit README §4, KIT-PULLREFRESH): a wall on a home-screen app has no reload. #}
-{% include "items/_pullrefresh.html" %}
-{# New version (kit README §4, KIT-UPDATE): a wall left open is told when a deploy made it old. #}
+{% comment %}
+The kit's snippets as one cached file (kitshell.py), blocking where they were: pull to refresh
+(a wall on a home-screen app has no reload), New version (a wall left open is told when a deploy
+made it old) and the filters the ink wall's header carries (on the pen wall it finds nothing to mount).
+{% endcomment %}
 <script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
-{% include "items/_update.html" %}
+<script src="{% kit_shell 'wall.js' %}"></script>
 
 <header class="wall-head">
   <div class="wall-title">{% block wall_title %}{% endblock %}</div>

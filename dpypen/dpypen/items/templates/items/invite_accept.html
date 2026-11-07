@@ -8,8 +8,9 @@
     {% if code.label %}{{ code.label }} · {% endif %}read-only guest access to {{ app_name }}, Tomek's fountain pen collection.
   </p>
 
-  {# A full load, not an hx-boost swap: the swap replaced only #main, so a new
-     guest kept the stranger's header and had no tab bar until a reload. #}
+  {% comment %}A full load, not an hx-boost swap: the swap replaced only #main, so a new
+     guest kept the stranger's header and had no tab bar until a reload. (Django's {# #} is one line
+     only: this text showed on the page.){% endcomment %}
   <form method="post" class="form-bare" hx-boost="false">
     {% csrf_token %}
     <button type="submit" class="btn primary">Accept &amp; enter</button>

@@ -5,11 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{% block title %}{{ app_name }}{% endblock %}</title>
 <meta name="description" content="{% block description %}Tomek Grining's fountain pen collection.{% endblock %}">
-{% comment %}
-The kit's overlay layer (kit README §4 "Dialogs & sheets", KIT-LAYER, a byte
-copy): first, so its popstate listener runs before htmx's and the app's.
-{% endcomment %}
-<script>{% include "items/_layer.js" %}</script>
 <link rel="preload" as="font" type="font/woff2" crossorigin
       href="{% static 'items/fonts/eb-garamond-normal.woff2' %}">
 <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -55,54 +50,11 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <link rel="stylesheet" href="{% static 'items/css/app.css' %}">
 <link rel="stylesheet" href="{% static 'items/css/tabbar.css' %}">
 <link rel="stylesheet" href="{% static 'items/css/viewer.css' %}">
+{% include "items/_kit_css.html" %}
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
-{% comment %}
-The kit's toast (kit README §4 "Toast", KIT-TOAST), and the reader that turns
-the server's messages (the data block in #main) into it.
-{% endcomment %}
-{% include "items/_toast.html" %}
-{% comment %}
-The kit's empty block (kit README §4 "Empty states", KIT-EMPTY, a byte copy):
-nothing yet, nothing matches, could not load, loading. The lists write its
-markup on the server; the handler below and more.js call kitEmpty().
-{% endcomment %}
-{% include "items/_empty.html" %}
-{% comment %}
-The kit's controls above a list (kit README §4 "Filters and search", KIT-FILTERS, a byte copy):
-chips, search box, sort. The filter-nav script at the end of this file joins them to htmx.
-{% endcomment %}
-{% include "items/_filters.html" %}
-{% comment %}
-The kit's "New version ready · Refresh" toast (kit README §4 "New version",
-KIT-UPDATE, a byte copy). pypen's worker takes over at install (`takeover` in
-pwa.py), so nothing waits to be offered: the toast compares this page's build
-with /api/version instead (the same hash the worker carries).
-{% endcomment %}
-<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
-{% include "items/_update.html" %}
-{% comment %}
-Pull to refresh (kit README §4, KIT-PULLREFRESH, a byte copy): the app on an
-iPhone's home screen has no reload button and no browser gesture of its own.
-{% endcomment %}
-{% include "items/_pullrefresh.html" %}
-{% if is_owner or is_guest %}
-{% comment %}
-What's new (kit README §4, KIT-WHATSNEW, a byte copy): the log of new features
-(whatsnew.json in the repo, served by whatsnew.py), opened from Settings and the
-palette; the dot sits on More and on Settings. Signed-in and guests only, like
-the route.
-{% endcomment %}
-<script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};</script>
-{% include "items/_whatsnew.html" %}
-{# The install nudge (PYPEN-5, kit Fleet UX "Install nudge"): above the tab bar, never for a stranger. #}
-{% include "items/_installbar.html" %}
-<script>
-/* An hx-boost swap brings new controls (a pen's photo) and new dots without a
-   load: the snippet tags them again. */
-document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
-</script>
-{% endif %}
+{# The kit's snippets: the layer, toast, empty, filters, update, pull to refresh; What's new, install, Settings for members (_kit.html). The server's messages in #main become toasts in _shell_early. #}
+{% include "items/_kit.html" %}
 {# The scripts both shells share (the message reader, htmx's failed swaps; the behaviour at the end of this file, the filter-nav in #main): one copy, so a fix lands once. #}
 {% include "items/_shell_early.html" %}
 <a class="skip-link" href="#main">Skip to content</a>

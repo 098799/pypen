@@ -10,7 +10,6 @@ The new version's page (PYPEN-11, README "The new version"): its own look, the
 kit's and the old shell's behaviour. The kit's pieces and _shell_early,
 _shell_filternav, _shell_behave are the same files the old shell includes.
 {% endcomment %}
-<script>{% include "items/_layer.js" %}</script>
 <link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'items/next/fonts/alegreya-sans-400.woff2' %}">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'items/next/fonts/alegreya.woff2' %}">
 <link rel="manifest" href="/manifest.json">
@@ -40,22 +39,10 @@ if ("serviceWorker" in navigator) {
 <link rel="stylesheet" href="{% static 'items/next/next.css' %}">
 <link rel="stylesheet" href="{% static 'items/css/viewer.css' %}">
 {% if nx_accent %}<style>:root{--accent:{{ nx_accent.dark }};--on-accent:{{ nx_accent.on_dark }}}html[data-theme=light]{--accent:{{ nx_accent.light }};--on-accent:{{ nx_accent.on_light }}}</style>{% endif %}
+{% include "items/_kit_css.html" %}
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} data-new-seen="next-version" hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
-{% include "items/_toast.html" %}
-{% include "items/_empty.html" %}
-{% include "items/_filters.html" %}
-<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
-{% include "items/_update.html" %}
-{% include "items/_pullrefresh.html" %}
-{% if is_owner or is_guest %}
-<script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};</script>
-{% include "items/_whatsnew.html" %}
-{% include "items/_installbar.html" %}
-<script>
-document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
-</script>
-{% endif %}
+{% include "items/_kit.html" %}
 {% include "items/_shell_early.html" %}
 
 <a class="nx-skip" href="#main">Skip to the page</a>

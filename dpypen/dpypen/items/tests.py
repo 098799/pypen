@@ -7,6 +7,7 @@ that extends the shell (the shell includes the layer) and check the layer is
 there and is the version we think it is.
 """
 
+import re
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
@@ -14,6 +15,18 @@ from django.template.loader import get_template
 from django.test import TestCase, override_settings
 
 from dpypen.items.models import Brand, Ink, Nib, Pen, Rotation, Usage
+
+def shipped(client, url, **kw):
+    """The page and the kit files it links (kitshell.py, kit README §5.9): what
+    a browser runs, in its order. The snippets' code is no longer inline; this
+    joins it back for the tests that look for it."""
+    import re
+
+    html = client.get(url, **kw).content.decode()
+    for u in re.findall(r'(?:src|href)="(/kit/[\w.]+\?v=[0-9a-f]+)"', html):
+        html += "\n" + client.get(u).content.decode()
+    return html
+
 
 PLAIN_STATIC = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -132,12 +145,14 @@ class KitThemeRenders(TestCase):
                 self.assertEqual(r.status_code, 200, url)
                 html = r.content.decode()
                 head = html.split("</head>")[0]
-                self.assertIn("KIT-THEME: v1", head)
+                # theme.js, blocking (no defer), after its config (kitshell.py)
+                self.assertRegex(head, r'KITTHEME = .*</script>\n<script src="/kit/theme\.js\?v=[0-9a-f]+"></script>')
+                self.assertIn("KIT-THEME: v1", self.client.get(re.search(r'/kit/theme\.js\?v=\w+', head)[0]).content.decode())
                 self.assertIn('app: "pypen", default: "auto", legacy: ["theme"]', head)
                 self.assertIn(f'dark: "{dark}"', head)
                 # the boot runs before the stylesheet, so the first paint is right
                 if "app.css" in head:
-                    self.assertLess(head.index("KIT-THEME"), head.index("app.css"))
+                    self.assertLess(head.index("/kit/theme.js"), head.index("app.css"))
                 self.assertNotIn('localStorage.getItem("theme")', html)
 
     def test_settings_has_the_kit_chooser(self):
@@ -168,9 +183,9 @@ class KitSettingsRows(TestCase):
 
     def test_owner_sees_the_groups_in_the_kit_order(self):
         self.client.force_login(self.user)
-        html = self.client.get("/settings/").content.decode()
-        self.assertEqual(html.count("<!-- KIT-SETTINGS: v1"), 1)
-        page = html[html.index("</script>", html.index("<!-- KIT-SETTINGS")):]  # past the snippet's own example
+        html = shipped(self.client, "/settings/")
+        self.assertEqual(html.count("/*! KIT-SETTINGS: v1"), 2)   # member.css and member.js
+        page = html[:html.index("/*! KIT-")]   # the page, not the files after it
         heads = [h.split("<")[0] for h in page.split('<h2 class="kit-set-h">')[1:]]
         self.assertEqual(heads, ["Look", "Grining Pens", "Keyboard", "Account"])  # the app: What's new (PYPEN-2, PYPEN-9)
         self.assertIn('data-kit-install="Grining Pens"', html)

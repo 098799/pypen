@@ -50,7 +50,6 @@
 {% block wall_meta %}
     <span>tomek grining · {{ brand_count }} makers</span>
     <span class="sep">·</span>
-    {% include "items/_filters.html" %}
     <nav class="kit-chips" aria-label="Show">
       <a class="kit-chip" href="{{ toggle_samples_url }}"{% if not hide_samples %} aria-current="true"{% endif %} title="{% if hide_samples %}include samples{% else %}hide samples{% endif %}">Samples</a>
       <a class="kit-chip" href="{{ toggle_used_url }}"{% if not hide_used %} aria-current="true"{% endif %} title="{% if hide_used %}include used-up{% else %}hide used-up{% endif %}">Used-up</a>

@@ -32,20 +32,9 @@ def json_script_safe(value):
     return mark_safe(text.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026"))
 
 
-_KIT_THEME_JS = None
-
-
 @register.simple_tag
-def kit_theme_js():
-    """The kit's theme.js (templates/items/_theme.js), inlined as it is.
+def kit_shell(name):
+    """/kit/<name>?v=<hash>: one of the kit's cached files (kitshell.py)."""
+    from dpypen.items import kitshell
 
-    Read as a file, not with {% include %}: the snippet's header comment holds
-    an include tag of its own, which the template engine would execute.
-    """
-    global _KIT_THEME_JS
-    if _KIT_THEME_JS is None:
-        from pathlib import Path
-
-        path = Path(__file__).resolve().parent.parent / "templates" / "items" / "_theme.js"
-        _KIT_THEME_JS = path.read_text(encoding="utf-8")
-    return mark_safe(_KIT_THEME_JS)
+    return kitshell.url(name)

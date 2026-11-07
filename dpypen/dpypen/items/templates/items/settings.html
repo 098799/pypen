@@ -13,12 +13,11 @@
 
 {% comment %}
 Kit §4 "Settings" (BURNLOG-7): the kit's grouped rows, _settings.html is
-~/apps/kit/snippets/settings.html byte for byte. It sits inside #main, so an
-hx-boost swap carries its style; its script runs once per load, and the page
-script below mounts the Install row again after a swap.
+~/apps/kit/snippets/settings.html byte for byte. Its style and script come
+with the shell (member.css, member.js; kitshell.py), so a hx-boost swap finds
+them there; the page script below mounts the rows again after a swap.
 No "p340 — all apps" row: this site is public, the tailnet index is not.
 {% endcomment %}
-{% include "items/_settings.html" %}
 
 <div class="kit-set">
 <section class="kit-set-g">

@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, RequestFactory, TestCase, override_settings
 
 from dpypen.items import error_pages, pwa
-from dpypen.items.tests import PLAIN_STATIC
+from dpypen.items.tests import PLAIN_STATIC, shipped
 
 HERE = Path(__file__).resolve().parent
 TPL = HERE / "templates" / "items"
@@ -49,15 +49,15 @@ class TheShellCarriesThem(TestCase):
 
     def test_owner_page(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/pens/").content.decode()
-        self.assertEqual(html.count("<!-- KIT-UPDATE: v1"), 1)
-        self.assertEqual(html.count("<!-- KIT-PULLREFRESH: v1"), 1)
-        self.assertEqual(html.count("<!-- KIT-WHATSNEW: v2"), 1)
+        html = shipped(self.client, "/pens/")
+        self.assertEqual(html.count("/*! KIT-UPDATE: v1"), 2)        # shell.css and shell.js
+        self.assertEqual(html.count("/*! KIT-PULLREFRESH: v1"), 2)
+        self.assertEqual(html.count("/*! KIT-WHATSNEW: v2"), 2)      # member.css and member.js
         # the toast compares this page's build with the server's
         self.assertIn('id: "%s"' % pwa.KITSW["build"], html)
         self.assertIn('url: "/api/version"', html)
-        self.assertLess(html.index("window.KITUPDATE"), html.index("<!-- KIT-UPDATE"))
-        self.assertLess(html.index("window.WHATSNEW"), html.index("<!-- KIT-WHATSNEW"))
+        self.assertLess(html.index("window.KITUPDATE"), html.index('<script src="/kit/shell.js'))
+        self.assertLess(html.index("window.WHATSNEW"), html.index('<script src="/kit/member.js'))
         # the dot: on More (the tab bar), on the desk's menu button, on Settings in the menu
         self.assertGreaterEqual(html.count("data-whatsnew-dot"), 3)
         self.assertIn("u: '#whatsnew'", html)  # the palette entry
@@ -65,9 +65,10 @@ class TheShellCarriesThem(TestCase):
 
     def test_a_stranger_gets_no_log(self):
         # A stranger meets the shell only on an error page; it has no log.
-        html = self.client.get("/no-such-page/", **NAVIGATE).content.decode()
-        self.assertIn("<!-- KIT-PULLREFRESH", html)
-        self.assertNotIn("<!-- KIT-WHATSNEW", html)
+        html = shipped(self.client, "/no-such-page/", **NAVIGATE)
+        self.assertIn("/*! KIT-PULLREFRESH", html)
+        self.assertNotIn("KIT-WHATSNEW", html)
+        self.assertNotIn("/kit/member.", html)
         self.assertNotIn("data-whatsnew-dot", html)
 
     def test_settings_opens_the_log(self):
@@ -79,8 +80,8 @@ class TheShellCarriesThem(TestCase):
     def test_the_walls_pull_too(self):
         self.client.force_login(self.owner)
         for url in ("/pub/pens/wall/", "/pub/inks/wall/"):
-            html = self.client.get(url).content.decode()
-            self.assertEqual(html.count("<!-- KIT-PULLREFRESH: v1"), 1, url)
+            html = shipped(self.client, url)
+            self.assertEqual(html.count("/*! KIT-PULLREFRESH: v1"), 2, url)   # wall.css and wall.js
             # the kit turns the browser's own pull off; none of the page's own
             self.assertNotIn("overscroll-behavior: none", html, url)
 
@@ -253,12 +254,12 @@ class InstallNudge(TestCase):
         guest.post(f"/i/{self.invite.token}/")
         for who, c in (("owner", self.client), ("guest", guest)):
             for url in ("/dashboard/", "/pens/", "/settings/"):
-                html = c.get(url).content.decode()
-                self.assertEqual(html.count("KIT-INSTALL: "), 1, (who, url))
+                html = shipped(c, url)
+                self.assertEqual(html.count("/*! KIT-INSTALL: "), 2, (who, url))   # member.css and member.js
 
     def test_a_stranger_never_meets_it(self):
         for url in ("/", "/no-such-page/", "/pub/pens/wall/", "/pub/inks/"):
-            html = Client().get(url, **NAVIGATE).content.decode()
+            html = shipped(Client(), url, **NAVIGATE)
             self.assertNotIn("KIT-INSTALL", html, url)
 
     def test_the_bar_is_the_kits_byte_for_byte(self):
@@ -267,7 +268,7 @@ class InstallNudge(TestCase):
         canon = Path("/home/tgrining/apps/kit/snippets/install.html")
         if canon.exists():
             self.assertEqual(copy, canon.read_bytes())
-        self.assertIn("days: 1", (TPL / "_installbar.html").read_text())   # no second-day rule: a guest may come once
+        self.assertIn("days: 1", (TPL / "_kit.html").read_text())   # no second-day rule: a guest may come once
 
     def test_settings_lets_the_bar_hand_the_offer_over(self):
         self.client.force_login(self.owner)

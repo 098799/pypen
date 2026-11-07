@@ -29,7 +29,7 @@ class KitControls(TestCase):
     def test_the_old_controls_are_gone(self):
         for url in ("/inks/", "/pens/", "/usages/", "/search/", "/history/gantt/"):
             html = self.page(url)
-            self.assertEqual(html.count("<!-- KIT-FILTERS"), 1, url)
+            self.assertIn('<script src="/kit/shell.js', html, url)   # KIT-FILTERS is in it (kitshell.py)
             for old in ('class="fb-toggle', 'class="cc', 'class="rotchip', 'class="seg-pill', 'class="toggle-check',
                         'class="sort-select', 'hx-push-url="true"', 'role="tab"', 'delay:200ms'):
                 self.assertNotIn(old, html.split("<main", 1)[1], (url, old))
@@ -87,4 +87,6 @@ class KitControls(TestCase):
         self.assertIn('class="kit-search', html)
         self.assertIn('id="inkFilters"', html)
         self.assertRegex(wall, r'class="kit-chip" href="/pub/inks/wall/\?samples=0" aria-current="true"')
-        self.assertEqual(wall.count("<!-- KIT-FILTERS"), 1)
+        self.assertIn('<script src="/kit/wall.js', wall)   # KIT-FILTERS is in it (kitshell.py)
+        from dpypen.items import kitshell
+        self.assertIn("/*! KIT-FILTERS: v1", kitshell.KIT.files["wall.js"][0].decode())

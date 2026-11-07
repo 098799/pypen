@@ -149,9 +149,12 @@ class TheWallsShareOnePage(_Collection):
             r = c.get(reverse(name))
             self.assertEqual(r.status_code, 200, name)
             html = r.content.decode()
-            for piece in ("items/css/wall.css", 'id="themeBtn"', "KIT-PULLREFRESH", "KIT-UPDATE",
-                          "items/icons/apple-touch-icon.png", 'class="wall"'):
+            for piece in ("items/css/wall.css", 'id="themeBtn"', '<script src="/kit/wall.js?v=',
+                          '<link rel="stylesheet" href="/kit/wall.css?v=', "items/icons/apple-touch-icon.png", 'class="wall"'):
                 self.assertIn(piece, html, f"{name}: {piece}")
+        from dpypen.items import kitshell   # pull to refresh and New version are in wall.js
+        for stamp in ("KIT-PULLREFRESH", "KIT-UPDATE"):
+            self.assertIn(stamp, kitshell.KIT.files["wall.js"][0].decode())
 
 
 class NoFixedInlineStyle(_Collection):

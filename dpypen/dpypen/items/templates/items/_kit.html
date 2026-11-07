@@ -1,0 +1,30 @@
+{% load items_extras %}{% comment %}
+The kit's snippets (byte copies in templates/items/) as cached files, at the
+top of <body> where the first of them was (kitshell.py, kit README §5.9).
+Blocking, not `defer`: the shells' inline scripts call them as they run.
+
+shell.js: the overlay layer (KIT-LAYER, first: its popstate listener runs
+before htmx's and the app's), the toast (KIT-TOAST), the empty block
+(KIT-EMPTY), the filters (KIT-FILTERS), "New version ready · Refresh"
+(KIT-UPDATE) and pull to refresh (KIT-PULLREFRESH). pypen's worker takes over
+at install (`takeover` in pwa.py), so nothing waits to be offered: the toast
+compares this page's build with /api/version instead.
+
+member.js, the owner and guests only (a stranger never meets them): What's new
+(KIT-WHATSNEW; the log is whatsnew.json, opened from Settings and the palette;
+the dot sits on More and on Settings), the install nudge (KIT-INSTALL, PYPEN-5;
+it asks on the first day, days: 1: a guest on an invitation may come only
+once) and Settings' rows (KIT-SETTINGS).
+{% endcomment %}
+<script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
+<script src="{% kit_shell 'shell.js' %}"></script>
+{% if is_owner or is_guest %}
+<script>window.WHATSNEW = {app: "pypen", src: "/whatsnew.json"};
+window.KITINSTALL = {app: "{{ app_name|escapejs }}", key: "pypenInstallNudge", days: 1, tag: "install-nudge"};</script>
+<script src="{% kit_shell 'member.js' %}"></script>
+<script>
+/* An hx-boost swap brings new controls (a pen's photo) and new dots without a
+   load: the snippet tags them again. */
+document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
+</script>
+{% endif %}

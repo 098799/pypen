@@ -156,11 +156,11 @@ History), `?y=` narrows every chart to a year; `items/inkings.py` computes,
 ## Theme
 
 The kit's `theme.js` (stamp `KIT-THEME`), copied byte for byte to
-`dpypen/dpypen/items/templates/items/_theme.js` and inlined by
-`templates/items/_theme_boot.html` (via the `kit_theme_js` tag, because the
-snippet's header comment holds an `{% include %}` that the template engine
-would run) into all four full pages: `_shell`, `landing`, `pens/wall`,
-`inks/wall`. Key `pypenTheme`; the old `theme` key is read once.
+`dpypen/dpypen/items/templates/items/_theme.js` and loaded as the cached
+`/kit/theme.js` (blocking, after `window.KITTHEME`) by
+`templates/items/_theme_boot.html` into all four full pages: `_shell`,
+`landing`, `pens/wall`, `inks/wall` (and the 500 page). Key `pypenTheme`; the
+old `theme` key is read once.
 
 - **Default `auto`, not the fleet's dark**: the site is public and its design is
   paper (cream page, navy ink), so a visitor's first view follows their system
@@ -170,12 +170,34 @@ would run) into all four full pages: `_shell`, `landing`, `pens/wall`,
 - Their dark header colour is `#0a0907` (passed as `theme_dark`), the shell's
   `#13161c`; light is `#f4ecd8` everywhere.
 
+## The kit's files
+
+The kit's snippets (byte copies in `templates/items/`) go out as cached files,
+not inline in every page (kit README §5.9): `items/kitshell.py` builds them at
+start with `items/shell.py` (byte copy of `kit/py/shell.py`, KIT-SHELL; never
+edit it) and serves `/kit/<name>?v=<hash>` (immutable, gzip, ETag/304). Not
+`/static/`: nginx on bae serves that from disk. The worker keeps `/kit/` for
+offline (`pwa.KITSW["files"]`).
+
+- `theme.js` (head, blocking); `shell.css`/`shell.js` (both shells: layer,
+  toast, empty, filters, update, pull to refresh); `member.css`/`member.js`
+  (owner and guests: What's new, install bar, Settings' rows); `wall.css`/`wall.js`
+  (the walls: pull to refresh, update, filters). `_kit.html` and `_kit_css.html`
+  link them.
+- **Blocking at the top of `<body>`, not `defer`**: `_shell_early`,
+  `_shell_behave`, the What's new repaint and the settings page call the kit
+  as they run. A cached file costs one fetch per deploy.
+- `_keys.html` stays inline (~55 KB of a shell page): its code has
+  `{{ app_name }}` and a `{% comment %}` header, which `shell.cut` refuses.
+- Owner `/pens/` went from 257 KB to 99 KB (79 → 31 KB gzip); the ink wall
+  from 61 KB to 6 KB. Tests: `tests_kitshell.py`.
+
 ## Settings
 
 `/settings/` is the kit's grouped rows (kit README §4 "Settings", stamp
 `KIT-SETTINGS`, BURNLOG-7): `kit/snippets/settings.html` copied byte for byte to
-`dpypen/dpypen/items/templates/items/_settings.html` and included inside
-`#main`, so an hx-boost swap brings its style along; the page script calls
+`dpypen/dpypen/items/templates/items/_settings.html`, its style and script in the
+shell's `member.css`/`member.js` (see "The kit's files"); the page script calls
 `kitSettings.mount(main)` and `kitTheme.mount(main)` after each swap. Groups:
 Look (Theme, Install "Grining Pens"), Grining Pens (What's new), Keyboard (Keys, and a closed row with what
 "m only" is for), Account (Admin, Sign out) — or Visiting (Leave) for a guest.
@@ -188,8 +210,8 @@ Look (Theme, Install "Grining Pens"), Grining Pens (What's new), Keyboard (Keys,
 ## Install nudge
 
 (PYPEN-5.) The kit's bar (`_install.html`, kit README §4 "Install") in this app's paper
-(`app.css`), included through `templates/items/_installbar.html` by the shell for the owner and
-guests only, so a stranger (the front page, the public cupboard, a wall) never meets it.
+(`app.css`), in the shell's `member.js` with its `window.KITINSTALL` (`templates/items/_kit.html`)
+for the owner and guests only, so a stranger (the front page, the public cupboard, a wall) never meets it.
 State in `localStorage['pypenInstallNudge']`.
 
 - **No "second day of use" rule** (`days: 1`; the kit's default is 2): a guest on an

@@ -2,8 +2,9 @@
 {% comment %}
 The 500 page (items/error_pages.py). It needs nothing that may be what broke:
 no database (the shell's context reads one), no static manifest, no url
-lookups. The paper colours of app.css, inline; the kit's theme boot, which is
-a file read once.
+lookups. The paper colours of app.css, inline; the kit's theme, the cached
+theme.js the other pages load (kitshell.py: built in memory at start, served
+with no database).
 {% endcomment %}
 <html lang="en">
 <head>
@@ -12,7 +13,7 @@ a file read once.
 <title>{{ err.title }} · {{ app_name }}</title>
 <meta name="theme-color" content="#f4ecd8">
 <script>window.KITTHEME = {app: "pypen", default: "auto", legacy: ["theme"], colors: {dark: "#13161c", light: "#f4ecd8"}};</script>
-<script>{% kit_theme_js %}</script>
+<script src="{% kit_shell 'theme.js' %}"></script>
 <style>
 :root { --paper: #f4ecd8; --ink: #1b2a4a; --muted: #5a4b2e; --accent: #7a1f2b; --line: #2a3b5b33; }
 html[data-theme="dark"] { --paper: #13161c; --ink: #ece2c8; --muted: #9c9270; --accent: #e08a94; --line: #ece2c824; }

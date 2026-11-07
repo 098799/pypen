@@ -27,7 +27,7 @@ class ServiceWorkerTests(SimpleTestCase):
     def test_settings(self):
         s = pwa.KITSW
         self.assertEqual((s["app"], s["where"], s["takeover"]), ("pypen", "internet", True))
-        self.assertEqual(s["files"], ["/static/"])
+        self.assertEqual(s["files"], ["/static/", "/kit/"])   # the kit's cached files too (kitshell.py)
         self.assertRegex(s["build"], r"^[0-9a-f]{12}$")
         self.assertEqual(s["build"], pwa._build())                    # content, not start time
 

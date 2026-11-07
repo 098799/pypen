@@ -1,7 +1,7 @@
 from django.urls import path
 
 from dpypen.items.nextui import urls as nextui_urls
-from dpypen.items import api_lists, crud, history, invite, notebook, pairing, palette, public, pwa, records, search, share, undo, views
+from dpypen.items import api_lists, crud, history, invite, kitshell, notebook, pairing, palette, public, pwa, records, search, share, undo, views
 
 
 urlpatterns = [
@@ -27,6 +27,8 @@ urlpatterns = [
 
     path('manifest.json', pwa.manifest, name='pwa_manifest'),
     path('sw.js', pwa.service_worker, name='pwa_sw'),
+    # The kit's snippets as cached files (kitshell.py, kit README §5.9).
+    path('kit/<str:name>', kitshell.serve, name='kit_shell'),
     path('icon.svg', pwa.icon, name='pwa_icon'),
     path('icon-maskable.svg', pwa.icon_maskable, name='pwa_icon_maskable'),
     path('i/leave/', invite.deactivate, name='invite_deactivate'),

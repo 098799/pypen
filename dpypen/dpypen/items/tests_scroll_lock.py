@@ -78,10 +78,12 @@ class KitLayer(TestCase):
     def test_loaded_first_and_the_menus_use_it(self):
         for url in ("/pens/", "/history/gantt/"):
             html = self.client.get(url).content.decode()
-            self.assertIn("KIT-LAYER: v1", html, url)
-            head = html[: html.index("</head>")]
-            self.assertIn("window.kitLayer = {", head, url)
-            self.assertLess(html.index("window.kitLayer = {"), html.index("htmx-2.0.4"), url)
+            # shell.js starts with the layer and loads blocking at the top of
+            # <body>: it runs before htmx, which is `defer` (kitshell.py).
+            from dpypen.items import kitshell
+            self.assertTrue(kitshell.KIT.files["shell.js"][0].startswith(b"/*! KIT-LAYER: v1"))
+            self.assertIn('<script src="/kit/shell.js', html, url)
+            self.assertIn("htmx-2.0.4.min.js\" defer>", html, url)
             self.assertIn('name: "menu", lock: false, focus: false', html, url)
             self.assertIn('name: "overflow", lock: false, focus: false', html, url)
             # no own overlay history or Escape left for the menus

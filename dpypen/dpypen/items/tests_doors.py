@@ -38,6 +38,7 @@ OPEN_TO_ANYONE = {
     "pwa_icon",
     "pwa_icon_maskable",
     "api_version",  # the build id, for the update toast: no data
+    "kit_shell",  # the kit's snippets as cached files (kitshell.py): code, no data
     "invite_activate",  # the "accept this invite?" page, for a valid token
 }
 
@@ -142,6 +143,7 @@ class TheDoor(_Collection):
             "inks": {"pk": self.ink.pk},
             "swatches": {"pk": self.swatch.pk},
             "undo": {"token": "no-such-token"},
+            "kit": {"name": "shell.js"},
             "i": {"token": self.invite.token},
             "p": {"token": self.pen.share_token},
             "k": {"token": self.ink.share_token},
@@ -316,8 +318,10 @@ class MessagesAreTheKitsToast(_Collection):
     def test_a_delete_offers_undo_through_the_kit_toast(self):
         response = self.client.post(f"/usages/{self.usage.pk}/delete/", follow=True)
         html = response.content.decode()
-        self.assertEqual(html.count("<!-- KIT-TOAST: v1"), 1)
-        self.assertLess(html.index("window.kitToast = show"), html.index("window.__kitMsgs"))
+        # the toast is in shell.js, blocking before the reader of the messages
+        self.assertLess(html.index('<script src="/kit/shell.js'), html.index("window.__kitMsgs"))
+        from dpypen.items import kitshell
+        self.assertIn("window.kitToast = show", kitshell.KIT.files["shell.js"][0].decode())
         box = html[html.index("<div class=\"kit-msgs\" hidden data-kit-msgs>"):]
         self.assertLess(html.index('<main id="main">'), html.index("data-kit-msgs>"))
         self.assertIn(f'action="/undo/{self.last_token()}/"', box)

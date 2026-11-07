@@ -38,8 +38,10 @@ class KitEmpty(Collection):
             self.assertEqual(COPY.read_bytes(), CANON.read_bytes())
 
     def test_the_shell_carries_it_once(self):
-        html = self.client.get("/pens/").content.decode()
-        self.assertEqual(html.count("<!-- KIT-EMPTY: v1"), 1)
+        from dpypen.items.tests import shipped
+
+        html = shipped(self.client, "/pens/")
+        self.assertEqual(html.count("/*! KIT-EMPTY: v1"), 2)   # shell.css and shell.js
         # and the shared handler for a live search that fails
         self.assertIn('addEventListener("htmx:responseError", failed)', html)
         self.assertIn('addEventListener("htmx:sendError", failed)', html)
