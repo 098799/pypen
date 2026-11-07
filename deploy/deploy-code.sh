@@ -22,6 +22,17 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/dpypen/"
 DRY=""
 [[ "${1:-}" == "--dry-run" ]] && DRY="--dry-run"
 
+# The tree must hold everything on origin/master: rsync sends the working tree,
+# so a checkout behind origin would put older code live (2026-11-07: ~/pypen sat
+# at 423210a with work in progress while KIT-SHELL went out from a worktree).
+if [[ -z "$DRY" ]]; then
+  git -C "$(dirname "${BASH_SOURCE[0]}")" fetch -q origin master
+  if ! git -C "$(dirname "${BASH_SOURCE[0]}")" merge-base --is-ancestor origin/master HEAD; then
+    echo "HEAD is behind origin/master — rebase onto it first; nothing was deployed"
+    exit 1
+  fi
+fi
+
 # The tests gate the deploy, dry run included. `ship` would do this for a p340
 # app, but pypen runs on bae, so ship never sees it — until 2026-09-26 a red
 # suite (say, a view that lost its login decorator) went straight to the
