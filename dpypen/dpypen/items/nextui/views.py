@@ -6,15 +6,14 @@ from datetime import date
 from statistics import median
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse
-from django.views.decorators.http import require_POST, require_safe
+from django.views.decorators.http import require_safe
 
 from dpypen.items import history, inkings, pairing
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Pen, PenPhoto, Usage
 from dpypen.items.nextui import stats, turns as turns_data
-from dpypen.items.public import UI_COOKIE
 
 
 TABS = (
@@ -111,8 +110,8 @@ def _desk_data(today):
 
 @login_or_guest_required
 def desk(request):
-    # The old page lived at this address: its bookmarks, ?pen= and ?shuffle=,
-    # land on the same page here.
+    # The old desk took ?pen= and ?shuffle= (the picker lived on it): its
+    # bookmarks land on the picker.
     if "pen" in request.GET or "shuffle" in request.GET:
         return HttpResponseRedirect(reverse("nx_pick") + "?" + request.META.get("QUERY_STRING", ""), status=307)
     return render(request, "next/desk.html", {**_desk_data(date.today()), "nav": "dashboard"})
@@ -120,22 +119,18 @@ def desk(request):
 
 @login_or_guest_required
 def settings_page(request):
-    return render(request, "next/settings.html", {"nav": "settings", "ui_first": request.COOKIES.get(UI_COOKIE) == "next"})
+    return render(request, "next/settings.html", {"nav": "settings"})
 
 
 @login_or_guest_required
-@require_POST
-def prefer(request):
-    """Which version opens first: a cookie, per device. Nothing in the collection
-    moves, so a guest may choose too."""
-    first = request.POST.get("first") == "next"
-    leave = request.POST.get("leave") == "1"
-    resp = redirect("/dashboard/" if leave else "nx_settings")
-    if first:
-        resp.set_cookie(UI_COOKIE, "next", max_age=400 * 86400, samesite="Lax", secure=request.is_secure(), httponly=True)
-    else:
-        resp.delete_cookie(UI_COOKIE)
-    return resp
+def from_next(request, rest=""):
+    """The new version lived under /next/ while it was tried; its bookmarks and
+    home-screen tiles land on the same page at its main address. 308 keeps a
+    form's POST a POST."""
+    url = "/" + rest if rest else reverse("nx_desk")
+    if request.META.get("QUERY_STRING"):
+        url += "?" + request.META["QUERY_STRING"]
+    return HttpResponseRedirect(url, status=308 if request.method == "POST" else 301)
 
 
 # ---- stats ---------------------------------------------------------------

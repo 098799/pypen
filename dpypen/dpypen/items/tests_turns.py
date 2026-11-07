@@ -105,35 +105,35 @@ class Turns(TestCase):
     @override_settings(STORAGES=PLAIN_STATIC)
     def test_the_pages(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/next/supen/").content.decode()
+        html = self.client.get("/supen/").content.decode()
         self.assertIn("Pens' turns", html)
         self.assertIn('class="st st-late">200', html)
         self.assertIn("4001 Blue", html)                                 # what the inked pen holds
-        self.assertIn('href="/next/supen/?rot=p0"', html)
-        html = self.client.get("/next/supen/?rot=p0&sort=days").content.decode()
-        self.assertIn('href="/next/supen/?rot=p0&amp;sort=fills"', html)
-        self.assertIn('href="/next/supen/?sort=days">All', html)          # a rotation chip keeps the sort
-        self.assertIn('href="/next/supen/?rot=p0&amp;sort=days" aria-current="true">Days inked', html)
-        html = self.client.get("/next/suink/").content.decode()
+        self.assertIn('href="/supen/?rot=p0"', html)
+        html = self.client.get("/supen/?rot=p0&sort=days").content.decode()
+        self.assertIn('href="/supen/?rot=p0&amp;sort=fills"', html)
+        self.assertIn('href="/supen/?sort=days">All', html)          # a rotation chip keeps the sort
+        self.assertIn('href="/supen/?rot=p0&amp;sort=days" aria-current="true">Days inked', html)
+        html = self.client.get("/suink/").content.decode()
         self.assertIn("Bottles' turns", html)
         self.assertIn("in Pelikan M800", html)
 
     @override_settings(STORAGES=PLAIN_STATIC)
     def test_cost_does_not_grow_with_rows(self):
         self.client.force_login(self.owner)
-        self.client.get("/next/supen/")
+        self.client.get("/supen/")
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
         with CaptureQueriesContext(connection) as before:
-            self.client.get("/next/supen/")
+            self.client.get("/supen/")
         b = Brand.objects.get()
         for n in range(10):
             p = pen(b, f"Extra {n}", self.p0)
             Usage.objects.create(pen=p, ink=self.blue, nib=Nib.objects.get(), begin=self.today - timedelta(days=30), end=self.today)
         with CaptureQueriesContext(connection) as after:
-            self.client.get("/next/supen/")
+            self.client.get("/supen/")
         self.assertEqual(len(after), len(before))
 
     def test_a_stranger_gets_the_door(self):
-        for url in ("/next/supen/", "/next/suink/"):
+        for url in ("/supen/", "/suink/"):
             self.assertNotEqual(self.client.get(url).status_code, 200)

@@ -92,52 +92,52 @@ class Counts(Base):
 
 class Page(Base):
     def test_all_and_a_year(self):
-        r = self.client.get("/history/inkings/")
+        r = self.client.get("/prev/history/inkings/")
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, "Inkings by year")
         self.assertContains(r, "Month by month")
-        r = self.client.get("/history/inkings/?y=2021")
+        r = self.client.get("/prev/history/inkings/?y=2021")
         self.assertContains(r, "Inkings by month")
         self.assertNotContains(r, "Month by month")
 
     def test_an_unknown_year_is_no_filter(self):
         for bad in ("1999", "abc", "٢٠٢١", "20211"):
-            r = self.client.get("/history/inkings/", {"y": bad})
+            r = self.client.get("/prev/history/inkings/", {"y": bad})
             self.assertEqual(r.status_code, 200, bad)
             self.assertContains(r, "Inkings by year")
 
     def test_no_inkings_at_all(self):
         Usage.objects.all().delete()
-        r = self.client.get("/history/inkings/")
+        r = self.client.get("/prev/history/inkings/")
         self.assertContains(r, "No inkings to chart yet")
         self.assertNotContains(r, "chart-box")
 
     def test_a_guest_reads_a_stranger_does_not(self):
         self.client.logout()
-        r = self.client.get("/history/inkings/")
+        r = self.client.get("/prev/history/inkings/")
         self.assertNotEqual(r.status_code, 200)
         self.assertNotIn(b"Inkings by year", r.content)
 
     def test_a_new_inking_shows_at_once(self):
-        self.assertContains(self.client.get("/history/inkings/?y=2021"), "<b>3</b>")
+        self.assertContains(self.client.get("/prev/history/inkings/?y=2021"), "<b>3</b>")
         Usage.objects.create(pen=self.pen, nib=self.nib, ink=self.red, begin=date(2021, 7, 1), end=date(2021, 7, 2))
-        self.assertContains(self.client.get("/history/inkings/?y=2021"), "<b>4</b>")
+        self.assertContains(self.client.get("/prev/history/inkings/?y=2021"), "<b>4</b>")
 
     def test_the_tab_is_in_the_history_nav(self):
-        for u in ("/history/", "/history/calendar/", "/history/gantt/", "/history/matrix/"):
-            self.assertContains(self.client.get(u), 'href="/history/inkings/"')
+        for u in ("/prev/history/", "/prev/history/calendar/", "/prev/history/gantt/", "/prev/history/matrix/"):
+            self.assertContains(self.client.get(u), 'href="/prev/history/inkings/"')
 
     def test_tips_carry_no_markup_from_the_database(self):
         Ink.objects.filter(pk=self.red.pk).update(name="<img src=x onerror=1>")
         cache.clear()
-        for u in ("/history/inkings/", "/history/calendar/", "/history/matrix/"):
+        for u in ("/prev/history/inkings/", "/prev/history/calendar/", "/prev/history/matrix/"):
             self.assertNotContains(self.client.get(u), "<img src=x")
 
     def test_query_count_does_not_grow_with_the_rows(self):
         def count():
             cache.clear()
             with CaptureQueriesContext(connection) as c:
-                self.client.get("/history/inkings/")
+                self.client.get("/prev/history/inkings/")
             return len(c)
 
         before = count()
@@ -162,32 +162,32 @@ class ListScope(Base):
 
     def test_a_wrong_value_is_no_filter(self):
         for bad in ({"began": "2021-13"}, {"began": "0000-01"}, {"began": "x"}, {"color": "Nope"}):
-            r = self.client.get("/usages/", bad)
+            r = self.client.get("/prev/usages/", bad)
             self.assertEqual(r.status_code, 200, bad)
             self.assertEqual(r.context["scope"]["label"], "", bad)
 
     def test_the_list_says_what_is_on_and_how_to_leave(self):
-        r = self.client.get("/usages/", {"began": "2021-03", "color": "Red"})
+        r = self.client.get("/prev/usages/", {"began": "2021-03", "color": "Red"})
         self.assertContains(r, "Red · Mar 2021")
-        self.assertContains(r, 'aria-current="true" href="/usages/"')
+        self.assertContains(r, 'aria-current="true" href="/prev/usages/"')
 
     def test_an_empty_scope_has_a_way_out(self):
-        r = self.client.get("/usages/", {"began": "2018"})
+        r = self.client.get("/prev/usages/", {"began": "2018"})
         self.assertContains(r, "No past inking in 2018")
 
 
 class RecordPages(Base):
     def test_a_pen_page_has_its_bars(self):
-        r = self.client.get(f"/pens/{self.pen.pk}/")
+        r = self.client.get(f"/prev/pens/{self.pen.pk}/")
         self.assertContains(r, "per year")
         self.assertContains(r, "bar-col")
 
     def test_an_ink_page_has_its_bars(self):
-        r = self.client.get(f"/inks/{self.red.pk}/")
+        r = self.client.get(f"/prev/inks/{self.red.pk}/")
         self.assertContains(r, "per year")
 
     def test_one_year_is_no_chart(self):
         Usage.objects.all().delete()
         Usage.objects.create(pen=self.pen, nib=self.nib, ink=self.red, begin=date.today(), end=None)
-        r = self.client.get(f"/pens/{self.pen.pk}/")
+        r = self.client.get(f"/prev/pens/{self.pen.pk}/")
         self.assertNotContains(r, "bar-col")

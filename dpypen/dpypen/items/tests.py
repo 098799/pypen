@@ -64,31 +64,31 @@ class KeysLayerRenders(TestCase):
 
     def pages(self):
         return [
-            "/dashboard/",
-            "/history/",
-            "/history/calendar/",
-            "/history/gantt/",
-            "/history/matrix/",
-            "/records/",
-            "/search/",
-            "/search/?q=pelikan",
-            "/settings/",
-            "/usages/",
-            "/usages/add/",
-            "/pens/",
-            "/pens/?view=grid",
-            "/pens/add/",
-            "/pens/needs-photos/",
-            f"/pens/{self.pen.pk}/",
-            f"/pens/{self.pen.pk}/edit/",
-            "/inks/",
-            "/inks/?view=grid",
-            "/inks/add/",
-            f"/inks/{self.ink.pk}/",
-            f"/inks/{self.ink.pk}/edit/",
-            "/import/",
-            "/pick/",
-            f"/pick/?pen={self.pen.pk}",
+            "/prev/dashboard/",
+            "/prev/history/",
+            "/prev/history/calendar/",
+            "/prev/history/gantt/",
+            "/prev/history/matrix/",
+            "/prev/records/",
+            "/prev/search/",
+            "/prev/search/?q=pelikan",
+            "/prev/settings/",
+            "/prev/usages/",
+            "/prev/usages/add/",
+            "/prev/pens/",
+            "/prev/pens/?view=grid",
+            "/prev/pens/add/",
+            "/prev/pens/needs-photos/",
+            f"/prev/pens/{self.pen.pk}/",
+            f"/prev/pens/{self.pen.pk}/edit/",
+            "/prev/inks/",
+            "/prev/inks/?view=grid",
+            "/prev/inks/add/",
+            f"/prev/inks/{self.ink.pk}/",
+            f"/prev/inks/{self.ink.pk}/edit/",
+            "/prev/import/",
+            "/prev/pick/",
+            f"/prev/pick/?pen={self.pen.pk}",
         ]
 
     def test_the_layer_template_compiles(self):
@@ -139,7 +139,7 @@ class KitThemeRenders(TestCase):
 
     def test_every_full_page_boots_the_kit_theme(self):
         self.client.force_login(self.user)
-        for url, dark in [("/", "#13161c"), ("/settings/", "#13161c"), ("/pub/pens/wall/", "#0a0907"), ("/pub/inks/wall/", "#0a0907")]:
+        for url, dark in [("/", "#13161c"), ("/prev/settings/", "#13161c"), ("/pub/pens/wall/", "#0a0907"), ("/pub/inks/wall/", "#0a0907")]:
             with self.subTest(url=url):
                 r = self.client.get(url)
                 self.assertEqual(r.status_code, 200, url)
@@ -157,7 +157,7 @@ class KitThemeRenders(TestCase):
 
     def test_settings_has_the_kit_chooser(self):
         self.client.force_login(self.user)
-        html = self.client.get("/settings/").content.decode()
+        html = self.client.get("/prev/settings/").content.decode()
         self.assertIn("<div data-kit-theme></div>", html)
         self.assertIn("kitTheme.mount(", html)
         self.assertNotIn('data-theme="light" aria-label', html)
@@ -183,7 +183,7 @@ class KitSettingsRows(TestCase):
 
     def test_owner_sees_the_groups_in_the_kit_order(self):
         self.client.force_login(self.user)
-        html = shipped(self.client, "/settings/")
+        html = shipped(self.client, "/prev/settings/")
         self.assertEqual(html.count("/*! KIT-SETTINGS: v1"), 2)   # member.css and member.js
         page = html[:html.index("/*! KIT-")]   # the page, not the files after it
         heads = [h.split("<")[0] for h in page.split('<h2 class="kit-set-h">')[1:]]
@@ -207,4 +207,4 @@ class KitSettingsRows(TestCase):
     def test_sign_out_by_post_signs_out(self):
         self.client.force_login(self.user)
         self.client.post("/accounts/logout/")
-        self.assertNotEqual(self.client.get("/settings/").status_code, 200)
+        self.assertNotEqual(self.client.get("/prev/settings/").status_code, 200)

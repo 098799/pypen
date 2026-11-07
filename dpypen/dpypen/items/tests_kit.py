@@ -49,7 +49,7 @@ class TheShellCarriesThem(TestCase):
 
     def test_owner_page(self):
         self.client.force_login(self.owner)
-        html = shipped(self.client, "/pens/")
+        html = shipped(self.client, "/prev/pens/")
         self.assertEqual(html.count("/*! KIT-UPDATE: v1"), 2)        # shell.css and shell.js
         self.assertEqual(html.count("/*! KIT-PULLREFRESH: v1"), 2)
         self.assertEqual(html.count("/*! KIT-WHATSNEW: v2"), 2)      # member.css and member.js
@@ -73,7 +73,7 @@ class TheShellCarriesThem(TestCase):
 
     def test_settings_opens_the_log(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/settings/").content.decode()
+        html = self.client.get("/prev/settings/").content.decode()
         self.assertIn("data-whatsnew-open", html)
         self.assertLess(html.index('<h2 class="kit-set-h">Look</h2>'), html.index('type="button" data-whatsnew-open>'))
 
@@ -148,26 +148,26 @@ class ErrorPages(TestCase):
 
     def test_a_missing_page_is_a_page_with_a_way_on(self):
         self.client.force_login(self.owner)
-        r = self.client.get("/pens/no-such/", **NAVIGATE)
+        r = self.client.get("/prev/pens/no-such/", **NAVIGATE)
         self.assertEqual(r.status_code, 404)
         html = r.content.decode()
         self.assertIn('<main id="main">', html)
         self.assertIn('<nav class="kit-tabs"', html)
         self.assertIn("Not here", html)
-        self.assertIn('href="/dashboard/"', html)
+        self.assertIn('href="/prev/dashboard/"', html)
         self.assertIn("<title>Not here · Grining Pens</title>", html)
         self.assertEqual(r["Cache-Control"], "no-store")
         self.assertEqual(r["X-Frame-Options"], "DENY")
 
     def test_a_missing_object_too(self):
         self.client.force_login(self.owner)
-        r = self.client.get("/pens/987654/", **NAVIGATE)
+        r = self.client.get("/prev/pens/987654/", **NAVIGATE)
         self.assertEqual(r.status_code, 404)
         self.assertIn("Not here", r.content.decode())
 
     def test_a_boosted_swap_gets_the_page(self):
         self.client.force_login(self.owner)
-        r = self.client.get("/pens/987654/", HTTP_HX_REQUEST="true", HTTP_HX_BOOSTED="true", HTTP_SEC_FETCH_MODE="cors", HTTP_ACCEPT="*/*")
+        r = self.client.get("/prev/pens/987654/", HTTP_HX_REQUEST="true", HTTP_HX_BOOSTED="true", HTTP_SEC_FETCH_MODE="cors", HTTP_ACCEPT="*/*")
         self.assertEqual(r.status_code, 404)
         self.assertIn('<main id="main">', r.content.decode())
 
@@ -178,7 +178,7 @@ class ErrorPages(TestCase):
 
     def test_a_fetch_and_the_api_get_json(self):
         self.client.force_login(self.owner)
-        for url, headers in (("/pens/987654/", {"HTTP_SEC_FETCH_MODE": "cors"}), ("/api/nope", NAVIGATE), ("/static/items/nope.css", {})):
+        for url, headers in (("/prev/pens/987654/", {"HTTP_SEC_FETCH_MODE": "cors"}), ("/api/nope", NAVIGATE), ("/static/items/nope.css", {})):
             r = self.client.get(url, **headers)
             self.assertEqual(r.status_code, 404, url)
             self.assertEqual(r["Content-Type"], "application/json", url)
@@ -187,14 +187,14 @@ class ErrorPages(TestCase):
     def test_a_refused_form_says_what_to_do(self):
         c = Client(enforce_csrf_checks=True)
         c.force_login(self.owner)
-        r = c.post("/usages/add/", {}, **NAVIGATE)
+        r = c.post("/prev/usages/add/", {}, **NAVIGATE)
         self.assertEqual(r.status_code, 403)
         html = r.content.decode()
         self.assertIn("That did not go through", html)
         self.assertIn("reload the page and send it again", html)
 
     def test_the_500_page_needs_nothing(self):
-        req = RequestFactory().get("/pens/", **NAVIGATE)
+        req = RequestFactory().get("/prev/pens/", **NAVIGATE)
         r = error_pages.server_error(req)
         self.assertEqual(r.status_code, 500)
         html = r.content.decode()
@@ -203,12 +203,12 @@ class ErrorPages(TestCase):
         self.assertIn('<main id="main">', html)  # an hx-boost swap selects it
         self.assertIn("location.reload()", html)
         self.assertEqual(r["Cache-Control"], "no-store")
-        fetch = error_pages.server_error(RequestFactory().get("/pens/", HTTP_SEC_FETCH_MODE="cors"))
+        fetch = error_pages.server_error(RequestFactory().get("/prev/pens/", HTTP_SEC_FETCH_MODE="cors"))
         self.assertEqual(fetch["Content-Type"], "application/json")
 
     def test_the_shell_swaps_an_error_page_in(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         self.assertIn('document.addEventListener("htmx:beforeSwap"', html)
 
 
@@ -261,7 +261,7 @@ class InstallNudge(TestCase):
         guest = Client()
         guest.post(f"/i/{self.invite.token}/")
         for who, c in (("owner", self.client), ("guest", guest)):
-            for url in ("/dashboard/", "/pens/", "/settings/"):
+            for url in ("/prev/dashboard/", "/prev/pens/", "/prev/settings/"):
                 html = shipped(c, url)
                 self.assertEqual(html.count("/*! KIT-INSTALL: "), 2, (who, url))   # member.css and member.js
 
@@ -280,6 +280,6 @@ class InstallNudge(TestCase):
 
     def test_settings_lets_the_bar_hand_the_offer_over(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/settings/").content.decode()
+        html = self.client.get("/prev/settings/").content.decode()
         self.assertIn("kitInstall.hand()", html)
         self.assertIn('data-kit-install="', html)

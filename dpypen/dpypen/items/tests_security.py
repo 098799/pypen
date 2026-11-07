@@ -130,10 +130,10 @@ class TheWayBackIsQuoted(TestCase):
     stranger's choosing."""
 
     def test_a_query_stays_inside_next(self):
-        response = self.client.get("/pens/?q=a&process=connect")
+        response = self.client.get("/prev/pens/?q=a&process=connect")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            response["Location"], "/accounts/google/login/?next=/pens/%3Fq%3Da%26process%3Dconnect"
+            response["Location"], "/accounts/google/login/?next=/prev/pens/%3Fq%3Da%26process%3Dconnect"
         )
 
 
@@ -188,7 +188,7 @@ class SigningOutForgetsTheDevice(TestCase):
 
     def test_an_ordinary_page_clears_nothing(self):
         self.client.force_login(self.owner)
-        self.assertNotIn("Clear-Site-Data", self.client.get("/dashboard/"))
+        self.assertNotIn("Clear-Site-Data", self.client.get("/prev/dashboard/"))
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
@@ -209,8 +209,8 @@ class EveryAnswerCarriesThePolicy(TestCase):
 
     def test_a_private_page_is_not_for_shared_caches(self):
         self.client.force_login(self.owner)
-        self.assertIn("private", self.client.get("/dashboard/")["Cache-Control"])
-        self.assertIn("no-cache", self.client.get("/dashboard/")["Cache-Control"])  # kit §5.3
+        self.assertIn("private", self.client.get("/prev/dashboard/")["Cache-Control"])
+        self.assertIn("no-cache", self.client.get("/prev/dashboard/")["Cache-Control"])  # kit §5.3
 
     def test_the_service_worker_keeps_its_own_cache_header(self):
         self.assertEqual(self.client.get("/sw.js")["Cache-Control"], "no-cache")
@@ -253,7 +253,7 @@ class UploadsMustBePhotos(TestCase):
         self.client.force_login(self.owner)
 
     def _add(self, *files):
-        return self.client.post(f"/pens/{self.pen.pk}/photos/add/", {"image": list(files)}, follow=True)
+        return self.client.post(f"/prev/pens/{self.pen.pk}/photos/add/", {"image": list(files)}, follow=True)
 
     def test_a_good_photo_goes_in_a_bad_one_is_named(self):
         r = self._add(SimpleUploadedFile("good.png", _png((40, 30)), "image/png"),
@@ -282,14 +282,14 @@ class UploadsMustBePhotos(TestCase):
         self._add(SimpleUploadedFile("good.png", _png((40, 30)), "image/png"))
         photo = PenPhoto.objects.get()
         for bad in ("abc", "45"):
-            r = self.client.post(f"/pens/{self.pen.pk}/photos/{photo.pk}/rotate/", {"degrees": bad})
+            r = self.client.post(f"/prev/pens/{self.pen.pk}/photos/{photo.pk}/rotate/", {"degrees": bad})
             self.assertEqual(r.status_code, 302, bad)
 
     def test_the_notebook_sends_a_fresh_jpeg_and_never_a_non_photo(self):
         with mock.patch("dpypen.items.notebook.extract_from_image", return_value=[]) as call:
-            self.client.post("/import/", {"image": SimpleUploadedFile("x.heic", b"nope", "image/heic")})
+            self.client.post("/prev/import/", {"image": SimpleUploadedFile("x.heic", b"nope", "image/heic")})
             call.assert_not_called()
-            self.client.post("/import/", {"image": SimpleUploadedFile("p.png", _png((50, 40)), "image/png")})
+            self.client.post("/prev/import/", {"image": SimpleUploadedFile("p.png", _png((50, 40)), "image/png")})
             call.assert_called_once()
             sent, kwargs = call.call_args[0][0], call.call_args[1]
         self.assertEqual(kwargs["media_type"], "image/jpeg")

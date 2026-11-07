@@ -44,8 +44,8 @@ class ThePagesAreLight(TestCase):
         # Was 257 KB, 255 KB, 267 KB and 61 KB (the ink wall). What is left of a
         # shell page is mostly the keyboard layer (_keys.html, ~55 KB: Django
         # tags in it, so it stays inline).
-        for url, budget in (("/pens/", 110_000), ("/next/pens/", 110_000), ("/settings/", 110_000),
-                            ("/next/settings/", 110_000), ("/pub/pens/wall/", 10_000), ("/pub/inks/wall/", 10_000)):
+        for url, budget in (("/prev/pens/", 110_000), ("/pens/", 110_000), ("/prev/settings/", 110_000),
+                            ("/settings/", 110_000), ("/pub/pens/wall/", 10_000), ("/pub/inks/wall/", 10_000)):
             with self.subTest(url=url):
                 r = self.client.get(url)
                 self.assertEqual(r.status_code, 200, url)
@@ -105,7 +105,7 @@ class TheFilesAreKept(TestCase):
     def test_each_file_a_page_links_is_immutable_gzipped_and_answers_304(self):
         self.client.force_login(self.owner)
         urls = set()
-        for page in ("/pens/", "/next/pens/", "/pub/inks/wall/"):
+        for page in ("/prev/pens/", "/pens/", "/pub/inks/wall/"):
             urls |= set(kit_urls(self.client.get(page).content.decode()))
         names = sorted(u.split("?")[0].removeprefix("/kit/") for u in urls)
         self.assertEqual(names, sorted(kitshell.KIT.files))
@@ -138,7 +138,7 @@ class TheFilesAreKept(TestCase):
         self.assertEqual(at, sorted(at))
         self.assertEqual(at[0], 0)
         self.client.force_login(self.owner)
-        for page in ("/pens/", "/next/pens/"):
+        for page in ("/prev/pens/", "/pens/"):
             html = self.client.get(page).content.decode()
             # blocking at the top of <body>, before the shells' own scripts that call them
             body = html[html.index("<body"):]

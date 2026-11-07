@@ -49,30 +49,30 @@ class CheckPage(Base):
     def test_owner_sees_the_photos_waiting(self):
         self.machine_photo()
         self.client.force_login(self.owner)
-        r = self.client.get("/next/pens/photos/check/")
+        r = self.client.get("/pens/photos/check/")
         self.assertContains(r, "1 photo to check")
         self.assertContains(r, "992 Demo Blue")
         self.assertContains(r, 'value="wrong"')
         self.assertContains(r, "https://shop.example/992.jpg")
 
     def test_a_stranger_is_sent_to_log_in(self):
-        r = self.client.get("/next/pens/photos/check/")
+        r = self.client.get("/pens/photos/check/")
         self.assertEqual(r.status_code, 302)
 
     def test_right_keeps_it(self):
         ph = self.machine_photo()
         self.client.force_login(self.owner)
-        r = self.client.post(f"/next/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "ok"})
-        self.assertRedirects(r, "/next/pens/photos/check/", fetch_redirect_response=False)
+        r = self.client.post(f"/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "ok"})
+        self.assertRedirects(r, "/pens/photos/check/", fetch_redirect_response=False)
         ph.refresh_from_db()
         self.assertEqual(ph.review, "ok")
-        self.assertContains(self.client.get("/next/pens/photos/check/"), "Nothing to check")
+        self.assertContains(self.client.get("/pens/photos/check/"), "Nothing to check")
 
     def test_wrong_deletes_it_and_blocks_its_source(self):
         ph = self.machine_photo()
         files = [Path(f.path) for f in (ph.image, ph.thumbnail, ph.image_styled, ph.styled_thumbnail)]
         self.client.force_login(self.owner)
-        self.client.post(f"/next/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "wrong"})
+        self.client.post(f"/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "wrong"})
         self.assertFalse(PenPhoto.objects.filter(pk=ph.pk).exists())
         self.assertEqual(list(self.pen.rejected_photos.values_list("source_url", flat=True)), ["https://shop.example/992.jpg"])
         self.assertFalse(any(f.exists() for f in files))
@@ -80,12 +80,12 @@ class CheckPage(Base):
     def test_wrong_on_a_drawn_photo_blocks_drawing_again(self):
         ph = self.machine_photo(url="")
         self.client.force_login(self.owner)
-        self.client.post(f"/next/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "wrong"})
+        self.client.post(f"/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "wrong"})
         self.assertTrue(self.pen.rejected_photos.filter(source_url=RejectedPenPhoto.GENERATED).exists())
 
     def test_verdict_is_post_only_and_for_the_owner(self):
         ph = self.machine_photo()
-        url = f"/next/pens/{self.pen.pk}/photos/{ph.pk}/verdict/"
+        url = f"/pens/{self.pen.pk}/photos/{ph.pk}/verdict/"
         self.assertEqual(self.client.post(url, {"verdict": "wrong"}).status_code, 302)
         self.assertTrue(PenPhoto.objects.filter(pk=ph.pk).exists())
         self.client.force_login(self.owner)
@@ -94,23 +94,23 @@ class CheckPage(Base):
     def test_next_must_stay_on_the_site(self):
         ph = self.machine_photo()
         self.client.force_login(self.owner)
-        r = self.client.post(f"/next/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "ok", "next": "https://evil.example/"})
-        self.assertRedirects(r, "/next/pens/photos/check/", fetch_redirect_response=False)
+        r = self.client.post(f"/pens/{self.pen.pk}/photos/{ph.pk}/verdict/", {"verdict": "ok", "next": "https://evil.example/"})
+        self.assertRedirects(r, "/pens/photos/check/", fetch_redirect_response=False)
 
     def test_pen_page_and_desk_ask(self):
         self.machine_photo()
         self.client.force_login(self.owner)
-        page = self.client.get(f"/next/pens/{self.pen.pk}/")
+        page = self.client.get(f"/pens/{self.pen.pk}/")
         self.assertContains(page, "Is this your pen?")
-        self.assertContains(page, 'name="next" value="/next/pens/%d/"' % self.pen.pk)
-        self.assertContains(self.client.get("/next/"), "1 photo to check")
+        self.assertContains(page, 'name="next" value="/pens/%d/"' % self.pen.pk)
+        self.assertContains(self.client.get("/dashboard/"), "1 photo to check")
 
     def test_owners_own_photo_is_not_asked_about(self):
         ph = PenPhoto(pen=self.pen, kind="main")
         ph.image = ContentFile(jpeg(), name="p.jpg")
         ph.save()
         self.client.force_login(self.owner)
-        self.assertNotContains(self.client.get(f"/next/pens/{self.pen.pk}/"), "Is this your pen?")
+        self.assertNotContains(self.client.get(f"/pens/{self.pen.pk}/"), "Is this your pen?")
 
 
 class FillCommand(Base):

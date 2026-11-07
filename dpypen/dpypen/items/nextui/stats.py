@@ -645,12 +645,10 @@ def pairs() -> dict:
 
 
 def rebase(value):
-    """Links made for the old pages, pointing at their twins (the charts of
-    `inkings.build`: "See them", "The year's charts")."""
+    """Links made for the old pages (/prev/), pointing at their twins (the
+    charts of `inkings.build`: "See them", "The year's charts")."""
     if isinstance(value, str):
-        if value.startswith("/usages/"):
-            return "/next" + value
-        return value.replace("|/usages/", "|/next/usages/").replace("|/history/inkings/", "|/next/stats/inkings/")
+        return value.replace("/prev/history/inkings/", "/stats/inkings/").replace("/prev/", "/")
     if isinstance(value, list):
         return [rebase(v) for v in value]
     if isinstance(value, dict):

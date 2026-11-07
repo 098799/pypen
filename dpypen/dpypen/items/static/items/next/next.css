@@ -578,6 +578,9 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 /* ---- the bars ---- */
 .deskbar { display: contents; }
 .db-brand, .db-btn, .db-space, .desk-pop { display: none; }
+/* A stranger's way to the menu on a phone (no tab bar); a desk has the bar's ⋯. */
+.menu-corner { position: fixed; top: calc(10px + env(safe-area-inset-top)); right: 12px; z-index: 30; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+.menu-corner svg { width: 22px; height: 22px; }
 /* the tab bar is the kit's (items/_tabs.html); its place on a desk: */
 .desktabs { display: none; }
 .desktabs:has(.kit-tabs-in) { display: block; min-width: 0; }

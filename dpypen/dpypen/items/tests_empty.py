@@ -40,7 +40,7 @@ class KitEmpty(Collection):
     def test_the_shell_carries_it_once(self):
         from dpypen.items.tests import shipped
 
-        html = shipped(self.client, "/pens/")
+        html = shipped(self.client, "/prev/pens/")
         self.assertEqual(html.count("/*! KIT-EMPTY: v1"), 2)   # shell.css and shell.js
         # and the shared handler for a live search that fails
         self.assertIn('addEventListener("htmx:responseError", failed)', html)
@@ -54,14 +54,14 @@ class KitEmpty(Collection):
         self.assertNotIn("sr-empty", search)
 
     def test_no_pens_yet(self):
-        got = blocks(self.client.get("/pens/").content.decode())
+        got = blocks(self.client.get("/prev/pens/").content.decode())
         self.assertEqual([k for k, _ in got], ["none"])
         self.assertIn("No pens in the bureau yet", got[0][1])
 
     def test_a_pen_search_with_no_match_can_be_cleared(self):
         self.pens(2)
         for view in ("", "&view=grid"):
-            html = self.client.get(f"/pens/?q=zzz{view}", **PARTIAL).content.decode()
+            html = self.client.get(f"/prev/pens/?q=zzz{view}", **PARTIAL).content.decode()
             ((kind, b),) = blocks(html)
             self.assertEqual(kind, "match")
             self.assertIn("No pen matches “zzz”", b)
@@ -71,24 +71,24 @@ class KitEmpty(Collection):
 
     def test_an_empty_rotation_chip_is_a_no_match_with_all_pens(self):
         self.pens(2, rot=self.rots[1])
-        html = self.client.get("/pens/?rot=p3").content.decode()
+        html = self.client.get("/prev/pens/?rot=p3").content.decode()
         ((kind, b),) = blocks(html)
         self.assertEqual(kind, "match")
         self.assertIn("No pens in Priority 3", b)
         self.assertNotIn("bureau", b)
-        self.assertIn('href="/pens/">All pens</a>', b)
+        self.assertIn('href="/prev/pens/">All pens</a>', b)
         # the chip in force stays on show, at 0
         self.assertRegex(html, r'class="kit-chip" aria-current="true"\s+data-navkey="rot" data-navval="p3"[^>]*>3 <b>0</b>')
 
     def test_an_empty_cupboard_says_so(self):
-        got = blocks(self.client.get("/inks/").content.decode())
+        got = blocks(self.client.get("/prev/inks/").content.decode())
         self.assertEqual([k for k, _ in got], ["none"])
         self.assertIn("No inks in the cupboard yet", got[0][1])
         self.assertNotIn("filter", got[0][1])
 
     def test_a_cupboard_of_samples_is_a_no_match_with_show_all(self):
         Ink.objects.create(brand=self.brand, name="s", color="Blue", obtained_from="x", how="Bought", volume=2, rotation=self.rots[1], used_up=False)
-        ((kind, b),) = blocks(self.client.get("/inks/").content.decode())
+        ((kind, b),) = blocks(self.client.get("/prev/inks/").content.decode())
         self.assertEqual(kind, "match")
         self.assertIn("Samples and used-up inks are hidden", b)
         self.assertIn("samples=1", b)
@@ -97,7 +97,7 @@ class KitEmpty(Collection):
     def test_an_ink_search_with_no_match_can_be_cleared(self):
         self.inks(2)
         for view in ("", "&view=grid"):
-            html = self.client.get(f"/inks/?q=zzz{view}", **PARTIAL).content.decode()
+            html = self.client.get(f"/prev/inks/?q=zzz{view}", **PARTIAL).content.decode()
             ((kind, b),) = blocks(html)
             self.assertEqual(kind, "match")
             self.assertIn("No ink matches “zzz”", b)
@@ -105,20 +105,20 @@ class KitEmpty(Collection):
             self.assertIn(">Clear the search</a>", b)
 
     def test_inkings(self):
-        html = self.client.get("/usages/").content.decode()
+        html = self.client.get("/prev/usages/").content.decode()
         self.assertEqual([k for k, _ in blocks(html)], ["none"])
-        html = self.client.get("/usages/?q=zzz", **PARTIAL).content.decode()
+        html = self.client.get("/prev/usages/?q=zzz", **PARTIAL).content.decode()
         ((kind, b),) = blocks(html)
         self.assertEqual(kind, "match")
         self.assertIn(">Clear the search</a>", b)
 
     def test_search(self):
-        html = self.client.get("/search/").content.decode()
+        html = self.client.get("/prev/search/").content.decode()
         ((kind, b),) = blocks(html)
         self.assertEqual(kind, "none")
         self.assertIn("Type to search", b)
         self.pens(1)
-        html = self.client.get("/search/?q=zzz&type=pens", **PARTIAL).content.decode()
+        html = self.client.get("/prev/search/?q=zzz&type=pens", **PARTIAL).content.decode()
         ((kind, b),) = blocks(html)
         self.assertEqual(kind, "match")
         self.assertIn('role="status"', b)
@@ -127,15 +127,15 @@ class KitEmpty(Collection):
         self.assertIn("type=pens", clear)
         self.assertIn(">Show the hidden ones</a>", b)
         # nothing hidden: no second way out
-        html = self.client.get("/search/?q=zzz&type=pens&defunct=1", **PARTIAL).content.decode()
+        html = self.client.get("/prev/search/?q=zzz&type=pens&defunct=1", **PARTIAL).content.decode()
         self.assertNotIn("Show the hidden ones", html)
 
     def test_a_pen_never_inked(self):
         self.pens(1)
-        html = self.client.get(f"/pens/{Pen.objects.get().pk}/").content.decode()
+        html = self.client.get(f"/prev/pens/{Pen.objects.get().pk}/").content.decode()
         got = [b for k, b in blocks(html) if k == "none"]
         self.assertTrue(any("kit-empty small" in b and "never been inked" in b for b in got), got)
 
     def test_every_pen_has_a_photo(self):
-        html = self.client.get("/pens/needs-photos/").content.decode()
+        html = self.client.get("/prev/pens/needs-photos/").content.decode()
         self.assertTrue(any("Every pen in the collection has a photograph" in b for _, b in blocks(html)))

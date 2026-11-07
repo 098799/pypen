@@ -143,6 +143,7 @@ class TheDoor(_Collection):
             "inks": {"pk": self.ink.pk},
             "swatches": {"pk": self.swatch.pk},
             "undo": {"token": "no-such-token"},
+            "next": {"rest": "pens/"},
             "kit": {"name": "shell.js"},
             "i": {"token": self.invite.token},
             "p": {"token": self.pen.share_token},
@@ -153,8 +154,8 @@ class TheDoor(_Collection):
         out = []
         for pattern in item_urls.urlpatterns:
             route = str(pattern.pattern)
-            # next/usages/samples/<pk>/... is a sample: the last word before the <.
-            words = [w for w in route.split("<")[0].split("/") if w and w != "next"]
+            # usages/samples/<pk>/... is a sample: the last word before the <.
+            words = [w for w in route.split("<")[0].split("/") if w and w != "prev"]
             head = (words[-1] if words and words[-1] in ("samples", "swatches") else words[0]) if words else ""
             params = by_prefix.get(head, {})
 
@@ -194,8 +195,10 @@ class TheDoor(_Collection):
         guest.post(f"/i/{self.invite.token}/")
         before = _collection_state()
         for name, url in self.routes():
-            if name in ("invite_activate", "invite_deactivate", "nx_prefer"):
+            if name in ("invite_activate", "invite_deactivate"):
                 continue  # these move the guest's own session, not the collection
+            if name in ("prev", "nx_from_next", "next/<path:rest>"):
+                continue  # a guest's redirect to a page this loop walks itself
             with self.subTest(route=name, method="get"):
                 response = guest.get(url)
                 if name in GUEST_READS:
@@ -211,9 +214,9 @@ class TheDoor(_Collection):
     def test_a_revoked_invite_is_a_stranger_again(self):
         guest = Client()
         guest.post(f"/i/{self.invite.token}/")
-        self.assertEqual(guest.get("/dashboard/").status_code, 200)
+        self.assertEqual(guest.get("/prev/dashboard/").status_code, 200)
         InviteCode.objects.filter(pk=self.invite.pk).update(revoked_at=timezone.now())
-        self.assert_sent_away(guest.get("/dashboard/"), "/dashboard/")
+        self.assert_sent_away(guest.get("/prev/dashboard/"), "/prev/dashboard/")
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
@@ -228,7 +231,7 @@ class UndoBringsItBack(_Collection):
         usage_before = serializers.serialize("json", [self.usage])
         sample_before = serializers.serialize("json", [self.sample])
 
-        self.client.post(f"/usages/{self.usage.pk}/delete/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/delete/")
         self.assertFalse(Usage.objects.filter(pk=self.usage.pk).exists())
         self.assertFalse(WritingSample.objects.filter(pk=self.sample.pk).exists())
 
@@ -237,27 +240,27 @@ class UndoBringsItBack(_Collection):
         self.assertEqual(serializers.serialize("json", WritingSample.objects.filter(pk=self.sample.pk)), sample_before)
 
     def test_an_undone_finish_reopens_the_inking(self):
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         self.assertEqual(Usage.objects.get(pk=self.usage.pk).end, date.today())
         self.client.post(f"/undo/{self.last_token()}/")
         self.assertIsNone(Usage.objects.get(pk=self.usage.pk).end)
 
     def test_an_undone_edit_puts_the_old_values_back(self):
         self.client.post(
-            f"/usages/{self.usage.pk}/edit/", {"pen": self.pen.pk, "nib": self.nib.pk, "ink": self.ink.pk, "begin": "2001-02-03", "end": ""}
+            f"/prev/usages/{self.usage.pk}/edit/", {"pen": self.pen.pk, "nib": self.nib.pk, "ink": self.ink.pk, "begin": "2001-02-03", "end": ""}
         )
         self.assertEqual(Usage.objects.get(pk=self.usage.pk).begin, date(2001, 2, 3))
         self.client.post(f"/undo/{self.last_token()}/")
         self.assertEqual(Usage.objects.get(pk=self.usage.pk).begin, self.usage.begin)
 
     def test_an_undone_create_removes_only_the_new_row(self):
-        self.client.post("/usages/add/", {"pen": self.pen.pk, "nib": self.nib.pk, "ink": self.ink.pk, "begin": "2026-01-01", "end": ""})
+        self.client.post("/prev/usages/add/", {"pen": self.pen.pk, "nib": self.nib.pk, "ink": self.ink.pk, "begin": "2026-01-01", "end": ""})
         self.assertEqual(Usage.objects.count(), 2)
         self.client.post(f"/undo/{self.last_token()}/")
         self.assertEqual(list(Usage.objects.values_list("pk", flat=True)), [self.usage.pk])
 
     def test_a_token_works_once(self):
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         token = self.last_token()
         self.client.post(f"/undo/{token}/")
         Usage.objects.filter(pk=self.usage.pk).update(end=date(2026, 5, 5))  # a later, deliberate change
@@ -265,7 +268,7 @@ class UndoBringsItBack(_Collection):
         self.assertEqual(Usage.objects.get(pk=self.usage.pk).end, date(2026, 5, 5))
 
     def test_a_token_is_no_good_in_another_session(self):
-        self.client.post(f"/usages/{self.usage.pk}/delete/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/delete/")
         token = self.last_token()
         other = Client()
         other.force_login(self.owner)
@@ -273,26 +276,26 @@ class UndoBringsItBack(_Collection):
         self.assertFalse(Usage.objects.filter(pk=self.usage.pk).exists())
 
     def test_undo_never_bounces_off_site(self):
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         response = self.client.post(f"/undo/{self.last_token()}/", {"next": "//evil.example/"})
         self.assertEqual(response["Location"], "/dashboard/")
 
     def test_undo_never_bounces_off_site_by_a_backslash(self):
         # Browsers read /\evil.example as //evil.example.
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         response = self.client.post(f"/undo/{self.last_token()}/", {"next": "/\\evil.example/"})
         self.assertEqual(response["Location"], "/dashboard/")
 
     def test_undo_goes_back_to_the_page_it_was_pressed_on(self):
         # The toast's form sends no `next`; the browser's Referer is a full URL.
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         response = self.client.post(
             f"/undo/{self.last_token()}/", HTTP_REFERER="http://testserver/pens/"
         )
         self.assertEqual(response["Location"], "http://testserver/pens/")
 
     def test_undo_does_not_follow_another_sites_referer(self):
-        self.client.post(f"/usages/{self.usage.pk}/end/")
+        self.client.post(f"/prev/usages/{self.usage.pk}/end/")
         response = self.client.post(
             f"/undo/{self.last_token()}/", HTTP_REFERER="https://evil.example/pens/"
         )
@@ -316,7 +319,7 @@ class MessagesAreTheKitsToast(_Collection):
             self.assertEqual(copy.read_bytes(), canon.read_bytes())
 
     def test_a_delete_offers_undo_through_the_kit_toast(self):
-        response = self.client.post(f"/usages/{self.usage.pk}/delete/", follow=True)
+        response = self.client.post(f"/prev/usages/{self.usage.pk}/delete/", follow=True)
         html = response.content.decode()
         # the toast is in shell.js, blocking before the reader of the messages
         self.assertLess(html.index('<script src="/kit/shell.js'), html.index("window.__kitMsgs"))

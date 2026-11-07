@@ -23,7 +23,7 @@ from dpypen.items.templatetags.items_extras import highlight
 from dpypen.items.tests import PLAIN_STATIC
 
 MORE = {"HTTP_X_PYPEN_MORE": "1"}
-LISTS = ["/pens/", "/inks/", "/usages/", "/search/?q=x", "/api/pens", "/api/inks", "/api/usages"]
+LISTS = ["/prev/pens/", "/prev/inks/", "/prev/usages/", "/prev/search/?q=x", "/api/pens", "/api/inks", "/api/usages"]
 
 
 def heads(html):
@@ -110,7 +110,7 @@ class Paging(Collection):
         self.pens(60)
         self.inks(60)
         self.usages(60)
-        for url in ("/pens/", "/inks/", "/usages/"):
+        for url in ("/prev/pens/", "/prev/inks/", "/prev/usages/"):
             with self.subTest(url=url):
                 html = self.client.get(url).content.decode()
                 self.assertEqual(rows(html), 50)
@@ -137,15 +137,15 @@ class Paging(Collection):
 
     def test_load_more_answers_the_next_rows_only(self):
         self.pens(60)
-        html = self.client.get("/pens/?offset=50", **MORE).content.decode()
+        html = self.client.get("/prev/pens/?offset=50", **MORE).content.decode()
         self.assertNotIn("<html", html)
         self.assertEqual(rows(html), 10)
         self.assertNotIn("Load more", html)
-        self.assertIn("X-Pypen-More", self.client.get("/pens/")["Vary"])
+        self.assertIn("X-Pypen-More", self.client.get("/prev/pens/")["Vary"])
 
     def test_a_page_past_the_end_is_empty_not_an_error(self):
         self.pens(3)
-        self.assertEqual(self.client.get("/pens/?offset=999999").status_code, 200)
+        self.assertEqual(self.client.get("/prev/pens/?offset=999999").status_code, 200)
         self.assertEqual(self.client.get("/api/pens?offset=999999").json()["items"], [])
 
     def test_a_guest_and_a_stranger(self):
@@ -164,16 +164,16 @@ class QueryCount(Collection):
 
     def test_flat_at_1_10_30_rows(self):
         urls = [
-            "/pens/",
-            "/pens/?view=grid",
-            "/pens/?q=x",
-            "/inks/",
-            "/inks/?sort=inked",
-            "/inks/?view=grid",
-            "/usages/",
-            "/usages/?q=x",
-            "/search/?q=x",
-            "/search/?q=x&sort=used",
+            "/prev/pens/",
+            "/prev/pens/?view=grid",
+            "/prev/pens/?q=x",
+            "/prev/inks/",
+            "/prev/inks/?sort=inked",
+            "/prev/inks/?view=grid",
+            "/prev/usages/",
+            "/prev/usages/?q=x",
+            "/prev/search/?q=x",
+            "/prev/search/?q=x&sort=used",
             "/pub/inks/",
             "/api/pens",
             "/api/inks",
@@ -202,7 +202,7 @@ class Search(Collection):
         self.pens(1, model="Limmat", brand=zb)
         self.inks(1, name="Zürichsee", color="Blue")
         self.usages(1)
-        for url, word in (("/pens/?q=zur", "Zür"), ("/inks/?q=ZUR", "Zür"), ("/search/?q=zur", "Zür"), ("/usages/?q=zur", "Zür")):
+        for url, word in (("/prev/pens/?q=zur", "Zür"), ("/prev/inks/?q=ZUR", "Zür"), ("/prev/search/?q=zur", "Zür"), ("/prev/usages/?q=zur", "Zür")):
             with self.subTest(url=url):
                 html = self.client.get(url).content.decode()
                 self.assertIn(f"<mark>{word}</mark>", html)
@@ -231,7 +231,7 @@ class Search(Collection):
         self.assertEqual(str(highlight("<b>Zürich</b>", "zur")), "&lt;b&gt;<mark>Zür</mark>ich&lt;/b&gt;")
         self.assertEqual(str(highlight("a<b", ["lt"])), "a&lt;b")
         self.pens(1, model="<script>x</script>")
-        html = self.client.get("/pens/?q=script").content.decode()
+        html = self.client.get("/prev/pens/?q=script").content.decode()
         self.assertNotIn("<script>x", html)
         self.assertIn("&lt;<mark>script</mark>&gt;", html)
 
@@ -245,12 +245,12 @@ class Search(Collection):
         for _ in range(3):
             Usage.objects.create(pen=a, ink=ink, nib=self.nib, begin=date(2020, 1, 1), end=date(2020, 2, 1))
         Usage.objects.bulk_create([Usage(id=9000, pen=bb, ink=ink, nib=self.nib, begin=date(2021, 1, 1), end=date(2021, 2, 1))])
-        html = self.client.get("/search/?q=sport&type=pens&sort=used").content.decode()
-        self.assertLess(html.index(f"/pens/{a.pk}/"), html.index(f"/pens/{bb.pk}/"))
+        html = self.client.get("/prev/search/?q=sport&type=pens&sort=used").content.decode()
+        self.assertLess(html.index(f"/prev/pens/{a.pk}/"), html.index(f"/prev/pens/{bb.pk}/"))
 
     def test_both_kinds_preview_then_one_kind_goes_on(self):
         self.pens(25)
-        html = self.client.get("/search/?q=x").content.decode()
+        html = self.client.get("/prev/search/?q=x").content.decode()
         self.assertIn("1–20 of 25", text(html))
         nxt = re.search(r'href="([^"]*)" data-more', html).group(1).replace("&amp;", "&")
         self.assertIn("type=pens", nxt)
@@ -265,15 +265,15 @@ class Groups(Collection):
         self.pens(30, rot=self.rots[0])
         self.pens(30, rot=self.rots[1])
         self.pens(5, rot=self.gone)
-        first = self.client.get("/pens/").content.decode()
+        first = self.client.get("/prev/pens/").content.decode()
         self.assertEqual(heads(first), ["Priority 0", "Priority 1"])
         self.assertIn("30 pens · ~every 14 days", first)  # the group, not the 20 on this page
-        more = self.client.get("/pens/?offset=50", **MORE).content.decode()
+        more = self.client.get("/prev/pens/?offset=50", **MORE).content.decode()
         # Priority 1 goes on from the last page: no second heading for it.
         self.assertEqual(heads(more), ["Defunct / sold"])
         self.assertIn('data-group="p1"', more)
         # A bookmarked page in the middle of a group does show its heading.
-        page = self.client.get("/pens/?offset=50").content.decode()
+        page = self.client.get("/prev/pens/?offset=50").content.decode()
         self.assertEqual(heads(page), ["Priority 1", "Defunct / sold"])
 
     def test_the_rotation_chips_filter_in_sql(self):
@@ -285,7 +285,7 @@ class Groups(Collection):
         self.assertEqual(d["total"], 2)
         self.assertEqual({i["group"] for i in self.client.get("/api/pens?rot=other").json()["items"]}, {"other"})
         self.assertEqual(self.client.get("/api/pens?rot=p9").json()["total"], 9)  # a stale chip: all
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         for chip in ('data-navval="p0"', 'data-navval="p2"', 'data-navval="other"'):
             self.assertIn(chip, html)
         self.assertNotIn('data-navval="p1"', html)  # no pens, no chip
@@ -297,28 +297,28 @@ class Groups(Collection):
         self.inks(40, color="Black", name="Noir")
         self.inks(20, color="Blue", name="Bleu")
         self.inks(3, color="Blue", name="Noir")
-        html = self.client.get("/inks/").content.decode()
+        html = self.client.get("/prev/inks/").content.decode()
         self.assertEqual(heads(html), ["Black", "Blue"])
         self.assertIn("23 bottles", html)
-        more = self.client.get("/inks/?offset=50", **MORE).content.decode()
+        more = self.client.get("/prev/inks/?offset=50", **MORE).content.decode()
         self.assertEqual(heads(more), [])  # Blue goes on
-        searched = self.client.get("/inks/?q=noir").content.decode()
+        searched = self.client.get("/prev/inks/?q=noir").content.decode()
         self.assertRegex(searched, r'</i>Blue <b>3</b>')
         self.assertEqual(self.client.get("/api/inks?q=noir&color=Blue").json()["total"], 3)
 
     def test_a_flat_sort_has_no_headings(self):
         self.inks(3, color="Black")
         self.inks(3, color="Blue")
-        html = self.client.get("/inks/?sort=brand").content.decode()
+        html = self.client.get("/prev/inks/?sort=brand").content.decode()
         self.assertEqual(heads(html), [])
 
     def test_the_desk_stays_on_the_first_page(self):
         self.usages(3, end=False)
         self.usages(55)
-        html = self.client.get("/usages/").content.decode()
+        html = self.client.get("/prev/usages/").content.decode()
         self.assertIn("3 on duty", html)
         self.assertEqual(rows(html), 50)
-        more = self.client.get("/usages/?offset=50", **MORE).content.decode()
+        more = self.client.get("/prev/usages/?offset=50", **MORE).content.decode()
         self.assertNotIn("on duty", more)
         self.assertNotIn("Past <em>inkings</em>", more)
         self.assertEqual(rows(more), 5)

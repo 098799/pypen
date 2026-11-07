@@ -86,6 +86,7 @@ def _pen_detail(request, ctx):
     picks = pairing.suggest_inks(pen, today, usages)[:3]
     return {
         **ctx,
+        "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
             "median_fill": round(median(ended)) if ended else None,
             "price_pln": round(price) if price else None,
@@ -135,6 +136,7 @@ def _ink_detail(request, ctx):
     last = max((u.end for u in ctx.get("past") or []), default=None)
     return {
         **ctx,
+        "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
             "per_ml": f"{price / ink.volume:.2f}" if price and ink.volume else None,
             "price_pln": round(price) if price else None,

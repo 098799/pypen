@@ -38,7 +38,7 @@ class ScrollLock(TestCase):
         self.client.force_login(self.user)
 
     def test_the_kit_locks_for_the_palette_and_the_sheet(self):
-        for url in ("/pens/", "/inks/", "/history/"):
+        for url in ("/prev/pens/", "/prev/inks/", "/prev/history/"):
             html = self.client.get(url).content.decode()
             self.assertIn('id="kpal"', html, url)
             # KEYS-LAYER v1.3 opens both through kitLayer, which sets the lock
@@ -51,7 +51,7 @@ class ScrollLock(TestCase):
             self.assertIn("items/css/app.css", html, url)
 
     def test_the_public_page_names_no_path_of_the_box(self):
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         # the ? sheet showed "The whole dialect: ~/apps/kit/KEYS.md" (PYPEN-8)
         self.assertNotIn("The whole dialect", html)
         self.assertIn("placeholder: 'Jump to a pen, an ink, anywhere", html)
@@ -76,7 +76,7 @@ class KitLayer(TestCase):
             self.assertEqual(LAYER.read_bytes(), KIT_LAYER.read_bytes())
 
     def test_loaded_first_and_the_menus_use_it(self):
-        for url in ("/pens/", "/history/gantt/"):
+        for url in ("/prev/pens/", "/prev/history/gantt/"):
             html = self.client.get(url).content.decode()
             # shell.js starts with the layer and loads blocking at the top of
             # <body>: it runs before htmx, which is `defer` (kitshell.py).
@@ -89,7 +89,7 @@ class KitLayer(TestCase):
             # no own overlay history or Escape left for the menus
             self.assertNotIn('window.addEventListener("popstate", closeMenu)', html, url)
             self.assertNotIn('if (e.key === "Escape") closeMenu()', html, url)
-        gantt = self.client.get("/history/gantt/").content.decode()
+        gantt = self.client.get("/prev/history/gantt/").content.decode()
         self.assertIn('name: "gantt", lock: false, focus: false', gantt)
         self.assertNotIn('if (e.key === "Escape") closePopup()', gantt)
 

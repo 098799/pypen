@@ -16,15 +16,7 @@
 <section class="kit-set-g">
   <h2 class="kit-set-h">This version</h2>
   <div class="kit-set-card">
-    <form class="kit-set-form" method="post" action="{% url 'nx_prefer' %}" hx-boost="false">
-      {% csrf_token %}
-      <input type="hidden" name="first" value="{% if ui_first %}old{% else %}next{% endif %}">
-      <button class="kit-set-row kit-set-go" type="submit"><span class="kit-set-k">{% if ui_first %}Stop opening this version first{% else %}Open this version first{% endif %}<small class="kit-set-sub">{% if ui_first %}On this device the app now opens here{% else %}On this device the app still opens the old version{% endif %}</small></span></button>
-    </form>
-    <form class="kit-set-form" method="post" action="{% url 'nx_prefer' %}" hx-boost="false">
-      {% csrf_token %}<input type="hidden" name="first" value="old"><input type="hidden" name="leave" value="1">
-      <button class="kit-set-row kit-set-go kit-set-out" type="submit"><span class="kit-set-k">Back to the old version<small class="kit-set-sub">Same pens and inks, same data</small></span></button>
-    </form>
+    <a class="kit-set-row kit-set-go kit-set-out" href="{% url 'dashboard' %}" hx-boost="false"><span class="kit-set-k">The old version<small class="kit-set-sub">Still at /prev/ for now: same pens and inks, same data</small></span></a>
     <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open><span class="kit-set-k"><span class="wn-host" data-whatsnew-dot>What's new</span><small class="kit-set-sub">New things the app can do</small></span></button>
   </div>
 </section>

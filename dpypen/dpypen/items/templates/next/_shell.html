@@ -60,11 +60,11 @@ if ("serviceWorker" in navigator) {
   </button>
   <div class="desk-pop" id="deskSearch" role="dialog" aria-label="Search"></div>
   <div class="desk-pop" id="deskFilter" role="menu" aria-label="Filter"></div>
-  {# ⋯: the menu on a desk; a phone has it on the tab bar's More. #}
-  <button type="button" class="db-btn" aria-label="More" aria-controls="menuPanel" data-menu-btn>
-    <span class="wn-host" data-whatsnew-dot><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></span>
-  </button>
   {% endif %}
+  {# ⋯: the menu on a desk; a phone has it on the tab bar's More, a stranger in the corner. #}
+  <button type="button" class="db-btn" aria-label="More" aria-controls="menuPanel" data-menu-btn>
+    <span class="wn-host"{% if is_owner or is_guest %} data-whatsnew-dot{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></span>
+  </button>
 </header>
 {% include "next/_tabbar.html" %}
 
@@ -116,21 +116,25 @@ if ("serviceWorker" in navigator) {
 
 <main id="main">
 {% include "items/_msgs.html" %}
+{% if not is_owner and not is_guest %}
+{# A stranger has no tab bar: on a phone the menu (Front page, Sign in) opens from here. #}
+<button class="menu-corner" type="button" aria-label="Menu" aria-controls="menuPanel" data-menu-btn>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+</button>
+{% endif %}
 {% block content %}{% endblock %}
 {% include "items/_shell_filternav.html" %}
 </main>
 </div>
 {% include "items/_shell_behave.html" %}
 <script>
-/* The palette's places and its hits are the old pages' addresses (one list for
-   both shells, _keys.html). Here each one means its twin. */
+/* The palette's places and its hits are the main addresses, plus the old
+   pages' History and Records (one list for both shells, _keys.html). Here
+   those two mean their Stats twins. */
 window.__nextUrl = function (url) {
-  if (/^\/(next|accounts|admin)\b|^#/.test(url)) return url;
-  if (url === "/dashboard/") return "/next/";
-  if (url === "/history/") return "/next/stats/";
-  if (url === "/records/") return "/next/stats/records/";
-  if (url.indexOf("/history/") === 0) return url.replace("/history/gantt/", "/next/stats/timeline/").replace("/history/matrix/", "/next/stats/pairs/").replace("/history/", "/next/stats/");
-  if (/^\/(pens|inks|usages|search|settings|import|pick)\//.test(url)) return "/next" + url;
+  if (url === "/history/") return "/stats/";
+  if (url === "/records/") return "/stats/records/";
+  if (url.indexOf("/history/") === 0) return url.replace("/history/gantt/", "/stats/timeline/").replace("/history/matrix/", "/stats/pairs/").replace("/history/", "/stats/");
   return url;
 };
 </script>

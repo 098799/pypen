@@ -78,14 +78,14 @@ class OneName(TestCase):
 
     def test_every_screen_says_it_the_same_way(self):
         self.client.force_login(self.owner)
-        home = self.client.get("/dashboard/").content.decode()
+        home = self.client.get("/prev/dashboard/").content.decode()
         self.assertIn("<title>Grining Pens</title>", home)
         self.assertIn('<meta name="apple-mobile-web-app-title" content="Grining Pens">', home)
         self.assertIn("name: 'Grining Pens',", home)  # the keyboard layer
         self.assertIn('<span class="overline">Grining Pens</span>', home)
-        self.assertIn("<title>Pens · Grining Pens</title>", self.client.get("/pens/").content.decode())
-        self.assertIn("<title>Settings · Grining Pens</title>", self.client.get("/settings/").content.decode())
-        for url in ("/dashboard/", "/pens/", "/inks/", "/usages/", "/history/", "/records/", "/settings/"):
+        self.assertIn("<title>Pens · Grining Pens</title>", self.client.get("/prev/pens/").content.decode())
+        self.assertIn("<title>Settings · Grining Pens</title>", self.client.get("/prev/settings/").content.decode())
+        for url in ("/prev/dashboard/", "/prev/pens/", "/prev/inks/", "/prev/usages/", "/prev/history/", "/prev/records/", "/prev/settings/"):
             html = self.client.get(url).content.decode()
             self.assertNotIn("Grining Fountain Pens", html, url)
             self.assertNotIn("the bureau'", html, url)

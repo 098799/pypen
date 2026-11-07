@@ -76,7 +76,7 @@ class DashboardBudget(TestCase):
 
         post_init.connect(count, weak=False)
         try:
-            r = self.client.get("/dashboard/")
+            r = self.client.get("/prev/dashboard/")
         finally:
             post_init.disconnect(count)
         self.assertEqual(r.status_code, 200)
@@ -92,7 +92,7 @@ class DashboardBudget(TestCase):
 
     def test_inked_now_still_shown_newest_first(self):
         self.add_history(40)
-        html = self.client.get("/dashboard/").content.decode()
+        html = self.client.get("/prev/dashboard/").content.decode()
         self.assertIn("<strong>2</strong> inked", html)
         # pens[0] was inked a day after pens[1], so it leads.
         self.assertLess(html.index('<div class="ink">Brand 0 Ink 0</div>'),

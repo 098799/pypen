@@ -45,7 +45,7 @@ def head_row(html):
 @override_settings(STORAGES=PLAIN_STATIC)
 class TheDeskBar(Collection):
     def test_one_header_with_the_tab_bar_s_slot_in_it(self):
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         self.assertEqual(html.count('id="hdr"'), 1)
         hdr = header(html)
         self.assertIn('<div class="desktabs" id="desktabs"></div>', hdr)
@@ -60,7 +60,7 @@ class TheDeskBar(Collection):
         self.assertIn('id="deskSearch"', hdr)
         self.assertIn('id="deskFilter"', hdr)
         # the places a phone has no room for are tabs on a desk only
-        for place in ("/history/", "/records/"):
+        for place in ("/prev/history/", "/prev/records/"):
             self.assertRegex(html, r'<a class="kit-tab" data-desk href="%s">' % place)
         # More is the bar's on a phone; the desk bar has ⋯
         self.assertRegex(html, r'<button type="button" class="kit-tab" data-phone data-menu-btn')
@@ -68,7 +68,7 @@ class TheDeskBar(Collection):
         self.assertIn("items/js/deskbar.js", html)
 
     def test_the_pill_nav_and_the_floating_button_are_gone(self):
-        for url in ("/dashboard/", "/pens/", "/inks/", "/usages/", "/history/", "/records/", "/settings/"):
+        for url in ("/prev/dashboard/", "/prev/pens/", "/prev/inks/", "/prev/usages/", "/prev/history/", "/prev/records/", "/prev/settings/"):
             html = self.client.get(url).content.decode()
             with self.subTest(url=url):
                 self.assertNotIn("app-nav", html)
@@ -77,7 +77,7 @@ class TheDeskBar(Collection):
                 self.assertNotIn('aria-labelledby="menuBtn"', html)  # it named no element
 
     def test_the_tab_lights_where_you_are(self):
-        cases = {"/pens/": "/pens/", "/inks/": "/inks/", "/usages/": "/usages/", "/dashboard/": "/dashboard/"}
+        cases = {"/prev/pens/": "/prev/pens/", "/prev/inks/": "/prev/inks/", "/prev/usages/": "/prev/usages/", "/prev/dashboard/": "/prev/dashboard/"}
         for url, tab in cases.items():
             html = tabs(self.client.get(url).content.decode())
             with self.subTest(url=url):
@@ -90,8 +90,8 @@ class TheDeskBar(Collection):
         tabs, the rest have none). They light More, where a phone has them; a
         desk-only tab is lit with it."""
         more = r'<button type="button" class="kit-tab" data-phone data-menu-btn[^>]* aria-current="page">'
-        for url, desk in (("/history/", "/history/"), ("/history/inkings/", "/history/"), ("/records/", "/records/"),
-                          ("/pick/", None), ("/search/?q=blue", None), ("/settings/", None)):
+        for url, desk in (("/prev/history/", "/prev/history/"), ("/prev/history/inkings/", "/prev/history/"), ("/prev/records/", "/prev/records/"),
+                          ("/prev/pick/", None), ("/prev/search/?q=blue", None), ("/prev/settings/", None)):
             html = tabs(self.client.get(url).content.decode())
             with self.subTest(url=url):
                 self.assertRegex(html, more)
@@ -102,18 +102,18 @@ class TheDeskBar(Collection):
     def test_chip_rows_fold_into_filter(self):
         self.pens(2)
         self.inks(2)
-        self.assertIn('data-fold="Rotation"', self.client.get("/pens/").content.decode())
-        self.assertIn('data-fold="Ink filters"', self.client.get("/inks/").content.decode())
+        self.assertIn('data-fold="Rotation"', self.client.get("/prev/pens/").content.decode())
+        self.assertIn('data-fold="Ink filters"', self.client.get("/prev/inks/").content.decode())
         # a filtered swap brings the row back with its mark
-        part = self.client.get("/inks/?color=Blue", HTTP_HX_REQUEST="true").content.decode()
+        part = self.client.get("/prev/inks/?color=Blue", HTTP_HX_REQUEST="true").content.decode()
         self.assertIn('data-fold="Ink filters"', part)
 
     def test_the_menu_drops_what_the_bar_has_tabs_for(self):
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         panel = html[html.index('id="menuPanel"') : html.index("</nav>", html.index('class="menu-nav"'))]
-        for place in ("/dashboard/", "/history/", "/records/", "/usages/", "/pens/", "/inks/"):
+        for place in ("/prev/dashboard/", "/prev/history/", "/prev/records/", "/prev/usages/", "/prev/pens/", "/prev/inks/"):
             self.assertRegex(panel, r'href="%s" class="menu-link[^"]*" data-tab>' % place)
-        for place in ("/pick/", "/import/", "/pens/needs-photos/"):
+        for place in ("/prev/pick/", "/prev/import/", "/prev/pens/needs-photos/"):
             self.assertNotRegex(panel, r'href="%s" class="menu-link[^"]*" data-tab>' % place)
 
 
@@ -125,10 +125,10 @@ class TheHeaderRow(Collection):
         self.usages(4)  # past, from 2024
         Usage.objects.create(pen_id=self.pens_first(), ink_id=self.inks_first(), nib=self.nib, begin=date.today() - timedelta(days=3))
         cases = {
-            "/pens/": ["<b>3</b> pens", "<b>1</b> inked", "last inked 3 d ago"],
-            "/inks/": ["<b>2</b> inks", "<b>1</b> in pens", "last inked 3 d ago"],
-            "/usages/": ["<b>1</b> inked", "<b>4</b> past", "last 3 d ago"],
-            "/dashboard/": ["last inked 3 d ago"],
+            "/prev/pens/": ["<b>3</b> pens", "<b>1</b> inked", "last inked 3 d ago"],
+            "/prev/inks/": ["<b>2</b> inks", "<b>1</b> in pens", "last inked 3 d ago"],
+            "/prev/usages/": ["<b>1</b> inked", "<b>4</b> past", "last 3 d ago"],
+            "/prev/dashboard/": ["last inked 3 d ago"],
         }
         for url, words in cases.items():
             row = head_row(self.client.get(url).content.decode())
@@ -147,14 +147,14 @@ class TheHeaderRow(Collection):
         return Ink.objects.first().pk
 
     def test_at_most_two_icon_buttons(self):
-        for url in ("/dashboard/", "/pens/", "/inks/", "/usages/"):
+        for url in ("/prev/dashboard/", "/prev/pens/", "/prev/inks/", "/prev/usages/"):
             row = head_row(self.client.get(url).content.decode())
             with self.subTest(url=url):
                 self.assertLessEqual(row.count('class="icon-btn"'), 2)
                 self.assertNotIn('class="toolbar"', row)
 
     def test_the_toolbar_lost_the_icons_the_header_took(self):
-        html = self.client.get("/pens/").content.decode()
+        html = self.client.get("/prev/pens/").content.decode()
         bar = html[html.index('<div class="toolbar">') : html.index('id="rotbar"')]
         self.assertNotIn("icon-btn", bar)
 
@@ -182,7 +182,7 @@ class AStranger(Collection):
         invite = InviteCode.objects.create(token="guest-token", label="friend")
         guest = Client()
         guest.post(f"/i/{invite.token}/")
-        html = guest.get("/pens/").content.decode()
+        html = guest.get("/prev/pens/").content.decode()
         panel = html[html.index('id="menuPanel"') : html.index("<main")]
         self.assertIn("guest · friend", panel)
         self.assertIn('action="/i/leave/"', panel)

@@ -16,7 +16,7 @@ def activate(request, token):
         request.session.cycle_key()
         request.session[GUEST_SESSION_KEY] = code.pk
         request.session.set_expiry(60 * 60 * 24 * 30)
-        return redirect("dashboard")
+        return redirect("nx_desk")
     return render(request, "items/invite_accept.html", {"code": code})
 
 

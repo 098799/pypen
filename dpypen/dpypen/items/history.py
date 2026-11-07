@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from django.core.cache import cache
 from django.db.models import Count, Max
 from django.shortcuts import render
+from django.urls import reverse
 
 from dpypen.items import inkings as inking_charts
 from dpypen.items.auth import login_or_guest_required
@@ -36,11 +37,11 @@ def _bounds():
 
 def _sub_nav(active):
     return [
-        {"key": "overview", "label": "Overview", "url": "/history/", "active": active == "overview"},
-        {"key": "inkings", "label": "Inkings", "url": "/history/inkings/", "active": active == "inkings"},
-        {"key": "calendar", "label": "Calendar", "url": "/history/calendar/", "active": active == "calendar"},
-        {"key": "gantt", "label": "Per-pen Gantt", "url": "/history/gantt/", "active": active == "gantt"},
-        {"key": "matrix", "label": "Pen × Ink", "url": "/history/matrix/", "active": active == "matrix"},
+        {"key": "overview", "label": "Overview", "url": reverse("history"), "active": active == "overview"},
+        {"key": "inkings", "label": "Inkings", "url": reverse("history_inkings"), "active": active == "inkings"},
+        {"key": "calendar", "label": "Calendar", "url": reverse("history_calendar"), "active": active == "calendar"},
+        {"key": "gantt", "label": "Per-pen Gantt", "url": reverse("history_gantt"), "active": active == "gantt"},
+        {"key": "matrix", "label": "Pen × Ink", "url": reverse("history_matrix"), "active": active == "matrix"},
     ]
 
 

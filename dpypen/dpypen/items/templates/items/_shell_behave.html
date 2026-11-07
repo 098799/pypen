@@ -382,8 +382,8 @@
 window.__go = function (url, push) {
   // The palette's "What's new" entry opens the log, it is not a page.
   if (url === "#whatsnew") { if (window.kitWhatsNew) kitWhatsNew.open(); return; }
-  // The new version (/next/, nextui): the palette's places and its hits are the
-  // old addresses, one list for both shells; its shell says where each one lives.
+  // The palette's places and its hits are the main addresses, one list for
+  // both shells; each shell says where each one lives (the old one: /prev/).
   if (window.__nextUrl) url = window.__nextUrl(url);
   if (window.htmx && typeof htmx.ajax === "function") {
     /* HX-Boosted: the list views answer a bare HX-Request with a partial that
@@ -457,7 +457,7 @@ window.__go = function (url, push) {
       out: function () {
         if (drop()) return true;
         // on a pen or an ink (or a page under it), out is its list
-        var m = location.pathname.match(/^\/(?:next\/)?(pens|inks|usages)\/[^/]+\//);
+        var m = location.pathname.match(/^\/(?:prev\/)?(pens|inks|usages)\/[^/]+\//);
         if (m && window.__go) { window.__go("/" + m[1] + "/", true); return true; }
         return false;
       },

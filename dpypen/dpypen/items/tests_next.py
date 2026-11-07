@@ -16,15 +16,15 @@ from dpypen.items.tests import PLAIN_STATIC
 
 HERE = Path(__file__).resolve().parent
 PAGES = (
-    "/next/", "/next/pens/", "/next/pens/?view=grid", "/next/inks/", "/next/inks/?view=list", "/next/usages/",
-    "/next/pick/", "/next/search/", "/next/search/?q=pel", "/next/settings/", "/next/stats/", "/next/stats/inkings/",
-    "/next/stats/collection/", "/next/stats/cupboard/", "/next/stats/rotation/", "/next/stats/timeline/",
-    "/next/stats/timeline/?rot=p1", "/next/stats/calendar/", "/next/stats/pairs/", "/next/stats/records/",
-    "/next/pens/add/", "/next/inks/add/", "/next/usages/add/", "/next/pens/needs-photos/", "/next/import/",
-    "/next/supen/", "/next/supen/?rot=p1&sort=fills", "/next/supen/?rot=out", "/next/suink/", "/next/suink/?rot=easy&sort=name",
+    "/dashboard/", "/pens/", "/pens/?view=grid", "/inks/", "/inks/?view=list", "/usages/",
+    "/pick/", "/search/", "/search/?q=pel", "/settings/", "/stats/", "/stats/inkings/",
+    "/stats/collection/", "/stats/cupboard/", "/stats/rotation/", "/stats/timeline/",
+    "/stats/timeline/?rot=p1", "/stats/calendar/", "/stats/pairs/", "/stats/records/",
+    "/pens/add/", "/inks/add/", "/usages/add/", "/pens/needs-photos/", "/import/",
+    "/supen/", "/supen/?rot=p1&sort=fills", "/supen/?rot=out", "/suink/", "/suink/?rot=easy&sort=name",
 )
 # The old pages' addresses, which a page of the new version must not lead to.
-OLD_LINK = re.compile(r'(?:href|action)="(/(?:pens|inks|usages|dashboard|history|records|search|settings|import|pick)/[^"]*)"')
+OLD_LINK = re.compile(r'(?:href|action)="(/prev/[^"]*)"')
 
 
 class Seeded(TestCase):
@@ -54,14 +54,15 @@ class Pages(Seeded):
         self.client.force_login(self.owner)
 
     def test_every_page_answers_and_stays_in_the_new_version(self):
-        for url in (*PAGES, f"/next/pens/{self.pen.pk}/", f"/next/inks/{self.ink.pk}/", f"/next/pens/{self.pen.pk}/edit/",
-                    f"/next/inks/{self.ink.pk}/edit/", f"/next/usages/{self.now.pk}/edit/"):
+        for url in (*PAGES, f"/pens/{self.pen.pk}/", f"/inks/{self.ink.pk}/", f"/pens/{self.pen.pk}/edit/",
+                    f"/inks/{self.ink.pk}/edit/", f"/usages/{self.now.pk}/edit/"):
             with self.subTest(url=url):
                 r = self.client.get(url)
                 self.assertEqual(r.status_code, 200)
                 html = r.content.decode()
                 self.assertIn('next/next.css', html)
-                self.assertEqual(OLD_LINK.findall(html), [])
+                # Settings has the one way back to the old version.
+                self.assertEqual([u for u in OLD_LINK.findall(html) if url != "/settings/"], [])
 
     def test_pages_with_nothing_in_the_database(self):
         for model in (Usage, Pen, Ink):
@@ -71,40 +72,40 @@ class Pages(Seeded):
                 self.assertEqual(self.client.get(url).status_code, 200)
 
     def test_a_form_saved_here_lands_here(self):
-        r = self.client.post("/next/usages/add/", {"pen": self.due.pk, "nib": self.nib.pk, "ink": self.red.pk, "begin": "2026-01-01"})
-        self.assertRedirects(r, f"/next/pens/{self.due.pk}/", fetch_redirect_response=False)
-        r = self.client.post(f"/next/usages/{self.now.pk}/end/")
-        self.assertRedirects(r, "/next/usages/", fetch_redirect_response=False)
+        r = self.client.post("/usages/add/", {"pen": self.due.pk, "nib": self.nib.pk, "ink": self.red.pk, "begin": "2026-01-01"})
+        self.assertRedirects(r, f"/pens/{self.due.pk}/", fetch_redirect_response=False)
+        r = self.client.post(f"/usages/{self.now.pk}/end/")
+        self.assertRedirects(r, "/usages/", fetch_redirect_response=False)
         self.now.refresh_from_db()
         self.assertEqual(self.now.end, date.today())
 
     def test_an_undo_after_a_change_here_comes_back_here(self):
-        self.client.post(f"/next/usages/{self.now.pk}/end/")
-        html = self.client.get("/next/usages/").content.decode()
+        self.client.post(f"/usages/{self.now.pk}/end/")
+        html = self.client.get("/usages/").content.decode()
         token = re.search(r'action="/undo/([^/]+)/"', html).group(1)
-        r = self.client.post(f"/undo/{token}/", {"next": "/next/usages/"})
-        self.assertRedirects(r, "/next/usages/", fetch_redirect_response=False)
+        r = self.client.post(f"/undo/{token}/", {"next": "/usages/"})
+        self.assertRedirects(r, "/usages/", fetch_redirect_response=False)
         self.now.refresh_from_db()
         self.assertIsNone(self.now.end)
 
     def test_the_old_address_of_the_picker_lands_on_the_picker(self):
-        r = self.client.get(f"/next/?pen={self.due.pk}&shuffle=2")
+        r = self.client.get(f"/dashboard/?pen={self.due.pk}&shuffle=2")
         self.assertEqual(r.status_code, 307)
-        self.assertEqual(r["Location"], f"/next/pick/?pen={self.due.pk}&shuffle=2")
+        self.assertEqual(r["Location"], f"/pick/?pen={self.due.pk}&shuffle=2")
         self.assertEqual(self.client.get("/pick/").status_code, 200)
 
     def test_a_404_here_keeps_this_look(self):
         with override_settings(DEBUG=False):
-            html = self.client.get("/next/no-such-page/", headers={"Accept": "text/html"}).content.decode()
+            html = self.client.get("/no-such-page/", headers={"Accept": "text/html"}).content.decode()
         self.assertIn("next/next.css", html)
 
     def test_the_tab_bar_lights_the_place_of_each_page(self):
         """The kit's tab bar (KIT-TABS): one tab marked, sub-pages too, and a page
         behind More (Inkings, the picker, search, settings) lights More."""
         more = 'data-phone data-menu-btn'
-        cases = {"/next/": "Desk", "/next/pens/": "Pens", "/next/pens/needs-photos/": "Pens", "/next/inks/": "Inks",
-                 "/next/stats/": "Stats", "/next/stats/records/": "Stats", "/next/stats/pairs/": "Stats",
-                 "/next/usages/": more, "/next/pick/": more, "/next/search/?q=blue": more, "/next/settings/": more}
+        cases = {"/dashboard/": "Desk", "/pens/": "Pens", "/pens/needs-photos/": "Pens", "/inks/": "Inks",
+                 "/stats/": "Stats", "/stats/records/": "Stats", "/stats/pairs/": "Stats",
+                 "/usages/": more, "/pick/": more, "/search/?q=blue": more, "/settings/": more}
         for url, tab in cases.items():
             html = self.client.get(url).content.decode()
             html = html[html.index('<nav class="kit-tabs"') : html.index("</nav>", html.index('<nav class="kit-tabs"'))]
@@ -115,14 +116,14 @@ class Pages(Seeded):
                 self.assertIn(tab if tab == more else "<span>%s</span>" % tab, lit)
 
     def test_list_rows_cost_no_query_per_row(self):
-        with self.assertNumQueries(self._queries_for("/next/pens/")):
-            self.client.get("/next/pens/")
+        with self.assertNumQueries(self._queries_for("/pens/")):
+            self.client.get("/pens/")
         for i in range(20):
             Pen.objects.create(obtained=date(2020, 1, 1), brand=self.pen.brand, model=f"Extra {i}", filling="Piston", age="Modern",
                                obtained_from="shop", out=False, price=10, rotation=self.rot)
-        self.client.get("/next/pens/")
-        with self.assertNumQueries(self._queries_for("/next/pens/")):
-            self.client.get("/next/pens/")
+        self.client.get("/pens/")
+        with self.assertNumQueries(self._queries_for("/pens/")):
+            self.client.get("/pens/")
 
     def _queries_for(self, url):
         from django.db import connection
@@ -134,31 +135,42 @@ class Pages(Seeded):
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
-class WhichOpensFirst(Seeded):
+class TheCutOver(Seeded):
+    """Nov 2026: the new version took the main addresses, the old one is /prev/."""
+
     def setUp(self):
         self.client.force_login(self.owner)
 
-    def test_the_old_desk_is_the_default(self):
-        self.assertEqual(self.client.get("/dashboard/").status_code, 200)
-
-    def test_choosing_it_redirects_the_old_desk_and_going_back_undoes_it(self):
-        self.client.post("/next/prefer/", {"first": "next"})
+    def test_the_main_desk_is_the_new_one(self):
         r = self.client.get("/dashboard/")
-        self.assertEqual(r.status_code, 307)
-        self.assertEqual(r["Location"], "/next/")
-        # A soft navigation keeps the page it is in.
-        self.assertEqual(self.client.get("/dashboard/", headers={"HX-Request": "true"}).status_code, 200)
-        r = self.client.post("/next/prefer/", {"first": "old", "leave": "1"})
-        self.assertEqual(r["Location"], "/dashboard/")
-        self.assertEqual(self.client.get("/dashboard/").status_code, 200)
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("next/next.css", r.content.decode())
 
-    def test_the_old_version_leads_here(self):
-        html = self.client.get("/dashboard/").content.decode()
-        self.assertIn('href="/next/" class="menu-link" hx-boost="false"', html)
-        self.assertIn('href="/next/"', self.client.get("/settings/").content.decode())
+    def test_the_old_version_is_under_prev(self):
+        self.assertRedirects(self.client.get("/prev/"), "/prev/dashboard/", fetch_redirect_response=False)
+        for url in ("/prev/dashboard/", "/prev/pens/", f"/prev/pens/{self.pen.pk}/", "/prev/history/", "/prev/settings/"):
+            with self.subTest(url=url):
+                r = self.client.get(url)
+                self.assertEqual(r.status_code, 200)
+                self.assertNotIn("next/next.css", r.content.decode())
 
-    def test_the_prefer_door_is_post_only(self):
-        self.assertEqual(self.client.get("/next/prefer/").status_code, 405)
+    def test_each_version_leads_to_the_other(self):
+        html = self.client.get("/prev/dashboard/").content.decode()
+        self.assertIn('href="/dashboard/" class="menu-link" hx-boost="false"', html)
+        self.assertIn('href="/dashboard/"', self.client.get("/prev/settings/").content.decode())
+        self.assertIn('href="/prev/dashboard/"', self.client.get("/settings/").content.decode())
+
+    def test_a_redirect_in_the_old_version_stays_there(self):
+        r = self.client.post(f"/prev/usages/{self.now.pk}/end/")
+        self.assertRedirects(r, "/prev/usages/", fetch_redirect_response=False)
+
+    def test_the_weeks_under_next_still_land(self):
+        r = self.client.get("/next/")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/dashboard/"))
+        r = self.client.get("/next/pens/?view=grid")
+        self.assertEqual((r.status_code, r["Location"]), (301, "/pens/?view=grid"))
+        r = self.client.post(f"/next/usages/{self.now.pk}/end/")
+        self.assertEqual((r.status_code, r["Location"]), (308, f"/usages/{self.now.pk}/end/"))
 
 
 class Numbers(Seeded):
@@ -189,7 +201,7 @@ class Numbers(Seeded):
 
     def test_a_chart_link_goes_to_the_twin(self):
         self.assertEqual(stats.rebase({"links": "See them|/usages/?began=2024", "url": "/usages/?color=Blue"}),
-                         {"links": "See them|/next/usages/?began=2024", "url": "/next/usages/?color=Blue"})
+                         {"links": "See them|/usages/?began=2024", "url": "/usages/?color=Blue"})
 
     def test_rotation_splits_the_pens(self):
         data = stats.rotation()
@@ -221,9 +233,9 @@ class Accent(TestCase):
 
 class Skin(TestCase):
     def test_a_redirect_to_a_page_without_a_twin_stays(self):
-        self.assertEqual(skin.to_next("/accounts/google/login/?next=/next/"), "/accounts/google/login/?next=/next/")
-        self.assertEqual(skin.to_next("/pens/5/"), "/next/pens/5/")
-        self.assertEqual(skin.to_next("/next/pens/5/"), "/next/pens/5/")
+        self.assertEqual(skin.to_next("/accounts/google/login/?next=/dashboard/"), "/accounts/google/login/?next=/dashboard/")
+        self.assertEqual(skin.to_next("/pens/5/"), "/pens/5/")
+        self.assertEqual(skin.to_next("/pens/5/"), "/pens/5/")
 
     def test_the_river_data_cannot_close_its_script_tag(self):
         from dpypen.items.templatetags.items_extras import json_script_safe

@@ -107,4 +107,4 @@ def _back(request):
         nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
         return redirect(nxt)
-    return redirect(reverse("dashboard"))
+    return redirect(reverse("nx_desk"))
