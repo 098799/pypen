@@ -149,7 +149,7 @@
   </form>
 
   {% if photo.image_styled %}
-  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" class="form-inline" onsubmit="return confirm('Discard the AI catalog shot and go back to the original?');">
+  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" class="form-inline" data-confirm="Discard the AI catalog shot and go back to the original?" data-confirm-label="Revert">
     {% csrf_token %}
     <button type="submit" class="btn">↩ Revert to original</button>
   </form>
@@ -168,7 +168,7 @@
   </form>
   {% endif %}
 
-  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" class="form-inline" onsubmit="return confirm('Delete this photo entirely?');">
+  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" class="form-inline" data-confirm="Delete this photo entirely?">
     {% csrf_token %}
     <button type="submit" class="btn danger">Delete photo</button>
   </form>

@@ -1,0 +1,549 @@
+<!-- KIT-CONFIRM: v1.0 2026-11-08
+  Ask before an action that cannot be undone: a bottom sheet on a phone (a
+  centred card on a wider screen) with the question, an optional note of what
+  will go, Cancel on the left and a red destructive button on the right; or a
+  two-tap inline arm on a small reset button inside an open sheet. Reversible
+  deletes do not ask first — they act at once and offer Undo in kitToast
+  (toast.html). Spec: ~/apps/kit/README.md §4, "Delete and confirm".
+  Canonical copy: ~/apps/kit/snippets/confirm.html. Apps carry a byte-identical
+  copy (fleet-check `kit` compares them): change this file, bump the stamp here
+  and in `version` below, copy it out. Never edit a copy.
+
+  Include once near </body> (or bundle via shell.py). The elements are built on
+  first call so shell.py can split the CSS and JS cleanly.
+
+  Sheet (modal <dialog id="kit-confirm">, opened through kitLayer when loaded):
+    kitConfirm('Delete this entry?')                        // -> Promise<boolean>
+    kitConfirm({
+      title:  'Delete this entry?',                         // required
+      text:   '32 highlights go with it. This cannot be undone.',
+      ok:     'Delete',                                     // default 'Delete' (or 'OK' when danger: false)
+      cancel: 'Cancel',                                     // default 'Cancel'
+      danger: true,                                         // default true (red button); false = accent button
+      phrase: 'delete',                                     // optional: user must type this word to enable ok
+    })
+  Or with no script on a <form>, <button> or <a>:
+    <form method="post" action="/x/delete"
+          data-confirm="Delete this job?"
+          data-confirm-note="Its notes go with it."
+          data-confirm-label="Delete">
+      <button type="submit">Delete</button>
+    </form>
+
+  Two-tap inline arm (for a secondary reset button inside an open sheet):
+    kitConfirm.arm(btn, 'Tap again to erase', function () { ... }, {ms: 4000})
+  Or declaratively:
+    <button type="button" data-confirm-arm="Tap again to erase">Erase</button>
+  First tap sets data-kit-armed="1" and class "kit-armed", swaps the label to
+  the question, and announces it; a second tap within 4 s runs the action; 4 s,
+  Escape, pagehide, kit:softnav or any pointerdown outside disarms and restores
+  the button's original nodes.
+
+  API: kitConfirm(q, opts?) · kitConfirm.arm(el, label?, fn?, opts?) ·
+       kitConfirm.disarm(el?) · kitConfirm.armed() · kitConfirm.close(ok?) ·
+       kitConfirm.state() · kitConfirm.version
+-->
+<style>
+#kit-confirm {
+  margin: auto; padding: 20px; width: calc(100% - 32px); max-width: 380px;
+  border: 1px solid var(--line, var(--border, rgba(127, 127, 127, .24)));
+  border-radius: 14px;
+  background: var(--panel, var(--card, var(--surface, var(--bg-card, #1b1916))));
+  color: var(--fg, var(--ink, var(--text, #ede8df)));
+  font: 400 14px/1.45 var(--font-sans, system-ui, -apple-system, sans-serif);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .48);
+  box-sizing: border-box; overflow: visible;
+}
+html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18); }
+#kit-confirm:not([open]) { display: none; }
+#kit-confirm::backdrop { background: rgba(0, 0, 0, .52); }
+.kit-confirm-grab {
+  display: none; width: 36px; height: 4px; border-radius: 2px;
+  background: var(--line, var(--border, rgba(127, 127, 127, .35)));
+  margin: 0 auto 12px;
+}
+.kit-confirm-title {
+  margin: 0; font-size: 16px; font-weight: 650; line-height: 1.3;
+  color: var(--fg, var(--ink, var(--text, #ede8df)));
+  overflow-wrap: anywhere;
+}
+.kit-confirm-text {
+  margin: 8px 0 0; font-size: 13.5px; line-height: 1.45;
+  color: var(--dim, var(--muted, var(--sub, #9c9488)));
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.kit-confirm-phrase { margin: 12px 0 0; }
+.kit-confirm-phrase-label {
+  display: block; margin: 0 0 6px; font-size: 12.5px;
+  color: var(--dim, var(--muted, var(--sub, #9c9488)));
+}
+.kit-confirm-input {
+  display: block; width: 100%; min-height: 40px; padding: 8px 11px;
+  box-sizing: border-box; border-radius: 8px;
+  border: 1px solid var(--line, var(--border, rgba(127, 127, 127, .32)));
+  background: var(--bg, rgba(0, 0, 0, .18));
+  color: var(--fg, var(--ink, var(--text, #ede8df)));
+  font: 500 14px/1.3 var(--font-mono, ui-monospace, monospace);
+}
+.kit-confirm-input:focus-visible {
+  outline: 2px solid var(--accent, #c89b3c); outline-offset: 1px;
+}
+.kit-confirm-actions {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px;
+}
+.kit-confirm-actions button {
+  appearance: none; min-height: 44px; min-width: 84px; padding: 10px 16px;
+  border-radius: 10px; cursor: pointer;
+  font: 600 14px/1.2 var(--font-sans, system-ui, -apple-system, sans-serif);
+  transition: opacity .12s ease, transform .08s ease;
+}
+.kit-confirm-actions button:focus-visible {
+  outline: 2px solid var(--accent, #c89b3c); outline-offset: 2px;
+}
+.kit-confirm-cancel {
+  background: transparent;
+  color: var(--fg, var(--ink, var(--text, #ede8df)));
+  border: 1px solid var(--line, var(--border, rgba(127, 127, 127, .32)));
+}
+.kit-confirm-ok {
+  background: var(--accent, #c89b3c);
+  color: var(--on-accent, var(--accent-ink, #141210));
+  border: 1px solid transparent;
+}
+.kit-confirm-ok.is-danger {
+  background: var(--kit-confirm-bad, #c53030);
+  color: #ffffff;
+  border-color: transparent;
+}
+.kit-confirm-ok:disabled { opacity: .42; cursor: not-allowed; }
+.kit-armed {
+  background: var(--kit-confirm-bad, #c53030) !important;
+  color: #ffffff !important;
+  border-color: var(--kit-confirm-bad, #c53030) !important;
+}
+#kit-confirm-live {
+  position: fixed; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+@media (max-width: 560px) {
+  #kit-confirm {
+    margin: auto 0 0 0; width: 100%; max-width: 100%;
+    border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding: 12px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .kit-confirm-grab { display: block; }
+  .kit-confirm-actions button { flex: 1; }
+}
+@media print { #kit-confirm, #kit-confirm-live { display: none; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  if (window.kitConfirm && window.kitConfirm.version) return;
+  var version = 'v1.0 2026-11-08';
+  var dlg = null, grab = null, titleEl = null, textEl = null;
+  var phraseWrap = null, phraseLbl = null, phraseIn = null;
+  var cancelBtn = null, okBtn = null, liveEl = null;
+  var cur = null;
+  var armedEl = null, armTimer = null;
+
+  function ensureLive() {
+    if (liveEl && liveEl.isConnected) return liveEl;
+    if (!document.body) return null;
+    var old = document.getElementById('kit-confirm-live');
+    if (old) old.remove();
+    liveEl = document.createElement('div');
+    liveEl.id = 'kit-confirm-live';
+    liveEl.setAttribute('role', 'status');
+    liveEl.setAttribute('aria-live', 'polite');
+    liveEl.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(liveEl);
+    return liveEl;
+  }
+  function announce(msg) {
+    var l = ensureLive();
+    if (!l) return;
+    l.textContent = '';
+    setTimeout(function () { if (l.isConnected) l.textContent = msg || ''; }, 10);
+  }
+
+  function build() {
+    if (dlg && !dlg.isConnected && document.body) {
+      var old = document.querySelectorAll('#kit-confirm');
+      for (var i = 0; i < old.length; i++) old[i].remove();
+      document.body.appendChild(dlg);
+    }
+    if (dlg || !document.body) return dlg;
+    dlg = document.createElement('dialog');
+    dlg.id = 'kit-confirm';
+    dlg.setAttribute('aria-labelledby', 'kit-confirm-title');
+    grab = document.createElement('div');
+    grab.className = 'kit-confirm-grab';
+    grab.setAttribute('aria-hidden', 'true');
+    titleEl = document.createElement('h2');
+    titleEl.id = 'kit-confirm-title';
+    titleEl.className = 'kit-confirm-title';
+    textEl = document.createElement('p');
+    textEl.id = 'kit-confirm-text';
+    textEl.className = 'kit-confirm-text';
+    textEl.hidden = true;
+    phraseWrap = document.createElement('div');
+    phraseWrap.className = 'kit-confirm-phrase';
+    phraseWrap.hidden = true;
+    phraseLbl = document.createElement('label');
+    phraseLbl.className = 'kit-confirm-phrase-label';
+    phraseLbl.setAttribute('for', 'kit-confirm-input');
+    phraseIn = document.createElement('input');
+    phraseIn.id = 'kit-confirm-input';
+    phraseIn.type = 'text';
+    phraseIn.className = 'kit-confirm-input';
+    phraseIn.autocomplete = 'off';
+    phraseIn.autocapitalize = 'off';
+    phraseIn.spellcheck = false;
+    phraseWrap.appendChild(phraseLbl);
+    phraseWrap.appendChild(phraseIn);
+    var actions = document.createElement('div');
+    actions.className = 'kit-confirm-actions';
+    cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'kit-confirm-cancel';
+    okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.className = 'kit-confirm-ok is-danger';
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    dlg.appendChild(grab);
+    dlg.appendChild(titleEl);
+    dlg.appendChild(textEl);
+    dlg.appendChild(phraseWrap);
+    dlg.appendChild(actions);
+
+    phraseIn.addEventListener('input', function () {
+      if (!cur || !cur.phrase) return;
+      okBtn.disabled = phraseIn.value.trim().toLowerCase() !== cur.phrase.toLowerCase();
+    });
+    phraseIn.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' && !okBtn.disabled) {
+        ev.preventDefault();
+        finish(true);
+      }
+    });
+    cancelBtn.addEventListener('click', function () { finish(false); });
+    okBtn.addEventListener('click', function () {
+      if (okBtn.disabled) return;
+      finish(true);
+    });
+    dlg.addEventListener('close', function () {
+      if (cur && !cur.closing) settle(false);
+    });
+    dlg.addEventListener('click', function (ev) {
+      if (window.kitLayer && kitLayer.isOpen && kitLayer.isOpen(dlg)) return;
+      if (ev.target === dlg && (ev.clientX || ev.clientY)) {
+        var r = dlg.getBoundingClientRect();
+        if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom) {
+          finish(false);
+        }
+      }
+    });
+    document.body.appendChild(dlg);
+    return dlg;
+  }
+
+  function settle(ok) {
+    var c = cur;
+    if (!c) return;
+    cur = null;
+    if (dlg && dlg.open) {
+      try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); }
+    }
+    c.resolve(!!ok);
+  }
+
+  function finish(ok) {
+    var c = cur;
+    if (!c) return;
+    if (c.closing) return;
+    c.closing = true;
+    c.verdict = !!ok;
+    if (window.kitLayer && kitLayer.isOpen && kitLayer.isOpen(dlg)) {
+      kitLayer.close(dlg, function () { settle(c.verdict); });
+    } else {
+      settle(c.verdict);
+    }
+  }
+
+  function normalize(q, opts) {
+    var o = (q && typeof q === 'object') ? Object.assign({}, q) : Object.assign({}, opts, {title: q});
+    var danger = o.danger !== false;
+    var title = String(o.title != null ? o.title : (o.question != null ? o.question : 'Are you sure?'));
+    var text = o.text != null ? String(o.text) : (o.note != null ? String(o.note) : (o.body != null ? String(o.body) : ''));
+    var ok = o.ok != null ? String(o.ok) : (o.label != null ? String(o.label) : (danger ? 'Delete' : 'OK'));
+    var cancel = o.cancel != null ? String(o.cancel) : 'Cancel';
+    var phrase = o.phrase ? String(o.phrase).trim() : '';
+    var phraseHint = o.phraseHint ? String(o.phraseHint) : (phrase ? 'Type "' + phrase + '" to confirm' : '');
+    return {title: title, text: text, ok: ok, cancel: cancel, danger: danger, phrase: phrase, phraseHint: phraseHint};
+  }
+
+  function show(spec) {
+    return new Promise(function (resolve) {
+      if (!document.body) {
+        document.addEventListener('DOMContentLoaded', function () {
+          show(spec).then(resolve);
+        }, {once: true});
+        return;
+      }
+      var el = build();
+      if (cur) {
+        var prev = cur;
+        cur = null;
+        prev.resolve(false);
+      }
+      cur = {
+        title: spec.title,
+        text: spec.text,
+        ok: spec.ok,
+        cancel: spec.cancel,
+        danger: spec.danger,
+        phrase: spec.phrase,
+        resolve: resolve,
+        closing: false,
+        verdict: false
+      };
+      titleEl.textContent = spec.title;
+      if (spec.text) {
+        textEl.textContent = spec.text;
+        textEl.hidden = false;
+        el.setAttribute('aria-describedby', 'kit-confirm-text');
+      } else {
+        textEl.textContent = '';
+        textEl.hidden = true;
+        el.removeAttribute('aria-describedby');
+      }
+      if (spec.phrase) {
+        phraseLbl.textContent = spec.phraseHint;
+        phraseIn.value = '';
+        phraseIn.placeholder = spec.phrase;
+        phraseWrap.hidden = false;
+        okBtn.disabled = true;
+      } else {
+        phraseIn.value = '';
+        phraseWrap.hidden = true;
+        okBtn.disabled = false;
+      }
+      cancelBtn.textContent = spec.cancel;
+      okBtn.textContent = spec.ok;
+      okBtn.classList.toggle('is-danger', spec.danger);
+
+      var targetFocus = spec.phrase ? phraseIn : cancelBtn;
+      if (window.kitLayer && kitLayer.open) {
+        if (!kitLayer.isOpen(el)) {
+          kitLayer.open(el, {
+            name: 'confirm',
+            swipe: grab,
+            onClose: function () {
+              if (cur) settle(cur.closing ? cur.verdict : false);
+            }
+          });
+        }
+      } else if (!el.open) {
+        try { el.showModal(); } catch (e) { el.setAttribute('open', ''); }
+      }
+      try { targetFocus.focus({preventScroll: true}); } catch (e) {}
+    });
+  }
+
+  function kitConfirm(q, opts) {
+    return show(normalize(q, opts));
+  }
+
+  /* ---- Two-tap inline arm ---- */
+  function resolveEl(x) {
+    return typeof x === 'string' ? document.querySelector(x) : x;
+  }
+
+  function disarm(x) {
+    var el = x ? resolveEl(x) : armedEl;
+    if (!el) return;
+    if (el === armedEl) {
+      clearTimeout(armTimer);
+      armTimer = null;
+      armedEl = null;
+    }
+    delete el.dataset.kitArmed;
+    delete el.dataset.armed;
+    delete el.dataset.sure;
+    el.classList.remove('kit-armed', 'armed', 'sure');
+    if (el.__kitArmNodes) {
+      while (el.firstChild) el.removeChild(el.firstChild);
+      for (var i = 0; i < el.__kitArmNodes.length; i++) {
+        el.appendChild(el.__kitArmNodes[i].cloneNode(true));
+      }
+      delete el.__kitArmNodes;
+    }
+    if (el.__kitArmAria !== undefined) {
+      if (el.__kitArmAria === null) el.removeAttribute('aria-label');
+      else el.setAttribute('aria-label', el.__kitArmAria);
+      delete el.__kitArmAria;
+    }
+  }
+
+  function arm(x, label, fn, opts) {
+    var el = resolveEl(x);
+    if (!el) return false;
+    if (typeof label === 'function') { opts = fn; fn = label; label = null; }
+    if (el.dataset.kitArmed === '1') {
+      disarm(el);
+      if (typeof fn === 'function') fn.call(el);
+      return true;
+    }
+    if (armedEl && armedEl !== el) disarm(armedEl);
+    var msg = label || el.getAttribute('data-confirm-arm') || 'Tap again to confirm';
+    el.__kitArmNodes = [].map.call(el.childNodes, function (n) { return n.cloneNode(true); });
+    el.__kitArmAria = el.getAttribute('aria-label');
+    el.textContent = msg;
+    el.setAttribute('aria-label', msg);
+    el.dataset.kitArmed = '1';
+    el.dataset.armed = '1';
+    el.dataset.sure = '1';
+    el.classList.add('kit-armed', 'armed');
+    armedEl = el;
+    announce(msg);
+    var ms = (opts && typeof opts.ms === 'number') ? opts.ms : 4000;
+    clearTimeout(armTimer);
+    armTimer = setTimeout(function () { disarm(el); }, ms);
+    return false;
+  }
+
+  document.addEventListener('pointerdown', function (ev) {
+    if (!armedEl) return;
+    if (ev.target instanceof Node && armedEl.contains(ev.target)) return;
+    disarm(armedEl);
+  }, true);
+
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && armedEl && !ev.defaultPrevented) {
+      disarm(armedEl);
+    }
+  }, true);
+
+  /* ---- Declarative data-confirm & data-confirm-arm ---- */
+  function inferOkLabel(el, fallbackEl, danger) {
+    var attr = (el && el.getAttribute('data-confirm-label')) ||
+               (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm-label'));
+    if (attr) return attr;
+    var btn = (el && el.tagName !== 'FORM') ? el : fallbackEl;
+    if (btn) {
+      var raw = (btn.value && btn.tagName === 'INPUT') ? btn.value : (btn.textContent || '');
+      var t = raw.replace(/\s+/g, ' ').trim();
+      if (t && t.length >= 2 && t.length <= 24 && /[A-Za-z]/.test(t)) return t;
+    }
+    return danger === false ? 'OK' : 'Delete';
+  }
+
+  function specFromAttrs(el, fallbackEl) {
+    var dangerAttr = (el && el.getAttribute('data-confirm-danger')) ||
+                     (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm-danger'));
+    var danger = dangerAttr !== 'false';
+    var title = (el && el.getAttribute('data-confirm')) ||
+                (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm')) ||
+                'Are you sure?';
+    var note = (el && el.getAttribute('data-confirm-note')) ||
+               (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm-note')) || '';
+    var cancel = (el && el.getAttribute('data-confirm-cancel')) ||
+                 (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm-cancel')) || 'Cancel';
+    var phrase = (el && el.getAttribute('data-confirm-phrase')) ||
+                 (fallbackEl && fallbackEl.getAttribute && fallbackEl.getAttribute('data-confirm-phrase')) || '';
+    return normalize({
+      title: title,
+      text: note,
+      ok: inferOkLabel(el, fallbackEl, danger),
+      cancel: cancel,
+      danger: danger,
+      phrase: phrase
+    });
+  }
+
+  window.addEventListener('click', function (ev) {
+    if (ev.defaultPrevented || ev.button) return;
+    var t = ev.target;
+    if (!(t instanceof Element)) return;
+
+    var armBtn = t.closest('[data-confirm-arm]');
+    if (armBtn && armBtn.tagName !== 'FORM' && !armBtn.disabled) {
+      if (armBtn.dataset.kitArmed === '1') {
+        disarm(armBtn);
+        return;
+      }
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      arm(armBtn, armBtn.getAttribute('data-confirm-arm'));
+      return;
+    }
+
+    var el = t.closest('[data-confirm]');
+    if (!el || el.tagName === 'FORM' || el.disabled || el.__kitConfirmed) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    show(specFromAttrs(el, el.form)).then(function (ok) {
+      if (!ok || !el.isConnected) return;
+      el.__kitConfirmed = true;
+      if (el.form) el.form.__kitConfirmed = true;
+      try { el.click(); } finally {
+        el.__kitConfirmed = false;
+        if (el.form) el.form.__kitConfirmed = false;
+      }
+    });
+  }, true);
+
+  window.addEventListener('submit', function (ev) {
+    if (ev.defaultPrevented) return;
+    var f = ev.target;
+    if (!(f instanceof HTMLFormElement) || f.__kitConfirmed) return;
+    var sub = ev.submitter;
+    var has = f.hasAttribute('data-confirm') || (sub && sub.hasAttribute && sub.hasAttribute('data-confirm'));
+    if (!has) return;
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    var primary = (sub && sub.hasAttribute && sub.hasAttribute('data-confirm')) ? sub : f;
+    var secondary = primary === sub ? f : sub;
+    show(specFromAttrs(primary, secondary)).then(function (ok) {
+      if (!ok || !f.isConnected) return;
+      f.__kitConfirmed = true;
+      try {
+        if (f.requestSubmit) {
+          if (sub && sub.isConnected && f.contains(sub)) f.requestSubmit(sub);
+          else f.requestSubmit();
+        } else {
+          f.submit();
+        }
+      } finally {
+        f.__kitConfirmed = false;
+      }
+    });
+  }, true);
+
+  function resetAll() {
+    disarm();
+    if (cur) settle(false);
+  }
+  window.addEventListener('pagehide', resetAll);
+  document.addEventListener('kit:softnav', resetAll);
+
+  kitConfirm.version = version;
+  kitConfirm.arm = arm;
+  kitConfirm.disarm = disarm;
+  kitConfirm.armed = function () { return armedEl; };
+  kitConfirm.close = function (ok) { finish(!!ok); };
+  kitConfirm.state = function () {
+    return cur ? {
+      title: cur.title,
+      text: cur.text || null,
+      ok: cur.ok,
+      cancel: cur.cancel,
+      danger: cur.danger,
+      phrase: cur.phrase || null
+    } : null;
+  };
+  window.kitConfirm = kitConfirm;
+})();
+</script>

@@ -235,7 +235,7 @@
         <button type="submit" class="ph-btn star" title="Make primary" aria-label="Make primary">★</button>
       </form>
       {% endif %}
-      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" class="form-inline" onsubmit="return confirm('Delete this photo?');">
+      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" class="form-inline" data-confirm="Delete this photo?">
         {% csrf_token %}
         <button type="submit" class="ph-btn del" title="Delete photo" aria-label="Delete photo">&times;</button>
       </form>
@@ -245,7 +245,7 @@
         <button type="submit" class="ph-btn rot" title="Rotate 90°" aria-label="Rotate 90°">↻</button>
       </form>
       {% if ph.image_styled %}
-      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" class="form-inline" onsubmit="return confirm('Revert to original photo? The catalog shot will be discarded.');">
+      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" class="form-inline" data-confirm="Revert to original photo?" data-confirm-note="The catalog shot will be discarded." data-confirm-label="Revert">
         {% csrf_token %}
         <button type="submit" class="ph-btn sparkle on" title="Revert to original" aria-label="Revert to original">✨</button>
       </form>

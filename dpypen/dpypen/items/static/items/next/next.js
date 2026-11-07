@@ -73,11 +73,6 @@
   /* ---- forms ---- */
   document.addEventListener("submit", function (e) {
     var f = e.target;
-    if (f.hasAttribute("data-confirm") && !window.confirm(f.getAttribute("data-confirm"))) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      return;
-    }
     if (f.hasAttribute("data-busy-on-submit")) {
       var sel = f.getAttribute("data-busy-on-submit");
       var host = (sel && document.querySelector(sel)) || f.closest("[data-busy-host]") || f;

@@ -175,7 +175,7 @@
         {% if not s.image_clean %}
         <form method="post" action="{% url 'swatches_extract' s.pk %}">{% csrf_token %}<button type="submit">✨ Extract</button></form>
         {% endif %}
-        <form method="post" action="{% url 'swatches_delete' s.pk %}" onsubmit="return confirm('Delete swatch?');">{% csrf_token %}<button type="submit">Delete</button></form>
+        <form method="post" action="{% url 'swatches_delete' s.pk %}" data-confirm="Delete swatch?">{% csrf_token %}<button type="submit">Delete</button></form>
       </div>
     </div>
     {% endfor %}

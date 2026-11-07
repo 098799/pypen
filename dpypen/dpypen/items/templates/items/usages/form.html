@@ -57,7 +57,7 @@ irreversible act and does not belong next to 130 rows you are only reading;
 this form is the one place you have already decided to change this inking.
 {% endcomment %}
 <form method="post" action="{% url 'usages_delete' usage.pk %}"
-      onsubmit="return confirm('Delete this inking? This cannot be undone.');"
+      data-confirm="Delete this inking?" data-confirm-note="This cannot be undone."
       class="mt-1">
   {% csrf_token %}
   <button type="submit" class="btn small danger">Delete this inking</button>
@@ -142,7 +142,7 @@ this form is the one place you have already decided to change this inking.
           <button type="submit">✨ Extract</button>
         </form>
         {% endif %}
-        <form method="post" action="{% url 'samples_delete' s.pk %}" onsubmit="return confirm('Delete this sample?');">
+        <form method="post" action="{% url 'samples_delete' s.pk %}" data-confirm="Delete this sample?">
           {% csrf_token %}
           <button type="submit">Delete</button>
         </form>

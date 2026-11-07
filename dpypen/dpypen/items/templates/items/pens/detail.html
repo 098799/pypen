@@ -175,7 +175,7 @@ share token instead — the door that is actually open.
         <a href="{% url 'pens_edit' pen.pk %}" data-kbd="edit" role="menuitem">Edit pen</a>
         <button type="button" role="menuitem" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share pen</button>
         <form method="post" action="{% url 'pens_delete' pen.pk %}" class="form-bare"
-              onsubmit="return confirm('Delete {{ pen|escapejs }}? This cannot be undone.');">
+              data-confirm="Delete {{ pen }}?" data-confirm-note="This cannot be undone.">
           {% csrf_token %}
           <button type="submit" class="danger" role="menuitem">Delete pen</button>
         </form>
