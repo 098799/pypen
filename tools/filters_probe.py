@@ -190,7 +190,7 @@ def run(page):
     # ---- the menu's search
     page.goto(BASE + "/pens/")
     settle(page)
-    page.locator("[data-menu-btn], .tabbar [aria-controls=menuPanel]").first.tap()
+    page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(300)
     page.locator("#menuSearchInput").type("pilot", delay=120)
     page.wait_for_timeout(500)

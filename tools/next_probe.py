@@ -64,7 +64,7 @@ def phone(page):
 
     # The More menu, kit layer: opens, Back closes it and stays.
     go(page, "/next/")
-    page.locator(".tabbar [data-menu-btn]").tap()
+    page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(200)
     check("menu opens", js("document.getElementById('menuPanel').classList.contains('open')"))
     box = page.locator("#menuPanel").bounding_box()
@@ -75,11 +75,11 @@ def phone(page):
 
     # Tabs swap softly and light up.
     js("window.__stay = 1")
-    page.locator(".tabbar a", has_text="Inks").tap()
+    page.locator("nav.kit-tabs a", has_text="Inks").tap()
     page.wait_for_url("**/next/inks/")
     settle(page)
     check("a tab is a soft navigation", js("window.__stay === 1"))
-    check("the tab is lit", js("document.querySelector('.tabbar a.active span').textContent") == "Inks")
+    check("the tab is lit", js("document.querySelector('nav.kit-tabs .kit-tab[aria-current=page] span').textContent") == "Inks")
 
     # A chip filters and stays in the version.
     page.locator("#inkFilters a[data-color]").first.tap()
@@ -228,7 +228,7 @@ def desk(page):
     js = page.evaluate
     go(page, "/next/inks/")
     check("the bar is 52 px", js("document.getElementById('hdr').offsetHeight") == 52)
-    check("no tab bar at the bottom", js("getComputedStyle(document.querySelector('.tabbar')).position") != "fixed")
+    check("no tab bar at the bottom", js("getComputedStyle(document.querySelector('nav.kit-tabs')).position") != "fixed")
     page.locator("#deskFilterBtn").click()
     page.wait_for_timeout(150)
     check("Filter opens the chips", js("document.getElementById('deskFilter').classList.contains('open')"))
@@ -242,7 +242,7 @@ def desk(page):
     page.wait_for_url("**/next/search/?q=pelikan")
     settle(page)
     check("the bar's search stays in this version", js("document.querySelectorAll('#searchResultsBody .pen-row-nx').length") > 0)
-    page.locator("#hdr [data-menu-btn]").click()
+    page.locator("#hdr .db-btn[data-menu-btn]").click()
     page.wait_for_timeout(150)
     check("⋯ opens the menu", js("document.getElementById('menuPanel').classList.contains('open')"))
     page.keyboard.press("Escape")

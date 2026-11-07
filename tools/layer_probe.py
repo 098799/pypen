@@ -49,6 +49,10 @@ def start(tmp, src=None):
         f"MEDIA_ROOT = {str(Path(tmp) / 'media')!r}\n")
     env = dict(os.environ, DJANGO_SETTINGS_MODULE="probe_settings", DEBUG="True",
                SECRET_KEY="probe-not-a-secret", PYTHONPATH=f"{tmp}:{APP}")
+    # The copy may be older than the code (the local db.sqlite3 is a backup pulled
+    # from bae, which migrates at deploy): bring it up to the code's migrations.
+    subprocess.run([str(PY), "manage.py", "migrate", "--noinput"], cwd=APP, env=env,
+                   capture_output=True, text=True, check=True)
     sess = subprocess.run([str(PY), "-c", (
         "import django; django.setup()\n"
         "from django.contrib.auth import get_user_model\n"
@@ -84,7 +88,7 @@ def run(page):
     check("kitLayer loaded", page.evaluate("kitLayer.version").startswith("v1"))
     check("closed menu is out of the tab order",
           page.evaluate("getComputedStyle(document.getElementById('menuPanel')).visibility") == "hidden")
-    more = page.locator(".tabbar [data-menu-btn]")
+    more = page.locator("nav.kit-tabs [data-menu-btn]")
     more.click()
     page.wait_for_timeout(300)
     check("menu: open", page.evaluate("document.getElementById('menuPanel').classList.contains('open')"))
@@ -94,7 +98,7 @@ def run(page):
     page.wait_for_timeout(400)
     check("menu: Back closes it", not page.evaluate("document.getElementById('menuPanel').classList.contains('open')"))
     check("menu: Back stays on the page", page.url == url)
-    check("menu: focus back on More", page.evaluate("document.activeElement.matches('.tabbar [data-menu-btn]')"))
+    check("menu: focus back on More", page.evaluate("document.activeElement.matches('nav.kit-tabs [data-menu-btn]')"))
     # Esc
     more.click(); page.wait_for_timeout(300)
     page.keyboard.press("Escape"); page.wait_for_timeout(400)
@@ -117,7 +121,7 @@ def run(page):
     check("menu link: ... with the menu shut",
           not page.evaluate("document.getElementById('menuPanel').classList.contains('open')"))
     # After htmx's Back (the body rewritten from its snapshot) the menu still works.
-    page.locator(".tabbar [data-menu-btn]").click(); page.wait_for_timeout(300)
+    page.locator("nav.kit-tabs [data-menu-btn]").click(); page.wait_for_timeout(300)
     check("after htmx Back: menu opens", page.evaluate("document.getElementById('menuPanel').classList.contains('open')"))
     page.go_back(); page.wait_for_timeout(400)
     check("after htmx Back: Back closes it",
@@ -125,7 +129,7 @@ def run(page):
     # Reload with the menu open: one Back then leaves the page.
     page.goto(BASE + "/inks/"); page.wait_for_load_state("networkidle")
     page.goto(BASE + "/pens/"); page.wait_for_load_state("networkidle")
-    page.locator(".tabbar [data-menu-btn]").click(); page.wait_for_timeout(300)
+    page.locator("nav.kit-tabs [data-menu-btn]").click(); page.wait_for_timeout(300)
     page.reload(); page.wait_for_load_state("networkidle"); page.wait_for_timeout(300)
     check("reload: lands on the page", not (page.evaluate("history.state") or {}).get("kitLayer"))
     page.go_back(); page.wait_for_timeout(800)

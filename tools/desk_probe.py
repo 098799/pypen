@@ -53,27 +53,27 @@ def desk(page):
     go(page, "/pens/")
     box = js(page, "(() => { const r = document.getElementById('hdr').getBoundingClientRect(); return [r.top, r.height]; })()")
     check("bar: at the top, 52 px", box == [0, 52])
-    tabs = js(page, "[...document.querySelectorAll('#hdr .tabbar a')].filter(a => a.offsetParent).map(a => a.textContent.trim())")
+    tabs = js(page, "[...document.querySelectorAll('#hdr nav.kit-tabs a')].filter(a => a.offsetParent).map(a => a.textContent.trim())")
     check("bar: six tabs", tabs == ["Desk", "Inkings", "Pens", "Inks", "History", "Records"])
-    check("bar: Pens is lit", js(page, "document.querySelector('#hdr .tabbar a.active').textContent.trim()") == "Pens")
+    check("bar: Pens is lit", js(page, "document.querySelector('#hdr nav.kit-tabs .kit-tab[aria-current=page]').textContent.trim()") == "Pens")
     check(
         "bar: every control on one row",
         js(
             page,
             """(() => {
         const h = document.getElementById('hdr').getBoundingClientRect();
-        return [...document.querySelectorAll('#hdr .db-brand, #hdr .tabbar a, #deskFilterBtn, #deskSearchBtn, #hdr [data-menu-btn]')]
+        return [...document.querySelectorAll('#hdr .db-brand, #hdr nav.kit-tabs a, #deskFilterBtn, #deskSearchBtn, #hdr .db-btn[data-menu-btn]')]
           .every(e => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= h.top && r.bottom <= h.bottom; });
     })()""",
         ),
     )
     order = js(
         page,
-        """['.db-brand', '#deskFilterBtn', '#deskSearchBtn', '#hdr [data-menu-btn]']
+        """['.db-brand', '#deskFilterBtn', '#deskSearchBtn', '#hdr .db-btn[data-menu-btn]']
         .map(s => document.querySelector(s).getBoundingClientRect().left)""",
     )
     check("bar: brand, then Filter, ⌕, ⋯ from left to right", order == sorted(order))
-    check("bar: the tab bar is not fixed to the bottom", js(page, "getComputedStyle(document.querySelector('.tabbar')).position") == "static")
+    check("bar: the tab bar is not fixed to the bottom", js(page, "getComputedStyle(document.querySelector('nav.kit-tabs')).position") == "static")
     check("no pill nav, no floating button", js(page, "!document.querySelector('.app-nav, #topbar')"))
     check("the chip row is folded", js(page, "getComputedStyle(document.getElementById('rotbar')).display") == "none")
     check("Filter names nothing while All is on", js(page, "document.querySelector('#deskFilterBtn b').textContent") == "")
@@ -111,21 +111,23 @@ def desk(page):
     # a chip in the popover filters the page as the real chip does
     page.click("#deskFilterBtn")
     page.wait_for_timeout(300)
+    n0 = js(page, "history.length")
     page.locator("#deskFilter .db-chips > button").nth(2).click()
     page.wait_for_timeout(1200)
     check("filter: a chip filters (URL)", "rot=" in page.url)
     label = js(page, "document.querySelector('#deskFilterBtn b').textContent")
     check(f"filter: the button names it ({label!r})", label.startswith("Priority") or label in ("Other", "Defunct"))
     check("filter: no layer left open", not (js(page, "history.state") or {}).get("kitLayer"))
-    page.go_back()
-    page.wait_for_timeout(1000)
-    check("filter: Back undoes the filter", "rot=" not in page.url)
+    # The kit's filters: a tap replaces the entry (kit README §4 "Filters"), so
+    # Back leaves the list rather than walking through its chips.
+    check("filter: a chip replaces the history entry", js(page, "history.length") == n0)
+    go(page, "/pens/")
 
     # A tab: hx-boost swaps the page, the bar follows.
-    page.click("#hdr .tabbar a[href='/inks/']")
+    page.click("#hdr nav.kit-tabs a[href='/inks/']")
     page.wait_for_url("**/inks/", timeout=8000)
     page.wait_for_timeout(800)
-    check("tab: Inks is lit after the swap", js(page, "document.querySelector('#hdr .tabbar a.active').textContent.trim()") == "Inks")
+    check("tab: Inks is lit after the swap", js(page, "document.querySelector('#hdr nav.kit-tabs .kit-tab[aria-current=page]').textContent.trim()") == "Inks")
     check(
         "tab: Filter now stands for the ink filters",
         js(page, "document.getElementById('deskFilterBtn') && getComputedStyle(document.querySelector('#main [data-fold]')).display") == "none",
@@ -152,7 +154,7 @@ def desk(page):
     check("search: the field is back in the menu", js(page, "document.getElementById('menuSearchForm').parentNode.id") == "menuPanel")
 
     # ⋯: the menu under it, without the places the bar has as tabs
-    page.click("#hdr [data-menu-btn]")
+    page.click("#hdr .db-btn[data-menu-btn]")
     page.wait_for_timeout(300)
     check("menu: open", js(page, "document.getElementById('menuPanel').classList.contains('open')"))
     m = js(page, "(() => { const p = document.getElementById('menuPanel').getBoundingClientRect(); return [p.top, p.bottom < innerHeight]; })()")
@@ -185,14 +187,14 @@ def desk(page):
     check("narrow: header has no box", js(page, "document.getElementById('hdr').getBoundingClientRect().height") == 0)
     tb = js(
         page,
-        "(() => { const r = document.querySelector('.tabbar').getBoundingClientRect(); return [getComputedStyle(document.querySelector('.tabbar')).position, Math.round(r.bottom)]; })()",
+        "(() => { const r = document.querySelector('nav.kit-tabs').getBoundingClientRect(); return [getComputedStyle(document.querySelector('nav.kit-tabs')).position, Math.round(r.bottom)]; })()",
     )
     check(f"narrow: the tab bar is at the bottom ({tb})", tb == ["fixed", 844])
     check(
         "narrow: the chips are back, Filter gone",
         js(page, "getComputedStyle(document.getElementById('rotbar')).display") != "none" and js(page, "!document.getElementById('deskFilterBtn')"),
     )
-    check("narrow: History is not a tab", js(page, "!document.querySelector('.tabbar .desk-tab').offsetParent"))
+    check("narrow: History is not a tab", js(page, "!document.querySelector('nav.kit-tabs [data-desk]').offsetParent"))
     page.set_viewport_size({"width": 1440, "height": 900})
     page.wait_for_timeout(400)
     check("wide again: Filter is back", js(page, "!!document.getElementById('deskFilterBtn')"))
@@ -218,11 +220,11 @@ def phone(page):
         "phone: five tabs",
         js(
             page,
-            "[...document.querySelectorAll('.tabbar a, .tabbar button')].filter(e => e.offsetParent !== null || getComputedStyle(e).display !== 'none').length",
+            "[...document.querySelectorAll('nav.kit-tabs .kit-tab')].filter(e => e.offsetParent !== null || getComputedStyle(e).display !== 'none').length",
         )
         == 5,
     )
-    page.click(".tabbar [data-menu-btn]")
+    page.click("nav.kit-tabs [data-menu-btn]")
     page.wait_for_timeout(300)
     check(
         "phone: More opens the menu with its search",

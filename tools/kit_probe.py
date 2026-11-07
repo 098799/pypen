@@ -84,7 +84,7 @@ def run(page, cdp):
     check("update: words", "New version ready" in (page.text_content("#kit-update") or ""))
     box = page.evaluate(
         "(() => { const r = document.getElementById('kit-update').getBoundingClientRect();"
-        " const t = document.querySelector('.tabbar').getBoundingClientRect(); return [r.bottom, t.top]; })()"
+        " const t = document.querySelector('nav.kit-tabs').getBoundingClientRect(); return [r.bottom, t.top]; })()"
     )
     check("update: above the tab bar", box[0] <= box[1])
     shot(page, "update-toast.png")
@@ -125,7 +125,7 @@ def run(page, cdp):
     # Error pages: a load, and a boosted link (htmx swaps no 4xx by itself).
     r = page.goto(BASE + "/pens/987654321/")
     check("404: status", r.status == 404)
-    check("404: in the app's chrome", page.locator(".tabbar").count() == 1 and "Not here" in page.content())
+    check("404: in the app's chrome", page.locator("nav.kit-tabs").count() == 1 and "Not here" in page.content())
     shot(page, "error-404.png")
     page.goto(BASE + "/pens/")
     page.wait_for_load_state("networkidle")
