@@ -31,15 +31,15 @@ check, failures = lsp.check, lsp.failures
 
 
 def PEN_Q(url):
-    return "/pens/?" in url and "q=" in url
+    return "/prev/pens/?" in url and "q=" in url
 
 
 def SEARCH_Q(url):
-    return "/search/?" in url and "q=" in url
+    return "/prev/search/?" in url and "q=" in url
 
 
 def PEN_MORE(url):
-    return "/pens/?" in url and "offset=" in url
+    return "/prev/pens/?" in url and "offset=" in url
 
 
 def shot(page, name):
@@ -58,7 +58,7 @@ def run(page):
     page.on("pageerror", lambda e: errors.append(str(e)))
 
     # A live search on /pens/ that the server answers with a 500.
-    page.goto(lp.BASE + "/pens/")
+    page.goto(lp.BASE + "/prev/pens/")
     lsp.settle(page)
     before = lsp.rows(page)
     page.route(PEN_Q, lambda r: r.fulfill(status=500, body="boom", content_type="text/html"))
@@ -74,7 +74,7 @@ def run(page):
     check("pens 500: Try again brings the rows", lsp.rows(page) > 0 and bad(page) is None)
 
     # No answer at all on /search/.
-    page.goto(lp.BASE + "/search/")
+    page.goto(lp.BASE + "/prev/search/")
     lsp.settle(page)
     check("search: Type to search", page.locator("#main .kit-empty[data-kind=none]").count() == 1)
     page.route(SEARCH_Q, lambda r: r.abort())
@@ -85,7 +85,7 @@ def run(page):
     page.unroute(SEARCH_Q)
 
     # A no-match and its way out.
-    page.goto(lp.BASE + "/inks/?q=zzqqxx")
+    page.goto(lp.BASE + "/prev/inks/?q=zzqqxx")
     lsp.settle(page)
     m = page.locator("#main .kit-empty[data-kind=match]")
     check("inks: a no-match block", m.count() == 1)
@@ -95,7 +95,7 @@ def run(page):
     check("inks: Clear the search shows rows", lsp.rows(page) > 0 and "zzqqxx" not in page.url)
 
     # A failed Load more.
-    page.goto(lp.BASE + "/pens/")
+    page.goto(lp.BASE + "/prev/pens/")
     lsp.settle(page)
     page.route(PEN_MORE, lambda r: r.fulfill(status=502, body="", content_type="text/html"))
     page.locator("a[data-more]").click()

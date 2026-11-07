@@ -78,11 +78,11 @@ def desk(b):
     ctx.add_cookies([{"name": "sessionid", "value": SESSION, "url": BASE}])
     page = ctx.new_page()
     js = page.evaluate
-    visit(page, "/dashboard/", "desk-dashboard")
+    visit(page, "/prev/dashboard/", "desk-dashboard")
     check("desk: one 52 px bar at the top", js("(() => { const r = document.getElementById('hdr').getBoundingClientRect(); return r.top === 0 && r.height === 52; })()"))
     tabs = js("[...document.querySelectorAll('#hdr nav.kit-tabs a')].filter(a => a.offsetParent).map(a => a.textContent.trim())")
     check(f"desk: six tabs {tabs}", tabs == ["Desk", "Inkings", "Pens", "Inks", "History", "Records"])
-    visit(page, "/pens/", "desk-pens")
+    visit(page, "/prev/pens/", "desk-pens")
     page.click("#deskFilterBtn")
     page.wait_for_timeout(400)
     check("desk: Filter opens the rotation chips", js("document.querySelectorAll('#deskFilter.open .db-chips > button').length") > 2)
@@ -91,7 +91,7 @@ def desk(b):
     page.wait_for_timeout(1500)
     check("desk: a chip filters", "rot=" in page.url)
     check("desk: Filter names it", js("document.querySelector('#deskFilterBtn b').textContent") != "")
-    visit(page, "/inks/", "desk-inks")
+    visit(page, "/prev/inks/", "desk-inks")
     page.click("#deskSearchBtn")
     page.wait_for_timeout(400)
     check("desk: ⌕ opens the search", js("document.activeElement.id") == "menuSearchInput")
@@ -106,14 +106,14 @@ def desk(b):
     ctx.close()
 
 
-NEXT_SCREENS = [("/next/", "next-desk"), ("/next/pens/", "next-pens"), ("/next/pens/?view=grid", None), ("/next/inks/", "next-inks"),
-                ("/next/inks/?view=list", None), ("/next/usages/", "next-inkings"), ("/next/pick/", "next-pick"), ("/next/search/?q=blue", None),
-                ("/next/settings/", "next-settings"), ("/next/stats/", "next-stats"), ("/next/stats/inkings/", "next-stats-inkings"),
-                ("/next/stats/collection/", "next-stats-collection"), ("/next/stats/cupboard/", "next-stats-cupboard"),
-                ("/next/stats/rotation/", "next-stats-rotation"), ("/next/stats/timeline/", None), ("/next/stats/calendar/", "next-stats-calendar"),
-                ("/next/stats/pairs/", None), ("/next/stats/records/", None), ("/next/usages/add/", "next-add-inking"),
-                ("/next/pens/add/", None), ("/next/inks/add/", None), ("/next/pens/needs-photos/", None), ("/next/import/", None),
-                ("/next/supen/", "next-supen"), ("/next/supen/?rot=out&sort=fills", None), ("/next/suink/", "next-suink")]
+NEXT_SCREENS = [("/dashboard/", "next-desk"), ("/pens/", "next-pens"), ("/pens/?view=grid", None), ("/inks/", "next-inks"),
+                ("/inks/?view=list", None), ("/usages/", "next-inkings"), ("/pick/", "next-pick"), ("/search/?q=blue", None),
+                ("/settings/", "next-settings"), ("/stats/", "next-stats"), ("/stats/inkings/", "next-stats-inkings"),
+                ("/stats/collection/", "next-stats-collection"), ("/stats/cupboard/", "next-stats-cupboard"),
+                ("/stats/rotation/", "next-stats-rotation"), ("/stats/timeline/", None), ("/stats/calendar/", "next-stats-calendar"),
+                ("/stats/pairs/", None), ("/stats/records/", None), ("/usages/add/", "next-add-inking"),
+                ("/pens/add/", None), ("/inks/add/", None), ("/pens/needs-photos/", None), ("/import/", None),
+                ("/supen/", "next-supen"), ("/supen/?rot=out&sort=fills", None), ("/suink/", "next-suink")]
 
 
 def next_walk(b):
@@ -124,16 +124,16 @@ def next_walk(b):
     page = ctx.new_page()
     js = page.evaluate
     failed = []
-    page.on("response", lambda r: failed.append(f"{r.status} {r.url}") if r.status >= 400 and "/next/" in r.url else None)
+    page.on("response", lambda r: failed.append(f"{r.status} {r.url}") if r.status >= 400 and "/prev/" not in r.url else None)
     for path, name in NEXT_SCREENS:
         visit(page, path, name)
     check("next: fonts loaded", js("document.fonts.check('600 20px Alegreya') && document.fonts.check('16px \"Alegreya Sans\"')"))
     check("next: nothing failed to load", not failed)
     print(failed[:5])
-    visit(page, "/next/")
+    visit(page, "/dashboard/")
     check("next: the desk draws swabs", js("document.querySelectorAll('.swab').length") > 0)
     # PYPEN-12: supen and suink are a page; the desk's count of due pens opens it.
-    check("next: the desk's due count opens supen", js("document.querySelector('.head-link').getAttribute('href')") == "/next/supen/")
+    check("next: the desk's due count opens supen", js("document.querySelector('.head-link').getAttribute('href')") == "/supen/")
     page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(300)
     check("next: More opens", js("document.getElementById('menuPanel').classList.contains('open')"))
@@ -157,7 +157,7 @@ def next_walk(b):
     page.wait_for_load_state("networkidle")
     check("next: the ink page has its closest inks", js("document.querySelectorAll('.card-ink').length") > 0)
     shot(page, "next-ink")
-    visit(page, "/next/stats/")
+    visit(page, "/stats/")
     box = page.locator(".river-plot").bounding_box()
     page.touchscreen.tap(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.6)
     page.wait_for_timeout(200)
@@ -167,7 +167,7 @@ def next_walk(b):
     js("window.kitTheme && kitTheme.set('dark')")
     page.wait_for_timeout(200)
     shot(page, "next-stats-dark")
-    visit(page, "/next/inks/", "next-inks-dark")
+    visit(page, "/inks/", "next-inks-dark")
     js("window.kitTheme && kitTheme.set('auto')")
     ctx.close()
 
@@ -189,8 +189,8 @@ def main():
         ctx.add_init_script(READ_ONLY)
         ctx.add_cookies([{"name": "sessionid", "value": SESSION, "url": BASE}])
         page = ctx.new_page()
-        visit(page, "/dashboard/", "desk")
-        visit(page, "/usages/", "inkings")
+        visit(page, "/prev/dashboard/", "desk")
+        visit(page, "/prev/usages/", "inkings")
         page.locator("#usageQ").type("pilot blue", delay=40)
         try:
             page.wait_for_url("**q=pilot*", timeout=8000)
@@ -202,9 +202,9 @@ def main():
         check("inkings: the words are marked", page.evaluate("document.querySelectorAll('#main mark').length") > 0)
         page.evaluate("document.activeElement && document.activeElement.blur()")
         shot(page, "inkings-search")
-        visit(page, "/inks/?q=diamine", "inks-search")
+        visit(page, "/prev/inks/?q=diamine", "inks-search")
         visit(page, "/api/pens?limit=1000", status=422)
-        visit(page, "/pens/", "pens")
+        visit(page, "/prev/pens/", "pens")
         # PYPEN-7: 50 rows a page, Load more appends, no heading twice.
         n_rows = "document.querySelectorAll('#main [data-listnav-item]').length"
         n_heads = "[...document.querySelectorAll('#main [data-more-head] h3')].map(h => h.textContent)"
@@ -217,7 +217,7 @@ def main():
         check(f"pens: no heading twice {hs}", len(hs) == len(set(hs)))
         page.evaluate("document.querySelector('.more-nav').scrollIntoView({block: 'center'})")
         shot(page, "pens-load-more")
-        pen = page.locator("#main a[href^='/pens/']").evaluate_all(
+        pen = page.locator("#main a[href^='/prev/pens/']").evaluate_all(
             "as => as.map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
         )
         visit(page, pen, "pen")
@@ -231,28 +231,28 @@ def main():
             page.wait_for_timeout(700)
             check("viewer: Back closes it, stays", not page.evaluate("!!document.querySelector('dialog.pv[open]')") and page.url.endswith(pen))
             check("viewer: lock gone", not page.evaluate("document.documentElement.classList.contains('scroll-lock')"))
-        visit(page, "/inks/", "inks")
-        ink = page.locator("#main a[href^='/inks/']").evaluate_all(
+        visit(page, "/prev/inks/", "inks")
+        ink = page.locator("#main a[href^='/prev/inks/']").evaluate_all(
             "as => as.map(a => a.getAttribute('href')).find(h => /^\\/inks\\/\\d+\\/$/.test(h))"
         )
         visit(page, ink, "ink")
         for u in (
-            "/history/",
-            "/history/inkings/",
-            "/history/inkings/?y=2024",
-            "/usages/?began=2024-08",
-            "/history/calendar/",
-            "/history/gantt/",
-            "/history/matrix/",
-            "/records/",
-            "/pick/",
-            "/search/?q=lamy",
-            "/import/",
-            "/pens/needs-photos/",
-            "/usages/add/",
+            "/prev/history/",
+            "/prev/history/inkings/",
+            "/prev/history/inkings/?y=2024",
+            "/prev/usages/?began=2024-08",
+            "/prev/history/calendar/",
+            "/prev/history/gantt/",
+            "/prev/history/matrix/",
+            "/prev/records/",
+            "/prev/pick/",
+            "/prev/search/?q=lamy",
+            "/prev/import/",
+            "/prev/pens/needs-photos/",
+            "/prev/usages/add/",
         ):
             visit(page, u)
-        visit(page, "/settings/", "settings")
+        visit(page, "/prev/settings/", "settings")
         if page.locator("button[data-whatsnew-open]").count():
             page.locator("button[data-whatsnew-open]").click()
             page.wait_for_timeout(900)
@@ -261,7 +261,7 @@ def main():
             page.go_back()
             page.wait_for_timeout(700)
             check("whatsnew: Back closes it", not page.evaluate("!!document.querySelector('dialog#kit-wn[open]')"))
-        visit(page, "/pens/")
+        visit(page, "/prev/pens/")
         page.locator("nav.kit-tabs [data-menu-btn]").click()
         page.wait_for_timeout(500)
         check("menu: opens", page.evaluate("document.getElementById('menuPanel').classList.contains('open')"))
@@ -270,7 +270,7 @@ def main():
         page.wait_for_timeout(500)
         # The keyboard palette and the ? sheet (PYPEN-8, KEYS-LAYER v1.3): kit
         # layers, so the page under them is locked and Back closes them.
-        visit(page, "/pens/")
+        visit(page, "/prev/pens/")
         on = "document.getElementById('%s').classList.contains('on')"
         locked = "document.documentElement.classList.contains('scroll-lock')"
         page.keyboard.press("Control+k")
@@ -280,8 +280,8 @@ def main():
         shot(page, "palette")
         page.go_back()
         page.wait_for_timeout(700)
-        check("palette: Back closes it, stays", not page.evaluate(on % "kpal") and page.url.endswith("/pens/"))
-        if page.url.endswith("/pens/"):
+        check("palette: Back closes it, stays", not page.evaluate(on % "kpal") and page.url.endswith("/prev/pens/"))
+        if page.url.endswith("/prev/pens/"):
             page.keyboard.press("?")
             page.wait_for_timeout(500)
             check("? sheet: opens", page.evaluate(on % "khelp"))
@@ -290,10 +290,10 @@ def main():
             shot(page, "keys-sheet")
             page.go_back()
             page.wait_for_timeout(700)
-            check("? sheet: Back closes it, stays", not page.evaluate(on % "khelp") and page.url.endswith("/pens/"))
+            check("? sheet: Back closes it, stays", not page.evaluate(on % "khelp") and page.url.endswith("/prev/pens/"))
         visit(page, "/pub/pens/wall/", "pen-wall")
         visit(page, "/pub/inks/wall/")
-        visit(page, "/pens/no-such-page/", "404", status=404)
+        visit(page, "/prev/pens/no-such-page/", "404", status=404)
         if os.environ.get("DESK") != "0":
             desk(b)
         b.close()

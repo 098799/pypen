@@ -21,7 +21,7 @@
     <div class="db-legend"><span><i></i>Inkings</span><span><i class="is-own"></i>Bottles</span></div>
     <div class="dumbbell">
       {% for s in share %}
-      <button class="db-row" type="button" data-tip-title="{{ s.name }}" data-tip-lead="{{ s.use }}% of inkings, {{ s.own }}% of bottles" data-tip="{{ s.fills }} fills, {{ s.bottles }} bottles, {{ s.ml }} ml" data-tip-links="See the inkings|/next/usages/?color={{ s.name|urlencode }}">
+      <button class="db-row" type="button" data-tip-title="{{ s.name }}" data-tip-lead="{{ s.use }}% of inkings, {{ s.own }}% of bottles" data-tip="{{ s.fills }} fills, {{ s.bottles }} bottles, {{ s.ml }} ml" data-tip-links="See the inkings|{% url 'nx_usages_list' %}?color={{ s.name|urlencode }}">
         <span><i class="rank-dot" style="--c: {{ s.hex }}"></i>{{ s.name }}</span>
         <span class="db-track" style="--c: {{ s.hex }}">
           <i class="db-link" style="left: {{ s.lo_x|unlocalize }}%; width: {{ s.gap_x|unlocalize }}%"></i>
@@ -40,6 +40,8 @@
     <h2>Resting longest</h2><p>Out of a pen the longest.</p>
     <ul class="rows">{% for r in resting %}<li class="row" style="--sw: {{ r.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_inks_detail' r.ink.pk %}">{{ r.ink }}</a></div><span class="row-v">{{ r.span }}</span></li>{% endfor %}</ul>
   </section>
+  <section class="plate"><h2>Inks added per year</h2><p>Bottles and samples, used up ones too.</p>{% include "next/stats/_cols.html" with rows=ink_year show_n=True unit=" inks" %}</section>
+  <section class="plate"><h2>Spent on ink per year</h2><p>PLN, other currencies at rough rates.</p>{% include "next/stats/_cols.html" with rows=ink_spend_year unit=" PLN" %}</section>
   <section class="plate"><h2>Ink makers</h2><p>Open bottles.</p>{% include "next/stats/_hbars.html" with rows=brands %}</section>
   <section class="plate"><h2>How they came</h2>{% include "next/stats/_hbars.html" with rows=how %}</section>
 </div>

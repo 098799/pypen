@@ -1,5 +1,6 @@
-"""The new version under /next/ (PYPEN-11): same views, its own pages. tests_doors
-walks its routes for the door; this holds what is particular to it."""
+"""The new version (PYPEN-11), on the main addresses since Nov 2026 (the old one
+is /prev/): same views, its own pages. tests_doors walks its routes for the
+door; this holds what is particular to it."""
 
 import json
 import re
@@ -171,6 +172,70 @@ class TheCutOver(Seeded):
         self.assertEqual((r.status_code, r["Location"]), (301, "/pens/?view=grid"))
         r = self.client.post(f"/next/usages/{self.now.pk}/end/")
         self.assertEqual((r.status_code, r["Location"]), (308, f"/usages/{self.now.pk}/end/"))
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class WhatTheOldPagesHad(Seeded):
+    """The things the old pages showed that the new version lacked (Nov 2026)."""
+
+    def setUp(self):
+        self.client.force_login(self.owner)
+
+    def test_the_pen_page_edits_the_fill_in_it(self):
+        html = self.client.get(f"/pens/{self.pen.pk}/").content.decode()
+        self.assertIn(f'href="/usages/{self.now.pk}/edit/">Edit this fill', html)
+
+    def test_a_pen_row_says_its_filling_and_year(self):
+        html = self.client.get("/pens/").content.decode()
+        self.assertIn('class="pen-facts-nx">Piston, since 2020', html)
+        self.rot.in_use = False
+        self.rot.save()
+        html = self.client.get("/pens/?view=grid").content.decode()
+        self.assertIn('<em class="pip">Out</em>', html)
+
+    def test_an_ink_row_says_sample_year_and_moi(self):
+        Ink.objects.filter(pk=self.red.pk).update(volume=3, obtained=date(2021, 5, 1), moi_url="https://example.com/moi")
+        html = self.client.get("/inks/?view=list&samples=1").content.decode()
+        self.assertIn("Red, a sample, 3 ml", html)
+        self.assertIn("since 2021", html)
+        self.assertIn('href="https://example.com/moi"', html)
+
+    def test_the_desk_lists_more_than_one_due_pen_and_the_days(self):
+        brand = Brand.objects.get()
+        for n in range(3):
+            Pen.objects.create(obtained=date(2021, 1, 1), brand=brand, model=f"Spare {n}", filling="c/c", age="Modern",
+                               obtained_from="shop", out=False, price=10, rotation=self.rot)
+        html = self.client.get("/dashboard/").content.decode()
+        self.assertIn('<h3 class="then-h">Then</h3>', html)
+        self.assertIn("Never inked", html)
+        self.assertIn("pen-days inked", html)
+
+    def test_the_pick_page_names_a_hard_bottle(self):
+        hard = Rotation.objects.create(priority=None, how_often=0, whos="Bottle hard to fill from", in_use=True)
+        Ink.objects.filter(pk=self.red.pk).update(rotation=hard)
+        html = self.client.get(f"/pick/?pen={self.due.pk}").content.decode()
+        self.assertIn("a hard bottle to fill from", html)
+
+    def test_stats_have_the_old_history_years(self):
+        html = self.client.get("/stats/").content.decode()
+        self.assertIn("Year by year", html)
+        self.assertIn("2024: ", html)
+        html = self.client.get("/stats/cupboard/").content.decode()
+        self.assertIn("Inks added per year", html)
+        self.assertIn("Spent on ink per year", html)
+        self.assertIn('data-tip-links="See the inkings|/usages/?color=Blue"', html)
+
+    def test_timeline_zooms_and_pairings_link(self):
+        self.assertIn('data-tl-zoom="4"', self.client.get("/stats/timeline/").content.decode())
+        html = self.client.get("/stats/pairs/").content.decode()
+        self.assertIn(f"Open the pen|/pens/{self.pen.pk}/", html)
+
+    def test_a_pen_page_s_year_bars_stay_here(self):
+        Usage.objects.create(pen=self.pen, nib=self.nib, ink=self.red, begin=date(2023, 3, 1), end=date(2023, 4, 1))
+        html = self.client.get(f"/pens/{self.pen.pk}/").content.decode()
+        self.assertIn("data-stack-chart", html)
+        self.assertEqual(OLD_LINK.findall(html), [])
+        self.assertNotIn("|/prev/", html)
 
 
 class Numbers(Seeded):

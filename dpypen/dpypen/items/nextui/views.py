@@ -94,15 +94,21 @@ def _desk_data(today):
 
     year = today.year
     this_year = [u for u in usages if u.begin.year == year]
+    # Pen-days inked this year, by every fill that ran in it (one from last
+    # December counts its January days too).
+    jan1 = date(year, 1, 1)
+    year_days = sum(max(0, ((u.end or today) - max(u.begin, jan1)).days + 1) for u in usages if (u.end or today) >= jan1)
     return {
         "fills": fills,
         "due_n": len(due),
+        "then": [{**d, "rested_span": stats.span(d["rested"]) if d["rested"] is not None else None} for d in due[1:6]],
         "up_next": up_next,
         "recent": recent,
         "year": year,
         "year_n": len(this_year),
         "year_pens": len({u.pen_id for u in this_year}),
         "year_inks": len({u.ink_id for u in this_year}),
+        "year_days": year_days,
         "no_photo": Pen.objects.filter(photos__isnull=True).count(),
         "to_check": PenPhoto.objects.filter(review="check").count(),
     }

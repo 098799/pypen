@@ -61,7 +61,7 @@ def run(page, cdp):
     page.on("pageerror", lambda e: errors.append(str(e)))
 
     # Pull to refresh: a long pull from the top loads the page again.
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     page.wait_for_load_state("networkidle")
     check("pull: active on a touch screen", page.evaluate("kitPull.active") is True)
     page.evaluate("window.stamp = 1")
@@ -92,7 +92,7 @@ def run(page, cdp):
     page.wait_for_load_state("networkidle")
 
     # What's new: from Settings; a modal sheet; Back closes it and stays.
-    page.goto(BASE + "/settings/")
+    page.goto(BASE + "/prev/settings/")
     page.wait_for_load_state("networkidle")
     url = page.url
     page.locator("button[data-whatsnew-open]").click()
@@ -123,25 +123,25 @@ def run(page, cdp):
     page.wait_for_timeout(500)
 
     # Error pages: a load, and a boosted link (htmx swaps no 4xx by itself).
-    r = page.goto(BASE + "/pens/987654321/")
+    r = page.goto(BASE + "/prev/pens/987654321/")
     check("404: status", r.status == 404)
     check("404: in the app's chrome", page.locator("nav.kit-tabs").count() == 1 and "Not here" in page.content())
     shot(page, "error-404.png")
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     page.wait_for_load_state("networkidle")
-    page.evaluate("""(() => { const a = document.createElement('a'); a.href = '/pens/987654321/';
+    page.evaluate("""(() => { const a = document.createElement('a'); a.href = '/prev/pens/987654321/';
                      a.id = 'deadlink'; a.textContent = 'dead'; document.getElementById('main').prepend(a);
                      htmx.process(a); })()""")
     page.click("#deadlink")
     page.wait_for_timeout(1200)
     check("404 boosted: the page is swapped in", "Not here" in (page.text_content("#main") or ""))
-    check("404 boosted: the address is the dead one", page.url.endswith("/pens/987654321/"))
+    check("404 boosted: the address is the dead one", page.url.endswith("/prev/pens/987654321/"))
     page.locator("[data-error-back]").click()
     page.wait_for_timeout(1200)
-    check("404 boosted: Back is a way on", page.url.endswith("/pens/"))
+    check("404 boosted: Back is a way on", page.url.endswith("/prev/pens/"))
 
     # Nothing is wider than the phone.
-    for u in ("/dashboard/", "/pens/", "/settings/"):
+    for u in ("/prev/dashboard/", "/prev/pens/", "/prev/settings/"):
         page.goto(BASE + u)
         page.wait_for_load_state("networkidle")
         check(f"{u}: no sideways scroll", page.evaluate("document.documentElement.scrollWidth <= innerWidth"))

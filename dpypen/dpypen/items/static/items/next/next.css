@@ -190,6 +190,9 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .next-pen small { display: block; color: var(--dim); font-size: .92rem; line-height: 1.2; }
 .next-pen b { display: block; font: 600 1.14rem/1.15 var(--serif); overflow-wrap: anywhere; }
 .next-pen em { display: block; font-style: normal; color: var(--dim); font-size: .92rem; line-height: 1.25; margin-top: 2px; }
+.then-h { font-size: .95rem; font-weight: 600; color: var(--dim); margin-top: 14px; }
+.rows.then .row { align-items: center; }
+.rows.then .pri { flex: none; min-width: 2.4em; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); font-size: .8rem; text-align: center; font-variant-numeric: lining-nums; }
 .next-inks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .next-inks .swab { --swab-h: 30px; }
 .next-inks .card-ink { padding: 8px 8px 9px; }
@@ -219,6 +222,8 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .pen-row-nx h3 span { font-weight: 400; font-style: italic; }
 .pen-row-nx p { color: var(--dim); font-size: .92rem; line-height: 1.25; margin-top: 1px; }
 .pen-row-nx p.is-now { color: var(--fg); }
+.pen-row-nx p.pen-facts-nx { font-size: .86rem; }
+.file-preview { display: block; max-width: 100%; max-height: 50vh; margin: 10px 0; border-radius: 10px; }
 .trail { display: flex; align-items: center; gap: 3px; margin-top: 5px; min-height: 13px; }
 .trail i { width: 13px; height: 13px; border-radius: 50%; background: var(--sw); box-shadow: 0 0 0 1px #0002, inset 0 0 0 1px #ffffff1c; }
 html:not([data-theme=light]) .trail i { box-shadow: 0 0 0 1.5px var(--plate); }
@@ -227,7 +232,9 @@ html:not([data-theme=light]) .trail i { box-shadow: 0 0 0 1.5px var(--plate); }
 @media (min-width: 560px) { .pen-wall-nx { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 900px) { .pen-wall-nx { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .pen-tile-nx { display: block; min-width: 0; }
-.pen-tile-nx .pic { display: block; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: var(--panel-2); }
+.pen-tile-nx .pic { position: relative; display: block; aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: var(--panel-2); }
+.pen-tile-nx .pip { position: absolute; top: 6px; left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--panel); color: var(--fg); font-style: normal; font-size: .78rem; line-height: 1.5; font-variant-numeric: lining-nums; box-shadow: 0 0 0 1px var(--line); }
+.pen-tile-nx.is-out img { opacity: .55; }
 .pen-tile-nx img { width: 100%; height: 100%; object-fit: cover; filter: var(--photo); }
 .pen-tile-nx small { display: block; color: var(--dim); font-size: .88rem; margin-top: 5px; line-height: 1.15; }
 .pen-tile-nx b { display: block; font: 600 1rem/1.16 var(--serif); overflow-wrap: anywhere; }
@@ -459,6 +466,11 @@ a.hbar { min-height: 34px; }
 .tl-track button.is-now { box-shadow: 0 0 0 1.5px var(--plate-fg); }
 .tl-axis { position: sticky; top: 0; height: 20px; background: var(--plate); z-index: 2; }
 .tl-axis span { position: absolute; font-size: .78rem; color: var(--plate-dim); }
+/* Zoom: 2× and 4× widen the tracks; the plate scrolls sideways and the names stay. */
+.tl-zoom.is-zoomed { overflow-x: auto; overscroll-behavior-x: contain; }
+.tl-zoom.is-zoomed .tl-inner { width: calc(var(--z, 1) * 100%); }
+.tl-zoom.is-zoomed .tl-row a.nm { position: sticky; left: 0; display: inline-block; max-width: calc(100% / var(--z, 1)); }
+.tl-zoom.is-zoomed .tl-axis { position: relative; }
 
 .mx { display: grid; gap: 1px; overflow-x: auto; margin-top: 10px; scrollbar-width: thin; }
 .mx-grid { display: grid; gap: 1px; grid-template-columns: 120px repeat(var(--cols), 17px); width: max-content; }
@@ -549,6 +561,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 .th-acts { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; }
 .th-acts form { margin: 0; }
 .th-acts .btn { min-height: 36px; padding: 0 9px; font-size: .9rem; border-radius: 9px; }
+.compare { position: relative; }
 .is-busy { opacity: .55; pointer-events: none; }
 .is-busy::after { content: "Working…"; position: absolute; inset: auto 0 44%; text-align: center; font-weight: 700; color: var(--fg); }
 .compare { display: grid; gap: 10px; margin-bottom: 12px; }

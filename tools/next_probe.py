@@ -21,11 +21,11 @@ import layer_probe as lp  # noqa: E402
 lp.PORT = int(os.environ.get("PROBE_PORT", "18497"))
 lp.BASE = BASE = os.environ.get("BASE") or f"http://127.0.0.1:{lp.PORT}"
 BACKUPS = Path("/home/tgrining/.local/share/vps-backups/pypen")
-SCREENS = ["/next/", "/next/pens/", "/next/pens/?view=grid", "/next/inks/", "/next/inks/?view=list", "/next/usages/", "/next/pick/",
-           "/next/search/?q=blue", "/next/settings/", "/next/stats/", "/next/stats/inkings/", "/next/stats/inkings/?y=2019",
-           "/next/stats/collection/", "/next/stats/cupboard/", "/next/stats/rotation/", "/next/stats/timeline/",
-           "/next/stats/calendar/", "/next/stats/pairs/", "/next/stats/records/", "/next/pens/add/", "/next/inks/add/",
-           "/next/usages/add/", "/next/pens/needs-photos/", "/next/import/"]
+SCREENS = ["/dashboard/", "/pens/", "/pens/?view=grid", "/inks/", "/inks/?view=list", "/usages/", "/pick/",
+           "/search/?q=blue", "/settings/", "/stats/", "/stats/inkings/", "/stats/inkings/?y=2019",
+           "/stats/collection/", "/stats/cupboard/", "/stats/rotation/", "/stats/timeline/",
+           "/stats/calendar/", "/stats/pairs/", "/stats/records/", "/pens/add/", "/inks/add/",
+           "/usages/add/", "/pens/needs-photos/", "/import/"]
 failures = []
 errors = []
 
@@ -63,7 +63,7 @@ def phone(page):
         go(page, path)
 
     # The More menu, kit layer: opens, Back closes it and stays.
-    go(page, "/next/")
+    go(page, "/dashboard/")
     page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(200)
     check("menu opens", js("document.getElementById('menuPanel').classList.contains('open')"))
@@ -71,12 +71,12 @@ def phone(page):
     check("menu is on the screen", box and box["y"] >= 0 and box["y"] + box["height"] <= 844, box)
     page.go_back()
     page.wait_for_timeout(300)
-    check("Back closes the menu and stays", not js("document.getElementById('menuPanel').classList.contains('open')") and page.url.endswith("/next/"), page.url)
+    check("Back closes the menu and stays", not js("document.getElementById('menuPanel').classList.contains('open')") and page.url.endswith("/dashboard/"), page.url)
 
     # Tabs swap softly and light up.
     js("window.__stay = 1")
     page.locator("nav.kit-tabs a", has_text="Inks").tap()
-    page.wait_for_url("**/next/inks/")
+    page.wait_for_url("**/inks/")
     settle(page)
     check("a tab is a soft navigation", js("window.__stay === 1"))
     check("the tab is lit", js("document.querySelector('nav.kit-tabs .kit-tab[aria-current=page] span').textContent") == "Inks")
@@ -91,7 +91,7 @@ def phone(page):
     check("Clear clears", "color=" not in page.url, page.url)
 
     # Load more on the wall.
-    go(page, "/next/inks/")
+    go(page, "/inks/")
     before = js("document.querySelectorAll('#inkContentBody .card-ink').length")
     page.locator("[data-more]").first.tap()
     settle(page, 400)
@@ -99,7 +99,7 @@ def phone(page):
     check(f"Load more adds rows ({before} to {after})", after > before)
 
     # A search box filters as it is typed.
-    go(page, "/next/pens/")
+    go(page, "/pens/")
     page.locator("#penQ").fill("pelikan")
     page.wait_for_timeout(700)
     settle(page)
@@ -115,7 +115,7 @@ def phone(page):
     check("no match says so", "zzzznothing" in js("document.querySelector('#penContentBody .kit-empty').textContent"))
 
     # The river reads under a finger.
-    go(page, "/next/stats/")
+    go(page, "/stats/")
     plot = page.locator(".river-plot").bounding_box()
     page.touchscreen.tap(plot["x"] + plot["width"] * .3, plot["y"] + plot["height"] * .6)
     page.wait_for_timeout(150)
@@ -125,28 +125,28 @@ def phone(page):
     check("the key lights one colour", js("document.querySelectorAll('.river path.is-lit').length") == 1)
 
     # A tip: tap, numbers, a link to the twin, Back closes.
-    go(page, "/next/stats/inkings/")
+    go(page, "/stats/inkings/")
     page.locator(".heat-c[data-tip-links]").first.tap()
     page.wait_for_timeout(250)
     check("a square gives its numbers", "inking" in tip(page), tip(page))
     href = js("document.querySelector('#chartTip a').getAttribute('href')")
-    check("its link stays in this version", href.startswith("/next/usages/?began="), href)
+    check("its link stays in this version", href.startswith("/usages/?began="), href)
     page.go_back()
     page.wait_for_timeout(300)
-    check("Back closes the tip", tip(page) == "" and "/next/stats/inkings/" in page.url)
-    go(page, "/next/stats/collection/")
+    check("Back closes the tip", tip(page) == "" and "/stats/inkings/" in page.url)
+    go(page, "/stats/collection/")
     page.locator(".scatter button").first.tap(force=True)
     page.wait_for_timeout(250)
     check("a dot names its pen", "days inked" in tip(page), tip(page))
-    go(page, "/next/stats/calendar/?y=2019")
+    go(page, "/stats/calendar/?y=2019")
     page.locator(".cal button").nth(40).tap()
     page.wait_for_timeout(250)
     check("a day says what was inked", "pen" in tip(page), tip(page))
 
     # The ink flow: pick an ink on the desk, save, finish, undo.
-    go(page, "/next/")
+    go(page, "/dashboard/")
     page.locator(".next-inks .card-ink").first.tap()
-    page.wait_for_url("**/next/usages/add/**")
+    page.wait_for_url("**/usages/add/**")
     settle(page, 500)
     check("the form has the pen and the ink", js("document.getElementById('id_pen').value") != "" and js("document.getElementById('id_ink').value") != "")
     page.wait_for_timeout(200)
@@ -154,19 +154,19 @@ def phone(page):
     if not nib:
         js("(() => { const s = document.getElementById('id_nib'); s.tomselect.setValue(s.options[1].value); })()")
     page.locator("form.form-nx button[type=submit]").tap()
-    page.wait_for_url("**/next/pens/*/", timeout=8000)
+    page.wait_for_url("**/pens/*/", timeout=8000)
     settle(page, 400)
-    check("saved: it lands on the pen, in this version", "/next/pens/" in page.url, page.url)
+    check("saved: it lands on the pen, in this version", "/pens/" in page.url, page.url)
     check("saved: a toast says so", "Inked" in js("(document.getElementById('kit-toast') || {}).textContent || ''"))
     check("saved: the pen shows its ink", js("!!document.querySelector('.now-plate')"))
     pen_url = page.url
     page.locator("form[action*='/end/'] button").first.tap()
-    page.wait_for_url("**/next/usages/", timeout=8000)
+    page.wait_for_url("**/usages/", timeout=8000)
     settle(page, 400)
     toast = page.locator("#kit-toast")
     check("finished: a toast with Undo", "Undo" in js("document.getElementById('kit-toast').textContent"))
     toast.get_by_text("Undo").tap()
-    page.wait_for_url("**/next/usages/", timeout=8000)
+    page.wait_for_url("**/usages/", timeout=8000)
     settle(page, 400)
     page.goto(pen_url)
     settle(page)
@@ -176,33 +176,44 @@ def phone(page):
     page.locator(".row-t a").first.wait_for()
 
     # A confirm that is answered no sends nothing.
-    go(page, "/next/pens/add/")
+    go(page, "/pens/add/")
     check("Sold for hides while the switch is off", js("document.getElementById('soldRow').hidden"))
     page.locator(".switch-nx").first.tap()
     page.wait_for_timeout(100)
     check("the switch shows Sold for", not js("document.getElementById('soldRow').hidden"))
 
-    # Settings: theme, which opens first.
-    go(page, "/next/settings/")
+    # Settings: theme, the way to the old version.
+    go(page, "/settings/")
     check("the theme row is mounted", js("!!document.querySelector('[data-kit-theme] button')"))
     page.locator("[data-kit-theme] button", has_text="Dark").tap()
     page.wait_for_timeout(100)
     check("Dark sets the theme", js("document.documentElement.getAttribute('data-theme')") == "dark")
     check("the plates stay paper in dark", js("getComputedStyle(document.documentElement).getPropertyValue('--plate').trim()") == "#f3f2ec")
     page.locator("[data-kit-theme] button", has_text="Light").tap()
-    page.locator("button", has_text="Open this version first").tap()
+    page.locator("a", has_text="The old version").tap()
     settle(page)
-    check("the choice is shown", js("document.body.textContent.includes('Stop opening this version first')"))
-    r = page.goto(BASE + "/dashboard/")
+    check("The old version goes to /prev/", page.url.endswith("/prev/dashboard/") and js("!!document.querySelector('link[href*=\"css/app\"]')"), page.url)
+    page.goto(BASE + "/next/pens/")
     settle(page)
-    check("the old desk now opens here", page.url.endswith("/next/"), page.url)
-    go(page, "/next/settings/")
-    page.locator("button", has_text="Back to the old version").tap()
+    check("a /next/ bookmark lands on the main address", page.url.endswith("/pens/") and "/next/" not in page.url, page.url)
+
+    # The pieces the old pages had (Nov 2026).
+    go(page, "/stats/timeline/")
+    page.locator("[data-tl-zoom='4']").tap()
+    page.wait_for_timeout(150)
+    check("the timeline zooms and scrolls sideways", js("(function(p){return p.scrollWidth > p.clientWidth * 3})(document.getElementById('tlPlate'))"))
+    go(page, "/pens/")
+    page.locator('.view-switch a[aria-label="Photos"]').tap()
     settle(page)
-    check("Back to the old version goes there", page.url.endswith("/dashboard/") and js("!!document.querySelector('link[href*=\"css/app\"]')"), page.url)
+    go(page, "/pens/")
+    check("the pens list remembers the grid", "view=grid" in page.url, page.url)
+    page.locator('.view-switch a[aria-label="List"]').tap()
+    settle(page)
+    go(page, "/pens/")
+    check("and the list again", "view=" not in page.url, page.url)
 
     # A 404 keeps the look.
-    go_ok = page.goto(BASE + "/next/pens/999999/")
+    go_ok = page.goto(BASE + "/pens/999999/")
     settle(page)
     check("a dead pen is a 404 page", go_ok.status == 404)
     check("errors so far", not errors, errors[:4])
@@ -210,7 +221,7 @@ def phone(page):
 
 def viewer(page):
     js = page.evaluate
-    go(page, "/next/pens/")
+    go(page, "/pens/")
     page.locator(".pen-row-nx h3 a").first.tap()
     settle(page)
     if not js("!!document.getElementById('photoImg')"):
@@ -221,12 +232,12 @@ def viewer(page):
     check("a photo opens the viewer", js("!!document.querySelector('dialog.pv[open]')"))
     page.go_back()
     page.wait_for_timeout(350)
-    check("Back closes the viewer and stays", not js("!!document.querySelector('dialog.pv[open]')") and "/next/pens/" in page.url)
+    check("Back closes the viewer and stays", not js("!!document.querySelector('dialog.pv[open]')") and "/pens/" in page.url)
 
 
 def desk(page):
     js = page.evaluate
-    go(page, "/next/inks/")
+    go(page, "/inks/")
     check("the bar is 52 px", js("document.getElementById('hdr').offsetHeight") == 52)
     check("no tab bar at the bottom", js("getComputedStyle(document.querySelector('nav.kit-tabs')).position") != "fixed")
     page.locator("#deskFilterBtn").click()
@@ -239,7 +250,7 @@ def desk(page):
     page.wait_for_timeout(150)
     page.keyboard.type("pelikan")
     page.keyboard.press("Enter")
-    page.wait_for_url("**/next/search/?q=pelikan")
+    page.wait_for_url("**/search/?q=pelikan")
     settle(page)
     check("the bar's search stays in this version", js("document.querySelectorAll('#searchResultsBody .pen-row-nx').length") > 0)
     page.locator("#hdr .db-btn[data-menu-btn]").click()
@@ -247,19 +258,19 @@ def desk(page):
     check("⋯ opens the menu", js("document.getElementById('menuPanel').classList.contains('open')"))
     page.keyboard.press("Escape")
     # The palette: its hits and places mean their twins here.
-    go(page, "/next/")
+    go(page, "/dashboard/")
     page.keyboard.press("Control+k")
     page.wait_for_timeout(250)
     page.keyboard.type("Records")
     page.wait_for_timeout(500)
     page.keyboard.press("Enter")
     page.wait_for_timeout(800)
-    check("the palette goes to this version's page", page.url.endswith("/next/stats/records/"), page.url)
+    check("the palette goes to this version's page", page.url.endswith("/stats/records/"), page.url)
     page.keyboard.press("m")
     page.keyboard.press("p")
     page.wait_for_timeout(600)
-    check("m p goes to this version's pens", page.url.endswith("/next/pens/"), page.url)
-    for path in ("/next/", "/next/stats/", "/next/stats/collection/", "/next/stats/calendar/", "/next/pens/?view=grid", "/next/stats/pairs/"):
+    check("m p goes to this version's pens", page.url.endswith("/pens/"), page.url)
+    for path in ("/dashboard/", "/stats/", "/stats/collection/", "/stats/calendar/", "/pens/?view=grid", "/stats/pairs/"):
         go(page, path)
     check("errors at the desk", not errors, errors[:4])
 

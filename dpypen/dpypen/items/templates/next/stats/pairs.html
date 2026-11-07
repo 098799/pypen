@@ -15,7 +15,7 @@
       <span></span>{% for c in matrix_cols %}<a class="mx-h" href="{% url 'nx_inks_detail' c.ink_id %}" style="--sw: {{ c.bg }}" title="{{ c.label }}" aria-label="{{ c.label }}"></a>{% endfor %}
       {% for r in matrix_rows %}
       <a class="mx-p" href="{% url 'nx_pens_detail' r.pen_id %}">{{ r.pen }}</a>
-      {% for c in r.cells %}{% if c and c.days %}<button type="button" class="mx-c" style="--c: {{ c.hex }}; --a: {{ c.opacity|unlocalize }}" data-tip-title="{{ r.pen }}" data-tip-lead="{{ c.ink_label }}" data-tip="{{ c.fills }} fill{{ c.fills|pluralize }}, {{ c.days }} days" aria-label="{{ r.pen }} with {{ c.ink_label }}"></button>{% else %}<span class="mx-c"></span>{% endif %}{% endfor %}
+      {% for c in r.cells %}{% if c and c.days %}<button type="button" class="mx-c" style="--c: {{ c.hex }}; --a: {{ c.opacity|unlocalize }}" data-tip-title="{{ r.pen }}" data-tip-lead="{{ c.ink_label }}" data-tip="{{ c.fills }} fill{{ c.fills|pluralize }}, {{ c.days }} days" data-tip-links="Open the pen|{% url 'nx_pens_detail' r.pen_id %}&#10;Open the ink|{% url 'nx_inks_detail' c.ink_id %}" aria-label="{{ r.pen }} with {{ c.ink_label }}"></button>{% else %}<span class="mx-c"></span>{% endif %}{% endfor %}
       {% endfor %}
     </div></div>
   </section>

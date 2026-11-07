@@ -6,7 +6,13 @@
    [data-confirm] a form that asks first (a delete that cannot come back).
    [data-autosubmit] a file picker that sends its form as soon as it has a file.
    [data-shown-by="<id>"] a row that shows while that checkbox is on (Sold, Used up).
-   [data-busy-on-submit] a form whose answer takes a while: its parent says so.
+   [data-busy-on-submit] a form whose answer takes a while: its parent says so
+                  (or the element its value names, e.g. ".compare").
+   [data-reset-field="<id>" data-reset-value] a button that puts a field back.
+   [data-preview="<img id>"] a file picker that shows the photo it holds.
+   [data-tl-zoom] the timeline's Fit, 2×, 4×.
+   .view-switch  the list or the grid on /pens/ and /inks/, kept per device
+                  (pensView, inksView: the old version's keys).
 */
 (function () {
   "use strict";
@@ -73,7 +79,8 @@
       return;
     }
     if (f.hasAttribute("data-busy-on-submit")) {
-      var host = f.closest("[data-busy-host]") || f;
+      var sel = f.getAttribute("data-busy-on-submit");
+      var host = (sel && document.querySelector(sel)) || f.closest("[data-busy-host]") || f;
       host.classList.add("is-busy");
     }
   }, true);
@@ -82,7 +89,58 @@
     if (t.hasAttribute && t.hasAttribute("data-autosubmit") && t.form) t.form.requestSubmit ? t.form.requestSubmit() : t.form.submit();
     if (t.type === "checkbox" && t.id) document.querySelectorAll('[data-shown-by="' + t.id + '"]').forEach(reveal);
     if (t.id === "polishAll") polish(t);
+    if (t.hasAttribute && t.hasAttribute("data-preview")) preview(t);
   });
+  function preview(input) {
+    var img = document.getElementById(input.getAttribute("data-preview"));
+    if (!img) return;
+    if (img.src && img.src.indexOf("blob:") === 0) URL.revokeObjectURL(img.src);
+    var file = input.files && input.files[0];
+    img.hidden = !file;
+    if (file) img.src = URL.createObjectURL(file);
+  }
+
+  /* ---- small buttons ---- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-reset-field]");
+    if (b) {
+      var field = document.getElementById(b.getAttribute("data-reset-field"));
+      if (field) { field.value = b.getAttribute("data-reset-value"); field.focus(); }
+      return;
+    }
+    var z = e.target.closest && e.target.closest("[data-tl-zoom]");
+    if (z) {
+      var plate = document.getElementById("tlPlate");
+      if (!plate) return;
+      var n = Number(z.getAttribute("data-tl-zoom")) || 1;
+      var zoomed = plate.classList.contains("is-zoomed");
+      var mid = (plate.scrollLeft + plate.clientWidth / 2) / (plate.scrollWidth || 1);
+      plate.style.setProperty("--z", n);
+      plate.classList.toggle("is-zoomed", n > 1);
+      z.parentNode.querySelectorAll("[data-tl-zoom]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === z)); });
+      // from Fit, the newest years; from a zoom, the same years in the middle
+      plate.scrollLeft = zoomed ? mid * plate.scrollWidth - plate.clientWidth / 2 : plate.scrollWidth;
+      return;
+    }
+    var v = e.target.closest && e.target.closest('.view-switch a[data-navkey="view"]');
+    if (v) {
+      var key = location.pathname === "/inks/" ? "inksView" : location.pathname === "/pens/" ? "pensView" : null;
+      var grid = (key === "pensView") === (v.getAttribute("data-navval") === "grid");
+      if (key) try { localStorage.setItem(key, grid ? "grid" : "list"); } catch (err) {}
+    }
+  });
+  /* The list or the grid as chosen last on this device, when the address does not say. */
+  function keepView() {
+    var key = location.pathname === "/inks/" ? "inksView" : location.pathname === "/pens/" ? "pensView" : null;
+    if (!key || new URLSearchParams(location.search).has("view")) return;
+    var saved = null;
+    try { saved = localStorage.getItem(key); } catch (err) {}
+    var want = key === "pensView" ? (saved === "grid" ? "grid" : "") : (saved === "list" ? "list" : "");
+    if (!want) return;
+    var u = new URL(location.href);
+    u.searchParams.set("view", want);
+    location.replace(u.toString());
+  }
   function reveal(row) {
     var box = document.getElementById(row.getAttribute("data-shown-by"));
     if (box) row.hidden = !box.checked;
@@ -92,6 +150,10 @@
     try { localStorage.setItem("polishNewShots", master.checked ? "1" : "0"); } catch (e) {}
   }
   function arrive() {
+    keepView();
+    // a search page opened with a query: the caret at its end, to go on typing
+    var q = document.getElementById("searchQ");
+    if (q && q.value && document.activeElement === q) { try { q.setSelectionRange(q.value.length, q.value.length); } catch (err) {} }
     document.querySelectorAll("[data-shown-by]").forEach(reveal);
     var master = document.getElementById("polishAll");
     if (master) {

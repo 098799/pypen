@@ -59,7 +59,7 @@ TIP = "(() => { const t = document.getElementById('chartTip'); return t && t.cla
 
 def run(page):
     js = page.evaluate
-    go(page, "/history/inkings/")
+    go(page, "/prev/history/inkings/")
     check("tab lit", js("document.querySelector('.history-sub-nav a.active').textContent") == "Inkings")
     check("All lit", js("document.querySelector('nav[aria-label=Year] [aria-current]').textContent") == "All")
     n = js("document.querySelectorAll('.bars:not(.is-plain) .bar-col').length")
@@ -75,7 +75,7 @@ def run(page):
     shot(page, "charts-phone-tip")
     page.go_back()
     page.wait_for_timeout(500)
-    check("bar: Back closes it and stays", js(TIP) == "" and page.url.endswith("/history/inkings/"), page.url)
+    check("bar: Back closes it and stays", js(TIP) == "" and page.url.endswith("/prev/history/inkings/"), page.url)
     # A square: tap outside closes.
     page.locator(".heat-c:not(.is-ahead)[data-tip-links]").first.tap()
     page.wait_for_timeout(300)
@@ -105,7 +105,7 @@ def run(page):
     check("× leaves the month", "began=" not in page.url, page.url)
     check("× shows more", js("document.querySelector('[data-more-head] .aside').textContent") != total)
     # A year chip.
-    go(page, "/history/inkings/")
+    go(page, "/prev/history/inkings/")
     page.locator("nav[aria-label=Year] .kit-chip", has_text="2024").click()
     page.wait_for_url("**y=2024", timeout=8000)
     page.wait_for_load_state("networkidle")
@@ -128,10 +128,10 @@ def run(page):
     page.locator(".fam-key").first.tap()
     check("key: a second tap, all", js("document.querySelectorAll('.is-picked').length") == 0)
     # The whole page, for the eye.
-    go(page, "/history/inkings/")
+    go(page, "/prev/history/inkings/")
     shot(page, "charts-phone-full", full_page=True)
     # Older tabs: taps now answer on a phone.
-    go(page, "/history/calendar/")
+    go(page, "/prev/history/calendar/")
     page.locator(".cal-cell.is-inked").nth(20).scroll_into_view_if_needed()
     page.locator(".cal-cell.is-inked").nth(20).tap()
     page.wait_for_timeout(300)
@@ -139,20 +139,20 @@ def run(page):
     shot(page, "calendar-tip")
     page.go_back()
     page.wait_for_timeout(400)
-    go(page, "/history/matrix/")
+    go(page, "/prev/history/matrix/")
     page.locator(".pi-cell:not(.is-blank)").first.scroll_into_view_if_needed()
     page.locator(".pi-cell:not(.is-blank)").first.tap()
     page.wait_for_timeout(300)
-    check("matrix: a tap reads the cell, stays", "day" in js(TIP) and "/history/matrix/" in page.url, js(TIP))
+    check("matrix: a tap reads the cell, stays", "day" in js(TIP) and "/prev/history/matrix/" in page.url, js(TIP))
     shot(page, "matrix-tip")
     page.go_back()
     page.wait_for_timeout(400)
-    for u in ("/history/", "/history/gantt/"):
+    for u in ("/prev/history/", "/prev/history/gantt/"):
         go(page, u)
     # Record pages. Find a pen with years to compare in the top list.
-    go(page, "/history/inkings/")
-    pen = js("document.querySelector('a.rank-row[href^=\"/pens/\"]').getAttribute('href')")
-    ink = js("document.querySelector('a.rank-row[href^=\"/inks/\"]').getAttribute('href')")
+    go(page, "/prev/history/inkings/")
+    pen = js("document.querySelector('a.rank-row[href^=\"/prev/pens/\"]').getAttribute('href')")
+    ink = js("document.querySelector('a.rank-row[href^=\"/prev/inks/\"]').getAttribute('href')")
     for u, name in ((pen, "pen"), (ink, "ink")):
         go(page, u)
         check(f"{name} page: its bars", js("document.querySelectorAll('.bars.is-small .bar-col').length") >= 2)
@@ -162,7 +162,7 @@ def run(page):
 
 
 def desk(page):
-    go(page, "/history/inkings/")
+    go(page, "/prev/history/inkings/")
     check("desk: two columns of charts", page.evaluate("getComputedStyle(document.querySelector('.ink-charts')).gridTemplateColumns.split(' ').length") == 2)
     shot(page, "charts-desk", full_page=True)
     page.locator(".bars:not(.is-plain) .bar-col").nth(2).hover()
@@ -196,7 +196,7 @@ def main():
                 phone = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
                 run(ctx(color_scheme="light", **phone).new_page())
                 page = ctx(color_scheme="dark", **phone).new_page()
-                go(page, "/history/inkings/")
+                go(page, "/prev/history/inkings/")
                 shot(page, "charts-phone-dark", full_page=True)
                 desk(ctx(viewport={"width": 1440, "height": 900}, color_scheme="light").new_page())
                 b.close()

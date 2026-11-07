@@ -50,7 +50,7 @@ def go(page, url):
 def desk(page):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    go(page, "/pens/")
+    go(page, "/prev/pens/")
     box = js(page, "(() => { const r = document.getElementById('hdr').getBoundingClientRect(); return [r.top, r.height]; })()")
     check("bar: at the top, 52 px", box == [0, 52])
     tabs = js(page, "[...document.querySelectorAll('#hdr nav.kit-tabs a')].filter(a => a.offsetParent).map(a => a.textContent.trim())")
@@ -121,10 +121,10 @@ def desk(page):
     # The kit's filters: a tap replaces the entry (kit README §4 "Filters"), so
     # Back leaves the list rather than walking through its chips.
     check("filter: a chip replaces the history entry", js(page, "history.length") == n0)
-    go(page, "/pens/")
+    go(page, "/prev/pens/")
 
     # A tab: hx-boost swaps the page, the bar follows.
-    page.click("#hdr nav.kit-tabs a[href='/inks/']")
+    page.click("#hdr nav.kit-tabs a[href='/prev/inks/']")
     page.wait_for_url("**/inks/", timeout=8000)
     page.wait_for_timeout(800)
     check("tab: Inks is lit after the swap", js(page, "document.querySelector('#hdr nav.kit-tabs .kit-tab[aria-current=page]').textContent.trim()") == "Inks")
@@ -139,7 +139,7 @@ def desk(page):
     page.wait_for_timeout(1200)
     check("inks: a colour filters", "color=" in page.url)
     check("inks: the button names the colour", js(page, "document.querySelector('#deskFilterBtn b').textContent") != "")
-    go(page, "/history/")
+    go(page, "/prev/history/")
     check("history: no chip row, no Filter", js(page, "!document.getElementById('deskFilterBtn')"))
 
     # ⌕: the menu's search, lent to the popover
@@ -150,7 +150,7 @@ def desk(page):
     page.keyboard.press("Enter")
     page.wait_for_url("**/search/?q=blue", timeout=8000)
     page.wait_for_load_state("networkidle")
-    check("search: Enter searches", "/search/?q=blue" in page.url)
+    check("search: Enter searches", "/prev/search/?q=blue" in page.url)
     check("search: the field is back in the menu", js(page, "document.getElementById('menuSearchForm').parentNode.id") == "menuPanel")
 
     # ⋯: the menu under it, without the places the bar has as tabs
@@ -167,9 +167,9 @@ def desk(page):
     page.wait_for_timeout(300)
 
     # A record's verbs are labelled buttons on a desk.
-    go(page, "/pens/")
+    go(page, "/prev/pens/")
     href = js(
-        page, "[...document.querySelectorAll('#main a[href^=\"/pens/\"]')].map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
+        page, "[...document.querySelectorAll('#main a[href^=\"/prev/pens/\"]')].map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
     )
     go(page, href)
     verbs = js(
@@ -181,7 +181,7 @@ def desk(page):
     shot(page, "desk-pen.png")
 
     # Narrow the window: the phone's shape, the same markup.
-    go(page, "/pens/")
+    go(page, "/prev/pens/")
     page.set_viewport_size({"width": 390, "height": 844})
     page.wait_for_timeout(400)
     check("narrow: header has no box", js(page, "document.getElementById('hdr').getBoundingClientRect().height") == 0)
@@ -206,7 +206,7 @@ def desk(page):
 def phone(page):
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    for url in ("/dashboard/", "/pens/", "/inks/", "/usages/"):
+    for url in ("/prev/dashboard/", "/prev/pens/", "/prev/inks/", "/prev/usages/"):
         go(page, url)
         h = js(page, "document.querySelector('.page-head.hrow').getBoundingClientRect().height")
         check(f"phone {url}: header row ≤ 56 px ({h:.0f})", h <= 56)
@@ -233,11 +233,11 @@ def phone(page):
             "document.getElementById('menuPanel').classList.contains('open') && !!document.querySelector('#menuPanel .menu-search').offsetParent",
         ),
     )
-    check("phone: the menu lists History", js(page, "!!document.querySelector('#menuPanel a[href=\"/history/\"]').offsetParent"))
+    check("phone: the menu lists History", js(page, "!!document.querySelector('#menuPanel a[href=\"/prev/history/\"]').offsetParent"))
     shot(page, "phone-menu.png")
     page.keyboard.press("Escape")
     page.wait_for_timeout(300)
-    go(page, "/pens/")
+    go(page, "/prev/pens/")
     shot(page, "phone-pens.png")
     check("phone: no page errors", not errors)
     if errors:

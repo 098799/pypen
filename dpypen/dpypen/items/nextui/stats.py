@@ -301,6 +301,9 @@ def overview() -> dict:
         "year": this_year,
         "last_year": this_year - 1,
         "versus": versus,
+        "by_year": columns([(f"’{y['year'] % 100:02d}", y["days"],
+                             f"{y['year']}: {y['days']:,} pen-days, {y['inkings']} inkings, {y['pens']} pens, {y['inks']} inks")
+                            for y in history._overview_data()["year_list"]]),
     }
 
 
@@ -505,7 +508,16 @@ def cupboard() -> dict:
 
     brands = Counter(i.brand.name for i in open_inks)
     how = Counter(i.how for i in inks)
+    # Every ink by the year it came, used up ones too (the old History's two charts).
+    got_n, got_pln = Counter(), Counter()
+    for i in inks:
+        if i.obtained:
+            got_n[i.obtained.year] += 1
+            got_pln[i.obtained.year] += pln(i.price)
+    got_years = list(range(min(got_n), today.year + 1)) if got_n else []
     return {
+        "ink_year": columns([(f"’{y % 100:02d}", got_n[y], f"{y}: {got_n[y]} ink{'s' if got_n[y] != 1 else ''}") for y in got_years]),
+        "ink_spend_year": columns([(f"’{y % 100:02d}", got_pln[y], f"{y}: {round(got_pln[y]):,} PLN") for y in got_years]),
         "bottles": len(open_inks),
         "ml": f"{sum(i.volume for i in open_inks):,}",
         "samples": len(samples),

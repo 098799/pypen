@@ -13,7 +13,7 @@
         <a class="pen-thumb-nx" href="{% url 'nx_pens_detail' p.pk %}" tabindex="-1" aria-hidden="true">{% if p.thumb_url %}<img src="{{ p.thumb_url }}" alt="" loading="lazy">{% endif %}</a>
         <div>
           <h3><a href="{% url 'nx_pens_detail' p.pk %}">{{ p.brand.name|highlight:query }} {{ p.model|highlight:query }}{% if p.finish %} <span>{{ p.finish|highlight:query }}</span>{% endif %}</a></h3>
-          <p>{{ p.filling|highlight:query }}{% if p.rotation.priority is not None %}, priority {{ p.rotation.priority }}{% endif %}, from {{ p.obtained_from|highlight:query }}</p>
+          <p>{{ p.filling|highlight:query }}{% if not p.rotation.in_use %}, out of rotation{% elif p.rotation.priority is not None %}, priority {{ p.rotation.priority }}{% endif %}, from {{ p.obtained_from|highlight:query }}</p>
           {% if p.trail %}<div class="trail" aria-hidden="true">{% for t in p.trail %}<i style="--sw: {{ t.bg }}"></i>{% endfor %}</div>{% endif %}
         </div>
       </div>
@@ -33,7 +33,7 @@
         <span class="plated"><span class="swab" aria-hidden="true"></span></span>
         <div>
           <h3><a href="{% url 'nx_inks_detail' i.pk %}">{{ i.brand.name|highlight:query }} {% if i.line %}{{ i.line|highlight:query }} {% endif %}{{ i.name|highlight:query }}</a></h3>
-          <p>{{ i.color|highlight:query }}, {{ i.volume }} ml{% if i.used_up %}, used up{% endif %}, from {{ i.obtained_from|highlight:query }}</p>
+          <p>{{ i.color|highlight:query }}, {% if i.volume <= 5 %}a sample, {% endif %}{{ i.volume }} ml{% if i.used_up %}, used up{% endif %}, from {{ i.obtained_from|highlight:query }}</p>
         </div>
         <span></span>
       </div>

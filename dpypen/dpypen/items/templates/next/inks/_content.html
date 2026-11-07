@@ -11,7 +11,7 @@
       <span class="plated"><span class="swab" aria-hidden="true"></span></span>
       <div>
         <h3><a href="{% url 'nx_inks_detail' i.pk %}">{{ i.brand.name|highlight:filters.q }} {% if i.line %}{{ i.line|highlight:filters.q }} {% endif %}{{ i.name|highlight:filters.q }}</a></h3>
-        <p>{{ i.color|highlight:filters.q }}, {{ i.volume }} ml{% if i.used_up %}, used up{% endif %}{% if i.in_pens %}, in {{ i.in_pens.0.model }}{% endif %}{% if filters.q %}, from {{ i.obtained_from|highlight:filters.q }}{% endif %}</p>
+        <p>{{ i.color|highlight:filters.q }}, {% if i.volume <= 5 %}a sample, {% endif %}{{ i.volume }} ml{% if i.used_up %}, used up{% endif %}{% if i.in_pens %}, in {{ i.in_pens.0.model }}{% endif %}{% if i.obtained %}, since {{ i.obtained|date:"Y" }}{% endif %}{% if filters.q %}, from {{ i.obtained_from|highlight:filters.q }}{% endif %}{% if i.moi_url %}, <a href="{{ i.moi_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">MoI</a>{% endif %}</p>
       </div>
       <span>{% if i.fills %}{{ i.fills }} fill{{ i.fills|pluralize }}{% else %}Never{% endif %}</span>
     </div>

@@ -82,7 +82,7 @@ def lock(page):
 
 def run(page):
     # The menu, opened from the phone tab bar's "More".
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     page.wait_for_load_state("networkidle")
     url = page.url
     check("kitLayer loaded", page.evaluate("kitLayer.version").startswith("v1"))
@@ -106,9 +106,9 @@ def run(page):
     check("menu: Esc leaves no entry", not (page.evaluate("history.state") or {}).get("kitLayer"))
     # A link in the menu: the menu goes, then htmx navigates; Back lands on the page, menu shut.
     more.click(); page.wait_for_timeout(300)
-    link = page.locator("#menuPanel a[href='/inks/']").first
+    link = page.locator("#menuPanel a[href='/prev/inks/']").first
     if link.count() == 0:
-        link = page.locator("#menuPanel a[href^='/']:not([href='/pens/'])").first
+        link = page.locator("#menuPanel a[href^='/']:not([href='/prev/pens/'])").first
     target = link.get_attribute("href")
     link.click()
     page.wait_for_url("**" + target.split("?")[0] + "*", timeout=8000)
@@ -127,17 +127,17 @@ def run(page):
     check("after htmx Back: Back closes it",
           not page.evaluate("document.getElementById('menuPanel').classList.contains('open')") and page.url == url)
     # Reload with the menu open: one Back then leaves the page.
-    page.goto(BASE + "/inks/"); page.wait_for_load_state("networkidle")
-    page.goto(BASE + "/pens/"); page.wait_for_load_state("networkidle")
+    page.goto(BASE + "/prev/inks/"); page.wait_for_load_state("networkidle")
+    page.goto(BASE + "/prev/pens/"); page.wait_for_load_state("networkidle")
     page.locator("nav.kit-tabs [data-menu-btn]").click(); page.wait_for_timeout(300)
     page.reload(); page.wait_for_load_state("networkidle"); page.wait_for_timeout(300)
     check("reload: lands on the page", not (page.evaluate("history.state") or {}).get("kitLayer"))
     page.go_back(); page.wait_for_timeout(800)
-    check("reload: one Back leaves the page", page.url.startswith(BASE + "/inks/"))
+    check("reload: one Back leaves the page", page.url.startswith(BASE + "/prev/inks/"))
 
     # The "⋯" panel on a pen.
-    page.goto(BASE + "/pens/"); page.wait_for_load_state("networkidle")
-    href = page.locator("#main a[href^='/pens/']").evaluate_all(
+    page.goto(BASE + "/prev/pens/"); page.wait_for_load_state("networkidle")
+    href = page.locator("#main a[href^='/prev/pens/']").evaluate_all(
         "as => as.map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))")
     page.goto(BASE + href); page.wait_for_load_state("networkidle")
     purl = page.url
@@ -165,7 +165,7 @@ def run(page):
 
     # The keyboard palette and the ? sheet (KEYS-LAYER v1.3, PYPEN-8): kit
     # layers, so Back closes them and the page under them is locked.
-    page.goto(BASE + "/pens/"); page.wait_for_load_state("networkidle")
+    page.goto(BASE + "/prev/pens/"); page.wait_for_load_state("networkidle")
     url = page.url
     pal_on = "document.getElementById('kpal').classList.contains('on')"
     help_on = "document.getElementById('khelp').classList.contains('on')"
@@ -188,7 +188,7 @@ def run(page):
     page.keyboard.type("Inks"); page.wait_for_timeout(700)
     page.keyboard.press("Enter")
     page.wait_for_url("**/inks/", timeout=8000); page.wait_for_timeout(600)
-    check("palette choice: on /inks/", page.url.startswith(BASE + "/inks/"))
+    check("palette choice: on /inks/", page.url.startswith(BASE + "/prev/inks/"))
     check("palette choice: palette gone, lock off", not page.evaluate(pal_on) and not lock(page))
     page.go_back(); page.wait_for_timeout(900)
     check("palette choice: Back lands on the list", page.url == url)
@@ -205,7 +205,7 @@ def run(page):
     check("? sheet: lock off", not lock(page))
 
     # The gantt popup.
-    page.goto(BASE + "/history/gantt/"); page.wait_for_load_state("networkidle")
+    page.goto(BASE + "/prev/history/gantt/"); page.wait_for_load_state("networkidle")
     gurl = page.url
     bar = page.locator(".gantt-bar").first
     if bar.count():

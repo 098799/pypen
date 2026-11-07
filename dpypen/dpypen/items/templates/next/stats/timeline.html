@@ -6,7 +6,13 @@
 <div class="kit-chips" role="group" aria-label="Rotation" id="tlChips">
   {% for k, label in rot_chips %}<a class="kit-chip" href="{% url 'nx_stats_timeline' %}{% if k %}?rot={{ k }}{% endif %}"{% if rot == k %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
 </div>
-<section class="plate">
+<div class="kit-chips" role="group" aria-label="Zoom" id="tlZoom">
+  <button type="button" class="kit-chip" data-tl-zoom="1" aria-pressed="true">Fit</button>
+  <button type="button" class="kit-chip" data-tl-zoom="2" aria-pressed="false">2×</button>
+  <button type="button" class="kit-chip" data-tl-zoom="4" aria-pressed="false">4×</button>
+</div>
+<section class="plate tl-zoom" id="tlPlate">
+  <div class="tl-inner">
   <div class="tl-axis">{% for t in year_ticks %}<span style="left: {{ t.left|unlocalize }}%">’{{ t.year|stringformat:"d"|slice:"2:" }}</span>{% endfor %}</div>
   {% for r in rows %}
   <div class="tl-row" data-listnav-item>
@@ -18,5 +24,6 @@
   {% empty %}
   <div class="kit-empty small" data-kind="match"><p class="kit-empty-t">No fills in this group</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_stats_timeline' %}">All pens</a></p></div>
   {% endfor %}
+  </div>
 </section>
 {% endblock %}

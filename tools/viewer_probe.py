@@ -153,7 +153,7 @@ def run(page, pen, ink):
     page.go_back()
     page.wait_for_timeout(400)
     s = st(page)
-    check("Back closes the viewer and stays on the pen", not s["open"] and s["url"] == f"/pens/{pen}/")
+    check("Back closes the viewer and stays on the pen", not s["open"] and s["url"] == f"/prev/pens/{pen}/")
     check("the lock is gone", not s["lock"])
     check("history is where it was", page.evaluate("history.length") >= hist)
 
@@ -164,7 +164,7 @@ def run(page, pen, ink):
     check("the photo opens at the thumb chosen", st(page)["n"] == "3 of 6")
     page.click("#pv .pv-close")
     page.wait_for_timeout(400)
-    check("✕ closes", not st(page)["open"] and page.url.endswith(f"/pens/{pen}/"))
+    check("✕ closes", not st(page)["open"] and page.url.endswith(f"/prev/pens/{pen}/"))
 
     # flick down closes
     page.click("#photoImg")
@@ -180,7 +180,7 @@ def run(page, pen, ink):
     page.locator(".samples-strip img").first.click()
     page.wait_for_timeout(400)
     s = st(page)
-    check("a writing sample opens in the viewer", s["open"] and s["n"].endswith("of 2") and s["url"] == f"/pens/{pen}/")
+    check("a writing sample opens in the viewer", s["open"] and s["n"].endswith("of 2") and s["url"] == f"/prev/pens/{pen}/")
     page.keyboard.press("Escape")
     page.wait_for_timeout(400)
     check("Esc closes", not st(page)["open"])
@@ -194,12 +194,12 @@ def run(page, pen, ink):
     check("an ink swatch opens", s["open"] and "swatch" in s["t"])
     page.go_back()
     page.wait_for_timeout(300)
-    check("Back closes it on the ink page", not st(page)["open"] and st(page)["url"] == f"/inks/{ink}/")
+    check("Back closes it on the ink page", not st(page)["open"] and st(page)["url"] == f"/prev/inks/{ink}/")
 
     # boosted swap from the ink page to the pen, then the photo still opens
     page.goto(f"{BASE}/pens/")
     page.wait_for_load_state("networkidle")
-    page.evaluate(f"htmx.ajax('GET', '/pens/{pen}/', {{target: '#main', select: '#main', swap: 'outerHTML'}})")
+    page.evaluate(f"htmx.ajax('GET', '/prev/pens/{pen}/', {{target: '#main', select: '#main', swap: 'outerHTML'}})")
     page.wait_for_selector("#photoImg")
     page.wait_for_timeout(300)
     page.click("#photoImg")

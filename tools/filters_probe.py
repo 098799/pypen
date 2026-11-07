@@ -74,8 +74,8 @@ def measure(page, where, theme):
 
 
 def screens(page, theme):
-    for name, url in (("inks", "/inks/?color=Blue"), ("pens", "/pens/?rot=p1"), ("usages", "/usages/?q=pilot"),
-                      ("search", "/search/?q=blue&samples=1"), ("gantt", "/history/gantt/?rot=p1"),
+    for name, url in (("inks", "/prev/inks/?color=Blue"), ("pens", "/prev/pens/?rot=p1"), ("usages", "/prev/usages/?q=pilot"),
+                      ("search", "/prev/search/?q=blue&samples=1"), ("gantt", "/prev/history/gantt/?rot=p1"),
                       ("pub", "/pub/inks/"), ("wall", "/pub/inks/wall/")):
         page.goto(BASE + url + ("&" if "?" in url else "?") + "theme=" + theme)
         page.evaluate(f"kitTheme.set({theme!r})")
@@ -91,7 +91,7 @@ def run(page):
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
 
     # ---- pens: keystrokes, ×, a chip, a word with a chip
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     settle(page)
     n0 = page.evaluate("history.length")
     page.evaluate("window.__same = 1")
@@ -117,12 +117,12 @@ def run(page):
     settle(page, 900)
     check("pens: the word goes with the chip", "q=pil" in page.url and "rot=p0" in page.url, page.url)
     check("pens: the box still has it", page.input_value("#penQ") == "pil")
-    page.goto(BASE + "/pens/?q=pil&rot=p0")
+    page.goto(BASE + "/prev/pens/?q=pil&rot=p0")
     settle(page)
     check("pens: back on the same row after a reload", page.locator("#rotbar .kit-chip[data-navval=p0]").get_attribute("aria-current") == "true")
 
     # ---- inks: colour, sort, clear
-    page.goto(BASE + "/inks/")
+    page.goto(BASE + "/prev/inks/")
     settle(page)
     page.evaluate("window.__same = 1")
     n0 = page.evaluate("history.length")
@@ -143,7 +143,7 @@ def run(page):
     check("inks: the default sort leaves the address", "sort" not in page.url, page.url)
     page.locator("#inkFilters .kit-chip-clear").tap()
     settle(page)
-    check("inks: Clear empties it", path(page) == "/inks/", page.url)
+    check("inks: Clear empties it", path(page) == "/prev/inks/", page.url)
     # the row is new after each swap: the kit's × and fade on it, as at load
     check("inks: no Clear when nothing is on", page.locator("#inkFilters .kit-chip-clear").count() == 0)
     page.locator("#inkQ").type("blue", delay=60)
@@ -158,13 +158,13 @@ def run(page):
     check("inks: its aria-current", page.locator(".vt-btn[data-view=list]").get_attribute("aria-current") == "true")
 
     # ---- search
-    page.goto(BASE + "/search/")
+    page.goto(BASE + "/prev/search/")
     settle(page)
     page.evaluate("window.__same = 1")
     n0 = page.evaluate("history.length")
     page.locator("#searchQ").type("blue", delay=60)
     settle(page, 700)
-    check("search: only ?q=", path(page) == "/search/?q=blue", page.url)
+    check("search: only ?q=", path(page) == "/prev/search/?q=blue", page.url)
     page.locator("#searchFilters label:has(input[value=inks])").tap()
     settle(page)
     check("search: a type chip", "type=inks" in page.url and page.locator("#searchFilters label:has(input[value=inks])").get_attribute("aria-current") == "true", page.url)
@@ -180,32 +180,32 @@ def run(page):
     settle(page)
     page.locator("#searchFilters label:has(input[name=samples])").tap()
     settle(page)
-    check("search: defaults leave the address", path(page) == "/search/?q=blue", page.url)
+    check("search: defaults leave the address", path(page) == "/prev/search/?q=blue", page.url)
     page.tap("#searchForm .kit-search-x")
     settle(page, 700)
-    check("search: × empties it", path(page) == "/search/", page.url)
+    check("search: × empties it", path(page) == "/prev/search/", page.url)
     check("search: no entry added", page.evaluate("history.length") == n0)
     check("search: not busy for ever", page.locator("#searchForm[aria-busy]").count() == 0)
 
     # ---- the menu's search
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     settle(page)
     page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(300)
     page.locator("#menuSearchInput").type("pilot", delay=120)
     page.wait_for_timeout(500)
-    check("menu: typing stays on the page", path(page) == "/pens/", page.url)
+    check("menu: typing stays on the page", path(page) == "/prev/pens/", page.url)
     if SHOTS:
         page.screenshot(path=os.path.join(SHOTS, "pypen-menu.png"))
     page.keyboard.press("Enter")
     settle(page)
-    check("menu: Enter searches", "/search/?q=pilot" in page.url, page.url)
+    check("menu: Enter searches", "/prev/search/?q=pilot" in page.url, page.url)
     page.go_back()
     settle(page)
-    check("menu: Back leaves the search", path(page).startswith("/pens/"), page.url)
+    check("menu: Back leaves the search", path(page).startswith("/prev/pens/"), page.url)
 
     # ---- the Gantt
-    page.goto(BASE + "/history/gantt/")
+    page.goto(BASE + "/prev/history/gantt/")
     settle(page)
     chips = page.locator(".kit-chip.rot-filter[data-rot=p1]")
     chips.tap()
@@ -234,7 +234,7 @@ def run(page):
 
 
 def desk(page):
-    page.goto(BASE + "/inks/?color=Blue")
+    page.goto(BASE + "/prev/inks/?color=Blue")
     settle(page)
     check("desk: Filter ▾ names the colour", "Blue" in page.locator("#deskFilterBtn b").text_content())
     check("desk: the row is folded", page.evaluate("getComputedStyle(document.getElementById('inkFilters')).display") == "none")
@@ -247,7 +247,7 @@ def desk(page):
     page.locator("#deskFilter button:has(.kit-chip-dot)").first.click()
     settle(page)
     check("desk: a chip there filters", "color=" in page.url, page.url)
-    page.goto(BASE + "/pens/")
+    page.goto(BASE + "/prev/pens/")
     settle(page)
     page.click("#deskFilterBtn")
     page.wait_for_timeout(300)

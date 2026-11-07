@@ -6,7 +6,7 @@
   {% for u in active %}
   <li class="row" style="--sw: {{ u.ink_bg }}" data-listnav-item>
     <span class="dab" aria-hidden="true"></span>
-    <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}, {{ u.days }} d</small></div>
+    <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}, {{ u.days }} d</small></div>
     {% if can_edit %}<a class="btn is-small is-ghost" href="{% url 'nx_usages_edit' u.pk %}">Edit</a><form method="post" action="{% url 'nx_usages_end' u.pk %}">{% csrf_token %}<button class="btn is-small" type="submit">Finish</button></form>{% endif %}
   </li>
   {% endfor %}
@@ -14,12 +14,12 @@
 {% endif %}
 {% if past or past_head %}
 <section data-more-section data-group="past">
-  {% if past_head %}<div class="group-nx" data-more-head><h2>Past</h2><span>{{ total }}</span></div>{% endif %}
+  {% if past_head %}<div class="group-nx" data-more-head><h2>Past</h2><span>{{ total }}{% if query or scope.label %} matching{% endif %}, <a href="{% url 'nx_stats_inkings' %}">charts</a></span></div>{% endif %}
   <ul class="rows" data-more-rows>
     {% for u in past %}
     <li class="row" style="--sw: {{ u.ink_bg }}" data-listnav-item>
       <span class="dab" aria-hidden="true"></span>
-      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small></div>
+      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small></div>
       <span class="row-v">{{ u.days }} d</span>
       {% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this inking">✎</a>{% endif %}
     </li>

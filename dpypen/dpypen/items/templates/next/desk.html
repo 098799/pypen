@@ -50,12 +50,22 @@
       {% endfor %}
     </div>
     <p class="fine">{% if can_edit %}Tap an ink to start that inking. {% endif %}<a href="{% url 'nx_pick' %}?pen={{ up_next.pen.pk }}">See why these</a></p>
+    {% if then %}
+    <h3 class="then-h">Then</h3>
+    <ul class="rows then">
+      {% for d in then %}
+      <li class="row"><span class="pri" aria-label="Priority {{ d.priority }}">P{{ d.priority }}</span>
+        <div class="row-t"><a href="{% if can_edit %}{% url 'nx_pick' %}?pen={{ d.pen_id }}{% else %}{% url 'nx_pens_detail' d.pen_id %}{% endif %}">{{ d.pen }}</a><small>{% if d.never %}Never inked{% else %}Resting {{ d.rested_span }}{% endif %}</small></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
   </section>
   {% endif %}
 
   <section aria-labelledby="yearH">
     <div class="sec-head"><h2 id="yearH">{{ year }} so far</h2><a href="{% url 'nx_stats' %}">Stats</a></div>
-    <p class="sentence"><b>{{ year_n }}</b> inking{{ year_n|pluralize }}, in <b>{{ year_pens }}</b> pen{{ year_pens|pluralize }}, with <b>{{ year_inks }}</b> ink{{ year_inks|pluralize }}.</p>
+    <p class="sentence"><b>{{ year_n }}</b> inking{{ year_n|pluralize }}, in <b>{{ year_pens }}</b> pen{{ year_pens|pluralize }}, with <b>{{ year_inks }}</b> ink{{ year_inks|pluralize }}; <b>{{ year_days }}</b> pen-day{{ year_days|pluralize }} inked.</p>
   </section>
 
   {% if recent %}

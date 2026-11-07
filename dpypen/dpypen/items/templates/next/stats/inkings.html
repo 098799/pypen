@@ -4,7 +4,7 @@
 {% block content %}
 {% include "next/stats/_head.html" with title="Inkings" sub="How often, how long, in what" %}
 {% if not inkings_total %}
-<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inkings to chart yet</p><p class="kit-empty-p">The charts start with the first pen you ink.</p></div>
+<div class="kit-empty" data-kind="none"><p class="kit-empty-t">No inkings to chart yet</p><p class="kit-empty-p">The charts start with the first pen you ink.</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}">Ink a pen</a></p>{% endif %}</div>
 {% else %}
 <nav class="kit-chips" aria-label="Year">
   <a class="kit-chip" href="{% url 'nx_stats_inkings' %}"{% if not scope %} aria-current="true"{% endif %}>All</a>

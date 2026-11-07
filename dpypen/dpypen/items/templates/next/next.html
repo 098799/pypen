@@ -10,7 +10,7 @@
   <span>
     <small>{{ pen.brand.name }}</small>
     <b>{{ pen.model }}{% if pen.finish %} {{ pen.finish }}{% endif %}</b>
-    <em>{{ pen.filling }}{% if pen.rotation.priority is not None %}, priority {{ pen.rotation.priority }}{% endif %}{% if this_due %}{% if this_due.never %}, never inked{% else %}, resting {{ this_due.span }}, its turn is {{ this_due.turn }}{% endif %}{% endif %}</em>
+    <em>{{ pen.filling }}{% if pen.rotation.priority is not None %}, priority {{ pen.rotation.priority }}{% else %}, out of rotation{% endif %}{% if this_due %}{% if this_due.never %}, never inked{% else %}, resting {{ this_due.span }}, its turn is {{ this_due.turn }}{% endif %}{% endif %}</em>
   </span>
 </a>
 {% if inked_now %}<p class="fine">Inked now with {{ inked_now.ink }} since {{ inked_now.begin|date:"j M Y" }}. These are for its next fill.</p>{% endif %}
@@ -22,7 +22,7 @@
     <a class="plated" href="{% url 'nx_inks_detail' s.ink.pk %}" aria-label="{{ s.ink }}"><span class="swab"></span></a>
     <div>
       <h3><a href="{% url 'nx_inks_detail' s.ink.pk %}">{{ s.ink }}</a></h3>
-      <div class="fine">{{ s.ink.color }}, {{ s.ink.volume }} ml</div>
+      <div class="fine">{{ s.ink.color }}, {{ s.ink.volume }} ml{% if s.ink.rotation.whos == "Bottle hard to fill from" %}, a hard bottle to fill from{% endif %}</div>
       <div class="why">{% for t in s.good %}<span class="is-good">{{ t }}</span>{% endfor %}{% for t in s.plain %}<span>{{ t }}</span>{% endfor %}{% for t in s.warn %}<span class="is-warn">{{ t }}</span>{% endfor %}</div>
       {% if can_edit and not inked_now %}<a class="btn is-small is-go" href="{% url 'nx_usages_create' %}?pen={{ pen.pk }}&amp;ink={{ s.ink.pk }}">Ink it</a>{% endif %}
     </div>

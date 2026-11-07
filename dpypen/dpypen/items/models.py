@@ -186,7 +186,7 @@ class PenPhoto(models.Model):
     # owner marks wrong can be blocked from the next run.
     source_url = models.URLField(max_length=1000, blank=True, default="")
     # "" is the owner's own photo. "check" is one a machine found or made, which
-    # waits on the owner's verdict at /next/pens/photos/check/; "ok" passed it.
+    # waits on the owner's verdict at /pens/photos/check/; "ok" passed it.
     REVIEWS = [("", "Owner's"), ("check", "To check"), ("ok", "Checked")]
     review = models.CharField(max_length=8, choices=REVIEWS, blank=True, default="")
     position = models.IntegerField(default=0)

@@ -48,7 +48,7 @@ def load(page, path):
 def run(ctx, page):
     js = page.evaluate
 
-    load(page, "/dashboard/")
+    load(page, "/prev/dashboard/")
     page.wait_for_timeout(4500)
     check("no offer: no bar", not js(SHOWN))
     js(OFFER, "dismissed")
@@ -80,14 +80,14 @@ def run(ctx, page):
     st = js(STATE)
     days = (st.get("snoozeUntil", 0) - js("Date.now()")) / 864e5
     check(f"✕: hidden, 14 days ({days:.1f})", not js(SHOWN) and st.get("dismissed") == 1 and 13.9 < days < 14.1)
-    load(page, "/pens/")
+    load(page, "/prev/pens/")
     js(OFFER, "dismissed")
     page.wait_for_timeout(4500)
     check("snoozed: no bar", not js(SHOWN))
 
     # the snooze over: ✕ again is 60 days
     js("localStorage.setItem('pypenInstallNudge', JSON.stringify({dismissed: 1, snoozeUntil: 1}))")
-    load(page, "/pens/")
+    load(page, "/prev/pens/")
     js(OFFER, "dismissed")
     page.wait_for_timeout(4500)
     check("snooze over: the bar again", js(SHOWN))
@@ -98,7 +98,7 @@ def run(ctx, page):
 
     # Install: one prompt(), the Settings row lets go of the offer too
     js("localStorage.removeItem('pypenInstallNudge')")
-    load(page, "/pens/")
+    load(page, "/prev/pens/")
     js(OFFER, "accepted")
     page.wait_for_timeout(4500)
     page.click(".kit-install-go")
@@ -107,20 +107,20 @@ def run(ctx, page):
     check("Install: bar gone, offer let go", not js(SHOWN) and js("kitInstall.state().offer") is False)
     page.click("nav.kit-tabs [data-menu-btn]")
     page.wait_for_timeout(400)
-    page.click("#menuPanel a[href='/settings/']")
+    page.click("#menuPanel a[href='/prev/settings/']")
     page.wait_for_url("**/settings/")
     page.wait_for_timeout(500)
     check("Settings after Install: no second Add button", js("document.querySelectorAll('.kit-set-ibtn').length") == 0)
 
     # the offer caught on another page reaches the Settings row (a boosted tap)
     js("localStorage.removeItem('pypenInstallNudge')")  # the accepted prompt above: gone for good
-    load(page, "/pens/")
+    load(page, "/prev/pens/")
     js(OFFER, "dismissed")
     page.wait_for_timeout(4500)
     check("bar shows before Settings", js(SHOWN))
     page.click("nav.kit-tabs [data-menu-btn]")
     page.wait_for_timeout(400)
-    page.click("#menuPanel a[href='/settings/']")
+    page.click("#menuPanel a[href='/prev/settings/']")
     page.wait_for_url("**/settings/")
     page.wait_for_timeout(500)
     check("Settings: the row offers Add", js("document.querySelectorAll('.kit-set-ibtn').length") == 1)
@@ -132,7 +132,7 @@ def run(ctx, page):
 
     # the demo for screenshots
     js("localStorage.removeItem('pypenInstallNudge')")
-    load(page, "/dashboard/?installdemo=1")
+    load(page, "/prev/dashboard/?installdemo=1")
     page.wait_for_timeout(800)
     check("?installdemo=1 shows it", js(SHOWN))
     shot(page, "installbar-demo.png")
@@ -165,7 +165,7 @@ def main():
                 ctx.add_cookies([{"name": "sessionid", "value": sess, "url": BASE}])
                 page = ctx.new_page()
                 page.on("pageerror", lambda e: errs.append(str(e)))
-                load(page, "/dashboard/")
+                load(page, "/prev/dashboard/")
                 page.wait_for_timeout(4500)
                 check("iPhone: the bar with the Share words", page.evaluate(SHOWN))
                 check("iPhone: no Install button", page.evaluate("document.querySelector('.kit-install-go').hidden"))

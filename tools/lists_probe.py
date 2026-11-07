@@ -72,7 +72,7 @@ def run(page):
     page.on("request", lambda r: asks.append(r.url) if r.headers.get("x-pypen-more") == "1" else None)
 
     # /pens/: three pages of rotation groups.
-    page.goto(lp.BASE + "/pens/")
+    page.goto(lp.BASE + "/prev/pens/")
     settle(page)
     total = int(page.locator("#rotbar .kit-chip").first.locator("b").text_content())
     check(f"pens: the first page holds 50 of {total}", rows(page) == min(50, total))
@@ -98,7 +98,7 @@ def run(page):
     check(f"pens: every group once {hs}", len(hs) == len(set(hs)))
     no_sideways(page, "pens")
 
-    page.goto(lp.BASE + "/pens/?view=grid")
+    page.goto(lp.BASE + "/prev/pens/?view=grid")
     settle(page)
     page.locator("a[data-more]").click()
     settle(page)
@@ -106,7 +106,7 @@ def run(page):
     no_sideways(page, "pens grid")
 
     # /inks/: the colour groups.
-    page.goto(lp.BASE + "/inks/?samples=1&used=1")
+    page.goto(lp.BASE + "/prev/inks/?samples=1&used=1")
     settle(page)
     check("inks: 50 rows", rows(page) == 50)
     page.locator("a[data-more]").click()
@@ -116,7 +116,7 @@ def run(page):
     no_sideways(page, "inks")
 
     # /usages/: the search box, its state in the URL.
-    page.goto(lp.BASE + "/usages/")
+    page.goto(lp.BASE + "/prev/usages/")
     settle(page)
     check("inkings: 50 past rows", page.evaluate("document.querySelectorAll('#main .list [data-listnav-item]').length") == 50)
     shot(page, "inkings.png")
@@ -143,7 +143,7 @@ def run(page):
     no_sideways(page, "inkings")
 
     # /search/: both kinds, then Load more goes on with one.
-    page.goto(lp.BASE + "/search/?q=e")
+    page.goto(lp.BASE + "/prev/search/?q=e")
     settle(page)
     n = page.evaluate("document.querySelectorAll('[data-more-host=\"search-pens\"] [data-listnav-item]').length")
     check("search: 20 pens first", n == 20)

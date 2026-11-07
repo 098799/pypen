@@ -23,16 +23,36 @@ refreshes the manifest (Android, within a day or so).
 ## The new version
 
 (PYPEN-11, "Fully implement a new version of pypen /next". Goals: beauty, functionality, statistics, reusing the
-kit.) Read as: the whole app again, at the address `/next/`, next to the old one, on the same data, so Tomek can
-try it before it takes over. The old page that had that address, Next inking, is now `/pick/`; `/next/?pen=` and
-`?shuffle=` land on the new picker, `/next/pick/`. Settings there has "Open this version first" (a cookie per
-device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "Back to the old version".
+kit.) Read as: the whole app again, next to the old one, on the same data, so Tomek can try it before it takes
+over. It lived at `/next/` from 3 to 7 Nov 2026.
+
+**The cut-over (7 Nov 2026).** Tomek: "Move next to be the main route, and move old main route to be /prev". The
+new version answers the main addresses (`/dashboard/` is its desk, `/pens/`, `/stats/`, `/supen/` …; names
+`nx_*`); the old one is `/prev/<the old path>` with its old names (`{% url 'pens_list' %}` is `/prev/pens/`),
+and `/prev/` opens its desk. A `/next/…` bookmark 301s to the main address (a POST 308s), signed-in only, like
+every page. The "Open this version first" cookie is gone; each Settings page links the other version. The public
+pages stay where they were: `/`, `/p/`, `/k/`, `/pub/`, `/i/`, `/undo/`, `/api/`, `/kit/`, and the plain-text
+`/supen` and `/suink` (no slash) for the terminal's bookmarks. The shared pages `/p/` and `/k/` still draw the
+old templates (`share.py`, Django's own `render`).
+
+**What the old pages had** and the new ones lacked until the cut-over, now in: Edit this fill on a pen's page;
+the desk's next five due pens under Ink next ("Then") and the year's pen-days; a pen row's filling, year,
+priority (in a flat list) and "out of rotation", P0–P3 or Out on a tile; an ink row's sample, year and MoI link;
+"out of rotation" and "a sample" in search; the picker's hard bottle and an out-of-rotation pen; the notebook
+photo's preview; the photo editor's default prompt and its busy state; Charts from the inkings list; Ink a pen on
+an empty chart; links from a Pairings cell; the timeline's Fit, 2×, 4×; inks and ink spending per year (Stats,
+Cupboard) and Year by year (Stats, overview); the list or grid kept per device (`pensView`, `inksView`, the old
+keys); a stranger's corner menu. Left out on purpose: Inkings as a tab (it gave its place to Stats; the desk's
+Finish and New inking are the daily verbs), "Ink it" on the picker while the pen is inked (a second open fill),
+the old gift icon (pens have no `how`; it always said Bought). Tests: `tests_next.WhatTheOldPagesHad`,
+`tests_next.TheCutOver`.
 
 - **One set of views, two faces** (`items/skin.py`). Everything that reads or writes the collection is the same
   view on both addresses, so a door, an undo, a photo's clean-up lands once. `skin.render` swaps `items/x.html`
-  for `next/x.html` under `/next/`; `rehome` in `nextui/urls.py` keeps the view's redirects in the new version.
-  The routes are a plain list added to `items/urls.py`, so `tests_doors` walks them too. Cutting over later means
-  moving the paths and deleting the old templates.
+  for `next/x.html` everywhere but `/prev/` (`skin.is_next`); the shared views redirect by their old names, which
+  are `/prev/` addresses now, and `rehome` (on every main route in `nextui/urls.py`) turns those back.
+  The routes are a plain list added to `items/urls.py`, so `tests_doors` walks them too. Retiring the old version
+  means deleting the `prev/` routes, the old templates and the old-only views (`history.py`, `public.dashboard`).
 - **What only the new version shows** is in `items/nextui/`: `enrich.py` (added on the way to a template: a list's
   history from one IN query, never per row), `views.py` (the desk, Stats), `stats.py` (the numbers), `color.py`.
 - **Ink on paper.** Page: the bottle (dark) or a white pad (light). Every ink colour and chart sits on a paper
@@ -45,8 +65,9 @@ device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "B
   then royal blue. A test holds the contrast for any ink.
 - **The kit, unchanged**: layer, toast, empty, filters, update, pull to refresh, What's new, install, theme, settings,
   keys, worker. Both shells include the same `_shell_early`, `_shell_filternav`, `_shell_behave`, `_msgs` (cut out of
-  the old shell), `deskbar.js`, `charts.js`, `more.js`, `viewer.js`. The palette keeps the old addresses, one list
-  for both; `window.__nextUrl` in the new shell maps each to its twin.
+  the old shell), `deskbar.js`, `charts.js`, `more.js`, `viewer.js`. The palette has the main addresses (and the old
+  History's), one list for both; `window.__nextUrl` in each shell maps them: History to Stats in the new one, every
+  page to its `/prev/` twin in the old one.
 - **Five tabs**: Desk, Pens, Inks, Stats, More. Inkings moved behind More to give the charts a place; the desk's
   Finish and New inking are what is used daily.
 - **The desk's gauge**: days in against the median of this pen's own ended fills (the collection's while it has
@@ -68,7 +89,7 @@ device: `/dashboard/` 307s to `/next/`, so the home-screen tile opens it) and "B
 
 (PYPEN-12, "Something like supen suink commands for the pen.grining.eu/next".) Read as: the two terminal
 commands' tables (`dpypen/supen.py`, run as `supen` and `suink` from `~/bin`) as a page of the new version, with
-the commands' own names, so the phone shows what the terminal shows. `/next/supen/` and `/next/suink/`
+the commands' own names, so the phone shows what the terminal shows. `/supen/` and `/suink/`
 (`nextui/turns.py`, `templates/next/turns.html`). Reached from More ("Turns: supen, suink"), the palette (type
 `supen` or `suink`), the desk's "N past their turn", and Stats, Rotation.
 
@@ -99,7 +120,7 @@ owner input; the owner checks them afterwards.
   `image_styled`, as with an own photo and its catalogue shot. No fitting candidate: the image model draws the pen
   from its name (`generate_from_name`), and the note says it is not a photo.
 - **Every one waits for a check.** `PenPhoto.review` is `""` for the owner's own photos, `"check"` for a found or
-  drawn one, `"ok"` once checked. `/next/pens/photos/check/` lists them with Right and Wrong; the pen's page in the
+  drawn one, `"ok"` once checked. `/pens/photos/check/` lists them with Right and Wrong; the pen's page in the
   new version shows the same two buttons under a found photo, and the desk counts them. Wrong deletes the photo
   and its files and records the source in `RejectedPenPhoto` (a drawing as `gemini:text`), so `--list` hands the
   rejects to the next search and the next fill neither offers the same photo nor draws the pen again.

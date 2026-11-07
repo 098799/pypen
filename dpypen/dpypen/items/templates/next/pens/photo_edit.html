@@ -11,12 +11,12 @@
   <div class="blank">Not polished yet. The button below makes a clean shot of it.</div>
   {% endif %}
 </div>
-<form method="post" action="{% url 'nx_pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm">
+<form method="post" action="{% url 'nx_pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" data-busy-on-submit=".compare">
   {% csrf_token %}
   <div class="btn-row"><button type="submit" class="btn is-go">{% if photo.image_styled %}Polish again{% else %}Polish with AI{% endif %}</button></div>
   <div class="f"><label for="promptEditor" class="f-label">What Gemini is asked</label>
   <textarea class="prompt" id="promptEditor" name="prompt" spellcheck="false">{{ prompt_value }}</textarea></div>
-  <p class="fine">The prompt names the pen's brand, model, finish, filling and era, so the pen stays that pen. Change it if a result drifts.</p>
+  <p class="fine">The prompt names the pen's brand, model, finish, filling and era, so the pen stays that pen. Change it if a result drifts. <button type="button" class="nx-link" data-reset-field="promptEditor" data-reset-value="{{ default_prompt }}">Back to the default prompt</button></p>
 </form>
 <div class="btn-row">
   {% if photo.image_styled %}<form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk photo.pk %}" data-confirm="Discard the polished shot?">{% csrf_token %}<button type="submit" class="btn">Back to the original</button></form>{% endif %}
