@@ -218,7 +218,7 @@ def main():
         page.evaluate("document.querySelector('.more-nav').scrollIntoView({block: 'center'})")
         shot(page, "pens-load-more")
         pen = page.locator("#main a[href^='/prev/pens/']").evaluate_all(
-            "as => as.map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
+            "as => as.map(a => a.getAttribute('href')).find(h => /^\\/prev\\/pens\\/\\d+\\/$/.test(h))"
         )
         visit(page, pen, "pen")
         if page.locator("#photoMain img[data-zoom]").count():
@@ -233,7 +233,7 @@ def main():
             check("viewer: lock gone", not page.evaluate("document.documentElement.classList.contains('scroll-lock')"))
         visit(page, "/prev/inks/", "inks")
         ink = page.locator("#main a[href^='/prev/inks/']").evaluate_all(
-            "as => as.map(a => a.getAttribute('href')).find(h => /^\\/inks\\/\\d+\\/$/.test(h))"
+            "as => as.map(a => a.getAttribute('href')).find(h => /^\\/prev\\/inks\\/\\d+\\/$/.test(h))"
         )
         visit(page, ink, "ink")
         for u in (

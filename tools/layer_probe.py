@@ -138,7 +138,7 @@ def run(page):
     # The "⋯" panel on a pen.
     page.goto(BASE + "/prev/pens/"); page.wait_for_load_state("networkidle")
     href = page.locator("#main a[href^='/prev/pens/']").evaluate_all(
-        "as => as.map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))")
+        "as => as.map(a => a.getAttribute('href')).find(h => /^\\/prev\\/pens\\/\\d+\\/$/.test(h))")
     page.goto(BASE + href); page.wait_for_load_state("networkidle")
     purl = page.url
     btn = page.locator("[data-overflow-btn]")

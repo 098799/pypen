@@ -169,7 +169,7 @@ def desk(page):
     # A record's verbs are labelled buttons on a desk.
     go(page, "/prev/pens/")
     href = js(
-        page, "[...document.querySelectorAll('#main a[href^=\"/prev/pens/\"]')].map(a => a.getAttribute('href')).find(h => /^\\/pens\\/\\d+\\/$/.test(h))"
+        page, "[...document.querySelectorAll('#main a[href^=\"/prev/pens/\"]')].map(a => a.getAttribute('href')).find(h => /^\\/prev\\/pens\\/\\d+\\/$/.test(h))"
     )
     go(page, href)
     verbs = js(
