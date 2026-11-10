@@ -653,7 +653,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
   #main { padding: calc(52px + 20px) 24px 48px; }
   .deskbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 25; display: flex; align-items: center; gap: 6px; height: 52px; padding: 0 16px;
-    background: color-mix(in srgb, var(--bg) 94%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+    background: var(--bg); border-bottom: 1px solid var(--line);   /* no blur: the kit forbids it (it traps fixed children, costs scrolling; UX U27) */
   }
   .db-brand { display: flex; align-items: center; gap: 8px; font: 700 1.08rem/1 var(--serif); margin-right: 14px; }
   .db-brand img { border-radius: 6px; }

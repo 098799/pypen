@@ -381,3 +381,11 @@ class ListWords(Seeded):
     def test_the_ink_sort_says_it_is_a_sort(self):
         """U29: "Colour ▾" over the colour chips read as a filter."""
         self.assertContains(self.client.get("/inks/"), ">Sort: Colour</option>")
+
+
+class NoBlur(Seeded):
+    def test_the_desk_bar_has_no_backdrop_filter(self):
+        """U27 (part): kit §4 Header: never a blur; README: nothing may give #hdr a filter."""
+        from pathlib import Path
+        css = (Path(__file__).resolve().parent / "static/items/next/next.css").read_text()
+        self.assertNotIn("backdrop-filter:", css)
