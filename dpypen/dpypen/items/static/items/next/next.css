@@ -107,6 +107,9 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .btn.is-ghost { background: none; }
 .btn.is-bad { color: var(--bad); }
 .btn.is-small { min-height: 36px; padding: 0 12px; font-size: .95rem; border-radius: 10px; }
+/* A small button still takes a 44 px finger (U16): the hit area grows, not the look. */
+.btn.is-small, .ibtn.is-mini, .th-acts .btn { position: relative; }
+.btn.is-small::before, .ibtn.is-mini::before, .th-acts .btn::before { content: ""; position: absolute; inset: -4px -3px; }
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .btn-row form { display: contents; }
 
@@ -173,6 +176,18 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .fill-ink .swab { --swab-h: 34px; }
 .fill-ink-name { display: block; font: 600 1.04rem/1.2 var(--serif); margin-top: 5px; overflow-wrap: anywhere; }
 .fill-foot { grid-column: 1 / -1; margin-top: 10px; padding: 0 2px; }
+/* A phone: the photo beside the pen and its ink, not over a full-width plate. Seven
+   inked pens were 2,000 px before Ink next (UX U12). The desk keeps the big card. */
+@media (max-width: 899px) {
+  .fill { grid-template-columns: 92px minmax(0, 1fr); grid-template-rows: auto auto; }
+  .fill-photo { grid-row: 1 / span 2; align-self: start; }
+  .fill-pen { align-self: start; }
+  .fill-pen h3 { font-size: 1.12rem; }
+  .fill-ink { grid-column: 2; margin-top: 6px; padding: 5px 9px 6px; border-radius: 8px; }
+  .fill-ink .swab { --swab-h: 15px; }
+  .fill-ink-name { font-size: .96rem; margin-top: 3px; }
+  .fill-foot { margin-top: 8px; }
+}
 .gauge { position: relative; height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
 .gauge i { position: absolute; inset: 0 auto 0 0; background: var(--sw); border-radius: 3px; box-shadow: inset 0 0 0 1px #ffffff26; }
 .gauge u { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--bg); text-decoration: none; }
@@ -182,7 +197,7 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .fill-foot .gauge { grid-column: 1 / -1; }
 .fill-foot .gauge-t { margin: 0; }
 .fill-acts { display: flex; gap: 6px; }
-.fill-acts .btn { min-height: 40px; padding: 0 12px; }
+.fill-acts .btn { min-height: 44px; padding: 0 14px; }
 .fill-acts form { margin: 0; }
 
 .next-up .next-pen { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; align-items: center; }
@@ -215,9 +230,12 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
 .group-nx h2 { font-size: 1.16rem; display: flex; align-items: center; gap: 8px; }
 .group-nx span { color: var(--dim); font-size: .92rem; text-align: right; }
 .group-nx .dab { width: 16px; height: 16px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 22%, transparent); }
-.pen-row-nx { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.pen-row-nx { position: relative; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); align-items: center; }
 .pen-thumb-nx { display: block; width: 76px; height: 57px; border-radius: 9px; overflow: hidden; background: var(--panel-2); }
 .pen-thumb-nx img { width: 100%; height: 100%; object-fit: cover; filter: var(--photo); }
+/* The whole row opens the record (U17: only the 23 px name did). */
+.pen-row-nx h3 a::after, .ink-row-nx h3 a::after { content: ""; position: absolute; inset: 0; }
+.ink-row-nx p a { position: relative; z-index: 1; }
 .pen-row-nx h3 { font-size: 1.05rem; line-height: 1.18; overflow-wrap: anywhere; }
 .pen-row-nx h3 span { font-weight: 400; font-style: italic; }
 .pen-row-nx p { color: var(--dim); font-size: .92rem; line-height: 1.25; margin-top: 1px; }
@@ -250,7 +268,7 @@ html:not([data-theme=light]) .trail i { box-shadow: 0 0 0 1.5px var(--plate); }
 .fb-sep { flex: none; width: 1px; height: 22px; background: var(--line); align-self: center; margin: 0 2px; }
 .kit-chips { margin-bottom: 6px; }
 .kit-chip-clear { color: var(--accent); }
-.ink-row-nx { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); min-height: 56px; }
+.ink-row-nx { position: relative; display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); min-height: 56px; }
 .ink-row-nx .plated { padding: 6px; border-radius: 9px; background: var(--plate); box-shadow: var(--plate-shade); }
 .ink-row-nx .swab { --swab-h: 22px; }
 .ink-row-nx h3 { font-size: 1.05rem; line-height: 1.16; overflow-wrap: anywhere; }

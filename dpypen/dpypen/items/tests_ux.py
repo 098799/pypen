@@ -253,3 +253,21 @@ class Charts(Seeded):
         flat = stats.columns([(str(y), 5 if y > 2010 else 1, "") for y in range(2000, 2020)])
         self.assertEqual([c["label"] for c in flat if c["mark"]], ["2019"])
         self.assertEqual((stats.compact(12345), stats.compact(1500), stats.compact(999)), ("12k", "1.5k", "999"))
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class InkDeleteUndo(Seeded):
+    def test_a_deleted_ink_comes_back_with_its_inkings(self):
+        """U18: the ink and its inkings went for good, with a confirm; now at once with an Undo."""
+        from dpypen.items import undo
+        from dpypen.items.models import Ink
+        self.client.force_login(self.owner)
+        page = self.client.get(f"/inks/{self.ink.pk}/").content.decode()
+        self.assertRegex(page, rf'action="/inks/{self.ink.pk}/delete/" data-kit-busy>')
+        r = self.client.post(f"/inks/{self.ink.pk}/delete/")
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Ink.objects.filter(pk=self.ink.pk).exists())
+        token = self.client.session[undo.SESSION_KEY][-1]["token"]
+        self.client.post(f"/undo/{token}/", HTTP_REFERER="http://testserver/inks/")
+        self.assertTrue(Ink.objects.filter(pk=self.ink.pk).exists())
+        self.assertTrue(Usage.objects.filter(pk=self.now.pk, ink=self.ink).exists())

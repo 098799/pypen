@@ -715,6 +715,11 @@ def swatches_delete(request, pk):
 def inks_delete(request, pk):
     ink = get_object_or_404(Ink, pk=pk)
     label = str(ink)
+    # Its swatches, inkings and their samples cascade with it; their files stay
+    # on disk, so the whole of it can come back (UX U18: it said "cannot be undone").
+    usages = list(Usage.objects.filter(ink=ink))
+    frozen = serializers.serialize("json", [
+        ink, *ink.swatches.all(), *usages, *WritingSample.objects.filter(usage__in=usages)])
     ink.delete()
-    undo.say(request, f"Deleted {label}.")
+    undo.offer(request, f"Deleted {label}.", kind="delete", frozen=frozen)
     return redirect("inks_list")
