@@ -13,6 +13,7 @@
     <em>{{ pen.filling }}{% if pen.rotation.priority is not None %}, priority {{ pen.rotation.priority }}{% else %}, out of rotation{% endif %}{% if this_due %}{% if this_due.never %}, never inked{% else %}, resting {{ this_due.span }}, its turn is {{ this_due.turn }}{% endif %}{% endif %}</em>
   </span>
 </a>
+{% if due %}<p class="fine"><a href="#duePens">Another pen</a> · {{ due|length }} past their turn, below</p>{% endif %}
 {% if inked_now %}<p class="fine">Inked now with {{ inked_now.ink }} since {{ inked_now.begin|date:"j M Y" }}. These are for its next fill.</p>{% endif %}
 <div class="sec-head"><h2>Inks that suit it</h2><span>{% if shuffle %}A shuffle of the best {{ pool }}{% else %}Best first{% endif %}</span></div>
 {% if suggestions %}
@@ -39,13 +40,13 @@
 </div>
 {% endif %}
 {% if due %}
-<div class="sec-head"><h2>Past their turn</h2><span>{{ due|length }}</span></div>
+<div class="sec-head" id="duePens"><h2>Past their turn</h2><span>{{ due|length }}</span></div>
 <div class="due-list">
-  {% for d in due|slice:":12" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>{% endfor %}
+  {% for d in due|slice:":12" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>priority {{ d.priority }}</small></a>{% endfor %}
 </div>
 {% if due|length > 12 %}
 <details class="more-due"><summary>{{ due|length|add:"-12" }} more</summary><div class="due-list">
-  {% for d in due|slice:"12:" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>P{{ d.priority }}</small></a>{% endfor %}
+  {% for d in due|slice:"12:" %}<a href="{% url 'nx_pick' %}?pen={{ d.pen_id }}"{% if pen and d.pen_id == pen.pk %} aria-current="true"{% endif %}>{{ d.pen }} <small>priority {{ d.priority }}</small></a>{% endfor %}
 </div></details>
 {% endif %}
 {% endif %}

@@ -54,7 +54,7 @@
     <h3 class="then-h">Then</h3>
     <ul class="rows then">
       {% for d in then %}
-      <li class="row"><span class="pri" aria-label="Priority {{ d.priority }}">P{{ d.priority }}</span>
+      <li class="row"><span class="pri" aria-label="Priority {{ d.priority }}" title="Priority {{ d.priority }}">P{{ d.priority }}</span>
         <div class="row-t"><a href="{% if can_edit %}{% url 'nx_pick' %}?pen={{ d.pen_id }}{% else %}{% url 'nx_pens_detail' d.pen_id %}{% endif %}">{{ d.pen }}</a><small>{% if d.never %}Never inked{% else %}Resting {{ d.rested_span }}{% endif %}</small></div>
       </li>
       {% endfor %}

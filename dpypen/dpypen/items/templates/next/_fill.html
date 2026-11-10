@@ -13,7 +13,7 @@
     <span class="fill-ink-name">{{ f.u.ink.brand.name }} {% if f.u.ink.line %}{{ f.u.ink.line }} {% endif %}{{ f.u.ink.name }}</span>
   </a>
   <div class="fill-foot">
-    <div class="gauge{% if f.long %} is-long{% endif %}" role="img" aria-label="{{ f.days }} days in. Usually {{ f.usual }}.">
+    <div class="gauge{% if f.long %} is-long{% endif %}" role="img" aria-label="{{ f.days }} days in. Usually {{ f.usual }}." title="The mark in the middle is a usual fill, {{ f.usual }} days; the end is twice that.">
       <i style="width: {{ f.pct }}%"></i><u></u>
     </div>
     <p class="gauge-t">
