@@ -2,12 +2,27 @@ import json
 from datetime import date
 
 from django import forms
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 
-from dpypen.items.models import Ink, Pen, Usage
+from dpypen.items import constants
+from dpypen.items.models import Brand, Ink, Pen, Usage
 
 
 EMPTY = "— choose —"
+
+
+def _choose(form, name):
+    """Django's "---------" says "— choose —" like the other selects (U14)."""
+    f = form.fields.get(name)
+    if f is not None and getattr(f, "choices", None):
+        f.choices = [("", EMPTY) if not v else (v, t) for v, t in f.choices]
+
+
+def _int(v):
+    try:
+        return int(getattr(v, "pk", v))
+    except (TypeError, ValueError):
+        return None
 
 
 def _currency_choices(default: str = "PLN") -> list[tuple[str, str]]:
@@ -56,9 +71,20 @@ class UsageForm(forms.ModelForm):
         self.fields["pen"].queryset = Pen.objects.select_related("brand").order_by(
             "-rotation__in_use", "rotation__priority", "brand__name", "model"
         )
+        # The bottles in use and the samples (a vial inks a pen too), plus the
+        # ink this inking already has and the one asked for (?ink=), even used
+        # up: an old inking of a used-up ink could not be saved, and "Use this
+        # ink" on a sample opened an empty field (UX U4).
+        keep = {i for i in (self.instance.ink_id, _int(self.initial.get("ink")), _int(self.data.get("ink"))) if i}
         self.fields["ink"].queryset = Ink.objects.select_related("brand").filter(
-            used_up=False, volume__gt=5
+            Q(used_up=False) | Q(pk__in=keep)
         ).order_by("brand__name", "name")
+        self.fields["ink"].label_from_instance = lambda i: str(i) + (" · used up" if i.used_up else "")
+        # A pen that is inked says with what, so a second open fill is not made by mistake (U15).
+        self._open = {u.pen_id: u for u in Usage.objects.filter(end__isnull=True).select_related("ink__brand")
+                      .exclude(pk=self.instance.pk).order_by("begin")}
+        self.fields["pen"].label_from_instance = lambda p: str(p) + (
+            f" · inked: {self._open[p.pk].ink.brand.name} {self._open[p.pk].ink.name}" if p.pk in self._open else "")
         for name in ("pen", "ink", "nib"):
             self.fields[name].empty_label = EMPTY
             self.fields[name].widget.attrs["class"] = "js-tom-select"
@@ -79,8 +105,63 @@ class UsageForm(forms.ModelForm):
         })
         self.fields["end"].required = False
 
+    finish_open = forms.BooleanField(required=False, label="Finish that fill on this inking's day")
 
-class PenForm(forms.ModelForm):
+    def clean(self):
+        data = super().clean()
+        begin, end, pen = data.get("begin"), data.get("end"), data.get("pen")
+        if begin and end and end < begin:
+            self.add_error("end", "Finished before it was inked: check the two dates.")
+        old = self._open.get(pen.pk) if pen else None
+        # Only a new fill that is still open, and only one that starts after the old one began.
+        self.open_fill = None
+        if old and not end and begin and begin >= old.begin and not self.instance.pk:
+            if data.get("finish_open"):
+                self.open_fill = old
+            else:
+                self.show_finish_open = True
+                self.add_error("pen", f"{pen} is inked with {old.ink.brand.name} {old.ink.name} since "
+                               f"{old.begin:%-d %b %Y}. Finish that fill first, or tick the box below.")
+        return data
+
+    def save(self, commit=True):
+        usage = super().save(commit=commit)
+        if commit and getattr(self, "open_fill", None):
+            self.open_fill.end = usage.begin
+            self.open_fill.save(update_fields=["end"])
+        return usage
+
+
+class NewBrand(forms.Form):
+    """A brand that is not in the list yet, made on save (UX U3: only the admin
+    could make one, so a pen or bottle of a new maker could not be added)."""
+
+    new_brand = forms.CharField(required=False, max_length=64, label="New brand")
+    new_brand_country = forms.ChoiceField(required=False, label="From", choices=[("", EMPTY), *constants.NATIONALITIES])
+
+    def _brand_init(self):
+        self.fields["brand"].required = False
+
+    def _brand_clean(self, data):
+        name = (data.get("new_brand") or "").strip()
+        if data.get("brand") or "brand" in self.errors or "new_brand_country" in self.errors:
+            return
+        if not name:
+            self.add_error("brand", "Pick a brand, or write a new one below.")
+            return
+        found = Brand.objects.filter(name__iexact=name).first()
+        if not found:
+            if not data.get("new_brand_country"):
+                self.add_error("new_brand_country", "Where is it from?")
+                return
+            if self.errors:  # make it only when the rest of the form is fine
+                return
+            found = Brand.objects.create(name=name, nationality=data["new_brand_country"])
+        data["brand"] = found
+        self.instance.brand = found
+
+
+class PenForm(NewBrand, forms.ModelForm):
     class Meta:
         model = Pen
         fields = [
@@ -102,9 +183,18 @@ class PenForm(forms.ModelForm):
             self.fields["age"].choices = [c for c in self.fields["age"].choices if c[0]]
         _limit_currencies(self, "price")
         _limit_currencies(self, "price_out")
+        self._brand_init()
+        _choose(self, "filling")
+        if not self.instance.pk:
+            self.initial.setdefault("obtained", date.today())
+
+    def clean(self):
+        data = super().clean()
+        self._brand_clean(data)
+        return data
 
 
-class InkForm(forms.ModelForm):
+class InkForm(NewBrand, forms.ModelForm):
     used_up = forms.BooleanField(
         required=False, label="Used up",
         widget=forms.CheckboxInput(attrs={"class": "switch-input"}),
@@ -133,3 +223,13 @@ class InkForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields["used_up"].initial = bool(self.instance.used_up)
         _limit_currencies(self, "price")
+        self._brand_init()
+        _choose(self, "color")
+        if not self.instance.pk:
+            self.initial.setdefault("obtained", date.today())
+            self.initial.setdefault("how", "Bought")
+
+    def clean(self):
+        data = super().clean()
+        self._brand_clean(data)
+        return data

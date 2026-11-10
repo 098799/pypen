@@ -6,6 +6,7 @@
 <form method="post" class="form-nx" autocomplete="off" data-kit-busy>
   {% csrf_token %}{% if back_to %}<input type="hidden" name="next" value="{{ back_to }}">{% endif %}
   {% include "next/_field.html" with f=form.pen %}
+  {% if form.show_finish_open %}<label class="switch-nx">{{ form.finish_open }}<span class="track"></span><span>{{ form.finish_open.label }}</span></label>{% endif %}
   <div class="f2">{% include "next/_field.html" with f=form.nib %}{% include "next/_field.html" with f=form.ink %}</div>
   <div class="f2">{% include "next/_field.html" with f=form.begin label="Inked on" %}{% include "next/_field.html" with f=form.end label="Finished on (blank while inked)" %}</div>
   {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}

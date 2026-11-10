@@ -14,6 +14,7 @@
     <label for="{{ form.pen.id_for_label }}">Pen</label>
     {{ form.pen }}
     {% if form.pen.errors %}<div class="errors">{{ form.pen.errors|join:" · " }}</div>{% endif %}
+    {% if form.show_finish_open %}<label><input type="checkbox" name="finish_open" value="1"> {{ form.finish_open.label }}</label>{% endif %}
   </div>
 
   <div class="row-pair">
