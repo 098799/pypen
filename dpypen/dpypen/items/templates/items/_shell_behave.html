@@ -286,6 +286,18 @@
   document.body.addEventListener("htmx:afterSettle", sync);
   document.body.addEventListener("htmx:pushedIntoHistory", sync);
   window.addEventListener("popstate", sync);
+  /* A tab or a link tapped with no connection: the kit lit the new tab on the tap,
+     htmx swapped nothing, and the old page stayed under the wrong tab without a
+     word (UX U26). Light the tab of the page that is shown, and say why. */
+  function navFailed(e) {
+    var d = e.detail || {};
+    if (!d.boosted) return;
+    sync();
+    if (window.kitToast) kitToast(navigator.onLine === false || !(d.xhr && d.xhr.status)
+      ? "No connection — that page was not opened" : "That page did not load", {kind: "bad"});
+  }
+  document.body.addEventListener("htmx:sendError", navFailed);
+  document.body.addEventListener("htmx:responseError", navFailed);   // the worker's offline answer, a 5xx with no page
   /* Back from htmx's cache rewrites <body> from a snapshot taken on a desk
      with the nav inside the desk bar's slot: put it back where it lives (after
      #hdr) before the kit places it again, or a narrowed window keeps it in
