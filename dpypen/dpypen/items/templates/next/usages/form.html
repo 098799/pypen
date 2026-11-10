@@ -8,7 +8,7 @@
   {% include "next/_field.html" with f=form.pen %}
   {% if form.show_finish_open %}<label class="switch-nx">{{ form.finish_open }}<span class="track"></span><span>{{ form.finish_open.label }}</span></label>{% endif %}
   <div class="f2">{% include "next/_field.html" with f=form.nib %}{% include "next/_field.html" with f=form.ink %}</div>
-  <div class="f2">{% include "next/_field.html" with f=form.begin label="Inked on" %}{% include "next/_field.html" with f=form.end label="Finished on (blank while inked)" %}</div>
+  <div class="f2">{% include "next/_field.html" with f=form.begin label="Inked on" %}{% include "next/_field.html" with f=form.end label="Finished on (blank while inked)" no_opt=1 %}</div>
   {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}
   <div class="btn-row"><button type="submit" class="btn is-go">{{ submit_label }}</button><a class="btn is-ghost" href="{{ back_to|default:'/usages/' }}">Cancel</a></div>
 </form>
@@ -28,7 +28,7 @@
 </div>
 {% endif %}
 <form method="post" action="{% url 'nx_usages_sample_add' usage.pk %}" enctype="multipart/form-data" hx-boost="false" data-kit-busy>
-  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph the written page</span><input type="file" name="image" accept="image/*" capture="environment" multiple data-autosubmit></label>
+  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph the written page</span><input type="file" name="image" accept="image/*" multiple data-autosubmit></label>
 </form>
 <form method="post" action="{% url 'nx_usages_delete' usage.pk %}" data-confirm="Delete this inking? You can take it back from the note that follows." class="sec-head" data-kit-busy><button class="btn is-bad" type="submit">Delete this inking</button>{% csrf_token %}{% if back_to %}<input type="hidden" name="next" value="{{ back_to }}">{% endif %}</form>
 {% endif %}

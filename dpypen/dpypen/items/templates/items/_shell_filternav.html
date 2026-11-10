@@ -50,6 +50,13 @@ re-rendering, so a horizontally scrolled bar keeps its scroll position.
       sel.value = cur(key, [].map.call(sel.options, function (o) { return o.value; }));
     });
     inputChips();
+    // Back to a filtered list (htmx's snapshot keeps no typed value): the box says
+    // what the address filters by, so the rows are never filtered by a blank box.
+    // Not the box in use: an answer coming back must not eat what is being typed.
+    var q = new URLSearchParams(location.search);
+    document.querySelectorAll('form[data-navform] input[type=search][name], form[data-navform] input[type=text][name]').forEach(function (i) {
+      if (i !== document.activeElement && i.value !== (q.get(i.name) || '')) i.value = q.get(i.name) || '';
+    });
   }
   // A chip that is a real radio button or checkbox (/search/): the label says it for the kit's look.
   function inputChips() {

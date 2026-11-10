@@ -520,6 +520,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
   background: var(--panel); color: var(--fg); font: 400 16px/1.3 "Alegreya Sans", sans-serif;
 }
 .f input:focus, .f select:focus, .f textarea:focus, .prompt:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.f-opt { color: var(--dim); font-size: .85em; font-weight: 400; }
 .f-err { color: var(--bad); font-size: .93rem; margin-top: 3px; }
 .f-hint { color: var(--dim); font-size: .9rem; margin-top: 3px; }
 .money { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 6px; }
@@ -585,7 +586,6 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 .review p strong { color: var(--fg); font-weight: 500; }
 
 /* ---- kit pieces, in this look ---- */
-.kit-set { --bad: var(--bad); }
 .keys-choices, .ui-choices { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .keys-choices button { min-height: 40px; padding: 0 12px; background: none; border: 0; color: var(--dim); font: inherit; cursor: pointer; }
 .keys-choices button.active { background: var(--accent); color: var(--on-accent); font-weight: 700; }

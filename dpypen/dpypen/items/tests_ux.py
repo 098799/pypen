@@ -202,3 +202,18 @@ class NewBrandAndDefaults(Seeded):
                 self.assertNotIn("---------", page)
                 self.assertIn("A new brand", page)
         self.assertRegex(self.client.get("/inks/add/").content.decode(), r'value="Bought"[^>]*checked')
+
+
+class SmallFixes(Seeded):
+    def test_no_css_variable_points_at_itself(self):
+        """U13: `.kit-set { --bad: var(--bad) }` was invalid, so Sign out fell to the kit's dark-theme red (2.8:1)."""
+        import re
+        from pathlib import Path
+        css = (Path(__file__).resolve().parent / "static/items/next/next.css").read_text()
+        self.assertEqual([m.group(0) for m in re.finditer(r"(--[\w-]+):\s*var\(\1\)", css)], [])
+
+    def test_photo_pickers_can_choose_from_the_library(self):
+        """U8: capture= opens the camera only on a phone."""
+        from pathlib import Path
+        root = Path(__file__).resolve().parent / "templates/next"
+        self.assertEqual([str(p) for p in root.rglob("*.html") if "capture=" in p.read_text()], [])

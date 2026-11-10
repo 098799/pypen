@@ -15,7 +15,7 @@
       <div class="row-t"><a href="{% url 'nx_pens_detail' p.pk %}">{{ p.brand.name }} {{ p.model }}{% if p.finish %} {{ p.finish }}{% endif %}</a><small>{{ p.filling }}{% if p.obtained %}, since {{ p.obtained|date:"Y" }}{% endif %}</small></div>
       <form method="post" action="{% url 'nx_pens_photo_add' p.pk %}" enctype="multipart/form-data" hx-boost="false" data-kit-busy>
         {% csrf_token %}<input type="hidden" name="next" value="queue"><input type="checkbox" name="enhance" value="1" class="polish-flag" checked hidden>
-        <label class="ibtn" aria-label="Choose a photo of {{ p.model }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" name="image" accept="image/*" capture="environment" data-autosubmit hidden></label>
+        <label class="ibtn" aria-label="Choose a photo of {{ p.model }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" name="image" accept="image/*" data-autosubmit hidden></label>
       </form>
     </li>
     {% endfor %}

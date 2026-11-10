@@ -75,11 +75,28 @@
   /* ---- forms ---- */
   document.addEventListener("change", function (e) {
     var t = e.target;
-    if (t.hasAttribute && t.hasAttribute("data-autosubmit") && t.form) t.form.requestSubmit ? t.form.requestSubmit() : t.form.submit();
+    if (t.hasAttribute && t.hasAttribute("data-autosubmit") && t.form) autosubmit(t);
+    else if (t.form && t.form.classList.contains("form-nx")) t.form.setAttribute("data-dirty", "");
     if (t.type === "checkbox" && t.id) document.querySelectorAll('[data-shown-by="' + t.id + '"]').forEach(reveal);
     if (t.id === "polishAll") polish(t);
     if (t.hasAttribute && t.hasAttribute("data-preview")) preview(t);
   });
+  /* A photo picker sends its own form at once, and the page comes back from the
+     server: edits not saved in the form above it were lost without a word (UX U11).
+     With changes there, it asks: keep them (nothing is sent) or let them go. */
+  document.addEventListener("input", function (e) {
+    var f = e.target.form;
+    if (f && f.classList.contains("form-nx") && !e.target.hasAttribute("data-autosubmit")) f.setAttribute("data-dirty", "");
+  });
+  function autosubmit(t) {
+    var send = function () { t.form.requestSubmit ? t.form.requestSubmit() : t.form.submit(); };
+    var dirty = document.querySelector("form.form-nx[data-dirty]");
+    if (!dirty || dirty === t.form || !window.kitConfirm) return send();
+    kitConfirm({title: "Your changes are not saved", text: "Sending the photo reloads this page. Save the form first, or let the changes go.",
+                ok: "Send, lose changes", cancel: "Keep editing"}).then(function (yes) {
+      if (yes) { dirty.removeAttribute("data-dirty"); send(); } else t.value = "";
+    });
+  }
   function preview(input) {
     var img = document.getElementById(input.getAttribute("data-preview"));
     if (!img) return;

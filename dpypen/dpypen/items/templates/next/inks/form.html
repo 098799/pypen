@@ -5,10 +5,11 @@
 <header class="head"><div class="head-t"><h1>{{ title }}</h1></div></header>
 <form method="post" class="form-nx" autocomplete="off" data-kit-busy>
   {% csrf_token %}
-  <div class="f2">{% include "next/_field.html" with f=form.brand %}{% include "next/_field.html" with f=form.line %}</div>
+  {% include "next/_field.html" with f=form.brand no_opt=1 %}
   <details class="new-brand"{% if form.new_brand.value or form.new_brand.errors or form.new_brand_country.errors %} open{% endif %}><summary>Not in the list? A new brand</summary>
-  <div class="f2">{% include "next/_field.html" with f=form.new_brand label="Brand name" %}{% include "next/_field.html" with f=form.new_brand_country %}</div>
-</details>
+    <div class="f2">{% include "next/_field.html" with f=form.new_brand label="Brand name" no_opt=1 %}{% include "next/_field.html" with f=form.new_brand_country no_opt=1 %}</div>
+  </details>
+  {% include "next/_field.html" with f=form.line %}
   <div class="f2">{% include "next/_field.html" with f=form.name %}{% include "next/_field.html" with f=form.color label="Colour" %}</div>
   <div class="f2">{% include "next/_field.html" with f=form.obtained %}{% include "next/_field.html" with f=form.obtained_from label="Bought from" %}</div>
   <div class="f2">{% include "next/_seg.html" with f=form.how label="How it came" %}{% include "next/_field.html" with f=form.volume label="Volume, ml" %}</div>
@@ -35,7 +36,7 @@
 </div>
 {% endif %}
 <form method="post" action="{% url 'nx_inks_swatch_add' ink.pk %}" enctype="multipart/form-data" hx-boost="false" data-kit-busy>
-  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph a swatch</span><input type="file" name="image" accept="image/*" capture="environment" multiple data-autosubmit></label>
+  {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph a swatch</span><input type="file" name="image" accept="image/*" multiple data-autosubmit></label>
 </form>
 {% endif %}
 {% endblock %}
