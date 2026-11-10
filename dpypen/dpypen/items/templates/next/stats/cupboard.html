@@ -8,9 +8,9 @@
 {% else %}
 <section class="plate is-wide">
   <h2>Your spectrum</h2>
-  <p>{{ bottles }} open bottles in colour order, narrowed to one strip. Tap a colour for the ink.</p>
+  <p>{{ bottles }} open bottles in colour order, narrowed to one strip. Tap a colour: it names the ink, with a link to it.</p>
   <div class="spectrum" role="group" aria-label="Open inks in colour order">
-    {% for i in spectrum %}<a href="{{ i.url }}" style="--sw: {{ i.bg }}" title="{{ i.name }}" aria-label="{{ i.name }}"></a>{% endfor %}
+    {% for i in spectrum %}<button type="button" style="--sw: {{ i.bg }}" data-tip-title="{{ i.name }}" data-tip-links="Open the ink|{{ i.url }}" aria-label="{{ i.name }}"></button>{% endfor %}
   </div>
 </section>
 <p class="sentence" id="lede"><b>{{ bottles }}</b> bottles with <b>{{ ml }}</b> ml in them, {{ in_pen }} in a pen now. <b>{{ never_n }}</b> never inked, <b>{{ samples }}</b> sample{{ samples|pluralize }} on the side, <b>{{ used_up }}</b> used up.</p>

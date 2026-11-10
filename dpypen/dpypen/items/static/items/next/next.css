@@ -321,6 +321,12 @@ html:not([data-theme=light]) .trail i { box-shadow: 0 0 0 1.5px var(--plate); }
 /* ---- plates: a chart on paper ---- */
 .plates { display: grid; gap: 14px; align-items: start; }
 @media (min-width: 900px) { .plates { grid-template-columns: repeat(2, minmax(0, 1fr)); } .plate.is-wide { grid-column: 1 / -1; } }
+/* A desk: a list of rows reads at a measure, not 1,130 px with its buttons ~950 px from the name (UX U34).
+   The grids (photos, the ink wall) keep the width. */
+@media (min-width: 900px) {
+  #penContentBody:has(.pen-row-nx), #inkContentBody:has(.ink-row-nx), #usageContentBody, #main > section[data-listnav-group],
+  .turns-plates, .search-results-nx { max-width: 860px; }
+}
 .plate {
   min-width: 0; padding: 14px 14px 12px; border-radius: 14px; background: var(--plate); color: var(--plate-fg); box-shadow: var(--plate-shade);
   --line: var(--plate-line); --dim: var(--plate-dim); --fg: var(--plate-fg);
@@ -429,8 +435,9 @@ a.hbar { min-height: 34px; }
 .facts small { display: block; color: var(--dim); font-size: .92rem; line-height: 1.22; margin-top: 2px; }
 
 .spectrum { display: flex; height: 92px; margin-top: 12px; border-radius: 8px; overflow: hidden; }
-.spectrum a { flex: 1 1 0; min-width: 0; background: var(--sw); }
-.spectrum a:hover, .spectrum a:focus-visible { flex-grow: 4; }
+/* 98 strips of ~3 px: a tap named nothing and opened whichever ink it hit (UX U31); now it shows the tip, with the link in it. */
+.spectrum button { flex: 1 1 0; min-width: 0; background: var(--sw); border: 0; padding: 0; cursor: pointer; }
+.spectrum button:hover, .spectrum button:focus-visible { flex-grow: 4; }
 .dumbbell { display: grid; gap: 0; margin-top: 10px; }
 .db-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 8px; min-height: 28px; font-size: .94rem; line-height: 1.1; width: 100%; padding: 0; background: none; border: 0; color: inherit; font-family: inherit; cursor: pointer; text-align: left; }
 .db-row > span:first-child { display: flex; align-items: center; gap: 6px; }
@@ -488,6 +495,7 @@ a.hbar { min-height: 34px; }
 .tl-track { position: relative; height: 16px; margin-top: 3px; background: linear-gradient(var(--plate-line), var(--plate-line)) 0 50% / 100% 1px no-repeat; }
 .tl-track button { position: absolute; top: 2px; bottom: 2px; min-width: 2px; padding: 0; border: 0; border-radius: 2px; background: var(--sw); cursor: pointer; }
 .tl-track button.is-now { box-shadow: 0 0 0 1.5px var(--plate-fg); }
+.tl-track button::before { content: ""; position: absolute; inset: -6px -5px; }   /* a 2 px fill still takes a finger (U31) */
 .tl-axis { position: sticky; top: 0; height: 20px; background: var(--plate); z-index: 2; }
 .tl-axis span { position: absolute; font-size: .78rem; color: var(--plate-dim); }
 /* Zoom: 2× and 4× widen the tracks; the plate scrolls sideways and the names stay. */
