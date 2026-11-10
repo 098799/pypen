@@ -7,10 +7,12 @@ from django.core import serializers
 from django.core.files.base import ContentFile
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from dpypen.items import skin
 from dpypen.items.skin import render
-from dpypen.items import inkindex, inkings, listing, penindex, undo
+from dpypen.items import backto, inkindex, inkings, listing, penindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -138,10 +140,11 @@ def usages_edit(request, pk):
         form.save()
         undo.offer(request, f"Saved {usage.pen} · {usage.ink}.",
                    kind="update", frozen=before)
-        return redirect("usages_list")
+        return backto.back(request, reverse("usages_list"))
     return render(request, "items/usages/form.html", {
         "form": form,
         "usage": usage,
+        "back_to": backto.came_from(request, reverse("nx_usages_list" if skin.is_next(request) else "usages_list")),
         "samples": list(usage.samples.all()),
         "title": f"Edit inking · {usage.pen}",
         "submit_label": "Save",
@@ -158,7 +161,9 @@ def usages_end(request, pk):
     usage.save(update_fields=["end"])
     undo.offer(request, f"Finished {usage.pen} · {usage.ink}.",
                kind="update", frozen=before)
-    return redirect("usages_list")
+    # Finished on the desk or the pen's page: stay there (the pen's page then
+    # offers Ink this pen and the suggestions).
+    return backto.back(request, reverse("usages_list"), avoid=(f"/usages/{pk}/", f"/prev/usages/{pk}/"))
 
 
 @login_required
@@ -171,7 +176,7 @@ def usages_delete(request, pk):
     label = f"{usage.pen} · {usage.ink}"
     usage.delete()
     undo.offer(request, f"Deleted {label}.", kind="delete", frozen=frozen)
-    return redirect("usages_list")
+    return backto.back(request, reverse("usages_list"), avoid=(f"/usages/{pk}/", f"/prev/usages/{pk}/"))
 
 
 def _save_uploads(request, files, make):
@@ -341,7 +346,8 @@ def pens_create(request):
     if request.method == "POST" and form.is_valid():
         pen = form.save()
         undo.offer(request, f"Added {pen}.", kind="create", model=Pen, pk=pen.pk)
-        return redirect("pens_list")
+        # Its page, where the next step is: a photo, an inking.
+        return redirect("pens_detail", pk=pen.pk)
     return render(request, "items/pens/form.html", {
         "form": form,
         "title": "Add pen",
@@ -358,7 +364,7 @@ def pens_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         undo.offer(request, f"Saved {pen}.", kind="update", frozen=before)
-        return redirect("pens_list")
+        return redirect("pens_detail", pk=pen.pk)
     return render(request, "items/pens/form.html", {
         "form": form,
         "pen": pen,
@@ -623,7 +629,7 @@ def inks_create(request):
     if request.method == "POST" and form.is_valid():
         ink = form.save()
         undo.offer(request, f"Added {ink}.", kind="create", model=Ink, pk=ink.pk)
-        return redirect("inks_list")
+        return redirect("inks_detail", pk=ink.pk)
     return render(request, "items/inks/form.html", {
         "form": form,
         "title": "Add ink",
@@ -640,7 +646,7 @@ def inks_edit(request, pk):
     if request.method == "POST" and form.is_valid():
         form.save()
         undo.offer(request, f"Saved {ink}.", kind="update", frozen=before)
-        return redirect("inks_list")
+        return redirect("inks_detail", pk=ink.pk)
     return render(request, "items/inks/form.html", {
         "form": form,
         "ink": ink,

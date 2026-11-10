@@ -47,7 +47,7 @@
     {% if can_edit %}
     <div class="rec-verbs">
       {% if current %}
-      <form method="post" action="{% url 'nx_usages_end' current.pk %}" data-kit-busy>{% csrf_token %}<button class="btn is-go" type="submit">Finish this fill</button></form>
+      <form method="post" action="{% url 'nx_usages_end' current.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn is-go" type="submit">Finish this fill</button></form>
       <a class="btn" href="{% url 'nx_usages_edit' current.pk %}">Edit this fill</a>
       {% else %}
       <a class="btn is-go" href="{% url 'nx_usages_create' %}?pen={{ pen.pk }}">Ink this pen</a>
