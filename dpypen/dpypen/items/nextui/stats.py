@@ -395,14 +395,15 @@ def _scatter(points: list[dict]) -> dict:
 
     if not points:
         return {"points": [], "xticks": [], "yticks": []}
-    lo, hi = max(10, min(p["price"] for p in points)), max(p["price"] for p in points)
+    # The true cheapest (a 5 PLN Wing Sung): a floor of 10 piled a dozen pens on x = 0 (UX U20).
+    lo, hi = max(1, min(p["price"] for p in points)), max(p["price"] for p in points)
     top = max((p["days"] for p in points), default=1) or 1
     lx0, lx1 = math.log10(lo), math.log10(max(hi, lo * 2))
     sx = lambda v: round(100 * (math.log10(max(v, lo)) - lx0) / (lx1 - lx0), 2)  # noqa: E731
     sy = lambda v: round(100 * math.sqrt(v / top), 2)  # noqa: E731
     out = [{**p, "x": sx(p["price"]), "y": sy(p["days"])} for p in points]
-    xticks = [{"x": sx(v), "label": f"{v:,}"} for v in (50, 100, 200, 500, 1000, 2000, 5000, 10000) if lo <= v <= hi]
-    yticks = [{"y": sy(v), "label": str(v)} for v in (100, 500, 1000, 2000, 4000) if v <= top]
+    xticks = [{"x": sx(v), "label": f"{v:,}"} for v in (5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000) if lo <= v <= hi]
+    yticks = [{"y": sy(v), "label": str(v)} for v in (10, 50, 100, 500, 1000, 2000, 4000) if v <= top]
     return {"points": out, "xticks": xticks, "yticks": yticks}
 
 

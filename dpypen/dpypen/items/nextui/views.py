@@ -254,7 +254,7 @@ def stats_timeline(request):
 def stats_calendar(request):
     raw = request.GET.get("y", "")
     year = int(raw) if raw.isascii() and raw.isdigit() else None
-    return _stat(request, "nx_stats_calendar", "next/stats/calendar.html", stats.calendar_year(year))
+    return _stat(request, "nx_stats_calendar", "next/stats/calendar.html", stats.calendar_year(year), today=date.today())
 
 
 @login_or_guest_required

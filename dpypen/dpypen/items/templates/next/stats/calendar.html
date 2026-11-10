@@ -10,13 +10,14 @@
   {% for y in years %}<a class="kit-chip" href="{% url 'nx_stats_calendar' %}?y={{ y|unlocalize }}"{% if y == cal_year %} aria-current="true"{% endif %}>{{ y|unlocalize }}</a>{% endfor %}
 </nav>
 <section class="plate">
-  <h2>{{ cal_year|unlocalize }}</h2><p>{{ cal.active_days }} days with ink. Each row is a week, Monday first. A tap names what was inked.</p>
+  <h2>{{ cal_year|unlocalize }}</h2><p>{{ cal.active_days }} days with ink. Each row is a week, Monday first; today is ringed. A tap names what was inked.</p>
   <div class="cal-months">
     {% for m in months %}
     <div class="cal-m">
       <h3>{{ m.name }}</h3>
       <div class="cal" role="group" aria-label="{{ m.name }} {{ cal_year|unlocalize }}">
-        {% for _ in m.blanks %}<span></span>{% endfor %}{% for d in m.days %}<button type="button"{% if d.bg %} style="background: {{ d.bg }}"{% endif %} data-tip-title="{{ d.label }}" data-tip-lead="{{ d.count }} pen{{ d.count|pluralize }}" data-tip="{{ d.tip }}" aria-label="{{ d.label }}, {{ d.count }} pens"></button>{% endfor %}
+        <i class="cal-wd" aria-hidden="true">M</i><i class="cal-wd" aria-hidden="true">T</i><i class="cal-wd" aria-hidden="true">W</i><i class="cal-wd" aria-hidden="true">T</i><i class="cal-wd" aria-hidden="true">F</i><i class="cal-wd" aria-hidden="true">S</i><i class="cal-wd" aria-hidden="true">S</i>
+        {% for _ in m.blanks %}<span></span>{% endfor %}{% for d in m.days %}<button type="button"{% if d.date == today %} class="is-today" aria-current="date"{% endif %}{% if d.bg %} style="background: {{ d.bg }}"{% endif %} data-tip-title="{{ d.label }}" data-tip-lead="{{ d.count }} pen{{ d.count|pluralize }}" data-tip="{{ d.tip }}" aria-label="{{ d.label }}, {{ d.count }} pens"></button>{% endfor %}
       </div>
     </div>
     {% endfor %}

@@ -271,3 +271,32 @@ class InkDeleteUndo(Seeded):
         self.client.post(f"/undo/{token}/", HTTP_REFERER="http://testserver/inks/")
         self.assertTrue(Ink.objects.filter(pk=self.ink.pk).exists())
         self.assertTrue(Usage.objects.filter(pk=self.now.pk, ink=self.ink).exists())
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class StatsWords(Seeded):
+    def setUp(self):
+        self.client.force_login(self.owner)
+
+    def test_the_calendar_has_weekday_heads_and_today(self):
+        """U23."""
+        html = self.client.get(f"/stats/calendar/?y={date.today().year}").content.decode()
+        self.assertEqual(html.count('class="cal-wd"'), 7 * html.count('class="cal-m"'))
+        self.assertEqual(html.count('aria-current="date"'), 1)
+
+    def test_ranks_say_fills_and_days(self):
+        """U21: `63 2999 d` was two numbers with one word."""
+        html = self.client.get("/stats/inkings/").content.decode()
+        self.assertRegex(html, r'<span class="rank-v"><b>\d+</b> fills? · \d+ d</span>')
+        self.assertIn(">&lt;1w<", html)
+
+
+class Scatter(Seeded):
+    def test_the_cheapest_pen_is_not_clamped(self):
+        """U20."""
+        from dpypen.items.nextui import stats
+        sc = stats._scatter([{"price": 5, "days": 0}, {"price": 6, "days": 3}, {"price": 4000, "days": 900}])
+        xs = [p["x"] for p in sc["points"]]
+        self.assertEqual(xs[0], 0)
+        self.assertGreater(xs[1], 0)
+        self.assertEqual([t["label"] for t in sc["xticks"]][:3], ["5", "10", "20"])

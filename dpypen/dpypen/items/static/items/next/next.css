@@ -342,7 +342,7 @@ button.bar-col { cursor: pointer; }
 .bar-stack i { display: block; min-height: 1px; flex: 1 1 0; background: var(--fam, var(--plate-fg)); }
 .bar-n { position: absolute; left: 0; right: 0; bottom: calc(var(--h, 0) * 1% + 2px); text-align: center; font-size: .8rem; line-height: 1; color: var(--plate-dim); font-variant-numeric: lining-nums; }
 .bar-label { display: block; text-align: center; font-size: .8rem; line-height: 1; color: var(--plate-dim); padding-top: 5px; white-space: nowrap; }
-.bar-label.is-tiny { font-size: .68rem; white-space: normal; line-height: 1.05; }
+.bar-label.is-tiny { font-size: .78rem; }
 .bar-col.is-ahead .bar-label { opacity: .45; }
 .is-picked .bar-stack i:not(.is-lit) { opacity: .15; }
 .fam-black { --fam: var(--fam-black); } .fam-blue { --fam: var(--fam-blue); } .fam-teal { --fam: var(--fam-teal); } .fam-green { --fam: var(--fam-green); }
@@ -360,7 +360,7 @@ button.bar-col { cursor: pointer; }
 .hbar b { font-weight: 500; color: var(--plate-dim); font-variant-numeric: tabular-nums lining-nums; }
 a.hbar { min-height: 34px; }
 
-.heat { display: grid; grid-template-columns: 2.6em repeat(12, minmax(0, 1fr)) 2em; gap: 2px; margin-top: 12px; font-size: .78rem; align-items: center; }
+.heat { max-width: 620px; display: grid; grid-template-columns: 2.6em repeat(12, minmax(0, 1fr)) 2em; gap: 2px; margin-top: 12px; font-size: .78rem; align-items: center; }
 .heat-h { text-align: center; color: var(--plate-dim); line-height: 1.6; }
 .heat-y { color: var(--plate-dim); font-variant-numeric: lining-nums tabular-nums; }
 .heat-t { text-align: right; color: var(--plate-dim); font-variant-numeric: lining-nums tabular-nums; }
@@ -477,6 +477,9 @@ a.hbar { min-height: 34px; }
 .cal button, .cal span { aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-radius: 2px; background: var(--plate-line); display: block; }
 .cal button { cursor: pointer; }
 .cal span { background: none; }
+/* Weekday heads and today (UX U23). */
+.cal .cal-wd { font-style: normal; font-size: 11px; line-height: 1.3; text-align: center; color: var(--plate-dim); }
+.cal button.is-today { outline: 2px solid var(--plate-fg); outline-offset: 0; }
 
 .tl-row { padding: 7px 0; border-bottom: 1px solid var(--plate-line); }
 .tl-row a.nm { display: block; font: 600 .98rem/1.2 var(--serif); overflow-wrap: anywhere; }

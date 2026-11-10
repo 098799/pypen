@@ -52,8 +52,8 @@ WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 # (top in days, exclusive; label). A long fill is rare and a short one is the
 # point, so the bands grow.
 DURATIONS = (
-    (7, "< 1 wk"), (14, "1–2 wk"), (30, "2–4 wk"), (60, "1–2 mo"),
-    (90, "2–3 mo"), (180, "3–6 mo"), (None, "6 mo +"),
+    (7, "<1w"), (14, "1–2w"), (30, "2–4w"), (60, "1–2m"),
+    (90, "2–3m"), (180, "3–6m"), (None, "6m+"),
 )
 TOP_N = 8
 
