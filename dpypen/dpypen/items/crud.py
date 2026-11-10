@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from dpypen.items import skin
 from dpypen.items.skin import render
-from dpypen.items import backto, inkindex, inkings, listing, penindex, undo
+from dpypen.items import aierrors, backto, inkindex, inkings, listing, penindex, undo
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -399,6 +399,7 @@ def pens_photo_add(request, pk):
     # clicks behind it. A failure here must not lose the photograph.
     if made and request.POST.get("enhance") == "1":
         from dpypen.items.enhance import build_prompt, generate_catalog_shot
+        failed = None
         for photo in made:
             try:
                 photo.image.open("rb")
@@ -407,12 +408,19 @@ def pens_photo_add(request, pk):
                 styled = generate_catalog_shot(src, prompt=build_prompt(pen),
                                                mime_type="image/jpeg")
                 photo.set_styled(styled)
-            except Exception:
+            except Exception as exc:
                 # The original is already saved; polish is a nicety, so the
                 # upload must still succeed. But swallow it *loudly* — a silent
                 # pass here once hid a NameError for every upload in the queue.
                 logger.exception("Auto-polish failed for photo %s (pen %s)",
                                  photo.pk, pen.pk)
+                failed = exc
+                if aierrors.kind(exc):
+                    break  # a refused key or no credit: the next photo gets the same answer
+        # It was silent: the photo went in unpolished and the switch still promised it (UX U25).
+        if failed is not None:
+            from django.contrib import messages
+            messages.warning(request, "Saved, not polished. " + (aierrors.why(failed, "Gemini") or "Gemini did not answer."))
 
     nxt = request.POST.get("next")
     if nxt == "queue":
@@ -519,9 +527,11 @@ def pens_photo_enhance(request, pk, photo_pk):
         photo.image.close()
     try:
         styled = generate_catalog_shot(src_bytes, prompt=prompt, mime_type="image/jpeg")
-    except Exception:
+    except Exception as exc:
+        from dpypen.items import aierrors
         logger.exception("pen %s photo %s: Gemini catalog shot failed", pk, photo_pk)
-        messages.error(request, "The catalog shot was not made — Gemini did not answer. Try again later.")
+        messages.error(request, aierrors.why(exc, "Gemini") or
+                       "The catalog shot was not made — Gemini did not answer. Try again later.")
         return redirect("pens_photo_edit", pk=pk, photo_pk=photo_pk)
 
     photo.set_styled(styled)

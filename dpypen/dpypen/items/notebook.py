@@ -35,9 +35,11 @@ def upload(request):
             return redirect("notebook_upload")
         try:
             extractions = extract_from_image(page, media_type="image/jpeg")
-        except Exception:
+        except Exception as exc:
+            from dpypen.items import aierrors
             logger.exception("notebook upload: Claude vision failed")
-            messages.error(request, "The page was not read — Claude did not answer. Try again, or with a sharper photo.")
+            messages.error(request, aierrors.why(exc, "Claude") or
+                           "The page was not read — Claude did not answer. Try again, or with a sharper photo.")
             return redirect("notebook_upload")
         request.session[SESSION_KEY] = [asdict(x) for x in extractions]
         return redirect("notebook_review")

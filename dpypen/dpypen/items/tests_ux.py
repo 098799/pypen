@@ -300,3 +300,53 @@ class Scatter(Seeded):
         self.assertEqual(xs[0], 0)
         self.assertGreater(xs[1], 0)
         self.assertEqual([t["label"] for t in sc["xticks"]][:3], ["5", "10", "20"])
+
+
+class _Refused(Exception):
+    status_code = 401
+
+
+class _NoCredit(Exception):
+    pass
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class AiFailuresSaySo(Seeded):
+    """U24, U25: a refused key or no credit was blamed on the photo, or not said at all."""
+
+    def setUp(self):
+        self.client.force_login(self.owner)
+
+    def test_the_words(self):
+        from dpypen.items import aierrors
+        self.assertEqual(aierrors.kind(_Refused("Error code: 401 - invalid x-api-key")), "key")
+        self.assertEqual(aierrors.kind(_NoCredit("Your credit balance is too low")), "credit")
+        self.assertEqual(aierrors.kind(_NoCredit("429 RESOURCE_EXHAUSTED prepay")), "credit")
+        self.assertEqual(aierrors.kind(TimeoutError("read timed out")), "")
+
+    def test_the_import_names_a_refused_key(self):
+        import io
+        from unittest import mock
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (40, 30), "white").save(buf, "JPEG")
+        buf.seek(0)
+        buf.name = "page.jpg"
+        with mock.patch("dpypen.items.notebook.extract_from_image", side_effect=_Refused("invalid x-api-key")):
+            r = self.client.post("/import/", {"image": buf}, follow=True)
+        self.assertContains(r, "Claude refused the API key")
+        self.assertNotContains(r, "sharper photo")
+
+    def test_an_unpolished_upload_says_so(self):
+        import io
+        import tempfile
+        from unittest import mock
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new("RGB", (40, 30), "white").save(buf, "JPEG")
+        buf.seek(0)
+        buf.name = "pen.jpg"
+        with tempfile.TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media), \
+                mock.patch("dpypen.items.enhance.generate_catalog_shot", side_effect=_NoCredit("credit balance is too low")):
+            r = self.client.post(f"/pens/{self.due.pk}/photos/add/", {"image": buf, "enhance": "1", "next": "queue"}, follow=True)
+        self.assertContains(r, "Saved, not polished. Gemini refused: its credit has run out.")
