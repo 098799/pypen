@@ -16,50 +16,55 @@ internet; no page error, no failed asset, no sideways scroll on any screen in an
 Taps: "finish a fill and ink the pen again" took ~7 taps + typing (Finish sent you to the inkings list); "Ink next"
 from the desk takes 2 (tap the ink, Ink it); "add a pen with a photo" ~6 + a search.
 
+**Result** (live, 11 Nov): 152 shots again, every screen 200, no page error, no sideways scroll, no text under
+11 px (was 7); all 9 High fixed, 21 of 22 Medium fixed, the kit header (U27) left for a pass of its own.
+"Finish and ink again": ~7 taps + typing → 3 (Finish, Ink this pen, an ink). Tests: `tests_ux.py` (34).
+`tools/live_walk.py` waited for `/next/` addresses since the cut-over and never finished; fixed.
+
 Severity: **High** = a main task blocked, broken, or a chart that says the wrong thing; **Med** = friction or a kit
 rule broken; **Low** = polish. Status at the end of the pass in the last column.
 
 | # | sev | screen | finding (evidence) | fix | status |
 |---|---|---|---|---|---|
-| U1 | High | desk, pen | **Finish leaves the page**: always to the inkings list (behind More), so finishing and inking again was ~7 taps; Edit of a fill also ended on the list (`f1-after-finish.png`; `crud.usages_end`) | back to the page it came from (`backto.py`): the desk stays the desk, the pen's page then offers Ink this pen | |
-| U2 | High | pen, ink | **The pen page is wider than a phone**: the hero grid's one auto column grows to the thumbnail strip (6 × 74 px), so the photo, "Share" and the numbers are cut at the right edge on every pen with 5+ photos (`phone-light-pen.png`; `next.css .rec-hero`) | `minmax(0, 1fr)` | |
-| U3 | High | pen-add, ink-add | **No way to add a new brand**: Brand is a plain select and nothing outside the admin makes one (`full-pen-add.png`, `full-ink-add.png`) | "New brand" name + country on both forms | |
-| U4 | High | inking-edit, ink | **The inking form leaves out used-up inks and samples** (≤ 5 ml): an old inking of a used-up ink cannot be saved (its ink shows "— choose —"), "Use this ink" on a sample opens an empty Ink field, a sample cannot be inked (`forms.UsageForm`) | keep the inking's own and the asked-for ink; used-up and samples in a lower group | |
-| U5 | High | pen-add, ink-add, edits | **Add and Save land on the list** (127 pens, 98 inks), so the next step (a photo, a swatch, an inking) starts with a search; Save on an edit whose Back says "Back to the pen" went to the list too | Add and Save land on the record's page | |
-| U6 | High | stats-rotation, supen | **Two answers to "past their turn"**: Rotation counts a pen over at 1× its turn (12 of 14 P0 "past"), supen at 5/4 (4 of 14), with the same words (`full-stats-rotation.png`, `full-supen.png`) | one rule (supen's, the owner's terminal command) | |
-| U7 | High | stats-collection, stats-cupboard | **Year columns unreadable on a phone**: 21–22 columns of ~15 px, every label and value printed, so they run together (`'06'07'08…`, `117123123125…`) | label every 5th year when crowded, a value on the peak and the last only | |
-| U8 | High | pen-edit, inking-edit, ink-edit | **"Take or choose a photo" cannot choose**: `capture="environment"` opens the camera only on iOS and Android, so a photo already in the library cannot go in | no `capture` on the edit pages (the needs-photos queue keeps it: it is a camera session) | |
-| U9 | High | stats-pairs | **The matrix says "a darker square held ink longer" but the darkness is the ink's own colour**: a pink pair at 284 d is paler than a black one at 40 d (`desk-light-stats-pairs.png`) | one neutral ramp for the days; the ink's colour stays on the column dot | |
-| U10 | Med | pens, inks, inkings | **Back to a filtered list empties the box**: the list stays filtered by "pilot", the box is blank, so the user does not see why (`f6-back-to-list.png`) | filter-nav fills the box from the address | |
-| U11 | Med | pen-edit, ink-edit, inking-edit | Choosing a photo, swatch or sample posts at once and **throws away unsaved edits** above it | the picker warns and saves nothing while the form has changes | |
-| U12 | Med | desk | **Ink next is ~2,000 px down** on a phone, under 7 fill cards of ~290 px (`full-desk.png`, 3,247 px) | compact fill cards on a phone | |
-| U13 | Med | settings | **Sign out at 2.77:1** in light: `.kit-set { --bad: var(--bad) }` is a loop, so the kit's dark red is used | drop the line | |
-| U14 | Med | pen-add, ink-add | Required fields unmarked; Filling and Colour say `---------`; "Bought from" required for a present; How it came has no default; Obtained no default (`full-ink-add.png`) | mark optional fields, `— choose —`, today and Bought by default | |
-| U15 | Med | inking-add | No checks: Finished before Inked gives negative days; a pen already inked can be inked again with no word | `clean()`; the pen picker names a pen's open fill | |
-| U16 | Med | desk, inkings, pick, ink, pen-edit | Tap targets under 44 px on the daily buttons: Finish/Edit 40 px on the desk, `is-small` 36 px (inkings, Ink it), photo tile buttons 36 px | 44 px | |
-| U17 | Med | pens | In a pen row only the 23 px name opens the pen (52 small targets on the page) | the whole row is the link | |
-| U18 | Med | ink | The ink page's h1 is "Black" (4 inks are "Blue Black"); Delete sits next to Edit and takes the inkings with no undo | h1 = brand + name; Delete with an Undo | |
-| U19 | Med | supen, suink | Cut off from Stats (More lit, the way back at the end of a 6,000 px page); "Since" is raw days (`2164`); state by colour alone, the key at the bottom | a Turns chip in the Stats strip, Stats lit; days as ages; the key on top, a word for late | |
-| U20 | Med | stats-collection | The scatter clamps the 5–6 PLN pens to x = 0, a dozen dots on one spot; ticks only from 50 | the true minimum and ticks at 10, 20 | |
-| U21 | Med | stats-inkings | Rows print `63 2999 d` (two numbers, no word); 7 labels at 10.9 px; the heatmap is 960 px tall on a desk | `63 fills · 2,999 d`; short labels at 0.8 rem; a capped heatmap | |
-| U22 | Med | stats, collection, cupboard | Three bar charts print no number at all | a value on the peak and the last bar | |
-| U23 | Med | stats-calendar | 14 px days, no weekday heads, no mark for today | weekday heads, today ringed | |
-| U24 | Med | import | Any failure says "Try again, or with a sharper photo", also when the API key is refused | say the reading is off when the key or credit fails | |
-| U25 | Med | pens, needs-photos | Polish failing (Gemini credit empty since 4 Nov) is silent: the photo is saved unpolished, the toggle still promises it | a warning toast | |
-| U26 | Med | offline | A tab tapped offline to a page never opened lights that tab and leaves the old page under it | | |
-| U27 | Med | all | No kit header (`KIT-HEADER`): the page heads are the app's own, not sticky, h1 26–32 px; on a desk the bar has a `backdrop-filter` blur the kit forbids | | |
-| U28 | Med | pen, ink, forms | Back links are plain links to the list, so a search, filter and place are lost (kit: back in history) | | |
-| U29 | Med | inks | The sort select reads "Colour ▾" right above the colour chips, a filter look; toolbar ~190 px | | |
-| U30 | Med | pick | Changing the pen is ~1,300 px down; "P0" jargon | | |
-| U31 | Med | cupboard, timeline | Spectrum links 3 × 92 px, timeline bars 2 px: untappable | | |
-| U32 | Low | desk, pens | "+" is New inking on the desk, Add pen on Pens; the camera badge only on the desk | | |
-| U33 | Low | pens-search | The title stays "126 pens" while 8 show; no-match keeps a lone "All 0" chip | | |
-| U34 | Low | desk-wide lists | Rows 1,130 px wide on a desk: buttons ~950 px from the name (pens, inkings, needs-photos, supen) | | |
-| U35 | Low | photo-check | Says the empty answer twice; its button goes to All pens, not to the 23 that need a photo | | |
-| U36 | Low | e404 | A missing pen gets the generic 404; Back does nothing on a pasted link | | |
-| U37 | Low | import | "Read it" active before a photo is chosen | | |
-| U38 | Low | stats | Small stacked bars look striped; the river has no scale; cupboard dumbbells no values; pairs names cut | | |
-| U39 | Low | desk | The gauge's notch at 50 % and "P0" in Then are not explained | | |
+| U1 | High | desk, pen | **Finish leaves the page**: always to the inkings list (behind More), so finishing and inking again was ~7 taps; Edit of a fill also ended on the list (`f1-after-finish.png`; `crud.usages_end`) | back to the page it came from (`backto.py`): the desk stays the desk, the pen's page then offers Ink this pen | fixed d73eae1 |
+| U2 | High | pen, ink | **The pen page is wider than a phone**: the hero grid's one auto column grows to the thumbnail strip (6 × 74 px), so the photo, "Share" and the numbers are cut at the right edge on every pen with 5+ photos (`phone-light-pen.png`; `next.css .rec-hero`) | `minmax(0, 1fr)` | fixed d73eae1 (widest element 374 px live) |
+| U3 | High | pen-add, ink-add | **No way to add a new brand**: Brand is a plain select and nothing outside the admin makes one (`full-pen-add.png`, `full-ink-add.png`) | "New brand" name + country on both forms | fixed 191d3e1 |
+| U4 | High | inking-edit, ink | **The inking form leaves out used-up inks and samples** (≤ 5 ml): an old inking of a used-up ink cannot be saved (its ink shows "— choose —"), "Use this ink" on a sample opens an empty Ink field, a sample cannot be inked (`forms.UsageForm`) | keep the inking's own and the asked-for ink; used-up and samples in a lower group | fixed 191d3e1 |
+| U5 | High | pen-add, ink-add, edits | **Add and Save land on the list** (127 pens, 98 inks), so the next step (a photo, a swatch, an inking) starts with a search; Save on an edit whose Back says "Back to the pen" went to the list too | Add and Save land on the record's page | fixed d73eae1 |
+| U6 | High | stats-rotation, supen | **Two answers to "past their turn"**: Rotation counts a pen over at 1× its turn (12 of 14 P0 "past"), supen at 5/4 (4 of 14), with the same words (`full-stats-rotation.png`, `full-supen.png`) | one rule (supen's, the owner's terminal command) | fixed a538e75 |
+| U7 | High | stats-collection, stats-cupboard | **Year columns unreadable on a phone**: 21–22 columns of ~15 px, every label and value printed, so they run together (`'06'07'08…`, `117123123125…`) | label every 5th year when crowded, a value on the peak and the last only | fixed a538e75 |
+| U8 | High | pen-edit, inking-edit, ink-edit | **"Take or choose a photo" cannot choose**: `capture="environment"` opens the camera only on iOS and Android, so a photo already in the library cannot go in | no `capture` on the edit pages (the needs-photos queue keeps it: it is a camera session) | fixed a3b3d64 |
+| U9 | High | stats-pairs | **The matrix says "a darker square held ink longer" but the darkness is the ink's own colour**: a pink pair at 284 d is paler than a black one at 40 d (`desk-light-stats-pairs.png`) | one neutral ramp for the days; the ink's colour stays on the column dot | fixed a538e75 |
+| U10 | Med | pens, inks, inkings | **Back to a filtered list empties the box**: the list stays filtered by "pilot", the box is blank, so the user does not see why (`f6-back-to-list.png`) | filter-nav fills the box from the address | fixed a3b3d64 |
+| U11 | Med | pen-edit, ink-edit, inking-edit | Choosing a photo, swatch or sample posts at once and **throws away unsaved edits** above it | the picker warns and saves nothing while the form has changes | fixed a3b3d64 |
+| U12 | Med | desk | **Ink next is ~2,000 px down** on a phone, under 7 fill cards of ~290 px (`full-desk.png`, 3,247 px) | compact fill cards on a phone | fixed 1dbb669 (cards ~290 → ~215 px; desk 3,247 → 2,753 px live) |
+| U13 | Med | settings | **Sign out at 2.77:1** in light: `.kit-set { --bad: var(--bad) }` is a loop, so the kit's dark red is used | drop the line | fixed a3b3d64 (#b3261e, 6.5:1) |
+| U14 | Med | pen-add, ink-add | Required fields unmarked; Filling and Colour say `---------`; "Bought from" required for a present; How it came has no default; Obtained no default (`full-ink-add.png`) | mark optional fields, `— choose —`, today and Bought by default | fixed 191d3e1, a3b3d64; "Bought from" stays required (a model field, a migration for little) |
+| U15 | Med | inking-add | No checks: Finished before Inked gives negative days; a pen already inked can be inked again with no word | `clean()`; the pen picker names a pen's open fill | fixed 191d3e1 |
+| U16 | Med | desk, inkings, pick, ink, pen-edit | Tap targets under 44 px on the daily buttons: Finish/Edit 40 px on the desk, `is-small` 36 px (inkings, Ink it), photo tile buttons 36 px | 44 px | fixed 1dbb669 |
+| U17 | Med | pens | In a pen row only the 23 px name opens the pen (52 small targets on the page) | the whole row is the link | fixed 1dbb669 |
+| U18 | Med | ink | The ink page's h1 is "Black" (4 inks are "Blue Black"); Delete sits next to Edit and takes the inkings with no undo | h1 = brand + name; Delete with an Undo | Delete with Undo: fixed 1dbb669. h1 kept: the brand sits right above the name, as on a pen's page |
+| U19 | Med | supen, suink | Cut off from Stats (More lit, the way back at the end of a 6,000 px page); "Since" is raw days (`2164`); state by colour alone, the key at the bottom | a Turns chip in the Stats strip, Stats lit; days as ages; the key on top, a word for late | fixed a538e75 |
+| U20 | Med | stats-collection | The scatter clamps the 5–6 PLN pens to x = 0, a dozen dots on one spot; ticks only from 50 | the true minimum and ticks at 10, 20 | fixed d9822b9 |
+| U21 | Med | stats-inkings | Rows print `63 2999 d` (two numbers, no word); 7 labels at 10.9 px; the heatmap is 960 px tall on a desk | `63 fills · 2,999 d`; short labels at 0.8 rem; a capped heatmap | fixed d9822b9 (text under 11 px: 7 → 0) |
+| U22 | Med | stats, collection, cupboard | Three bar charts print no number at all | a value on the peak and the last bar | fixed a538e75 |
+| U23 | Med | stats-calendar | 14 px days, no weekday heads, no mark for today | weekday heads, today ringed | fixed d9822b9 |
+| U24 | Med | import | Any failure says "Try again, or with a sharper photo", also when the API key is refused | say the reading is off when the key or credit fails | fixed 6cef376 |
+| U25 | Med | pens, needs-photos | Polish failing (Gemini credit empty since 4 Nov) is silent: the photo is saved unpolished, the toggle still promises it | a warning toast | fixed 6cef376 |
+| U26 | Med | offline | A tab tapped offline to a page never opened lights that tab and leaves the old page under it | | fixed 02a8130 |
+| U27 | Med | all | No kit header (`KIT-HEADER`): the page heads are the app's own, not sticky, h1 26–32 px; on a desk the bar has a `backdrop-filter` blur the kit forbids | | not done: the kit header replaces the desk bar (PYPEN-6) and every page head in both versions; a pass of its own. Its Back rule is in (U28) |
+| U28 | Med | pen, ink, forms | Back links are plain links to the list, so a search, filter and place are lost (kit: back in history) | | fixed f09628a |
+| U29 | Med | inks | The sort select reads "Colour ▾" right above the colour chips, a filter look; toolbar ~190 px | | fixed e664e27 |
+| U30 | Med | pick | Changing the pen is ~1,300 px down; "P0" jargon | | fixed cf8e551 |
+| U31 | Med | cupboard, timeline | Spectrum links 3 × 92 px, timeline bars 2 px: untappable | | fixed 928c93d |
+| U32 | Low | desk, pens | "+" is New inking on the desk, Add pen on Pens; the camera badge only on the desk | | not done: low; the two + sit on different screens with their own titles |
+| U33 | Low | pens-search | The title stays "126 pens" while 8 show; no-match keeps a lone "All 0" chip | | fixed e664e27 |
+| U34 | Low | desk-wide lists | Rows 1,130 px wide on a desk: buttons ~950 px from the name (pens, inkings, needs-photos, supen) | | fixed 928c93d |
+| U35 | Low | photo-check | Says the empty answer twice; its button goes to All pens, not to the 23 that need a photo | | fixed e664e27 |
+| U36 | Low | e404 | A missing pen gets the generic 404; Back does nothing on a pasted link | | fixed e664e27 |
+| U37 | Low | import | "Read it" active before a photo is chosen | | no change: the file field is already `required`, the browser stops the send |
+| U38 | Low | stats | Small stacked bars look striped; the river has no scale; cupboard dumbbells no values; pairs names cut | | partly: pairs names (a538e75); striped small bars, the river's scale and the dumbbells' values left (polish) |
+| U39 | Low | desk | The gauge's notch at 50 % and "P0" in Then are not explained | | partly cf8e551: a title under the pointer; a phone still has no legend |
 
 
 ## Kit adherence (PYPEN-2, 1 Nov 2026)
