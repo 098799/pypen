@@ -6,7 +6,7 @@
 <form method="post" class="form-nx" autocomplete="off" data-kit-busy>
   {% csrf_token %}
   {% include "next/_field.html" with f=form.brand no_opt=1 %}
-  <details class="new-brand"{% if form.new_brand.value or form.new_brand.errors or form.new_brand_country.errors %} open{% endif %}><summary>Not in the list? A new brand</summary>
+  <details class="new-brand"{% if form.new_brand.value or form.new_brand.errors or form.new_brand_country.errors %} open{% endif %}><summary data-new="new-brand">Not in the list? A new brand</summary>
     <div class="f2">{% include "next/_field.html" with f=form.new_brand label="Brand name" no_opt=1 %}{% include "next/_field.html" with f=form.new_brand_country no_opt=1 %}</div>
   </details>
   {% include "next/_field.html" with f=form.line %}

@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "new-brand", "date": "2026-11-11", "title": "A pen or ink of a new brand",
+   "use": "When a pen or a bottle comes from a maker the app does not know yet: on Add pen or Add ink, tap Not in the list? A new brand under Brand, write its name and pick where it is from. The brand is made when you save (a name it already knows, in any case, is that brand). Before, only the admin could make one.",
+   "shots": ["/static/items/whatsnew/2026-11-11-new-brand.png"], "try": "/pens/add/"},
   {"id": "main-version", "date": "2026-11-07", "title": "The new version is the app now",
    "use": "When you open Grining Pens: you land on the new version, at the usual addresses, and the old one is gone from the way. If you need the old one for something: Settings, The old version (it lives under /prev/ for a while). Old /next/ links still work. The new version also got what only the old one had: Edit this fill on a pen's page, the next pens to ink under Ink next on the desk, a pen's filling and year in the list (P0 to P3 on its tile), samples, years and MoI links on inks, the timeline's 2x and 4x zoom, inks and ink spending per year in Stats, Cupboard, and Year by year in Stats. Pens and Inks remember the list or the grid.",
    "shots": ["/static/items/whatsnew/2026-11-07-main-version.png"], "try": "/stats/"},

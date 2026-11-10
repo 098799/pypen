@@ -428,6 +428,26 @@ own CONFIG).
   third Android 12+ keeps. iOS takes only a PNG apple-touch-icon.
 - Probe: `python3 tools/kit_probe.py` (DB copy, DEBUG off, 390×844 touch).
 
+## After a form, and the way back
+
+(UX pass, 10 Nov 2026, `AUDIT.md` "UX pass".) A form ends where the person was:
+
+- **Finish** on the desk or a pen's page stays there; an edited inking goes back to the page it was opened
+  from (`items/backto.py`: the form's `next`, else the Referer, this host only, never the record's own
+  page). A new or saved pen or ink lands on its page, where a photo or an inking is next.
+- **A record's back link** ("All pens") is a `history.back()` when the page before, in this tab, is that
+  list (`next.js` keeps the tab's trail in sessionStorage), so the search, the chip and the place stay.
+  Else it goes to the list. The kit's header (`KIT-HEADER`) is not carried yet: it replaces the desk bar
+  and every page head in both versions, a pass of its own.
+- **A new brand** comes from the pen and ink forms (`forms.NewBrand`): a name it knows, any case, is that
+  brand; a new one needs its country.
+- **The inking form** keeps the inking's own ink and the asked-for one even when used up, offers samples,
+  refuses Finished before Inked, and names a pen's open fill; a second fill on it asks first and can
+  finish the old one on the new day.
+- **AI failures** (`items/aierrors.py`): a refused key or no credit is said as such, never "a sharper photo".
+- **Past their turn** is one rule everywhere: more days than the turn (desk, Stats, Rotation, Turns);
+  supen's colours stay its own (amber to 1¼ turns, then red, "late").
+
 ## Security
 
 `AUDIT.md` holds the model (one owner, guests read, strangers see the door;
