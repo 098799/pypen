@@ -1,8 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}Settings · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_desk' %}">The desk</a>
-<header class="head"><div class="head-t"><h1>Settings</h1></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_desk' %}" aria-label="Back"></a><div class="kit-title"><h1>Settings</h1></div></div>
+</header>
 {# The kit's rows (KIT-SETTINGS) come with member.js and member.css in the shell (kitshell.py). #}
 <div class="kit-set">
 <section class="kit-set-g">

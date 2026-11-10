@@ -1,11 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}Photos to check · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_desk' %}">The desk</a>
-<header class="head"><div class="head-t">
-  <h1>{% if photos %}{{ photos|length }} photo{{ photos|length|pluralize }} to check{% else %}Nothing to check{% endif %}</h1>
-  <p>{% if photos %}Found on the web or drawn by Gemini. Is it your pen?{% endif %}{% if checked or rejected %} {{ checked }} right, {{ rejected }} wrong so far.{% endif %}</p>
-</div></header>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_desk' %}" aria-label="Back"></a><div class="kit-title"><h1>{% if photos %}{{ photos|length }} photo{{ photos|length|pluralize }} to check{% else %}Nothing to check{% endif %}</h1><small class="kit-sub">{% if photos %}Found on the web or drawn by Gemini. Is it your pen?{% endif %}{% if checked or rejected %} {{ checked }} right, {{ rejected }} wrong so far.{% endif %}</small></div></div>
+</header>
 {% if photos %}
 <ul class="check-grid">
   {% for ph in photos %}

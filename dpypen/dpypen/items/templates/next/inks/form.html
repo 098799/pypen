@@ -1,8 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}{{ title }} · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% if ink %}{% url 'nx_inks_detail' ink.pk %}{% else %}{% url 'nx_inks_list' %}{% endif %}">{% if ink %}Back to the ink{% else %}All inks{% endif %}</a>
-<header class="head"><div class="head-t"><h1>{{ title }}</h1></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% if ink %}{% url 'nx_inks_detail' ink.pk %}{% else %}{% url 'nx_inks_list' %}{% endif %}" aria-label="Back"></a><div class="kit-title"><h1>{{ title }}</h1></div></div>
+</header>
 <form method="post" class="form-nx" autocomplete="off" data-kit-busy>
   {% csrf_token %}
   {% include "next/_field.html" with f=form.brand no_opt=1 %}

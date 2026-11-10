@@ -435,10 +435,12 @@ own CONFIG).
 - **Finish** on the desk or a pen's page stays there; an edited inking goes back to the page it was opened
   from (`items/backto.py`: the form's `next`, else the Referer, this host only, never the record's own
   page). A new or saved pen or ink lands on its page, where a photo or an inking is next.
-- **A record's back link** ("All pens") is a `history.back()` when the page before, in this tab, is that
-  list (`next.js` keeps the tab's trail in sessionStorage), so the search, the chip and the place stay.
-  Else it goes to the list. The kit's header (`KIT-HEADER`) is not carried yet: it replaces the desk bar
-  and every page head in both versions, a pass of its own.
+- **The kit's header** (`KIT-HEADER`, byte copy `templates/items/_header.html`, in the shell bundle) heads
+  every page of the new version: the title and its sub-line, `.kit-back` on a sub-page, at most 3
+  `.kit-act`. It is the first thing in `#main`, so htmx swaps it with the page; it reaches the window's
+  edges and sticks at the top of a phone, under the 52 px desk bar (`#hdr`) on a desk. `.kit-back` has
+  `hx-boost="false"`: htmx took the click first and the kit's "back in history" never ran, so a list lost
+  its search and place. The old version (`/prev/`) keeps its own heads until it goes.
 - **A new brand** comes from the pen and ink forms (`forms.NewBrand`): a name it knows, any case, is that
   brand; a new one needs its country.
 - **The inking form** keeps the inking's own ink and the asked-for one even when used up, offers samples,

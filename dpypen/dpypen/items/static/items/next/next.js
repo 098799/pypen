@@ -21,37 +21,6 @@
   if (window.__nextJs) return;
   window.__nextJs = true;
 
-  /* ---- a record's back link ----
-     "All pens" was a plain link: the search, the chip and the place in the list
-     were lost (UX U28, kit §4 Header "Back"). When the page before, in this tab,
-     is that list, Back goes back in history and htmx brings it back as it was;
-     else the link goes to the list as before. */
-  var KEY = "pypenTrail";
-  function trail() { try { return JSON.parse(sessionStorage.getItem(KEY) || "[]"); } catch (e) { return []; } }
-  function seen() {
-    var t = trail(), here = location.pathname + location.search;
-    if (t.length > 1 && t[t.length - 2] === here) t.pop();      // a Back: one step down
-    else if (t[t.length - 1] !== here) t.push(here);
-    try { sessionStorage.setItem(KEY, JSON.stringify(t.slice(-20))); } catch (e) {}
-  }
-  seen();
-  document.addEventListener("htmx:pushedIntoHistory", seen);
-  document.addEventListener("htmx:replacedInHistory", function () {
-    var t = trail();
-    t[t.length - 1] = location.pathname + location.search;
-    try { sessionStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {}
-  });
-  window.addEventListener("popstate", function () { setTimeout(seen, 0); });
-  document.addEventListener("click", function (e) {
-    var a = e.target.closest && e.target.closest("a.back");
-    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
-    var t = trail(), prev = t[t.length - 2], to = a.getAttribute("href") || "";
-    if (prev && to && prev.split("?")[0] === to.split("?")[0] && history.length > 1) {
-      e.preventDefault();
-      e.stopPropagation();
-      history.back();
-    }
-  }, true);
 
   /* ---- the river ---- */
   function riverData(r) {

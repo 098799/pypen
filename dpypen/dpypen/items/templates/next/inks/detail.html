@@ -1,7 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}{{ ink }} · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_inks_list' %}">All inks</a>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_inks_list' %}" aria-label="Back"></a><div class="kit-title"><p>{{ ink }}</p><small class="kit-sub">{{ ink.color }}, {{ ink.volume }} ml{% if ink.used_up %}, used up{% endif %}</small></div></div>
+</header>
 <div class="rec-hero">
   <div class="ink-big" style="--sw: {{ ink_bg }}">
     <span class="swab" aria-hidden="true"></span>

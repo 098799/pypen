@@ -1,7 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}{{ err.title }} · {{ app_name }}{% endblock %}
 {% block content %}
-<header class="head"><div class="head-t"><h1>{{ err.title }}</h1></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><div class="kit-title"><h1>{{ err.title }}</h1></div></div>
+</header>
 <div class="error-box">
   <p>{{ err.text }}</p>
   <div class="btn-row">

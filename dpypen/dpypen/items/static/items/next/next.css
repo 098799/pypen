@@ -78,6 +78,21 @@ mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: in
   display: block; max-width: 1180px; margin: 0 auto;
   padding: calc(10px + env(safe-area-inset-top)) var(--edge) 12px;   /* the kit's tab bar adds its room */
 }
+/* The kit's header (KIT-HEADER, kit §4 "Header"; UX U27): what the screen is, Back on a sub-page, its
+   actions; sticky, 56 px + the safe area on a phone. Here it sits first in #main (htmx swaps it with the
+   page) and reaches the window's edges; on a desk it sticks under the 52 px desk bar (#hdr). */
+#main > header.kit-header {
+  --kit-header-bg: var(--bg); --kit-header-font: var(--serif); --kit-header-weight: 600;
+  margin: 0 calc(50% - 50vw) 10px;
+}
+#main:has(> header.kit-header) { padding-top: 0; }
+.kit-sub a { color: inherit; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.kit-header .kit-act.is-go { background: var(--accent); color: var(--on-accent); }
+.kit-header .kit-act + .kit-act { margin-left: 4px; }
+@media (min-width: 900px) {
+  #main > header.kit-header { --kit-header-max: 1132px; top: 52px; }
+  #main:has(> header.kit-header) { padding-top: 52px; }
+}
 .head { display: flex; align-items: center; gap: 12px; min-height: 56px; margin-bottom: 10px; }
 .head-t { flex: 1; min-width: 0; }
 .head h1 { font-size: 1.62rem; line-height: 1.12; overflow-wrap: anywhere; }

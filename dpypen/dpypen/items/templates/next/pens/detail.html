@@ -2,7 +2,9 @@
 {% load l10n %}
 {% block title %}{{ pen }} · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_pens_list' %}">All pens</a>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_pens_list' %}" aria-label="Back"></a><div class="kit-title"><p>{{ pen }}</p><small class="kit-sub">{% if current %}Inked with {{ current.ink }}{% else %}{{ pen.filling }}, since {{ pen.obtained|date:"Y" }}{% endif %}</small></div></div>
+</header>
 <div class="rec-hero">
   <div>
     <div class="rec-photo{% if not photos %} is-none{% endif %}" id="photoMain">

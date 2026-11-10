@@ -1,8 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}Edit photo, {{ pen }} · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_pens_edit' pen.pk %}">Back to {{ pen.model }}</a>
-<header class="head"><div class="head-t"><h1>Edit photo</h1><p>{{ pen }}</p></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_pens_edit' pen.pk %}" aria-label="Back"></a><div class="kit-title"><h1>Edit photo</h1><small class="kit-sub">{{ pen }}</small></div></div>
+</header>
 <div class="compare" data-busy-host>
   <figure><img src="{{ photo.image.url }}" alt="Original" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Original"><figcaption>Original</figcaption></figure>
   {% if photo.image_styled %}

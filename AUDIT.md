@@ -17,7 +17,7 @@ Taps: "finish a fill and ink the pen again" took ~7 taps + typing (Finish sent y
 from the desk takes 2 (tap the ink, Ink it); "add a pen with a photo" ~6 + a search.
 
 **Result** (live, 11 Nov): 152 shots again, every screen 200, no page error, no sideways scroll, no text under
-11 px (was 7); all 9 High fixed, 21 of 22 Medium fixed, the kit header (U27) left for a pass of its own.
+11 px (was 7); all 9 High and all 22 Medium fixed (the kit header, U27, in a second round).
 "Finish and ink again": ~7 taps + typing → 3 (Finish, Ink this pen, an ink). Tests: `tests_ux.py` (34).
 `tools/live_walk.py` waited for `/next/` addresses since the cut-over and never finished; fixed.
 
@@ -52,7 +52,7 @@ rule broken; **Low** = polish. Status at the end of the pass in the last column.
 | U24 | Med | import | Any failure says "Try again, or with a sharper photo", also when the API key is refused | say the reading is off when the key or credit fails | fixed 6cef376 |
 | U25 | Med | pens, needs-photos | Polish failing (Gemini credit empty since 4 Nov) is silent: the photo is saved unpolished, the toggle still promises it | a warning toast | fixed 6cef376 |
 | U26 | Med | offline | A tab tapped offline to a page never opened lights that tab and leaves the old page under it | | fixed 02a8130 |
-| U27 | Med | all | No kit header (`KIT-HEADER`): the page heads are the app's own, not sticky, h1 26–32 px; on a desk the bar has a `backdrop-filter` blur the kit forbids | | partly (U27 commit). Fixed: the desk bar's blur (kit: never a blur) and the Back rule (U28: the list keeps search, filter and scroll). Checked: actions are 44 × 44 px (`.ibtn`), at most 3 per head, safe area padded. Left: a sticky 56 px title bar. Not worth it now: on a phone the tab bar already names the section on every screen; carrying header.html replaces the desk bar (PYPEN-6: Filter, search, menu popovers measured from #hdr) and ~30 page heads in both versions, for a look, not a task. The fleet header pass converts it with the kit test |
+| U27 | Med | all | No kit header (`KIT-HEADER`): the page heads are the app's own, not sticky, h1 26–32 px; on a desk the bar has a `backdrop-filter` blur the kit forbids | | fixed: the blur (4445880), then the kit header on every page of the new version, Back by the kit's rule (list keeps search and scroll, checked) |
 | U28 | Med | pen, ink, forms | Back links are plain links to the list, so a search, filter and place are lost (kit: back in history) | | fixed f09628a |
 | U29 | Med | inks | The sort select reads "Colour ▾" right above the colour chips, a filter look; toolbar ~190 px | | fixed e664e27 |
 | U30 | Med | pick | Changing the pen is ~1,300 px down; "P0" jargon | | fixed cf8e551 |

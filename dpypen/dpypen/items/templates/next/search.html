@@ -1,7 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}{% if query %}Search, {{ query }}{% else %}Search{% endif %} · {{ app_name }}{% endblock %}
 {% block content %}
-<header class="head"><div class="head-t"><h1>Search</h1></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><div class="kit-title"><h1>Search</h1></div></div>
+</header>
 <div class="kit-listbar">
   <form method="get" action="{% url 'nx_search' %}" id="searchForm" role="search" class="kit-search" data-navform
         hx-get="{% url 'nx_search' %}" hx-trigger="input changed delay:300ms from:#searchQ, change from:#searchFilters, submit"

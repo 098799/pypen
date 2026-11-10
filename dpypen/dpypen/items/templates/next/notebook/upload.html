@@ -1,8 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}Read a notebook page · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_usages_list' %}">All inkings</a>
-<header class="head"><div class="head-t"><h1>Read a notebook page</h1></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_usages_list' %}" aria-label="Back"></a><div class="kit-title"><h1>Read a notebook page</h1></div></div>
+</header>
 <p class="fine">Photograph a page of your inking journal. Claude reads the handwriting, matches the pens and inks, and shows you the entries to check. Nothing is saved until you say so.</p>
 <form method="post" enctype="multipart/form-data" class="form-nx" hx-boost="false" data-kit-busy="Reading the page…">
   {% csrf_token %}

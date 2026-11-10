@@ -389,3 +389,30 @@ class NoBlur(Seeded):
         from pathlib import Path
         css = (Path(__file__).resolve().parent / "static/items/next/next.css").read_text()
         self.assertNotIn("backdrop-filter:", css)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class KitHeader(Seeded):
+    """U27: the kit's header (KIT-HEADER) on every page of the new version."""
+
+    def test_the_copy_is_the_kits(self):
+        from pathlib import Path
+        here = Path(__file__).resolve().parent / "templates/items/_header.html"
+        kit = Path("/home/tgrining/apps/kit/snippets/header.html")
+        if kit.exists():
+            self.assertEqual(here.read_bytes(), kit.read_bytes())
+        self.assertIn("KIT-HEADER", here.read_text())
+
+    def test_every_page_has_one_header_and_sub_pages_a_back(self):
+        from dpypen.items.tests_next import PAGES
+        self.client.force_login(self.owner)
+        for url in (*PAGES, f"/pens/{self.pen.pk}/", f"/inks/{self.ink.pk}/", f"/usages/{self.now.pk}/edit/"):
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertEqual(html.count('<header class="kit-header">'), 1)
+                self.assertNotIn('<header class="head"', html)
+                self.assertNotIn('class="back"', html)
+        for url in (f"/pens/{self.pen.pk}/", "/pens/add/", f"/inks/{self.ink.pk}/edit/", "/settings/"):
+            with self.subTest(url=url):
+                self.assertContains(self.client.get(url), 'class="kit-back" hx-boost="false"')
+        self.assertNotContains(self.client.get("/pens/"), "kit-back")

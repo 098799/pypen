@@ -41,7 +41,8 @@ TEMPLATES = Path(__file__).resolve().parent / "templates" / "items"
 
 KIT = shell.Shell(TEMPLATES, prefix="/kit")
 KIT.js("theme.js", "_theme.js")
-SHELL = ("_toast.html", "_busy.html", "_empty.html", "_filters.html", "_update.html", "_pullrefresh.html", "_confirm.html")
+SHELL = ("_toast.html", "_busy.html", "_empty.html", "_filters.html", "_update.html", "_pullrefresh.html", "_confirm.html",
+         "_header.html")
 KIT.css("shell.css", *SHELL)
 # The layer first: its popstate listener before htmx's and the app's.
 KIT.js("shell.js", "_layer.js", *SHELL)

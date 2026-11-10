@@ -1,7 +1,9 @@
 {% extends "next/_shell.html" %}
 {% block title %}What to ink next · {{ app_name }}{% endblock %}
 {% block content %}
-<header class="head"><div class="head-t"><h1>What to ink next</h1><p>{{ due|length }} pen{{ due|length|pluralize }} past their turn</p></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><div class="kit-title"><h1>What to ink next</h1><small class="kit-sub">{{ due|length }} pen{{ due|length|pluralize }} past their turn</small></div></div>
+</header>
 {% if not pen %}
 <div class="kit-empty" data-kind="none"><p class="kit-empty-t">No pen is past its turn</p><p class="kit-empty-p">Every pen in rotation is inked or still resting.</p><p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'nx_pens_list' %}">All pens</a></p></div>
 {% else %}

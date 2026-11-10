@@ -1,8 +1,12 @@
 {% extends "next/_shell.html" %}
 {% block title %}Check the entries · {{ app_name }}{% endblock %}
 {% block content %}
-<header class="head"><div class="head-t"><h1>Check the entries</h1><p>{{ rows|length }} found. An amber edge is a low-confidence reading, a red edge a poor match.</p></div>
-  <div class="head-a"><a class="btn" href="{% url 'nx_notebook_upload' %}">Start over</a></div></header>
+<header class="kit-header">
+  <div class="kit-lead"><div class="kit-title"><h1>Check the entries</h1><small class="kit-sub">{{ rows|length }} found</small></div></div>
+  <div class="kit-actions"><a class="kit-act kit-act-text" href="{% url 'nx_notebook_upload' %}">Start over</a>
+  </div>
+</header>
+<p class="fine">An amber edge is a low-confidence reading, a red edge a poor match.</p>
 <form method="post" class="form-nx" data-kit-busy>
   {% csrf_token %}
   {% for row in rows %}{% with idx=forloop.counter0 %}

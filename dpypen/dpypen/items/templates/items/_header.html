@@ -1,0 +1,181 @@
+<!-- KIT-HEADER: v1.1 2026-11-08
+  The app's header: what this screen is, a way back, the screen's actions. Sticky,
+  56 px + the safe area on a phone, 52 px on a desk with the tab bar's row in it.
+  Spec: ~/apps/kit/README.md §4, "Header". Canonical copy:
+  ~/apps/kit/snippets/header.html. Apps carry a byte-identical copy (fleet-check
+  `kit` compares them): change this file, bump the stamp here and in `version`
+  below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 26 apps had their own header (AUDIT.md, pass 9), from
+  35 to 113 px high, titles from 15 to 31 px, buttons from 21 to 44 px; a back
+  link in 9 of them by three different rules, none in the rest; 8 under the status
+  bar of an installed iPhone app, and the height written by hand in up to four places.
+
+  Include it once in the body (or its style part in the app's CSS bundle and its
+  script part in the app's JS). This file holds no double braces or brace-hash
+  pairs: Jinja and Django include it as text.
+
+    <header class="kit-header">
+      <div class="kit-lead">
+        <a class="kit-back" href="/items" aria-label="Back"></a>
+        <a class="kit-brand" href="/" aria-label="Home">(svg or img)</a>
+        <div class="kit-title">
+          <h1>Best fit first</h1>
+          <small class="kit-sub">150 of 2438 · <time data-kit-ago datetime="2026-11-04T16:00:00Z">1h ago</time></small>
+        </div>
+      </div>
+      <div class="kit-header-tabs" id="desktabs"></div>
+      <div class="kit-actions">
+        <button type="button" class="kit-act" aria-label="Search">(svg)</button>
+        <a class="kit-act" href="/settings" aria-label="Settings">(svg)</a>
+      </div>
+    </header>
+
+  Only .kit-lead and .kit-title's first child are required.
+    .kit-back     on a sub-page only: leave it out of a top-level screen. The kit draws the
+                  arrow. href = the parent. A tap goes back in the tab's history
+                  when the page before is of this app (the list keeps its place,
+                  its filter and its scroll), else to href (a deep link never
+                  leaves the app). Event `kit:back` (cancelable) fires first.
+    .kit-brand    optional: the app's mark, 28 px, 44 px to tap.
+    .kit-title    what this screen answers. May be an `a` (to the app's home) or a
+                  `button` (pod's source switcher). First child: the title, 17 px,
+                  one line, an ellipsis, never a wrap. The page's h1 when the page
+                  has no other. .kit-sub: one line, 12.5 px, the freshness or a count.
+                  A screen whose bar is a toolbar (twitter's chips): .kit-title.kit-vh keeps the
+                  h1 for a reader and draws nothing; the tools go in .kit-lead after it.
+    .kit-stale    in the sub-line: an age that is too old, in red (weekends).
+    time[data-kit-ago]  the age: carry snippets/when.js (KIT-WHEN) too, which says it (`now`,
+                  `5m ago`, `3h ago`, `2d ago`, then the date) and tells it again every 30 s.
+    .kit-header-tabs   the tab bar's slot on a desk: `data-desk-into="#desktabs"` on
+                  nav.kit-tabs. On a phone it takes no room.
+    .kit-actions  at most 3. .kit-act: 44 x 44, an SVG of 24 px with stroke currentColor (never
+                  an emoji or a font glyph), and an aria-label. A `b` in it: a count. i.kit-act-dot: a dot.
+                  .kit-act-text: a word, not an icon (a pill, 36 px, 44 px to tap).
+                  A control that is more than a button (a select) goes in as it is, 44 px high.
+
+  Soft navigation: sync: ['.kit-lead', '.kit-actions'] (it copies the inner HTML, so the
+  back link's address comes along). An app that routes in the page: kitHeader.set.
+
+  What sits under it: a sticky row of the app's own uses top: var(--kit-header-room), and
+  never a number. Anchors land under it (the kit sets scroll-padding-top).
+  Never a blur: it would hold a fixed child inside itself, and costs scrolling.
+
+  Look: --panel --line --fg --dim --accent --on-accent and the app's font.
+    --kit-header-bg         the bar's colour, when it is not --panel (theme-color = the same colour)
+    --kit-header-fg, --kit-header-dim   when --fg or --dim is under 4.5:1 on that colour
+    --kit-header-bad        the red of .kit-stale, when #e5484d is under 4.5:1 on that colour
+    --kit-header-font, --kit-header-weight, --kit-header-case, --kit-header-track, --kit-header-variant
+                            the title's own face and letter case (the app keeps its voice)
+    --kit-header-max        the page's width on a desk: the bar's content lines up with it
+    --kit-header-z (20), --kit-header-pos (sticky)
+  Size, place, targets and the arrow are the kit's. The room it takes is --kit-header-room:
+  read it, never set it. Words: window.KITHEADER = {labels: {back: 'Back'}} first; an age's are KITWHEN's.
+
+  JS: kitHeader.set({title, sub, back})   title: text. sub: text or a node; null removes it.
+                                          back: an address, or null for none.
+      kitHeader.mount()                   tell the times again, after the page drew them
+  Not an app header: a game's HUD (tower, paperclips), a child's bar (rule 4).
+  Test: kit/snippets/tests/test_header.py.
+-->
+<style>
+:root { --kit-header-h: 56px; --kit-header-room: 0px; }
+:root:has(header.kit-header:not([hidden])) { --kit-header-room: calc(var(--kit-header-h) + 1px + env(safe-area-inset-top, 0px)); scroll-padding-top: calc(var(--kit-header-room) + 8px); }
+header.kit-header { position: var(--kit-header-pos, sticky); top: 0; z-index: var(--kit-header-z, 20); box-sizing: content-box; display: flex; align-items: center; gap: 4px;
+  height: var(--kit-header-h); min-height: 0; margin: 0; flex-wrap: nowrap;
+  padding: env(safe-area-inset-top, 0px) max(calc(4px + env(safe-area-inset-right, 0px)), calc((100vw - var(--kit-header-max, 100vw)) / 2)) 0 max(calc(16px + env(safe-area-inset-left, 0px)), calc((100vw - var(--kit-header-max, 100vw)) / 2));
+  background: var(--kit-header-bg, var(--panel)); color: var(--kit-header-fg, var(--fg)); border: 0; border-bottom: 1px solid var(--line); box-shadow: none; font: inherit;
+  -webkit-backdrop-filter: none; backdrop-filter: none; transform: none; -webkit-tap-highlight-color: transparent; }
+header.kit-header[hidden] { display: none; }
+header.kit-header:has(.kit-back:not([hidden])) { padding-left: max(calc(2px + env(safe-area-inset-left, 0px)), calc((100vw - var(--kit-header-max, 100vw)) / 2)); }
+.kit-lead { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.kit-back { position: relative; flex: none; box-sizing: border-box; width: 44px; height: 44px; margin: 0 -6px 0 0; padding: 0; border: 0; border-radius: 12px; background: none; color: inherit; cursor: pointer; }
+.kit-back[hidden] { display: none; }
+.kit-back::before { content: ""; position: absolute; inset: 10px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 5l-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 5l-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+.kit-brand { flex: none; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 44px; margin: 0; padding: 0; color: inherit; text-decoration: none; }
+.kit-brand > svg, .kit-brand > img { display: block; width: 28px; height: 28px; }
+.kit-title { flex: 0 1 auto; min-width: 0; min-height: 44px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; margin: 0; padding: 0; border: 0;
+  background: none; color: inherit; font: inherit; text-align: left; text-decoration: none; }
+a.kit-title, button.kit-title { cursor: pointer; }
+.kit-title > :first-child { display: block; margin: 0; padding: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: inherit;
+  font-family: var(--kit-header-font, inherit); font-size: 17px; font-weight: var(--kit-header-weight, 650); font-style: normal; line-height: 22px;
+  letter-spacing: var(--kit-header-track, 0); text-transform: var(--kit-header-case, none); font-variant: var(--kit-header-variant, normal); }
+.kit-sub { display: block; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--kit-header-dim, var(--dim));
+  font-size: 12.5px; font-weight: 400; line-height: 16px; letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+.kit-title.kit-vh { position: absolute; width: 1px; height: 1px; min-height: 0; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.kit-stale { color: var(--kit-header-bad, #e5484d); font-weight: 600; }
+.kit-header-tabs { display: none; }
+.kit-actions { flex: none; display: flex; align-items: center; gap: 0; margin: 0 0 0 auto; }
+.kit-act { position: relative; flex: none; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; margin: 0; padding: 0;
+  border: 0; border-radius: 12px; background: none; box-shadow: none; color: inherit; font: inherit; font-size: 14px; font-weight: 600; line-height: 1; text-decoration: none; cursor: pointer; }
+.kit-act > svg { flex: none; display: block; width: 24px; height: 24px; }
+.kit-act > svg:not([fill]) { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.kit-act > b { position: absolute; top: 2px; left: 24px; box-sizing: border-box; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent, var(--bg));
+  box-shadow: 0 0 0 2px var(--kit-header-bg, var(--panel)); font: 700 11px/18px system-ui, -apple-system, sans-serif; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+.kit-act > .kit-act-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--kit-header-bg, var(--panel)); pointer-events: none; }
+.kit-act.kit-act-text { min-width: 0; padding: 0 12px; background: none; }
+.kit-act.kit-act-text::before { content: ""; position: absolute; z-index: -1; inset: 4px 0; border-radius: 12px; background: var(--accent); }
+.kit-act.kit-act-text { isolation: isolate; color: var(--on-accent, var(--bg)); }
+.kit-back:focus-visible, .kit-brand:focus-visible, a.kit-title:focus-visible, button.kit-title:focus-visible, .kit-act:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 12px; }
+@media (hover: hover) and (pointer: fine) { .kit-back:hover, .kit-act:not(.kit-act-text):hover { background: color-mix(in srgb, currentColor 10%, transparent); } }
+@media (min-width: 900px) { :root { --kit-header-h: 52px; }
+  .kit-lead { flex: 0 1 auto; }
+  .kit-header-tabs { display: flex; flex: 1 1 auto; min-width: 0; align-items: center; margin-left: 12px; } }
+@media print { header.kit-header { position: static; } }
+</style>
+<script>
+(function () {
+  if (window.kitHeader) return;
+  var L = (window.KITHEADER || {}).labels || {};
+  var moved = false;
+
+  // ——— the page before: is it of this app? ———
+  function canBack() {
+    var n = window.navigation;
+    // the Navigation API lists only this origin's run of entries
+    if (n && n.currentEntry && typeof n.currentEntry.index === 'number') return n.currentEntry.index > 0;
+    if (moved) return true;
+    try { return !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) { return false; }
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.kit-back');
+    if (!b || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!b.dispatchEvent(new CustomEvent('kit:back', {bubbles: true, cancelable: true}))) { e.preventDefault(); return; }
+    if (canBack()) { e.preventDefault(); history.back(); }
+  });
+  document.addEventListener('kit:softnav', function () { moved = true; tell(); });
+
+  // ——— the freshness: when.js (KIT-WHEN) says and tells it again ———
+  function tell() { if (window.kitWhen) window.kitWhen.tell(); }
+
+  // ——— an app that routes in the page ———
+  function set(o) {
+    var lead = document.querySelector('.kit-header .kit-lead');
+    if (!lead || !o) return;
+    var title = lead.querySelector('.kit-title');
+    if ('title' in o && title && title.firstElementChild) title.firstElementChild.textContent = o.title;
+    if ('sub' in o && title) {
+      var s = title.querySelector(':scope > .kit-sub');
+      if (o.sub === null || o.sub === '') { if (s) s.remove(); }
+      else {
+        if (!s) { s = document.createElement('small'); s.className = 'kit-sub'; title.appendChild(s); }
+        s.textContent = '';
+        s.append(o.sub);
+        tell();
+      }
+    }
+    if ('back' in o) {
+      var b = lead.querySelector('.kit-back');
+      if (o.back === null) { if (b) b.remove(); }
+      else {
+        if (!b) { b = document.createElement('a'); b.className = 'kit-back'; b.setAttribute('aria-label', L.back || 'Back'); lead.insertBefore(b, lead.firstChild); }
+        b.setAttribute('href', o.back);
+      }
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tell); else tell();
+  window.kitHeader = {version: '1.1', set: set, mount: tell, canBack: canBack};
+})();
+</script>
