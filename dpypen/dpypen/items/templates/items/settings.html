@@ -67,7 +67,7 @@ No "p340 — all apps" row: this site is public, the tailnet index is not.
     {% endcomment %}
     <a class="kit-set-row kit-set-go kit-set-out" href="/admin/" hx-boost="false"><span class="kit-set-k">Admin<small class="kit-set-sub">Django admin</small></span></a>
     {# The kit's worker keeps pages for offline: signing out drops them from this phone. #}
-    <form class="kit-set-form" method="post" action="{% url 'account_logout' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Sign out</span></button></form>
+    <form class="kit-set-form" method="post" action="{% url 'account_logout' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')" data-kit-busy>{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Sign out</span></button></form>
   </div>
 </section>
 {% elif is_guest %}
@@ -75,7 +75,7 @@ No "p340 — all apps" row: this site is public, the tailnet index is not.
   <h2 class="kit-set-h">Visiting</h2>
   <div class="kit-set-card">
     <div class="kit-set-row"><span class="kit-set-k">Invitation<small class="kit-set-sub">You are here on an invitation{% if invite_label %} — {{ invite_label }}{% endif %}.</small></span></div>
-    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
+    <form class="kit-set-form" method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')" data-kit-busy>{% csrf_token %}<button class="kit-set-row kit-set-bad" type="submit"><span class="kit-set-k">Leave</span></button></form>
   </div>
 </section>
 {% endif %}

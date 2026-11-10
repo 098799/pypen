@@ -42,11 +42,14 @@
   background: linear-gradient(135deg, #d4a52c, var(--accent));
   opacity: 1;
 }
-.photo-cell .busy {
+/* A shot being polished (data-busy-on-submit, _shell_early.html): a veil
+   over the picture, gone with the answer; the ✨ button is the kit's ring. */
+.photo-cell.is-busy::after {
+  content: "polishing…";
   position: absolute; inset: 0;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(3px);
-  display: none;
+  display: flex;
   align-items: center; justify-content: center;
   color: #fff;
   font-family: "Inter", sans-serif;
@@ -55,17 +58,6 @@
   text-transform: uppercase;
   z-index: 3;
 }
-.photo-cell.busy .busy { display: flex; }
-.ph-spinner {
-  width: 30px; height: 30px;
-  border: 2px solid rgba(255,255,255,0.25);
-  border-top-color: #fff;
-  border-radius: 6px;
-  animation: phSpin 0.8s linear infinite;
-  margin-bottom: 0.5rem;
-}
-@keyframes phSpin { to { transform: rotate(360deg); } }
-.photo-cell .busy-text { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
 .photo-cell.primary {
   border: 2px solid var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
@@ -120,7 +112,7 @@
   <h1>{{ title }}</h1>
 </div>
 
-<form method="post" class="form" autocomplete="off">
+<form method="post" class="form" autocomplete="off" data-kit-busy>
   {% csrf_token %}
 
   <div class="row-pair">
@@ -225,59 +217,47 @@
   {% if photos %}
   <div class="photos-grid">
     {% for ph in photos %}
-    <div class="photo-cell{% if forloop.first %} primary{% endif %}">
+    <div class="photo-cell{% if forloop.first %} primary{% endif %}" data-busy-host>
       <a href="{% url 'pens_photo_edit' pen.pk ph.pk %}">
         <img src="{{ ph.grid_url }}" alt="Photo of {{ pen }}" loading="lazy">
       </a>
       {% if not forloop.first %}
-      <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" class="form-inline">
+      <form method="post" action="{% url 'pens_photo_primary' pen.pk ph.pk %}" class="form-inline" data-kit-busy>
         {% csrf_token %}
         <button type="submit" class="ph-btn star" title="Make primary" aria-label="Make primary">★</button>
       </form>
       {% endif %}
-      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" class="form-inline" data-confirm="Delete this photo?">
+      <form method="post" action="{% url 'pens_photo_delete' pen.pk ph.pk %}" class="form-inline" data-confirm="Delete this photo?" data-kit-busy>
         {% csrf_token %}
         <button type="submit" class="ph-btn del" title="Delete photo" aria-label="Delete photo">&times;</button>
       </form>
-      <form method="post" action="{% url 'pens_photo_rotate' pen.pk ph.pk %}" class="form-inline">
+      <form method="post" action="{% url 'pens_photo_rotate' pen.pk ph.pk %}" class="form-inline" data-kit-busy>
         {% csrf_token %}
         <input type="hidden" name="degrees" value="90">
         <button type="submit" class="ph-btn rot" title="Rotate 90°" aria-label="Rotate 90°">↻</button>
       </form>
       {% if ph.image_styled %}
-      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" class="form-inline" data-confirm="Revert to original photo?" data-confirm-note="The catalog shot will be discarded." data-confirm-label="Revert">
+      <form method="post" action="{% url 'pens_photo_unstyle' pen.pk ph.pk %}" class="form-inline" data-confirm="Revert to original photo?" data-confirm-note="The catalog shot will be discarded." data-confirm-label="Revert" data-kit-busy>
         {% csrf_token %}
         <button type="submit" class="ph-btn sparkle on" title="Revert to original" aria-label="Revert to original">✨</button>
       </form>
       {% else %}
-      <form method="post" action="{% url 'pens_photo_enhance' pen.pk ph.pk %}" class="form-inline enhance-form">
+      <form method="post" action="{% url 'pens_photo_enhance' pen.pk ph.pk %}" class="form-inline enhance-form" data-busy-on-submit data-kit-busy>
         {% csrf_token %}
         <button type="submit" class="ph-btn sparkle" title="Make catalog shot (AI)" aria-label="Make catalog shot">✨</button>
       </form>
       {% endif %}
-      <div class="busy"><div class="busy-text"><div class="ph-spinner"></div><span>polishing…</span></div></div>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <script>
-    (function () {
-      document.querySelectorAll("form.enhance-form").forEach(function (f) {
-        f.addEventListener("submit", function () {
-          var cell = f.closest(".photo-cell");
-          if (cell) cell.classList.add("busy");
-        });
-      });
-    })();
-  </script>
-
-  <form method="post" action="{% url 'pens_photo_add' pen.pk %}" enctype="multipart/form-data" class="camera-upload">
+  <form method="post" action="{% url 'pens_photo_add' pen.pk %}" enctype="multipart/form-data" class="camera-upload" data-kit-busy>
     {% csrf_token %}
     <label class="camera-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       <span>Take a photo / choose</span>
-      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()">
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
     </label>
     <span class="upload-hint inline">auto-uploads on select</span>
   </form>

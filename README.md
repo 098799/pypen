@@ -63,7 +63,8 @@ the old gift icon (pens have no `how`; it always said Bought). Tests: `tests_nex
 - **The accent is an ink**: the newest coloured ink on the desk (`nextui/context.py`), lightened or darkened per
   theme to 4.6:1 against both papers (`color.accent`). A black or a grey has no colour to lend; then the next ink,
   then royal blue. A test holds the contrast for any ink.
-- **The kit, unchanged**: layer, toast, empty, filters, update, pull to refresh, What's new, install, theme, settings,
+- **The kit, unchanged**: layer, toast, busy (every POST form `data-kit-busy`; htmx's boosted sends wait through
+  `_shell_early.html`, a Polish veils its tile until the answer), empty, filters, update, pull to refresh, What's new, install, theme, settings,
   keys, worker. Both shells include the same `_shell_early`, `_shell_filternav`, `_shell_behave`, `_msgs` (cut out of
   the old shell), `deskbar.js`, `charts.js`, `more.js`, `viewer.js`. The palette has the main addresses (and the old
   History's), one list for both; `window.__nextUrl` in each shell maps them: History to Stats in the new one, every

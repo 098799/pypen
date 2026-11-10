@@ -30,7 +30,7 @@ come 50 at a time with Load more (kit §14, PYPEN-7; listing.py, more.js).
         <a href="{% url 'usages_edit' u.pk %}" class="icon-btn" aria-label="Edit inking" title="Edit inking">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path></svg>
         </a>
-        <form method="post" action="{% url 'usages_end' u.pk %}" class="form-inline">
+        <form method="post" action="{% url 'usages_end' u.pk %}" class="form-inline" data-kit-busy>
           {% csrf_token %}
           <button type="submit" class="icon-btn" aria-label="Mark ended" title="Mark ended">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>

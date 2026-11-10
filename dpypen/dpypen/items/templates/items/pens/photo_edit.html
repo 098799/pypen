@@ -45,7 +45,7 @@
   padding: 1rem;
   text-align: center;
 }
-.frame.busy::after {
+.frame.is-busy::after {
   content: "polishing…";
   position: absolute; inset: 0;
   background: rgba(0,0,0,0.55);
@@ -140,7 +140,7 @@
 </div>
 
 <div class="action-bar">
-  <form method="post" action="{% url 'pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" class="form-inline">
+  <form method="post" action="{% url 'pens_photo_enhance' pen.pk photo.pk %}" id="enhanceForm" class="form-inline" data-busy-on-submit=".compare .frame:nth-child(2)" data-kit-busy>
     {% csrf_token %}
     <input type="hidden" name="prompt" id="promptInput" value="">
     <button type="submit" class="btn primary">
@@ -149,26 +149,26 @@
   </form>
 
   {% if photo.image_styled %}
-  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" class="form-inline" data-confirm="Discard the AI catalog shot and go back to the original?" data-confirm-label="Revert">
+  <form method="post" action="{% url 'pens_photo_unstyle' pen.pk photo.pk %}" class="form-inline" data-confirm="Discard the AI catalog shot and go back to the original?" data-confirm-label="Revert" data-kit-busy>
     {% csrf_token %}
     <button type="submit" class="btn">↩ Revert to original</button>
   </form>
   {% endif %}
 
-  <form method="post" action="{% url 'pens_photo_rotate' pen.pk photo.pk %}" class="form-inline">
+  <form method="post" action="{% url 'pens_photo_rotate' pen.pk photo.pk %}" class="form-inline" data-kit-busy>
     {% csrf_token %}
     <input type="hidden" name="degrees" value="90">
     <button type="submit" class="btn">↻ Rotate 90°</button>
   </form>
 
   {% if photo != photo.pen.photos.first %}
-  <form method="post" action="{% url 'pens_photo_primary' pen.pk photo.pk %}" class="form-inline">
+  <form method="post" action="{% url 'pens_photo_primary' pen.pk photo.pk %}" class="form-inline" data-kit-busy>
     {% csrf_token %}
     <button type="submit" class="btn">★ Make primary</button>
   </form>
   {% endif %}
 
-  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" class="form-inline" data-confirm="Delete this photo entirely?">
+  <form method="post" action="{% url 'pens_photo_delete' pen.pk photo.pk %}" class="form-inline" data-confirm="Delete this photo entirely?" data-kit-busy>
     {% csrf_token %}
     <button type="submit" class="btn danger">Delete photo</button>
   </form>
@@ -193,11 +193,6 @@
 
   form.addEventListener("submit", function () {
     promptInput.value = promptEditor.value;
-    document.querySelectorAll(".compare .frame").forEach(function (f) {
-      if (f.classList.contains("is-blank")) f.classList.add("busy");
-    });
-    var styled = document.querySelector(".compare .frame:nth-child(2)");
-    if (styled && !styled.classList.contains("is-blank")) styled.classList.add("busy");
   });
 
   reset.addEventListener("click", function (e) {

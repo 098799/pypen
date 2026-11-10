@@ -12,7 +12,7 @@ submits it, a plain POST that the server answers with "Undone."
   <div data-msg{% if m.level_tag == 'error' or m.level_tag == 'warning' %} data-bad{% endif %}>
     <span data-text>{{ m }}</span>
     {% if m.extra_tags and 'undo:' in m.extra_tags %}
-    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" hx-boost="false" data-undo>
+    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" hx-boost="false" data-undo data-kit-busy>
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
     </form>

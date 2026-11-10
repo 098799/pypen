@@ -80,3 +80,66 @@ document.addEventListener("htmx:beforeSwap", function (e) {
   document.addEventListener("htmx:sendError", failed);
 })();
 </script>
+<script>
+/* A POST form (the kit's busy button, README §4 "Busy"; every POST form carries
+   data-kit-busy). The kit's markup waits for a page load, but hx-boost sends
+   the form itself (the submit is defaultPrevented), so here the button waits
+   on htmx's request instead: a ring in its label, a second tap or Enter sends
+   nothing (htmx would queue it and post twice), 20 s, then htmx's request is
+   aborted. No answer at all, or a refusal htmx swaps nothing for, is the kit's
+   toast "Not sent — …"; an error page swaps in (the handler above) and says it.
+   A form whose answer is a picture being made (data-busy-on-submit: Polish,
+   Lift the ink, Clean up) has no time limit and veils its tile (.is-busy, or
+   the element the value names) while it runs; the veil goes with the answer,
+   whatever it was. A form with hx-boost="false" is the kit's own markup case. */
+(function () {
+  if (window.__pypenBusy) return;
+  window.__pypenBusy = true;
+  function veilOf(f) {
+    if (!f.hasAttribute("data-busy-on-submit")) return null;
+    var sel = f.getAttribute("data-busy-on-submit");
+    return (sel && document.querySelector(sel)) || f.closest("[data-busy-host]");
+  }
+  /* The kit guards a busy button; a form with none (a photo picker that
+     sends itself) is busy as a whole: a second pick while it uploads sends
+     nothing (htmx queued it: the photos were added twice). */
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (f && f.hasAttribute && f.hasAttribute("data-kit-busy") && window.kitBusy && kitBusy.is(f)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+  }, true);
+  document.addEventListener("htmx:beforeRequest", function (e) {
+    var d = e.detail || {}, f = d.elt, cfg = d.requestConfig || {};
+    if (!window.kitBusy || !f || f.tagName !== "FORM" || !f.hasAttribute("data-kit-busy")) return;
+    if (String(cfg.verb || "get").toLowerCase() === "get") return;
+    var ev = cfg.triggeringEvent, by = ev && ev.submitter && ev.submitter.form === f ? ev.submitter : f;
+    var veil = veilOf(f), long = !!veil || /multipart/i.test(f.enctype || "");
+    if (veil) veil.classList.add("is-busy");
+    kitBusy(by, function (signal) {
+      return new Promise(function (ok, no) {
+        function end(x) {
+          f.removeEventListener("htmx:afterRequest", end);
+          if (veil) veil.classList.remove("is-busy");
+          var r = x.detail || {}, st = r.xhr ? r.xhr.status : 0;
+          if (r.successful) return ok();
+          var err = st ? new Error("HTTP " + st) : new TypeError("no answer");
+          if (st) err.status = st;
+          no(err);
+        }
+        f.addEventListener("htmx:afterRequest", end);
+        if (signal) signal.addEventListener("abort", function () { if (window.htmx) htmx.trigger(f, "htmx:abort"); });
+      });
+    }, {text: f.getAttribute("data-kit-busy") || null, fail: "Not sent", timeout: long ? 0 : 20000});
+  });
+  /* htmx keeps a copy of the page for Back before it swaps the answer in,
+     while the button still waits: free it first, or Back brings a button
+     the kit no longer knows (dead for ever). The same for the bfcache. */
+  function free() {
+    if (window.kitBusy) document.querySelectorAll(".kit-busy").forEach(function (b) { kitBusy.off(b); });
+    document.querySelectorAll(".is-busy").forEach(function (v) { v.classList.remove("is-busy"); });
+  }
+  document.addEventListener("htmx:beforeHistorySave", free);
+  window.addEventListener("pageshow", function (e) { if (e.persisted) free(); });
+})();
+</script>

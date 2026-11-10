@@ -175,7 +175,7 @@ share token instead — the door that is actually open.
         <a href="{% url 'pens_edit' pen.pk %}" data-kbd="edit" role="menuitem">Edit pen</a>
         <button type="button" role="menuitem" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share pen</button>
         <form method="post" action="{% url 'pens_delete' pen.pk %}" class="form-bare"
-              data-confirm="Delete {{ pen }}?" data-confirm-note="This cannot be undone.">
+              data-confirm="Delete {{ pen }}?" data-confirm-note="This cannot be undone." data-kit-busy>
           {% csrf_token %}
           <button type="submit" class="danger" role="menuitem">Delete pen</button>
         </form>
@@ -459,7 +459,7 @@ share token instead — the door that is actually open.
       <a href="{% url 'usages_edit' current.pk %}" class="icon-btn" aria-label="Edit inking" title="Edit inking">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.2-4.2L16 5a2.1 2.1 0 0 1 3 3L8.2 18.8z"></path></svg>
       </a>
-      <form method="post" action="{% url 'usages_end' current.pk %}" class="form-inline">
+      <form method="post" action="{% url 'usages_end' current.pk %}" class="form-inline" data-kit-busy>
         {% csrf_token %}
         <button type="submit" class="icon-btn" aria-label="Mark ended" title="Mark ended">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>

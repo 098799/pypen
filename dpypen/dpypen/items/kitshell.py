@@ -15,7 +15,7 @@ for offline like /static/ (pwa.KITSW["files"]).
 
 Files, in the order the pages had the snippets:
   theme.js           blocking in <head>, after window.KITTHEME (_theme_boot.html)
-  shell.css/.js      both shells: the layer, toast, empty, filters, update,
+  shell.css/.js      both shells: the layer, toast, busy, empty, filters, update,
                      pull to refresh
   member.css/.js     both shells, the owner and guests only (as before): What's
                      new, the install bar, Settings' rows, the tab bar (KIT-TABS;
@@ -41,7 +41,7 @@ TEMPLATES = Path(__file__).resolve().parent / "templates" / "items"
 
 KIT = shell.Shell(TEMPLATES, prefix="/kit")
 KIT.js("theme.js", "_theme.js")
-SHELL = ("_toast.html", "_empty.html", "_filters.html", "_update.html", "_pullrefresh.html", "_confirm.html")
+SHELL = ("_toast.html", "_busy.html", "_empty.html", "_filters.html", "_update.html", "_pullrefresh.html", "_confirm.html")
 KIT.css("shell.css", *SHELL)
 # The layer first: its popstate listener before htmx's and the app's.
 KIT.js("shell.js", "_layer.js", *SHELL)

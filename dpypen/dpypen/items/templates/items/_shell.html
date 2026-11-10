@@ -168,7 +168,7 @@ to the ⌕ popover.
   {# Was in the desk's pill nav only; the phone had it in Settings alone. #}
   <div class="menu-guest">
     <span class="guest-tag">guest{% if invite_label %} · {{ invite_label }}{% endif %}</span>
-    <form method="post" action="{% url 'invite_deactivate' %}" class="form-inline" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')">{% csrf_token %}<button type="submit" class="guest-leave">Leave</button></form>
+    <form method="post" action="{% url 'invite_deactivate' %}" class="form-inline" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET')" data-kit-busy>{% csrf_token %}<button type="submit" class="guest-leave">Leave</button></form>
   </div>
   {% endif %}
   {% if is_owner or is_guest %}

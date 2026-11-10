@@ -1,0 +1,298 @@
+<!-- KIT-BUSY: v1.0 2026-11-10
+  A control while its action runs: a button, a link, a tile or a form that
+  sent something and waits for the answer. Spec: ~/apps/kit/README.md §4,
+  "Busy". Canonical copy: ~/apps/kit/snippets/busy.html. Apps carry a
+  byte-identical copy (fleet-check `kit` compares them): change this file, bump
+  the stamp here and in `version` below, copy it out. Never edit a copy.
+
+  Why a piece of our own: 17 apps had their own (AUDIT.md, 2026-11-10), in 11
+  spinners and 6 helpers: some buttons stayed dead for ever after a failure,
+  some took a second tap and sent twice, some jumped in width when "Saving…"
+  replaced "Save", and a failure was an alert, a red word, or nothing.
+
+  Include it once, anywhere in the body (or its style part in the app's CSS
+  bundle and its script part in the app's JS: kit/py/shell.py cuts it). The
+  header names no tag in angle brackets but the markup below. A page that
+  loads it late puts this line in its first script; the calls made before
+  wait for it:
+    window.kitBusy = window.kitBusy || function (el, w, o) { return new Promise(function (y, n) { (kitBusy.q = kitBusy.q || []).push([el, w, o, y, n]); }); };
+
+  JS:
+    kitBusy(el, work, opts) -> Promise of what work gave
+        el    the button (a link, a tile; a form = its submit button)
+        work  a function (called with an AbortSignal) that returns a promise,
+              or a promise
+        While it runs: el is busy (below), and so are the text fields of its
+        form (read-only: what is sent is what was typed). A second tap on el,
+        or Enter in its form, does nothing and gets the same promise (no
+        double send). When it ends: el as it was,
+        the focus where it was. A failure: the kit's toast, kind "bad", with
+        the words from the error (below), and the promise rejects with it
+        (err.kitSaid = true): catch it only to do more, never to say it again.
+    opts (all optional):
+        text     words while it runs ("Saving…"); default: the label stays
+                 hidden under a ring, so nothing moves
+        fail     the toast's first words on a failure: "Not saved" → "Not
+                 saved — The server answered 502."; default "Did not work";
+                 false = no toast (the app says it in its own place)
+        ok       a toast on success ("Saved"); default none
+        timeout  ms, then the signal aborts and it fails "No answer in time";
+                 default 20000; 0 = none (a long job: an image, a tutor)
+        others   more controls that wait with it (a form's other buttons)
+    kitBusy.fetch(el, url, init, opts) -> Promise of the JSON (or text, or
+        null for 204): fetch with the signal, same-origin credentials; an
+        answer that is not ok is a failure (its JSON `detail` or `error`
+        becomes the words). The fleet's one way to POST from a button.
+    kitBusy.on(el, opts) / kitBusy.off(el)   by hand, for work that is not one
+        promise (an event stream, a page that goes away)
+    kitBusy.is(el)                         true while busy
+    kitBusy.say(err)                       the words for an error (as below)
+
+  Markup, no script of the page's own:
+    a form that posts and loads a page: the form gets data-kit-busy (or
+    data-kit-busy="Saving…"): the button that sent it is busy and the form
+    sends once until the next page; Back to the page (bfcache) frees it.
+    a button or a link that loads a page: data-kit-busy on it, same.
+
+  Busy looks the same in every app: aria-busy="true", aria-disabled="true"
+  (not `disabled`: the focus stays on it), the width it had, the label hidden
+  and a 1.1em ring in its place in the label's colour (with `text`: the ring
+  before the words). The ring shows after 0.15 s, so a quick answer does not
+  flash; the guard holds from the first tap. prefers-reduced-motion: the ring
+  pulses, it does not turn. Classes: .kit-busy on the control, .kit-busy-text
+  when it has words. Look: --kit-busy-ink (default: the control's colour),
+  --kit-busy-size (default 1.1em).
+
+  The words of a failure (kitBusy.say): offline or a network error → "p340 is
+  not reachable — is the phone on the tailnet?" (tailnet apps) / "No
+  connection — is the phone online?"; a timeout → "No answer in time."; 401 →
+  "Logged out — log in again."; 403 → "Not allowed."; 409 → "Changed
+  elsewhere — reload the page."; another status → the server's `detail` or
+  "The server answered 502."; an Error with a message → the message. Another
+  language: window.KITBUSY = {labels: {fail, tailnet, offline, timeout,
+  loggedOut, forbidden, conflict, status: "… %s"}}.
+
+  Not this piece: a list or a panel that loads (kit empty.html, kind busy); a
+  game's own animations; a progress bar with a percentage (an upload, a
+  render): the app's own, next to a busy button.
+
+  API: kitBusy(…) · .fetch · .on · .off · .is · .say · .version
+-->
+<style>
+.kit-busy { position: relative; cursor: progress; }
+.kit-busy:not(.kit-busy-text) { color: transparent !important; }
+.kit-busy:not(.kit-busy-text) > * { visibility: hidden; }
+.kit-busy::after { content: ""; box-sizing: border-box; position: absolute; left: 50%; top: 50%;
+  width: var(--kit-busy-size, 1.1em); height: var(--kit-busy-size, 1.1em);
+  margin: calc(var(--kit-busy-size, 1.1em) / -2) 0 0 calc(var(--kit-busy-size, 1.1em) / -2);
+  border-radius: 50%; border: 2px solid var(--kit-busy-ink, currentColor); border-right-color: transparent;
+  animation: kit-busy-wait 0s linear .15s both, kit-busy-turn .75s linear infinite; pointer-events: none; }
+.kit-busy.kit-busy-text::after { position: static; display: inline-block; vertical-align: -.15em; margin: 0 .45em 0 0;
+  order: -1; flex: none; }
+.kit-busy-words { pointer-events: none; }
+@keyframes kit-busy-wait { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes kit-busy-turn { to { transform: rotate(360deg); } }
+@keyframes kit-busy-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .kit-busy::after { animation: kit-busy-wait 0s linear .15s both, kit-busy-pulse 1.4s ease-in-out infinite; }
+}
+</style>
+<script>
+(function () {
+  if (window.kitBusy && window.kitBusy.version) return;
+  var version = "v1.0 2026-11-10";
+  var L = {fail: "Did not work", tailnet: "p340 is not reachable — is the phone on the tailnet?",
+    offline: "No connection — is the phone online?", timeout: "No answer in time.",
+    loggedOut: "Logged out — log in again.", forbidden: "Not allowed.",
+    conflict: "Changed elsewhere — reload the page.", status: "The server answered %s."};
+  function lab(k) { var c = window.KITBUSY && KITBUSY.labels; return (c && c[k]) || L[k]; }
+  function onTailnet() {
+    var c = window.KITBUSY;
+    if (c && typeof c.tailnet === "boolean") return c.tailnet;
+    return /(^|\.)p340\.grining\.eu$/.test(location.hostname);
+  }
+  var state = new WeakMap();
+
+  function target(el) {
+    if (!el) return null;
+    if (el.tagName === "FORM") return el.querySelector("button[type=submit], button:not([type]), input[type=submit]") || el;
+    return el;
+  }
+
+  function on(el, o) {
+    el = target(el); o = o || {};
+    if (!el || state.has(el)) return el;
+    var s = {o: o, w: el.style.width, mw: el.style.minWidth, ink: el.style.getPropertyValue("--kit-busy-ink"),
+      kids: null, others: [], focus: document.activeElement === el};
+    var cs = getComputedStyle(el), r = el.getBoundingClientRect();
+    if (r.width && cs.display !== "inline") el.style.minWidth = r.width + "px";
+    if (!s.ink) el.style.setProperty("--kit-busy-ink", cs.color);
+    if (o.text) {
+      s.kids = document.createDocumentFragment();
+      while (el.firstChild) s.kids.appendChild(el.firstChild);
+      var w = document.createElement("span");
+      w.className = "kit-busy-words"; w.textContent = o.text;
+      el.appendChild(w);
+      el.classList.add("kit-busy-text");
+    }
+    el.classList.add("kit-busy");
+    el.setAttribute("aria-busy", "true");
+    s.ad = el.getAttribute("aria-disabled");
+    el.setAttribute("aria-disabled", "true");
+    s.ro = [];
+    var form = el.form || (el.closest && el.closest("form"));
+    if (form) for (var i = 0; i < form.elements.length; i++) {
+      var f = form.elements[i];
+      if ((f.tagName === "TEXTAREA" || (f.tagName === "INPUT" && !/^(button|submit|reset|checkbox|radio|hidden|file|range|color)$/.test(f.type))) && !f.readOnly) {
+        f.readOnly = true; s.ro.push(f);
+      }
+    }
+    (o.others || []).forEach(function (x) {
+      if (x && x !== el) { s.others.push([x, x.getAttribute("aria-disabled")]); x.setAttribute("aria-disabled", "true"); x.dataset.kitBusyHeld = "1"; }
+    });
+    state.set(el, s);
+    return el;
+  }
+
+  function off(el) {
+    el = target(el);
+    var s = el && state.get(el);
+    if (!s) return;
+    state.delete(el);
+    el.classList.remove("kit-busy", "kit-busy-text");
+    el.removeAttribute("aria-busy");
+    if (s.ad == null) el.removeAttribute("aria-disabled"); else el.setAttribute("aria-disabled", s.ad);
+    el.style.minWidth = s.mw;
+    if (s.ink) el.style.setProperty("--kit-busy-ink", s.ink); else el.style.removeProperty("--kit-busy-ink");
+    if (s.kids) { while (el.firstChild) el.removeChild(el.firstChild); el.appendChild(s.kids); }
+    s.ro.forEach(function (f) { f.readOnly = false; });
+    s.others.forEach(function (p) {
+      if (p[1] == null) p[0].removeAttribute("aria-disabled"); else p[0].setAttribute("aria-disabled", p[1]);
+      delete p[0].dataset.kitBusyHeld;
+    });
+    if (s.focus && document.activeElement === document.body && el.isConnected) try { el.focus({preventScroll: true}); } catch (e) {}
+  }
+
+  function say(err) {
+    var st = err && typeof err.status === "number" ? err.status : null;
+    if (err && err.kitDetail) return err.kitDetail;
+    if (st === 401) return lab("loggedOut");
+    if (st === 403) return lab("forbidden");
+    if (st === 409) return lab("conflict");
+    if (st) return lab("status").replace("%s", st);
+    if (err && (err.name === "TimeoutError" || err.kitTimeout)) return lab("timeout");
+    if (navigator.onLine === false || !err || err.name === "TypeError" || err.name === "AbortError")
+      return onTailnet() ? lab("tailnet") : lab("offline");
+    if (err && err.message) return String(err.message);
+    return onTailnet() ? lab("tailnet") : lab("offline");
+  }
+
+  function toast(m, o) {
+    if (typeof window.kitToast === "function") window.kitToast(m, o);
+  }
+
+  function kitBusy(el, work, o) {
+    o = o || {};
+    var t = target(el);
+    var s = t && state.get(t);
+    if (s && s.p) return s.p;
+    on(t, o);
+    s = t && state.get(t);
+    var ctl = window.AbortController ? new AbortController() : null;
+    var ms = o.timeout == null ? 20000 : o.timeout, timedOut = false;
+    var tm = ms && ctl ? setTimeout(function () { timedOut = true; ctl.abort(); }, ms) : null;
+    var p;
+    try { p = Promise.resolve(typeof work === "function" ? work(ctl ? ctl.signal : undefined) : work); }
+    catch (e) { p = Promise.reject(e); }
+    p = p.then(function (v) {
+      clearTimeout(tm); off(t);
+      if (o.ok) toast(o.ok);
+      return v;
+    }, function (err) {
+      clearTimeout(tm); off(t);
+      if (timedOut) { err = err || {}; try { err.kitTimeout = true; } catch (e) {} }
+      if (o.fail !== false && !(err && err.name === "AbortError" && !timedOut && o.quietAbort)) {
+        var head = o.fail || lab("fail");
+        toast(head + " — " + (timedOut ? lab("timeout") : say(err)), {kind: "bad"});
+        try { err.kitSaid = true; } catch (e) {}
+      }
+      throw err;
+    });
+    if (s) s.p = p;
+    p.catch(function () {});
+    return p;
+  }
+
+  kitBusy.fetch = function (el, url, init, o) {
+    init = init || {};
+    return kitBusy(el, function (signal) {
+      var i = {};
+      for (var k in init) i[k] = init[k];
+      if (signal && !i.signal) i.signal = signal;
+      if (!i.credentials) i.credentials = "same-origin";
+      return fetch(url, i).then(function (r) {
+        var ct = r.headers.get("Content-Type") || "";
+        if (!r.ok) {
+          var e = new Error("HTTP " + r.status); e.status = r.status; e.response = r;
+          if (ct.indexOf("json") < 0) throw e;
+          return r.json().then(function (j) {
+            var d = j && (typeof j.detail === "string" ? j.detail : typeof j.error === "string" ? j.error : null);
+            if (d && r.status !== 401) e.kitDetail = d;
+            throw e;
+          }, function () { throw e; });
+        }
+        if (r.status === 204) return null;
+        return ct.indexOf("json") >= 0 ? r.json() : r.text();
+      });
+    }, o);
+  };
+  kitBusy.on = function (el, o) { return on(el, o); };
+  kitBusy.off = off;
+  kitBusy.is = function (el) { el = target(el); return !!(el && state.has(el)); };
+  kitBusy.say = say;
+  kitBusy.version = version;
+
+  // A tap on a busy control, or on one held with it, does nothing (no double send).
+  document.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest && e.target.closest(".kit-busy, [data-kit-busy-held]");
+    if (b) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+
+  // Enter in a form whose button is busy sends nothing (the click guard does not see it).
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (f && f.querySelector && f.querySelector(".kit-busy, [data-kit-busy-held]")) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+
+  // Markup: a form or a link that loads the next page.
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f || !f.hasAttribute || !f.hasAttribute("data-kit-busy")) return;
+    var b = e.submitter && e.submitter.tagName !== "FORM" ? e.submitter : target(f);
+    if (f.dataset.kitBusySent) { e.preventDefault(); return; }
+    setTimeout(function () {
+      if (e.defaultPrevented) return;
+      f.dataset.kitBusySent = "1";
+      on(b, {text: f.getAttribute("data-kit-busy") || null});
+    }, 0);
+  });
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest && e.target.closest("a[data-kit-busy], button[data-kit-busy]:not([type=submit])");
+    if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.tagName === "BUTTON" && a.form && a.form.hasAttribute("data-kit-busy")) return;
+    if (a.tagName === "A" && (a.target === "_blank" || a.hasAttribute("download"))) return;
+    setTimeout(function () { if (!e.defaultPrevented) on(a, {text: a.getAttribute("data-kit-busy") || null}); }, 0);
+  });
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    var n = document.querySelectorAll(".kit-busy, form[data-kit-busy-sent]");
+    for (var i = 0; i < n.length; i++) {
+      if (n[i].tagName === "FORM") delete n[i].dataset.kitBusySent; else off(n[i]);
+    }
+  });
+
+  var q = window.kitBusy && window.kitBusy.q;
+  window.kitBusy = kitBusy;
+  if (q) q.forEach(function (c) { kitBusy(c[0], c[1], c[2]).then(c[3], c[4]); });
+})();
+</script>

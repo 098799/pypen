@@ -102,7 +102,7 @@ if ("serviceWorker" in navigator) {
   {% if is_guest %}
   <div class="menu-guest">
     <span>Visiting{% if invite_label %}, {{ invite_label }}{% endif %}</span>
-    <form method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET');">
+    <form method="post" action="{% url 'invite_deactivate' %}" hx-boost="false" onsubmit="var w=navigator.serviceWorker;w&&w.controller&&w.controller.postMessage('KIT_FORGET');" data-kit-busy>
       {% csrf_token %}<button type="submit" class="nx-link">Leave</button>
     </form>
   </div>

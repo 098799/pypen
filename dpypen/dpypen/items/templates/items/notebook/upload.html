@@ -55,7 +55,7 @@
 
 <p class="import-hint">Snap a page of your inking journal. Claude will read your handwriting, match pens/inks from the catalog, and propose entries for review. Nothing gets saved until you confirm.</p>
 
-<form method="post" enctype="multipart/form-data" class="drop-zone">
+<form method="post" enctype="multipart/form-data" class="drop-zone" data-kit-busy>
   {% csrf_token %}
 
   <!-- Placeholder src: an <img> with no src is invalid and makes the browser

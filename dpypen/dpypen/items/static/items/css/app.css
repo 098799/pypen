@@ -2382,7 +2382,6 @@ a.pen-thumb { border-bottom: none; }
   text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums;
 }
 .more-btn { min-width: 9rem; min-height: 44px; justify-content: center; }
-.more-btn[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
 .more-first { font-size: 0.85rem; color: var(--muted); }
 
 /* The photo editor: messages, the AI shot's badge, the note under the actions. */

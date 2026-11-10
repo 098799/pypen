@@ -3,7 +3,7 @@
 {% block content %}
 <header class="head"><div class="head-t"><h1>Check the entries</h1><p>{{ rows|length }} found. An amber edge is a low-confidence reading, a red edge a poor match.</p></div>
   <div class="head-a"><a class="btn" href="{% url 'nx_notebook_upload' %}">Start over</a></div></header>
-<form method="post" class="form-nx">
+<form method="post" class="form-nx" data-kit-busy>
   {% csrf_token %}
   {% for row in rows %}{% with idx=forloop.counter0 %}
   <div class="review{% if row.confidence < 0.5 %} is-poor{% elif row.confidence < 0.8 %} is-low{% endif %}">

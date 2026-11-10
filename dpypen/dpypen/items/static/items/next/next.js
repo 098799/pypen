@@ -6,8 +6,10 @@
    [data-confirm] a form that asks first (a delete that cannot come back).
    [data-autosubmit] a file picker that sends its form as soon as it has a file.
    [data-shown-by="<id>"] a row that shows while that checkbox is on (Sold, Used up).
-   [data-busy-on-submit] a form whose answer takes a while: its parent says so
-                  (or the element its value names, e.g. ".compare").
+   [data-busy-on-submit] a form whose answer is a picture being made: its tile
+                  is veiled while it runs (or the element its value names,
+                  e.g. ".compare"). _shell_early.html does it, with the busy
+                  button (KIT-BUSY), and takes the veil away with the answer.
    [data-reset-field="<id>" data-reset-value] a button that puts a field back.
    [data-preview="<img id>"] a file picker that shows the photo it holds.
    [data-tl-zoom] the timeline's Fit, 2×, 4×.
@@ -71,14 +73,6 @@
   });
 
   /* ---- forms ---- */
-  document.addEventListener("submit", function (e) {
-    var f = e.target;
-    if (f.hasAttribute("data-busy-on-submit")) {
-      var sel = f.getAttribute("data-busy-on-submit");
-      var host = (sel && document.querySelector(sel)) || f.closest("[data-busy-host]") || f;
-      host.classList.add("is-busy");
-    }
-  }, true);
   document.addEventListener("change", function (e) {
     var t = e.target;
     if (t.hasAttribute && t.hasAttribute("data-autosubmit") && t.form) t.form.requestSubmit ? t.form.requestSubmit() : t.form.submit();

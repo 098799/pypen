@@ -7,7 +7,7 @@
   <h1>{{ title }}</h1>
 </div>
 
-<form method="post" class="form" autocomplete="off">
+<form method="post" class="form" autocomplete="off" data-kit-busy>
   {% csrf_token %}
 
   <div class="field">
@@ -58,7 +58,7 @@ this form is the one place you have already decided to change this inking.
 {% endcomment %}
 <form method="post" action="{% url 'usages_delete' usage.pk %}"
       data-confirm="Delete this inking?" data-confirm-note="This cannot be undone."
-      class="mt-1">
+      class="mt-1" data-kit-busy>
   {% csrf_token %}
   <button type="submit" class="btn small danger">Delete this inking</button>
 </form>
@@ -137,12 +137,12 @@ this form is the one place you have already decided to change this inking.
       </a>
       <div class="sample-actions">
         {% if not s.image_clean %}
-        <form method="post" action="{% url 'samples_extract' s.pk %}">
+        <form method="post" action="{% url 'samples_extract' s.pk %}" data-kit-busy>
           {% csrf_token %}
           <button type="submit">✨ Extract</button>
         </form>
         {% endif %}
-        <form method="post" action="{% url 'samples_delete' s.pk %}" data-confirm="Delete this sample?">
+        <form method="post" action="{% url 'samples_delete' s.pk %}" data-confirm="Delete this sample?" data-kit-busy>
           {% csrf_token %}
           <button type="submit">Delete</button>
         </form>
@@ -152,12 +152,12 @@ this form is the one place you have already decided to change this inking.
   </div>
   {% endif %}
 
-  <form method="post" action="{% url 'usages_sample_add' usage.pk %}" enctype="multipart/form-data" class="upload-box">
+  <form method="post" action="{% url 'usages_sample_add' usage.pk %}" enctype="multipart/form-data" class="upload-box" data-kit-busy>
     {% csrf_token %}
     <label class="file-pick">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="20" height="20" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       <span>Snap a writing sample</span>
-      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.submit()">
+      <input type="file" name="image" accept="image/*" capture="environment" multiple onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
     </label>
     <span class="upload-hint">photograph the written page — auto-uploads. <span class="t-touch">Tap</span><span class="t-desk">Click</span> ✨ Extract to lift the ink.</span>
   </form>

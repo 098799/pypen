@@ -24,7 +24,7 @@
       {% if can_edit %}
       <a class="btn" href="{% url 'nx_inks_edit' ink.pk %}" data-kbd="edit">Edit</a>
       <button class="btn" type="button" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">Share</button>
-      <form method="post" action="{% url 'nx_inks_delete' ink.pk %}" data-confirm="Delete {{ ink }}? Its inkings go too. This cannot be undone.">{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+      <form method="post" action="{% url 'nx_inks_delete' ink.pk %}" data-confirm="Delete {{ ink }}? Its inkings go too. This cannot be undone." data-kit-busy>{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
       {% endif %}
     </div>
     <div class="tally">

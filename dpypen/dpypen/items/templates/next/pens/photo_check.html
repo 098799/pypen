@@ -15,7 +15,7 @@
       <a href="{% url 'nx_pens_detail' ph.pen.pk %}"><b>{{ ph.pen.brand.name }} {{ ph.pen.model }}</b>{% if ph.pen.finish %} {{ ph.pen.finish }}{% endif %}</a>
       <small>{{ ph.source_note }}{% if ph.source_url %} · <a href="{{ ph.source_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">original</a>{% endif %}</small>
     </div>
-    <form class="check-verbs" method="post" action="{% url 'nx_pens_photo_verdict' ph.pen.pk ph.pk %}">{% csrf_token %}
+    <form class="check-verbs" method="post" action="{% url 'nx_pens_photo_verdict' ph.pen.pk ph.pk %}" data-kit-busy>{% csrf_token %}
       <input type="hidden" name="next" value="{% url 'nx_pens_photo_check' %}">
       <button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button>
       <button class="btn is-small is-bad" type="submit" name="verdict" value="wrong">Wrong</button>

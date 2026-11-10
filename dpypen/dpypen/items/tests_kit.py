@@ -26,6 +26,7 @@ COPIES = {
     TPL / "_update.html": KIT / "snippets" / "update.html",
     TPL / "_filters.html": KIT / "snippets" / "filters.html",
     TPL / "_whatsnew.html": KIT / "snippets" / "whatsnew.html",
+    TPL / "_busy.html": KIT / "snippets" / "busy.html",
     HERE / "errors.py": KIT / "py" / "errors.py",
     HERE / "whatsnew.py": KIT / "py" / "whatsnew.py",
     HERE / "lists.py": KIT / "py" / "lists.py",
@@ -84,6 +85,59 @@ class TheShellCarriesThem(TestCase):
             self.assertEqual(html.count("/*! KIT-PULLREFRESH: v1"), 2, url)   # wall.css and wall.js
             # the kit turns the browser's own pull off; none of the page's own
             self.assertNotIn("overscroll-behavior: none", html, url)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class Busy(TestCase):
+    """The kit's busy button (KIT-BUSY, AUDIT pass 12): every POST form waits
+    with it, htmx's boosted sends included, and no busy code of pypen's own is
+    left (the "Working…"/"polishing…" veils stay: a picture being made)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user("owner", password="x")
+
+    def test_both_shells_carry_it_and_the_htmx_glue(self):
+        self.client.force_login(self.owner)
+        for url in ("/pens/", "/prev/pens/"):
+            html = shipped(self.client, url)
+            self.assertEqual(html.count("/*! KIT-BUSY: v1"), 2, url)      # shell.css and shell.js
+            self.assertIn("window.__pypenBusy", html, url)
+            self.assertIn('"htmx:beforeHistorySave", free', html, url)  # Back never brings a dead button
+
+    def test_every_post_form_carries_it(self):
+        own = {p.name for p in TPL.glob("_*.html") if (KIT / "snippets" / p.name[1:]).exists()}
+        own |= {"_confirm.html", "_busy.html"}
+        missing = []
+        for p in (HERE / "templates").rglob("*.html"):
+            if p.name in own:
+                continue
+            for tag in re.findall(r"<form\b[^>]*>", p.read_text()):
+                if re.search(r'method="post"', tag, re.I) and "data-kit-busy" not in tag:
+                    missing.append(f"{p.relative_to(HERE)}: {tag[:80]}")
+        self.assertEqual(missing, [])
+
+    def test_no_own_busy_code_is_left(self):
+        js = (HERE / "static/items/next/next.js").read_text()
+        self.assertNotIn('classList.add("is-busy")', js)
+        more = (HERE / "static/items/js/more.js").read_text()
+        self.assertIn("kitBusy(a, load", more)
+        self.assertNotIn('setAttribute("aria-busy"', more)
+        self.assertNotIn('"Loading…"', more)
+        self.assertNotIn('aria-busy="true"', (HERE / "static/items/css/app.css").read_text())
+        old = (TPL / "pens" / "form.html").read_text() + (TPL / "pens" / "photo_edit.html").read_text()
+        self.assertNotIn("ph-spinner", old)
+        self.assertNotIn(".frame.busy", old)
+        self.assertNotIn('classList.add("busy")', old)
+        # form.submit() sends no submit event: neither the kit nor htmx saw it (a second pick posted twice)
+        for p in (HERE / "templates").rglob("*.html"):
+            self.assertNotIn('onchange="this.form.submit()"', p.read_text(), p.name)
+
+    def test_a_polish_veils_its_tile(self):
+        html = (HERE / "templates/next/pens/form.html").read_text()
+        self.assertIn('class="th-e" data-busy-host', html)
+        self.assertRegex(html, r'<form [^>]*photo_enhance[^>]*data-busy-on-submit data-kit-busy>')
+        self.assertIn(".is-busy::after", (HERE / "static/items/next/next.css").read_text())
 
 
 class TheBuildIsAsked(TestCase):

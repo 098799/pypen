@@ -66,7 +66,7 @@
 Claude found {{ rows|length }} entr{{ rows|length|pluralize:"y,ies" }}. Low-confidence rows are amber, poor matches are red. Skip any that are wrong.
 </p>
 
-<form method="post" class="form wide">
+<form method="post" class="form wide" data-kit-busy>
   {% csrf_token %}
 
   {% for row in rows %}

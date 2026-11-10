@@ -8,7 +8,8 @@
    one on the page when it is the same group (the server leaves its heading
    out); the others are added after it. The nav is replaced by the new one.
 
-   - A second tap while one is loading does nothing.
+   - The link is the kit's busy button while it loads (KIT-BUSY, shell.js):
+     a second tap does nothing, no answer in 20 s is a failure.
    - A failed load says so in the kit's "could not load" block under the
      button (kitEmpty.fail, templates/items/_empty.html), with the cause and
      Try again; the button keeps its label, so a tap on it tries again too.
@@ -66,20 +67,21 @@
     var host = a.closest("[data-more-host]");
     if (!host) return;
     e.preventDefault();
-    if (a.getAttribute("aria-busy") === "true") return;   // a double tap asks once
-    a.setAttribute("aria-busy", "true");
-    var label = a.getAttribute("data-label") || a.textContent;
-    a.setAttribute("data-label", label);
-    a.textContent = "Loading…";
     var nav = a.closest("[data-more-nav]");
     var oldFail = nav && nav.querySelector("[data-more-fail]");
     var name = host.getAttribute("data-more-host");
 
-    fetch(a.href, { headers: { "X-Pypen-More": "1" }, credentials: "same-origin" })
-      .then(function (r) {
-        if (!r.ok) throw r;
-        return r.text();
-      })
+    // The kit's busy button (KIT-BUSY): a ring in the label's place (the
+    // width holds), a second tap asks once, 20 s; the failure is said under
+    // the button (fail: false), not in a toast.
+    var load = function (signal) {
+      return fetch(a.href, { headers: { "X-Pypen-More": "1" }, credentials: "same-origin", signal: signal })
+        .then(function (r) {
+          if (!r.ok) throw r;
+          return r.text();
+        });
+    };
+    (window.kitBusy ? kitBusy(a, load, {fail: false}) : load())
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html");
         var got = doc.querySelector('[data-more-host="' + name + '"]');
@@ -91,8 +93,6 @@
         document.dispatchEvent(new CustomEvent("pypen:more", { detail: { host: host } }));
       })
       .catch(function (err) {
-        a.removeAttribute("aria-busy");
-        a.textContent = label;
         if (!nav || !window.kitEmpty) { a.textContent = "Could not load — try again"; return; }
         var slot = oldFail || nav.appendChild(document.createElement("div"));
         slot.setAttribute("data-more-fail", "");
