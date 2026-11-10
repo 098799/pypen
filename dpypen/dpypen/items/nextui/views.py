@@ -22,6 +22,7 @@ TABS = (
     ("nx_stats_collection", "Collection"),
     ("nx_stats_cupboard", "Cupboard"),
     ("nx_stats_rotation", "Rotation"),
+    ("nx_supen", "Turns"),
     ("nx_stats_timeline", "Timeline"),
     ("nx_stats_calendar", "Calendar"),
     ("nx_stats_pairs", "Pairings"),
@@ -194,7 +195,22 @@ def _turns(request, kind):
 
     data["rot_chips"] = [{"label": label, "url": url(k, data["sort"]), "on": k == data["rot"]} for k, label in data["chips"]]
     data["sort_chips"] = [{"label": label, "url": url(data["rot"], k), "on": k == data["sort"]} for k, label in data["sorts"]]
-    return render(request, "next/turns.html", {**data, "nav": "turns"})
+    for g in data["groups"]:
+        for r in g["rows"]:
+            r["since_words"] = short_span(r["since"]) if r["since"] else ""
+    # One of the stats pages (U19): the Stats tab is lit and its strip leads back.
+    return render(request, "next/turns.html", {**data, "nav": "history", "tabs": stat_tabs("nx_supen")})
+
+
+def short_span(days: int) -> str:
+    """Days since, as the table's narrow column can say it: 9 d, 3 wk, 8 mo, 5.9 y."""
+    if days < 21:
+        return f"{days} d"
+    if days < 60:
+        return f"{round(days / 7)} wk"
+    if days < 700:
+        return f"{round(days / 30.4)} mo"
+    return f"{days / 365.25:.1f} y"
 
 
 @login_or_guest_required

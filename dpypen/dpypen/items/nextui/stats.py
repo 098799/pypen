@@ -76,7 +76,30 @@ def bars(counts: Counter | dict, top: int | None = None, other: str = "Other") -
 def columns(rows: list[tuple]) -> list[dict]:
     """[(label, value, title)] as columns on one axis."""
     peak = max((v for _, v, _ in rows), default=0) or 1
-    return [{"label": a, "n": round(v) if isinstance(v, float) else v, "pct": round(100 * v / peak, 2), "title": t} for a, v, t in rows]
+    # Over 12 columns a phone gives each ~15 px, and every label and value ran into
+    # the next ('06'07'08…, 117123123…): then every 5th label counting back from the
+    # last, and a value on the peak and the last column only (UX U7). The tip has all.
+    n = len(rows)
+    crowded = n > CROWDED
+    # One peak only: a flat run of equal tops printed 126126126126.
+    top = max((i for i, (_, v, _) in enumerate(rows) if v == peak), default=-1)
+    return [{"label": a, "n": round(v) if isinstance(v, float) else v, "pct": round(100 * v / peak, 2), "title": t,
+             "lab": not crowded or (n - 1 - i) % 5 == 0, "mark": not crowded or i in (top, n - 1),
+             # A chart that prints no values still names its peak and its last (U22).
+             "edge": i in (top, n - 1), "short": compact(v)}
+            for i, (a, v, t) in enumerate(rows)]
+
+
+CROWDED = 12
+
+
+def compact(v) -> str:
+    """12345 as 12k, 1500 as 1.5k: a value that fits over a narrow column."""
+    v = round(v)
+    if abs(v) < 1000:
+        return str(v)
+    k = v / 1000
+    return (f"{k:.1f}".rstrip("0").rstrip(".") if k < 10 else f"{round(k)}") + "k"
 
 
 def load() -> list:

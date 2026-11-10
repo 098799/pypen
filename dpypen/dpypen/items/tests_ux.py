@@ -217,3 +217,39 @@ class SmallFixes(Seeded):
         from pathlib import Path
         root = Path(__file__).resolve().parent / "templates/next"
         self.assertEqual([str(p) for p in root.rglob("*.html") if "capture=" in p.read_text()], [])
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class OneRuleForPastTheirTurn(Seeded):
+    """U6: supen said 4 of 14 past their turn where Stats, Rotation said 12: one counted past 5/4 of the turn."""
+
+    def test_supen_counts_past_the_turn_like_rotation(self):
+        from dpypen.items.nextui import turns
+        # due: last fill ended 2024-02-10, turn 30 days: past it, and past 5/4 of it.
+        g = turns.build("pens")["groups"][0]
+        self.assertEqual(g["past"], 1)
+        Usage.objects.create(pen=self.due, nib=self.nib, ink=self.red, begin=date.today() - timedelta(days=60),
+                             end=date.today() - timedelta(days=33))
+        g = turns.build("pens")["groups"][0]
+        self.assertEqual((g["past"], g["late"]), (1, 0))   # 33 days: past the 30-day turn, not yet late
+
+    def test_turns_is_a_stats_page(self):
+        self.client.force_login(self.owner)
+        html = self.client.get("/supen/").content.decode()
+        self.assertRegex(html, r'href="/stats/" data-match="/stats /supen /suink" aria-current="page"')
+        self.assertIn('href="/supen/" aria-current="true">Turns', html)
+
+
+class Charts(Seeded):
+    def test_a_crowded_column_chart_labels_every_fifth_and_marks_the_peak(self):
+        """U7, U22."""
+        from dpypen.items.nextui import stats
+        cols = stats.columns([(f"’{y % 100:02d}", y - 2000, str(y)) for y in range(2005, 2027)])
+        self.assertEqual([c["label"] for c in cols if c["lab"]], ["’06", "’11", "’16", "’21", "’26"])
+        self.assertEqual([c["n"] for c in cols if c["mark"]], [26])
+        few = stats.columns([("a", 1, ""), ("b", 5, ""), ("c", 2, "")])
+        self.assertTrue(all(c["lab"] and c["mark"] for c in few))
+        self.assertEqual([c["short"] for c in few if c["edge"]], ["5", "2"])
+        flat = stats.columns([(str(y), 5 if y > 2010 else 1, "") for y in range(2000, 2020)])
+        self.assertEqual([c["label"] for c in flat if c["mark"]], ["2019"])
+        self.assertEqual((stats.compact(12345), stats.compact(1500), stats.compact(999)), ("12k", "1.5k", "999"))

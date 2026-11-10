@@ -157,6 +157,9 @@ def build(kind: str, rot: str = "", sort: str = "last", today: date | None = Non
                 "n": len(rows),
                 "inked": counts["now"],
                 "late": counts["late"],
+                # Past their turn: the same rule as the desk and Stats, Rotation (more days
+                # than the turn). supen's colours stay its own: amber to 1¼ turns, then red.
+                "past": sum(1 for row in rows if row["since"] and r.how_often > 0 and row["since"] > r.how_often),
                 "never": counts["never"],
             }
         )

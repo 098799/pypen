@@ -10,7 +10,7 @@
     <ul class="rows">{% for b in best %}<li class="row" style="--sw: {{ b.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_pens_detail' b.pen.pk %}">{{ b.pen }}</a><small>{{ b.ink }}</small></div><span class="row-v">{{ b.n }} fills<br>{{ b.days }} d</span></li>{% endfor %}</ul>
   </section>
   <section class="plate">
-    <h2>Most-used pens against most-used inks</h2><p>A darker square held ink longer. Swipe across.</p>
+    <h2>Most-used pens against most-used inks</h2><p>A darker square held ink longer; the dots on top are the inks. Swipe across.</p>
     <div class="mx"><div class="mx-grid" style="--cols: {{ matrix_cols|length }}">
       <span></span>{% for c in matrix_cols %}<a class="mx-h" href="{% url 'nx_inks_detail' c.ink_id %}" style="--sw: {{ c.bg }}" title="{{ c.label }}" aria-label="{{ c.label }}"></a>{% endfor %}
       {% for r in matrix_rows %}

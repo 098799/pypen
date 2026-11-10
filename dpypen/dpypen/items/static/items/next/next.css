@@ -475,11 +475,12 @@ a.hbar { min-height: 34px; }
 .tl-zoom.is-zoomed .tl-axis { position: relative; }
 
 .mx { display: grid; gap: 1px; overflow-x: auto; margin-top: 10px; scrollbar-width: thin; }
-.mx-grid { display: grid; gap: 1px; grid-template-columns: 120px repeat(var(--cols), 17px); width: max-content; }
+.mx-grid { display: grid; gap: 1px; grid-template-columns: 150px repeat(var(--cols), 17px); width: max-content; }
 .mx-h { height: 17px; border-radius: 50%; background: var(--sw); }
-.mx-p { font-size: .84rem; line-height: 17px; height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 6px; }
+.mx-p { font-size: .84rem; line-height: 17px; height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 6px; position: sticky; left: 0; background: var(--plate); z-index: 1; }
 .mx-c { width: 17px; height: 17px; padding: 0; border: 0; background: color-mix(in srgb, var(--plate-line) 45%, transparent); border-radius: 2px; }
-button.mx-c { background: color-mix(in srgb, var(--c) calc(25% + var(--a) * 75%), transparent); cursor: pointer; }
+/* The days are the shade, one neutral ramp: the ink's own colour made a pink pair at 284 days paler than a black one at 40 (UX U9). */
+button.mx-c { background: color-mix(in srgb, var(--plate-fg) calc(10% + var(--a) * 90%), transparent); cursor: pointer; }
 
 .rec-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
 .rec-c { padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
@@ -704,6 +705,7 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 .st-due { color: #8a5a00; font-weight: 600; }
 .st-late { color: #b3261e; font-weight: 800; }
 .st .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.turns-key { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 12px; color: var(--dim); font-size: .9rem; }
+.st-word { font-size: .78em; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.turns-key { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 4px 0 12px; color: var(--dim); font-size: .9rem; }
 .turns-key span { display: inline-flex; align-items: center; gap: 6px; }
 .turns-key i { width: 12px; height: 12px; border-radius: 3px; display: block; background: currentColor; box-shadow: 0 0 0 2px var(--plate); }

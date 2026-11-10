@@ -107,7 +107,8 @@ class Turns(TestCase):
         self.client.force_login(self.owner)
         html = self.client.get("/supen/").content.decode()
         self.assertIn("Pens' turns", html)
-        self.assertIn('class="st st-late">200', html)
+        # 200 days in words, the days under the finger, and a word for late (not colour alone, U19).
+        self.assertIn('class="st st-late"><span title="200 days">7 mo</span> <small class="st-word">late</small>', html)
         self.assertIn("4001 Blue", html)                                 # what the inked pen holds
         self.assertIn('href="/supen/?rot=p0"', html)
         html = self.client.get("/supen/?rot=p0&sort=days").content.decode()
