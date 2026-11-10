@@ -217,7 +217,7 @@ class ErrorPages(TestCase):
         self.client.force_login(self.owner)
         r = self.client.get("/prev/pens/987654/", **NAVIGATE)
         self.assertEqual(r.status_code, 404)
-        self.assertIn("Not here", r.content.decode())
+        self.assertIn("No such pen", r.content.decode())   # UX U36: a record says which kind
 
     def test_a_boosted_swap_gets_the_page(self):
         self.client.force_login(self.owner)

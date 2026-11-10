@@ -350,3 +350,34 @@ class AiFailuresSaySo(Seeded):
                 mock.patch("dpypen.items.enhance.generate_catalog_shot", side_effect=_NoCredit("credit balance is too low")):
             r = self.client.post(f"/pens/{self.due.pk}/photos/add/", {"image": buf, "enhance": "1", "next": "queue"}, follow=True)
         self.assertContains(r, "Saved, not polished. Gemini refused: its credit has run out.")
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class MissingRecord(Seeded):
+    def test_a_missing_pen_says_so_and_leads_to_the_list(self):
+        """U36."""
+        self.client.force_login(self.owner)
+        from dpypen.items.tests_kit import NAVIGATE
+        r = self.client.get("/pens/999999/", **NAVIGATE)
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "No such pen", status_code=404)
+        self.assertContains(r, '<a class="btn is-go" href="/pens/">All pens</a>', status_code=404)
+        r = self.client.get("/nope/", **NAVIGATE)
+        self.assertNotContains(r, "No such", status_code=404)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
+class ListWords(Seeded):
+    def setUp(self):
+        self.client.force_login(self.owner)
+
+    def test_a_search_says_how_many_match(self):
+        """U33: the title stayed "126 pens" over 8 rows."""
+        self.assertContains(self.client.get("/pens/?q=M800"), "1 of 2 pens match “M800”")
+        self.assertContains(self.client.get("/pens/?q=M800&view=grid"), "1 of 2 pens match")
+        self.assertContains(self.client.get("/inks/?q=ruby"), "1 ink match “ruby”")
+        self.assertNotContains(self.client.get("/pens/"), "match-line")
+
+    def test_the_ink_sort_says_it_is_a_sort(self):
+        """U29: "Colour ▾" over the colour chips read as a filter."""
+        self.assertContains(self.client.get("/inks/"), ">Sort: Colour</option>")

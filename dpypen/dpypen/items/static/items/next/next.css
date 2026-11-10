@@ -274,6 +274,7 @@ html:not([data-theme=light]) .trail i { box-shadow: 0 0 0 1.5px var(--plate); }
 .ink-row-nx h3 { font-size: 1.05rem; line-height: 1.16; overflow-wrap: anywhere; }
 .ink-row-nx p { color: var(--dim); font-size: .92rem; line-height: 1.25; }
 .ink-row-nx > span { color: var(--dim); font-size: .92rem; text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+.match-line { color: var(--dim); font-size: .92rem; margin: 2px 0 6px; }
 .pip { display: inline-block; padding: 0 7px; border-radius: 9px; background: var(--panel-2); color: var(--fg); font-size: .82rem; line-height: 1.5; }
 
 /* ---- a record's page ---- */

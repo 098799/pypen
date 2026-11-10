@@ -1,10 +1,10 @@
 {% extends "next/_shell.html" %}
 {% block title %}Photos to check · {{ app_name }}{% endblock %}
 {% block content %}
-<a class="back" href="{% url 'nx_pens_list' %}">All pens</a>
+<a class="back" href="{% url 'nx_desk' %}">The desk</a>
 <header class="head"><div class="head-t">
   <h1>{% if photos %}{{ photos|length }} photo{{ photos|length|pluralize }} to check{% else %}Nothing to check{% endif %}</h1>
-  <p>Found on the web or drawn by Gemini. Is it your pen?{% if checked or rejected %} {{ checked }} right, {{ rejected }} wrong so far.{% endif %}</p>
+  <p>{% if photos %}Found on the web or drawn by Gemini. Is it your pen?{% endif %}{% if checked or rejected %} {{ checked }} right, {{ rejected }} wrong so far.{% endif %}</p>
 </div></header>
 {% if photos %}
 <ul class="check-grid">
@@ -24,6 +24,6 @@
   {% endfor %}
 </ul>
 {% else %}
-<div class="kit-empty" data-kind="none"><p class="kit-empty-t">Every photo is checked</p><p class="kit-empty-p">A photo the app finds for a pen shows up here until you say whether it is right.</p><p class="kit-empty-a"><a class="kit-empty-b" href="{% url 'nx_pens_list' %}">All pens</a></p></div>
+<div class="kit-empty" data-kind="none"><p class="kit-empty-p">A photo the app finds for a pen shows up here until you say whether it is right.</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_pens_needs_photos' %}">Pens that need a photo</a></p></div>
 {% endif %}
 {% endblock %}

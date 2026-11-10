@@ -5,9 +5,12 @@
 <div class="error-box">
   <p>{{ err.text }}</p>
   <div class="btn-row">
-    <a class="btn" href="javascript:history.back()" hx-boost="false" data-error-back>Back</a>
-    {% if is_owner or is_guest %}<a class="btn is-go" href="{% url 'nx_desk' %}">The desk</a><a class="btn" href="{% url 'nx_search' %}">Search</a>{% else %}<a class="btn is-go" href="{% url 'home' %}">The front page</a>{% endif %}
+    {% if way and is_owner or way and is_guest %}<a class="btn is-go" href="{{ way.url }}">{{ way.label }}</a>{% endif %}
+    <a class="btn" href="javascript:history.back()" hx-boost="false" data-error-back hidden>Back</a>
+    {% if way and is_owner or way and is_guest %}<a class="btn" href="{% url 'nx_desk' %}">The desk</a>{% elif is_owner or is_guest %}<a class="btn is-go" href="{% url 'nx_desk' %}">The desk</a><a class="btn" href="{% url 'nx_search' %}">Search</a>{% else %}<a class="btn is-go" href="{% url 'home' %}">The front page</a>{% endif %}
   </div>
   <p class="code">Error {{ err.status }}</p>
+  <script>/* Back only where there is a page to go back to: on a pasted link it did nothing (U36). */
+  if (history.length > 1) document.querySelectorAll("[data-error-back]").forEach(function (a) { a.hidden = false; });</script>
 </div>
 {% endblock %}

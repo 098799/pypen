@@ -25,7 +25,7 @@
   </div>
 </div>
 <label class="kit-sort"><span>Sort</span><select name="sort" form="inkFilterForm" data-navkey="sort">
-  {% for o in filters.sort_options %}<option value="{% if o.key != 'color' %}{{ o.key }}{% endif %}"{% if o.on %} selected{% endif %}>{{ o.label }}</option>{% endfor %}
+  {% for o in filters.sort_options %}<option value="{% if o.key != 'color' %}{{ o.key }}{% endif %}"{% if o.on %} selected{% endif %}>Sort: {{ o.label }}</option>{% endfor %}
 </select></label>
 {% if filters.view == 'grid' %}{% include "next/inks/_grid.html" %}{% else %}{% include "next/inks/_content.html" %}{% endif %}
 {% endblock %}

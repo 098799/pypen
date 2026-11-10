@@ -6,7 +6,7 @@
   <form method="get" action="{% url 'nx_search' %}" id="searchForm" role="search" class="kit-search" data-navform
         hx-get="{% url 'nx_search' %}" hx-trigger="input changed delay:300ms from:#searchQ, change from:#searchFilters, submit"
         hx-target="#searchResultsBody" hx-swap="outerHTML" hx-select="#searchResultsBody" hx-replace-url="true" hx-sync="this:replace">
-    <input type="search" name="q" id="searchQ" aria-label="Search pens and inks" placeholder="Pen, ink, brand, colour, filler" value="{{ query }}" autofocus>
+    <input type="search" name="q" id="searchQ" aria-label="Search pens and inks" placeholder="Pen, ink, brand, colour" value="{{ query }}" autofocus>
   </form>
   <label class="kit-sort"><span>Sort</span><select name="sort" form="searchForm" data-default="alpha">
     {% for k, label in filters.sorts.items %}<option value="{{ k }}"{% if filters.sort == k %} selected{% endif %}>{{ label|capfirst }}</option>{% endfor %}

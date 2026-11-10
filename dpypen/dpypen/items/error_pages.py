@@ -19,6 +19,8 @@ with DEBUG on it shows its own debug pages instead.
   instead of doing nothing.
 """
 
+import re
+
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 
@@ -47,15 +49,28 @@ def _json(err):
     return resp
 
 
-def _page(request, err):
+def _page(request, err, way=None):
     if not _wants_page(request):
         return _json(err)
-    resp = render(request, "items/error.html", {"err": err, "nav": ""}, status=err.status)
+    resp = render(request, "items/error.html", {"err": err, "nav": "", "way": way}, status=err.status)
     resp["Cache-Control"] = "no-store"
     return resp
 
 
+# A record that is not there (deleted, or an old link): say which kind, and the
+# way on is its list. Back did nothing on a pasted link (UX U36).
+GONE = re.compile(r"^/(?:prev/)?(pens|inks|usages)/\d+/")
+GONE_WORDS = {"pens": ("pen", "/pens/", "All pens"), "inks": ("ink", "/inks/", "All inks"),
+              "usages": ("inking", "/usages/", "All inkings")}
+
+
 def not_found(request, exception=None):
+    m = GONE.match(request.path)
+    if m:
+        what, url, label = GONE_WORDS[m.group(1)]
+        err = errors.Error(404, f"No such {what}", f"This {what} is not in the collection: deleted, or the link is old.",
+                           None, ())
+        return _page(request, err, way={"url": url, "label": label})
     return _page(request, errors.describe(404, method=request.method))
 
 

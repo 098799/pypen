@@ -1,6 +1,7 @@
 {% load items_extras %}
 <div id="inkContentBody" data-listnav data-more-host="inks">
 {% include "next/inks/_filters.html" %}
+{% if filters.q and more.total %}<p class="match-line" role="status">{{ more.total }} ink{{ more.total|pluralize }} match “{{ filters.q }}”</p>{% endif %}
 {% if not sections %}{% include "next/inks/_empty_state.html" %}{% endif %}
 {% for s in sections %}
 <section data-listnav-group data-more-section data-group="{{ s.key }}">
