@@ -123,3 +123,23 @@ class SameAnswersFaster(SimpleTestCase):
             "{% load l10n %}{% for b in bars %}<button type=\"button\" class=\"{% if b.current %}is-now{% endif %}\" style=\"left: {{ b.left|unlocalize }}%; width: {{ b.width|unlocalize }}%; --sw: {{ b.bg }}\" data-tip-title=\"{{ b.begin|date:'j M Y' }} to {% if b.end %}{{ b.end|date:'j M Y' }}{% else %}now{% endif %}\" data-tip-lead=\"{{ b.ink }}\" data-tip=\"{{ b.nib }}, {{ b.days }} day{{ b.days|pluralize }}\" data-tip-links=\"Open the ink|{% url 'nx_inks_detail' b.ink_id %}\" aria-label=\"{{ b.ink }}, {{ b.days }} days\"></button>{% endfor %}"
         ).render(Context({"bars": bars}))
         self.assertEqual(_bars_html(bars), old)
+
+
+class WorkerBudget(SimpleTestCase):
+    """The service worker answers a hashed /static/ file from its copy (P10:
+    with the HTTP cache spent, 15-16 static files a page went to the network
+    through the worker; 0-1 after)."""
+
+    def test_hashed_static_files_are_answered_from_the_copy(self):
+        import re
+
+        from django.test import Client
+
+        js = Client().get("/sw.js").content.decode()
+        self.assertIn("kitSW.route(function (event, url)", js)
+        self.assertLess(js.index("self.kitSW = {"), js.rindex("kitSW.route(function (event, url)"))  # after the kit
+        pattern = re.search(r"var HASHED = /(.+?)/,", js).group(1).replace("\\/", "/")
+        self.assertRegex("/static/items/next/next.cbf05bc8b4ee.css", pattern)
+        self.assertRegex("/static/items/next/fonts/alegreya.89d46f51b51e.woff2", pattern)
+        self.assertNotRegex("/static/items/next/next.css", pattern)  # a name that never changes
+        self.assertNotRegex("/kit/shell.js", pattern)

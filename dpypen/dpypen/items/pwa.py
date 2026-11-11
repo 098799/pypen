@@ -48,7 +48,36 @@ KITSW = {
     "skip": ["/accounts/", "/admin/", "/api/", "/media/", "/i/", "/undo/"],
     "takeover": True,
 }
-_SW_JS = "self.KITSW = " + json.dumps(KITSW) + ";\n" + (_HERE / "_sw.js").read_text()
+# The app's part of the worker, after the kit's (its kitSW.route hook).
+# whitenoise names a changed /static/ file anew (name.<12 hex>.ext), so such a
+# file is content-addressed like a ?v= URL: the kept copy first, the network
+# only for a name never seen. The kit's file() went to the network first for
+# them and wrote each one into Cache Storage again on every page (~20 writes a
+# load), and once the HTTP cache's day ran out every asset was asked again
+# (speed pass, AUDIT.md P10). Kept in the kit's files cache, at most MAX_FILES.
+_SW_APP = """
+(function () {
+  var HASHED = /^\\/static\\/.+\\.[0-9a-f]{12}\\.[a-z0-9]+$/, MAX_FILES = 400;
+  kitSW.route(function (event, url) {
+    var req = event.request;
+    if (req.method !== "GET" || req.headers.has("Range") || !HASHED.test(url.pathname)) return;
+    return caches.open(kitSW.caches.files).then(function (cache) {
+      return cache.match(req).then(function (hit) {
+        if (hit) return hit;
+        return fetch(req).then(function (resp) {
+          if (resp.status === 200 && resp.type === "basic") {
+            event.waitUntil(cache.put(req, resp.clone()).then(function () { return cache.keys(); }).then(function (keys) {
+              return Promise.all(keys.slice(0, Math.max(0, keys.length - MAX_FILES)).map(function (k) { return cache.delete(k); }));
+            }));
+          }
+          return resp;
+        });
+      });
+    });
+  });
+})();
+"""
+_SW_JS = "self.KITSW = " + json.dumps(KITSW) + ";\n" + (_HERE / "_sw.js").read_text() + _SW_APP
 
 
 # The icon (kit §4 "Icons"): a navy nib, its breather hole and slit in the
