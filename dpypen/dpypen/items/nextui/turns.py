@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date
+from types import SimpleNamespace
 
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 
@@ -75,10 +76,25 @@ def ink_groups() -> list[dict]:
     return out
 
 
-def _rows(items, field: str, usages, today: date, turn: int, sort: str) -> list[dict]:
+def _by(usages, field: str) -> dict:
     mine = defaultdict(list)
     for u in usages:
         mine[getattr(u, field)].append(u)
+    return mine
+
+
+def _light(open_related: str) -> list:
+    """Every inking as four columns (pk, pen, ink, dates) for the counts; the
+    open ones, which the page names, as model objects with `open_related`.
+    All 568 with a join as model objects were 17 of supen's 36 ms (AUDIT.md P12)."""
+    full = {u.pk: u for u in Usage.objects.filter(end__isnull=True).select_related(open_related)}
+    out = []
+    for pk, pen_id, ink_id, begin, end in Usage.objects.values_list("pk", "pen_id", "ink_id", "begin", "end"):
+        out.append(full.get(pk) or SimpleNamespace(pk=pk, pen_id=pen_id, ink_id=ink_id, begin=begin, end=end))
+    return out
+
+
+def _rows(items, mine: dict, today: date, turn: int, sort: str) -> list[dict]:
     rows = []
     for it in items:
         us = mine.get(it.pk, [])
@@ -127,22 +143,23 @@ def build(kind: str, rot: str = "", sort: str = "last", today: date | None = Non
 
     if kind == "pens":
         field = "pen_id"
-        usages = list(Usage.objects.select_related("ink__brand"))
+        usages = _light("ink__brand")
         items = defaultdict(list)
         for p in Pen.objects.filter(rotation__in=[g["rot"] for g in shown]).select_related("brand"):
             items[p.rotation_id].append(p)
     else:
         field = "ink_id"
-        usages = list(Usage.objects.select_related("pen__brand"))
+        usages = _light("pen__brand")
         items = defaultdict(list)
         # suink's bottles: open ones with more than a few ml left
         for i in Ink.objects.filter(rotation__in=[g["rot"] for g in shown], volume__gt=5, used_up=False).select_related("brand"):
             items[i.rotation_id].append(i)
 
+    mine = _by(usages, field)  # once, not once per group
     out = []
     for g in shown:
         r = g["rot"]
-        rows = _rows(items.get(r.pk, []), field, usages, today, r.how_often, sort)
+        rows = _rows(items.get(r.pk, []), mine, today, r.how_often, sort)
         if not rows:
             continue
         counts = defaultdict(int)
