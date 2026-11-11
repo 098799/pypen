@@ -198,8 +198,10 @@ def _gantt_data():
             e_date = min(u.end or today, end_date)
             if e_date < b_date: continue
             bars.append({
-                "left": (b_date - start_date).days / total_days * 100,
-                "width": max(0.2, (e_date - b_date).days / total_days * 100),
+                # 2 decimals of a percent: 0.4 px at the 4x zoom of a desk; 17
+                # digits each were 19 KB of the page (AUDIT.md P6).
+                "left": round((b_date - start_date).days / total_days * 100, 2),
+                "width": round(max(0.2, (e_date - b_date).days / total_days * 100), 2),
                 "hex": INK_COLOR_HEX.get(u.ink.color, "#333"),
                 "bg": u.ink.swatch_bg,
                 "ink": str(u.ink), "ink_id": u.ink_id,
@@ -209,7 +211,7 @@ def _gantt_data():
                 "current": u.end is None,
             })
         if bars:
-            pen_rows.append({"pen": p, "bars": bars})
+            pen_rows.append({"pen": p, "bars": bars, "bars_html": _bars_html(bars)})
 
     year_ticks = [
         {"year": y, "left": (date(y, 1, 1) - start_date).days / total_days * 100}
@@ -222,6 +224,37 @@ def _gantt_data():
         "latest_year": latest_year,
         "total_pens": len(pen_rows),
     }
+
+
+def _tl_date(d) -> str:
+    """Django's `date:'j M Y'`: 5 Nov 2026."""
+    return f"{d.day} {_MONTHS[d.month - 1]} {d.year}"
+
+
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _bars_html(bars) -> str:
+    """One pen's bars on the Timeline, made once with the data it is cached
+    with (speed pass, AUDIT.md P6): the template drew 568 buttons with a
+    {% url %}, two dates and a pluralize each on every view, 105 ms of 108."""
+    from django.urls import reverse
+    from django.utils.html import escape
+
+    ink_url = reverse("nx_inks_detail", args=[987654321]).replace("987654321", "{}")
+    out = []
+    for b in bars:
+        span = f"{_tl_date(b['begin'])} to {_tl_date(b['end']) if b['end'] else 'now'}"
+        days = b["days"]
+        out.append(
+            f'<button type="button" class="{"is-now" if b["current"] else ""}" '
+            f'style="left: {b["left"]}%; width: {b["width"]}%; --sw: {escape(b["bg"])}" '
+            f'data-tip-title="{span}" data-tip-lead="{escape(b["ink"])}" '
+            f'data-tip="{escape(b["nib"])}, {days} day{"" if days == 1 else "s"}" '
+            f'data-tip-links="Open the ink|{ink_url.format(b["ink_id"])}" '
+            f'aria-label="{escape(b["ink"])}, {days} days"></button>'
+        )
+    return "".join(out)
 
 
 def _matrix_data():

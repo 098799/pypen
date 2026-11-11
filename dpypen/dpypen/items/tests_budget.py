@@ -68,3 +68,58 @@ class InlineBudget(TestCase):
                 size = sum(len(a) + len(b) for a, b in code)
                 self.assertLess(size, self.INLINE_MAX, url)
                 self.assertIn("/kit/late.js?v=", html, url)
+
+
+class SameAnswersFaster(SimpleTestCase):
+    """The rewrites of the speed pass give what the code before them gave."""
+
+    def test_peak_day_is_the_old_count_per_pen_day(self):
+        import random
+        from collections import Counter
+        from datetime import date, timedelta
+        from types import SimpleNamespace as N
+
+        from dpypen.items.records import _peak_day
+
+        def old(usages, today):  # records.py before P7, verbatim
+            day_counts = Counter()
+            for u in usages:
+                end = u.end or today
+                cur = u.begin
+                while cur <= end:
+                    day_counts[cur] += 1
+                    cur += timedelta(days=1)
+                    if (cur - u.begin).days > 2000:
+                        break
+            return day_counts.most_common(1)[0] if day_counts else None
+
+        rnd = random.Random(11)
+        base = date(2020, 1, 1)
+        for _ in range(1500):
+            us = []
+            for _ in range(rnd.randint(0, 10)):
+                s = base + timedelta(days=rnd.randint(0, 40))
+                e = None if rnd.random() < 0.2 else s + timedelta(days=rnd.randint(-3, 30))
+                us.append(N(begin=s, end=e))
+            if rnd.random() < 0.1:  # a fill longer than the cap
+                us.append(N(begin=base, end=base + timedelta(days=2100)))
+            today = base + timedelta(days=rnd.randint(0, 2200))
+            self.assertEqual(_peak_day(us, today), old(us, today), (us, today))
+
+    def test_timeline_bars_are_the_old_template_markup(self):
+        from datetime import date
+
+        from django.template import Context, Template
+
+        from dpypen.items.history import _bars_html
+
+        bars = [
+            {"left": 1.25, "width": 0.2, "bg": "linear-gradient(90deg, #123 0%, #456 100%)", "ink": "Pelikan <4001> & Co",
+             "ink_id": 7, "nib": 'F "steel"', "begin": date(2021, 9, 5), "end": date(2021, 9, 6), "days": 1, "current": False},
+            {"left": 98.5, "width": 1.5, "bg": "#000", "ink": "Iroshizuku Kon-peki", "ink_id": 12, "nib": "M gold",
+             "begin": date(2026, 1, 31), "end": None, "days": 0, "current": True},
+        ]
+        old = Template(  # next/stats/timeline.html before P6
+            "{% load l10n %}{% for b in bars %}<button type=\"button\" class=\"{% if b.current %}is-now{% endif %}\" style=\"left: {{ b.left|unlocalize }}%; width: {{ b.width|unlocalize }}%; --sw: {{ b.bg }}\" data-tip-title=\"{{ b.begin|date:'j M Y' }} to {% if b.end %}{{ b.end|date:'j M Y' }}{% else %}now{% endif %}\" data-tip-lead=\"{{ b.ink }}\" data-tip=\"{{ b.nib }}, {{ b.days }} day{{ b.days|pluralize }}\" data-tip-links=\"Open the ink|{% url 'nx_inks_detail' b.ink_id %}\" aria-label=\"{{ b.ink }}, {{ b.days }} days\"></button>{% endfor %}"
+        ).render(Context({"bars": bars}))
+        self.assertEqual(_bars_html(bars), old)

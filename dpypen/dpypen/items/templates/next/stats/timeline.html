@@ -18,7 +18,7 @@
   <div class="tl-row" data-listnav-item>
     <a class="nm" href="{% url 'nx_pens_detail' r.pen.pk %}">{{ r.pen.brand.name }} {{ r.pen.model }}{% if r.pen.finish %} {{ r.pen.finish }}{% endif %}</a>
     <div class="tl-track">
-      {% for b in r.bars %}<button type="button" class="{% if b.current %}is-now{% endif %}" style="left: {{ b.left|unlocalize }}%; width: {{ b.width|unlocalize }}%; --sw: {{ b.bg }}" data-tip-title="{{ b.begin|date:'j M Y' }} to {% if b.end %}{{ b.end|date:'j M Y' }}{% else %}now{% endif %}" data-tip-lead="{{ b.ink }}" data-tip="{{ b.nib }}, {{ b.days }} day{{ b.days|pluralize }}" data-tip-links="Open the ink|{% url 'nx_inks_detail' b.ink_id %}" aria-label="{{ b.ink }}, {{ b.days }} days"></button>{% endfor %}
+      {# The bars are made with the cached data (history._bars_html): 568 of them through the template engine were 105 ms. #}{{ r.bars_html|safe }}
     </div>
   </div>
   {% empty %}

@@ -1,5 +1,6 @@
 from collections import Counter
 from datetime import date, timedelta
+from types import SimpleNamespace
 
 
 from dpypen.items.skin import render
@@ -14,10 +15,15 @@ def records(request):
 
     pens = list(Pen.objects.select_related("brand"))
     inks = list(Ink.objects.select_related("brand"))
-    usages = list(Usage.objects.select_related("pen__brand", "ink__brand", "nib"))
-
     pen_lookup = {p.pk: p for p in pens}
     ink_lookup = {i.pk: i for i in inks}
+    # Four columns, not 568 inkings with four joins as model objects: 31 of
+    # the page's 69 ms (speed pass, AUDIT.md P7). The pen and ink of the two
+    # fills a card names come from the lookups above.
+    usages = [
+        SimpleNamespace(pen_id=p, ink_id=i, begin=b, end=e, pen=pen_lookup[p], ink=ink_lookup[i])
+        for p, i, b, e in Usage.objects.values_list("pen_id", "ink_id", "begin", "end")
+    ]
 
     pen_days: dict[int, int] = {}
     pen_fills: Counter = Counter()
@@ -173,17 +179,9 @@ def records(request):
         })
 
     # Most pens simultaneously inked on a single day
-    day_counts: Counter = Counter()
-    for u in usages:
-        end = u.end or today
-        cur = u.begin
-        while cur <= end:
-            day_counts[cur] += 1
-            cur += timedelta(days=1)
-            if (cur - u.begin).days > 2000:
-                break
-    if day_counts:
-        peak_day, peak_n = day_counts.most_common(1)[0]
+    peak = _peak_day(usages, today)
+    if peak:
+        peak_day, peak_n = peak
         cards.append({
             "title": "Peak desk day",
             "subtitle": "most pens inked at once",
@@ -222,3 +220,45 @@ def records(request):
         "tabs": getattr(request, "nx_tabs", None),
         "nav": "history" if getattr(request, "nx_tabs", None) else "records",
     })
+
+
+# A fill counts from its first day to its last (today when open), at most
+# 2,001 days.
+_SPAN = 2000
+
+
+def _peak_day(usages, today):
+    """(day, pens) with the most pens inked at once, or None. A +1/-1 sweep
+    over the fills' ends instead of a count per pen-day (27,378 steps, 22 ms;
+    now under 1 ms). On a tie, the day the old Counter.most_common(1) gave:
+    the first one counted, i.e. the earliest tied day of the first fill (in
+    the query's order) that covers any tied day."""
+    spans = []
+    delta: Counter = Counter()
+    for u in usages:
+        last = min(u.end or today, u.begin + timedelta(days=_SPAN))
+        if last < u.begin:  # ends before it begins: the old loop counted no day
+            spans.append(None)
+            continue
+        spans.append((u.begin, last))
+        delta[u.begin] += 1
+        delta[last + timedelta(days=1)] -= 1
+    if not delta:
+        return None
+    keys = sorted(delta)
+    best, runs, running = 0, [], 0
+    for i, day in enumerate(keys[:-1]):  # the count holds from `day` to the next key
+        running += delta[day]
+        run = (day, keys[i + 1] - timedelta(days=1))
+        if running > best:
+            best, runs = running, [run]
+        elif running == best:
+            runs.append(run)
+    for span in spans:
+        if span is None:
+            continue
+        lo, hi = span
+        hits = [max(lo, a) for a, b in runs if a <= hi and b >= lo]
+        if hits:
+            return min(hits), best
+    return None
