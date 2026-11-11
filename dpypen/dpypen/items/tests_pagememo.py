@@ -125,9 +125,11 @@ class PageMemoTests(TestCase):
 
     def test_what_is_never_kept(self):
         # No CSRF cookie: a kept form would carry a token for another secret.
+        # No CSRF cookie and a page with a form: its token goes with the
+        # cookie this answer sets.
         for _ in range(2):
             del self.client.cookies["csrftoken"]  # each answer sets it again
-            self.assertIsNone(self.get("/dashboard/")[1])
+            self.assertEqual(self.get("/usages/add/")[1], "skip")
         self.client.cookies["csrftoken"] = CSRF
         # A flash message waiting in a cookie.
         self.client.cookies["messages"] = "x"
@@ -162,3 +164,12 @@ class PageMemoTests(TestCase):
         req.session = S(_auth_user_id="1")
         self.assertEqual(mw(req)["X-Pypen-Memo"], "skip")
         self.assertEqual(mw(req)["X-Pypen-Memo"], "skip")
+
+    def test_a_page_without_a_form_is_kept_for_a_browser_without_a_csrf_cookie(self):
+        # /pens/ carries no form, so it never sets the CSRF cookie: a browser
+        # that opened only lists would never have had a kept page.
+        del self.client.cookies["csrftoken"]
+        hows = [self.get("/stats/")[1] for _ in range(3)]
+        self.assertEqual(hows[-1], "hit")
+        self.assertNotIn("csrftoken", self.client.cookies)
+

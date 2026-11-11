@@ -23,13 +23,16 @@ What an answer is keyed by — everything the page can read:
 
 What is never kept: anything but a GET answered 200 with HTML or JSON, an
 answer that sets a cookie, a page that showed or queued a flash message, a
-request without a session or CSRF cookie, and the paths in SKIP.
+request without a session cookie, a page with a CSRF token for a browser that
+had no CSRF cookie yet (its token goes with the cookie this answer sets), and
+the paths in SKIP.
 
 One process holds one store (the service runs one gunicorn worker with
 threads since this pass); with several workers each keeps its own.
 """
 
 import datetime
+import os
 import threading
 from collections import OrderedDict
 
@@ -40,6 +43,10 @@ from django.http.request import HttpHeaders
 from dpypen.items.dbmemo import Memo
 
 TTL = 15 * 60
+# PYPEN_PAGE_MEMO=0 in the secrets file turns it off (a restart): every page
+# made again, as before the speed pass. For a suspected stale page, and for
+# comparing made against kept on a spare port.
+ON = os.getenv("PYPEN_PAGE_MEMO", "1") != "0"
 SKIP = ("/admin/", "/accounts/", "/i/", "/undo/", "/kit/", "/sw.js", "/api/version", "/static/", "/media/")
 TYPES = ("text/html", "application/json")
 
@@ -125,7 +132,7 @@ def _skip(request):
     if request.method != "GET" or request.path.startswith(SKIP):
         return True
     c = request.COOKIES
-    return "messages" in c or not c.get("csrftoken") or not c.get("sessionid")
+    return "messages" in c or not c.get("sessionid")
 
 
 def _meta_value(meta, k):
@@ -141,7 +148,7 @@ class PageMemo:
         self.get_response = get_response
 
     def __call__(self, request):
-        if _skip(request):
+        if not ON or _skip(request):
             return self.get_response(request)
         user = request.session.get("_auth_user_id")
         if not user:
@@ -177,6 +184,10 @@ class PageMemo:
                 _shapes.move_to_end(base)
                 while len(_shapes) > _SHAPES_MAX:
                     _shapes.popitem(last=False)
+            raise _NotKept(response)
+        if not request.COOKIES.get("csrftoken") and "CSRF_COOKIE" in request.META:
+            # The page made a CSRF secret for a browser that had none: its
+            # token belongs to the cookie this answer sets, never to another.
             raise _NotKept(response)
         ctype = response.get("Content-Type", "")
         queued = getattr(getattr(request, "_messages", None), "_queued_messages", None)

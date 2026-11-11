@@ -502,9 +502,10 @@ Numbers and the full list of findings: `AUDIT.md`, "Speed pass" (11 Nov 2026).
   until any commit to the database file (the kit's `dbmemo`, byte copy `items/dbmemo.py`, KIT-DBMEMO), and a
   repeat visit costs ~1-3 ms instead of 25-160 ms. The key is the path, the query, the session, every cookie
   but the session's, the day, and every request header the page read while it was made (recorded; a page that
-  read a header its key lacked is not kept, the next request carries it). Never kept: no CSRF cookie, a flash
-  message, a cookie set by the answer, a non-200, `/admin/ /accounts/ /i/ /undo/ /kit/ /api/version`.
-  The answer says `X-Pypen-Memo: hit|miss|skip`. A GET must never write, or nothing stays kept: check
+  read a header its key lacked is not kept, the next request carries it). Never kept: a page with a CSRF token
+  for a browser with no CSRF cookie yet, a flash message, a cookie set by the answer, a non-200,
+  `/admin/ /accounts/ /i/ /undo/ /kit/ /api/version`. The answer says `X-Pypen-Memo: hit|miss|skip`;
+  `PYPEN_PAGE_MEMO=0` in the secrets file (and a restart) turns it off. A GET must never write, or nothing stays kept: check
   `PRAGMA data_version` over a crawl when a view starts writing on GET.
 - **One gunicorn worker with 4 threads** (`deploy/pypen.service`, installed by `deploy-code.sh` when it differs):
   one store of kept pages for every request, ~120 MB instead of 3 × 155 MB. `malloc.start()` in `wsgi.py`
