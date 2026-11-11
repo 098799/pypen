@@ -50,3 +50,15 @@ def kit_shell(name):
     from dpypen.items import kitshell
 
     return kitshell.url(name)
+
+
+@register.simple_tag
+def kit_keys():
+    """The end of <body>: the keyboard layer's markup, then late.js (the
+    filter-nav, the shell's behaviour and the layer's script, kitshell.py)."""
+    from django.utils.html import format_html
+    from django.utils.safestring import mark_safe
+
+    from dpypen.items import kitshell
+
+    return format_html('{}\n<script src="{}"></script>', mark_safe(kitshell.KEYS_MARKUP), kitshell.url("late.js"))

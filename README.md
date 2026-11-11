@@ -246,8 +246,13 @@ offline (`pwa.KITSW["files"]`).
 - **Blocking at the top of `<body>`, not `defer`**: `_shell_early`,
   `_shell_behave`, the What's new repaint and the settings page call the kit
   as they run. A cached file costs one fetch per deploy.
-- `_keys.html` stays inline (~55 KB of a shell page): its code has
-  `{{ app_name }}` and a `{% comment %}` header, which `shell.cut` refuses.
+- **pypen's own shell code and the keyboard layer are files too** (speed pass, 11 Nov 2026): `early.js`
+  (`_shell_early`, right after `member.js`), `late.js` (`_shell_filternav`, `_shell_behave`, the layer's
+  script; at the end of `<body>` after the layer's markup) and `keys.css`. They hold Django comments and
+  `{{ app_name }}`, which `shell.cut` refuses, so `kitshell._split` renders each template once at start and
+  splits it; each `<script>` block is wrapped in its own `try`, so one that throws stops only itself, as
+  inline. Both load blocking where their first block sat: the run order is the inline one. A page went from
+  33-40 KB to 4.5-11 KB gzip; `tests_budget.InlineBudget` keeps the inline code of a page under 8 KB.
 - Owner `/pens/` went from 257 KB to 99 KB (79 → 31 KB gzip); the ink wall
   from 61 KB to 6 KB. Tests: `tests_kitshell.py`.
 

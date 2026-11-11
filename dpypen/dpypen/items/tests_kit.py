@@ -262,7 +262,7 @@ class ErrorPages(TestCase):
 
     def test_the_shell_swaps_an_error_page_in(self):
         self.client.force_login(self.owner)
-        html = self.client.get("/prev/pens/").content.decode()
+        html = shipped(self.client, "/prev/pens/")  # early.js since AUDIT.md P3
         self.assertIn('document.addEventListener("htmx:beforeSwap"', html)
 
 

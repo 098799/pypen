@@ -9,7 +9,7 @@ from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import resolve
 
 from dpypen.items import pwa
-from dpypen.items.tests import PLAIN_STATIC
+from dpypen.items.tests import PLAIN_STATIC, shipped
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
@@ -78,7 +78,7 @@ class OneName(TestCase):
 
     def test_every_screen_says_it_the_same_way(self):
         self.client.force_login(self.owner)
-        home = self.client.get("/prev/dashboard/").content.decode()
+        home = shipped(self.client, "/prev/dashboard/")  # the layer's code is in late.js
         self.assertIn("<title>Grining Pens</title>", home)
         self.assertIn('<meta name="apple-mobile-web-app-title" content="Grining Pens">', home)
         self.assertIn("name: 'Grining Pens',", home)  # the keyboard layer

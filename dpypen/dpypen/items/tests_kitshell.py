@@ -116,7 +116,8 @@ class TheFilesAreKept(TestCase):
                 self.assertEqual(r.status_code, 200)
                 self.assertEqual(r["Cache-Control"], IMMUTABLE)
                 self.assertEqual(r["Content-Encoding"], "gzip")
-                self.assertIn(b"KIT-", gzip.decompress(r.content))
+                # a stamp names what it runs: the kit's, the layer's, or pypen's own template
+                self.assertRegex(gzip.decompress(r.content), rb"/\*! (KIT-|KEYS-LAYER: v|PYPEN-SHELL: items/_)")
                 self.assertTrue(r["Content-Type"].startswith(("text/css", "text/javascript")))
                 self.assertIn("Content-Security-Policy", r.headers)   # pypen's headers on every answer
                 self.assertEqual(r["X-Frame-Options"], "DENY")
@@ -144,5 +145,14 @@ class TheFilesAreKept(TestCase):
             body = html[html.index("<body"):]
             self.assertLess(body.index("window.KITUPDATE"), body.index('<script src="/kit/shell.js'))
             self.assertLess(body.index('<script src="/kit/shell.js'), body.index('<script src="/kit/member.js'))
-            self.assertLess(body.index('<script src="/kit/member.js'), body.index("window.__kitMsgs"))
+            # the shells' own early scripts: a file of their own, right after the kit's
+            self.assertLess(body.index('<script src="/kit/member.js'), body.index('<script src="/kit/early.js'))
+            # the layer's markup before late.js, at the end of <body>
+            self.assertLess(body.index('id="kpal"'), body.index('<script src="/kit/late.js'))
+            self.assertLess(body.index("</main>"), body.index('<script src="/kit/late.js'))
+            self.assertNotIn("window.__kitMsgs", html)  # not inline any more (AUDIT.md P3)
             self.assertIn('<link rel="stylesheet" href="/kit/shell.css', html.split("</head>")[0])
+        self.assertIn("window.__kitMsgs", kitshell.KIT.files["early.js"][0].decode())
+        late = kitshell.KIT.files["late.js"][0].decode()
+        at = [late.index(s) for s in ("window.__filterNav", "window.__go", "window.__keysLoaded")]
+        self.assertEqual(at, sorted(at))

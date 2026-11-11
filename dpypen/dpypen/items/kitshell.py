@@ -82,3 +82,49 @@ def serve(request, name):
     for k, v in out:
         resp[k] = v
     return resp
+
+
+# pypen's own shell scripts and the keyboard layer, as cached files too (speed
+# pass, 11 Nov 2026, AUDIT.md P3). They were ~92 KB inline in every page, the
+# same on each: 75-90 % of a page's bytes, sent again on every tap. They hold
+# Django comments (and _keys.html its app name), so the kit's cut() cannot
+# read them: each is rendered once here, at start, and split into its style,
+# its scripts and the markup that stays in the page. Each file loads blocking
+# where its first block sat, so the scripts run in the order they ran inline;
+# each block is wrapped in its own try, so one that throws stops only itself,
+# as an inline <script> did.
+def _split(template: str, **ctx) -> shell.Part:
+    from django.template.loader import render_to_string
+
+    html = render_to_string(template, ctx)
+    styles, scripts = shell._STYLE.findall(html), shell._SCRIPT.findall(html)
+    rest = shell._SCRIPT.sub("", shell._STYLE.sub("", html)).strip()
+    js = "\n;\n".join(
+        "try {\n" + s.strip("\n") + "\n} catch (e) { setTimeout(function () { throw e; }); }\n" for s in scripts
+    )
+    # The /*! */ line that names what a file runs: the keyboard layer keeps its
+    # KEYS-LAYER stamp, pypen's own parts say which template they came from.
+    source = (TEMPLATES.parent / template).read_text(encoding="utf-8")
+    stamp = shell.stamp_of(source) or f"PYPEN-SHELL: {template}"
+    return shell.Part(Path(template).name, stamp, "".join(styles), js, rest)
+
+
+def _parts():
+    from dpypen.items.pwa import APP_NAME
+
+    early = _split("items/_shell_early.html")
+    late = [_split("items/_shell_filternav.html"), _split("items/_shell_behave.html")]
+    keys = _split("items/_keys.html", app_name=APP_NAME)
+    for p in [early, *late]:
+        assert not p.markup and not p.css, p.name  # nothing of these may stay behind
+    return early, late, keys
+
+
+_EARLY, _LATE, _KEYS = _parts()
+# Right after the kit's shell.js (and member.js): kitToast, kitBusy, kitEmpty.
+KIT.js("early.js", _EARLY)
+# At the end of <body>, after the keys layer's markup: filter-nav (it sat at the
+# end of #main), the shell's behaviour, the keyboard layer.
+KIT.js("late.js", *_LATE, _KEYS)
+KIT.css("keys.css", _KEYS)
+KEYS_MARKUP = _KEYS.markup

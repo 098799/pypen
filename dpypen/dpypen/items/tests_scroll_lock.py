@@ -19,7 +19,7 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from dpypen.items.tests import PLAIN_STATIC
+from dpypen.items.tests import PLAIN_STATIC, shipped
 
 APP_CSS = Path(__file__).resolve().parent / "static" / "items" / "css" / "app.css"
 LAYER = Path(__file__).resolve().parent / "templates" / "items" / "_layer.js"
@@ -39,7 +39,7 @@ class ScrollLock(TestCase):
 
     def test_the_kit_locks_for_the_palette_and_the_sheet(self):
         for url in ("/prev/pens/", "/prev/inks/", "/prev/history/"):
-            html = self.client.get(url).content.decode()
+            html = shipped(self.client, url)  # the layer's code is in late.js
             self.assertIn('id="kpal"', html, url)
             # KEYS-LAYER v1.3 opens both through kitLayer, which sets the lock
             self.assertIn("window.__keysLayer = 'v1.3", html, url)
@@ -51,7 +51,7 @@ class ScrollLock(TestCase):
             self.assertIn("items/css/app.css", html, url)
 
     def test_the_public_page_names_no_path_of_the_box(self):
-        html = self.client.get("/prev/pens/").content.decode()
+        html = shipped(self.client, "/prev/pens/")
         # the ? sheet showed "The whole dialect: ~/apps/kit/KEYS.md" (PYPEN-8)
         self.assertNotIn("The whole dialect", html)
         self.assertIn("placeholder: 'Jump to a pen, an ink, anywhere", html)
@@ -77,7 +77,7 @@ class KitLayer(TestCase):
 
     def test_loaded_first_and_the_menus_use_it(self):
         for url in ("/prev/pens/", "/prev/history/gantt/"):
-            html = self.client.get(url).content.decode()
+            html = shipped(self.client, url)
             # shell.js starts with the layer and loads blocking at the top of
             # <body>: it runs before htmx, which is `defer` (kitshell.py).
             from dpypen.items import kitshell
@@ -89,7 +89,7 @@ class KitLayer(TestCase):
             # no own overlay history or Escape left for the menus
             self.assertNotIn('window.addEventListener("popstate", closeMenu)', html, url)
             self.assertNotIn('if (e.key === "Escape") closeMenu()', html, url)
-        gantt = self.client.get("/prev/history/gantt/").content.decode()
+        gantt = shipped(self.client, "/prev/history/gantt/")
         self.assertIn('name: "gantt", lock: false, focus: false', gantt)
         self.assertNotIn('if (e.key === "Escape") closePopup()', gantt)
 

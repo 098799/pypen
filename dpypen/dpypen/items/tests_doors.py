@@ -322,9 +322,10 @@ class MessagesAreTheKitsToast(_Collection):
         response = self.client.post(f"/prev/usages/{self.usage.pk}/delete/", follow=True)
         html = response.content.decode()
         # the toast is in shell.js, blocking before the reader of the messages
-        self.assertLess(html.index('<script src="/kit/shell.js'), html.index("window.__kitMsgs"))
+        self.assertLess(html.index('<script src="/kit/shell.js'), html.index('<script src="/kit/early.js'))
         from dpypen.items import kitshell
         self.assertIn("window.kitToast = show", kitshell.KIT.files["shell.js"][0].decode())
+        self.assertIn("window.__kitMsgs", kitshell.KIT.files["early.js"][0].decode())
         box = html[html.index("<div class=\"kit-msgs\" hidden data-kit-msgs>"):]
         self.assertLess(html.index('<main id="main">'), html.index("data-kit-msgs>"))
         self.assertIn(f'action="/undo/{self.last_token()}/"', box)

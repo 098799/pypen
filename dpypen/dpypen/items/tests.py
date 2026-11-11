@@ -102,7 +102,7 @@ class KeysLayerRenders(TestCase):
             with self.subTest(url=url):
                 r = self.client.get(url)
                 self.assertEqual(r.status_code, 200, url)
-                html = r.content.decode()
+                html = shipped(self.client, url)  # the layer's code is in late.js
                 self.assertIn('id="kwk"', html)  # which-key: the v1 layer
                 self.assertIn("__keysPageKey", html)  # the page hook
                 self.assertIn("window.__keysList", html)  # the shell names the list

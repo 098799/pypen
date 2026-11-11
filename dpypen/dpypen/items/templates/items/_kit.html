@@ -30,3 +30,5 @@ window.KITINSTALL = {app: "{{ app_name|escapejs }}", key: "pypenInstallNudge", d
 document.addEventListener("htmx:afterSettle", function () { if (window.kitWhatsNew) kitWhatsNew.paint(); });
 </script>
 {% endif %}
+{# pypen's own early scripts (once inline here as _shell_early.html): the messages as toasts, the busy POST, the failed swap. #}
+<script src="{% kit_shell 'early.js' %}"></script>

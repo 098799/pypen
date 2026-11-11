@@ -1,4 +1,4 @@
-{% load static %}<!doctype html>
+{% load static items_extras %}<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -55,7 +55,6 @@ page load, and it also stopped collectstatic hashing the assets at all.
 {# The kit's snippets: the layer, toast, empty, filters, update, pull to refresh; What's new, install, Settings for members (_kit.html). The server's messages in #main become toasts in _shell_early. #}
 {% include "items/_kit.html" %}
 {# The scripts both shells share (the message reader, htmx's failed swaps; the behaviour at the end of this file, the filter-nav in #main): one copy, so a fix lands once. #}
-{% include "items/_shell_early.html" %}
 <a class="skip-link" href="#main">Skip to content</a>
 
 
@@ -193,7 +192,6 @@ to the ⌕ popover.
 {% endif %}
 {% block content %}{% endblock %}
 
-{% include "items/_shell_filternav.html" %}
 </main>
 
 </div>
@@ -208,7 +206,6 @@ window.__nextUrl = function (url) {
   return url;
 };
 </script>
-{% include "items/_shell_behave.html" %}
-{% include "items/_keys.html" %}
+{% kit_keys %}
 </body>
 </html>
