@@ -96,6 +96,9 @@ MIDDLEWARE = [
     # A bad ?limit= or ?offset= is a 422, not a 500 (items/listing.py).
     "dpypen.items.listing.ListErrors",
     "allauth.account.middleware.AccountMiddleware",
+    # Last: a signed-in GET answered from the pages kept until the database
+    # changes (items/pagememo.py); everything above still runs on it.
+    "dpypen.items.pagememo.PageMemo",
 ]
 
 AUTHENTICATION_BACKENDS = [

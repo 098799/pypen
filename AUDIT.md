@@ -1,5 +1,92 @@
 # pypen — audit
 
+## Speed pass (11 Nov 2026, burn p11111619)
+
+**Goal.** At least 2× faster where the user waits (time until usable −50 % or better on every main page and
+API, cold and warm), and less memory and CPU.
+
+**How it was measured.** (1) On bae, `curl` against gunicorn at 127.0.0.1:8000 with an owner session made for
+the pass: every main page and API, 7 runs, median (server time without the network). (2) Headless Chromium at
+390×844 against the live site: per page a cold load (new context, no HTTP cache, service worker off) and warm
+loads (same context): navigation timing, first contentful paint, request count, transferred and decoded bytes.
+(3) A copy of the newest backup on p340 under gunicorn with Python 3.12 (bae's), DEBUG off, the same flags,
+on spare ports (18471 old code, 18472 new), for profiles (cProfile), SQL (two helpers: every query of every page
+with `EXPLAIN QUERY PLAN`; every inline block, asset, font and image of every page) and old-vs-new output checks.
+(4) `systemctl show pypen` MemoryCurrent / CPUUsageNSec and the workers' RSS on bae.
+
+**Baseline** (live, 11 Nov 2026, before any change). bae: 2 vCPU; `pypen.service` 3 sync workers,
+MemoryCurrent **367 MB** (workers 152–167 MB RSS each). The app's import took **734 ms** (pandas and anthropic).
+
+| page | server ms (bae) | HTML KB | cold: load ms · requests · KB | warm: load ms · KB |
+|---|---:|---:|---|---|
+| `/` | 8 | 5 | — | — |
+| `/dashboard/` | 81 | 122 | 626 · 30 · 423 | 185 · 39 |
+| `/pens/` | 73 | 146 | 602 · 58 · 983 | 219 · 44 |
+| `/pens/189/` | 50 | 119 | 543 · 27 · 384 | 183 · 40 |
+| `/pens/189/edit/` | 42 | 109 | — | — |
+| `/pens/add/` | 44 | 104 | — | — |
+| `/inks/` | 58 | 125 | 534 · 22 · 273 | 171 · 39 |
+| `/inks/89/` | 56 | 110 | 552 · 22 · 272 | 185 · 38 |
+| `/inks/89/edit/` | 40 | 106 | — | — |
+| `/usages/` | 56 | 141 | 523 · 22 · 274 | 177 · 41 |
+| `/usages/add/` | 57 | 117 | 503 · 22 · 274 | 172 · 40 |
+| `/usages/750/edit/` | 54 | 119 | — | — |
+| `/pick/` | 52 | 107 | 517 · 23 · 287 | 161 · 38 |
+| `/search/?q=pilot` | 43 | 108 | — | — |
+| `/supen/` | 67 | 140 | 574 · 23 · 298 | 182 · 41 |
+| `/suink/` | 59 | 144 | — | — |
+| `/stats/` | 30 | 142 | 420 · 22 · 282 | 133 · 49 |
+| `/stats/inkings/` | 45 | 173 | 532 · 22 · 280 | 178 · 46 |
+| `/stats/collection/` | 44 | 152 | — | — |
+| `/stats/cupboard/` | 32 | 142 | — | — |
+| `/stats/rotation/` | 25 | 103 | — | — |
+| `/stats/timeline/` | 157 | 311 | 603 · 22 · 301 | 359 · 67 |
+| `/stats/calendar/` | 58 | 212 | 503 · 22 · 275 | 172 · 41 |
+| `/stats/pairs/` | 41 | 136 | — | — |
+| `/stats/records/` | 122 | 103 | 591 · 22 · 270 | 251 · 37 |
+| `/settings/` | 18 | 102 | 471 · 22 · 270 | 128 · 37 |
+| `/pens/needs-photos/` | 28 | 121 | — | — |
+| `/api/pens` | 27 | 12 | — | — |
+| `/api/inks` | 18 | 9 | — | — |
+| `/api/usages` | 25 | 13 | — | — |
+| `/api/palette` | 9 | 0 | — | — |
+| `/api/version` | 2 | 0 | — | — |
+| `/whatsnew.json` | 7 | 7 | — | — |
+| `/manifest.json` | 2 | 1 | — | — |
+| `/sw.js` | 2 | 22 | — | — |
+| `/pub/inks/wall/` | 27 | 56 | — | — |
+| `/pub/pens/wall/` | 41 | 68 | — | — |
+
+Every HTML page carried ~92 KB of the same inline script and style (75–90 % of its gzip bytes). SQL is not the
+cost: under 4 ms on every page, no N+1; the time is Python (model objects, template rendering).
+
+**Findings.** Severity: **High** = a large share of the wait on many pages, or of the memory; **Med** = one page
+or a smaller share; **Low** = small. Status at the end of the pass in the last column.
+
+| # | sev | where | finding (evidence) | fix | status |
+|---|---|---|---|---|---|
+| P1 | High | every signed-in page | **Each page is made anew on every request**: 25–160 ms of Python on bae (desk 81, pens 73, timeline 157, records 122), the same answer until something is written; a GET never writes (`PRAGMA data_version` stays put over a crawl of every page) | keep whole answers until the DB changes (`items/pagememo.py` on the kit's `dbmemo`), keyed by path, query, session, cookies, day and every header the page read | open |
+| P2 | High | service | **3 sync workers, 367 MB**; each imported pandas (old supen page) and anthropic (notebook import) at start: 734 ms of import, ~80 MB each | lazy imports; one gthread worker (4 threads) so one store of kept pages serves every request; kit `malloc.start()` | open |
+| P3 | High | every page | **92 KB of identical inline script/style in every HTML answer** (`_keys.html` 56 KB, `_shell_early`/`_shell_behave`/`_shell_filternav` ~35 KB), sent again on every tap: ~29 KB gzip of a 33–45 KB page | cached files (`kitshell.py`, the kit's `Shell`) | open |
+| P4 | High | /pens/ | **600 px thumbnails in a 76×57 box**, and lazy loading still pulls 35 of 47 at once: cold 983 KB, 58 requests | a small thumbnail size for the list rows | open |
+| P5 | High | every tap | **A boosted tap downloads the whole page** (149 KB on /pens/) and htmx keeps `#main` (~15 %) | after P3 the rest is small; measure again | open |
+| P6 | Med | /stats/timeline/ | 318 KB HTML, 105 ms to make (local; 157 on bae): 568 bars × a `{% url %}` and filters each, 15-digit floats | precompute the bar strings in the view, round | open |
+| P7 | Med | /stats/records/ | 69 ms (local) on every request, no cache: 4-join load of all inkings, a 27,378 pen-day loop | `values_list` + a sweep line | open |
+| P8 | Med | after any write | the first visit of each page after a write pays the full make (P1 keeps only what was seen) | make the pages last seen again off the request path after a write | open |
+| P9 | Med | stats | stats caches live per worker with a 240 s ttl: each of 3 workers rebuilt each chart every 4 min (cold calendar 135 ms) | P1 + P2 (one process, kept until a write) | open |
+| P10 | Med | service worker | hashed `/static/` files answered network-first and re-written into Cache Storage on every page (~20 writes per load) | cache-first for hashed names (app part of `/sw.js`) | open |
+| P11 | Med | every page | `shell.js` (78 KB) and `member.js` (42 KB) block the parser at the top of `<body>` | `defer` once P3 moves the inline callers | open |
+| P12 | Med | /supen/, /suink/ | 36 ms: all inkings as model objects with `select_related`, grouped again per group | `values_list` | open |
+| P13 | Med | inking form | 28–30 ms: Django renders ~270 `<option>`s | P1 keeps it | open |
+| P14 | Low | every page | tom-select (50 KB JS + 9.7 KB render-blocking CSS) loads on 15 of 15 pages, used on the forms | load it where a form needs it | open |
+| P15 | Low | every page | `/whatsnew.json` (7 KB) fetched on every full load, no ETag | P1 keeps it (1 ms); ETag | open |
+| P16 | Low | fonts | the 500 weight (the digits on every page) is not preloaded; a 44 KB italic face loads for a few words | preload 500 | open |
+| P17 | Low | SQL | no index on `items_usage(end)` / `(begin)`: `SCAN … USE TEMP B-TREE`; saves < 1 ms today | — | open |
+| P18 | Low | nginx (bae) | `/static/` names are content-hashed but sent `expires 1d`: after a day every asset is asked again | `immutable`, a year | open |
+| P19 | Low | /stats/cupboard/ | two colours with the same count came in an order set by the process's hash seed (found by the old-vs-new check: workers disagreed) | tie broken by name | open |
+| P20 | Low | deploy | `deploy-code.sh` did not install the unit file: a unit change in the repo never reached bae | install it when it differs | open |
+
+
 ## UX pass (10 Nov 2026, burn p11102208)
 
 **How.** The live site, read only (an owner session made on bae for the walk, writes refused in the page), headless

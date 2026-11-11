@@ -1,6 +1,11 @@
 # pypen — pen.grining.eu. Source of truth: ~/pypen on p340 (deploy/deploy-code.sh).
-# A copy for reading: the live file is /etc/systemd/system/pypen.service on bae.
-# Change both together (deploy-code.sh does not install it).
+# Installed on bae as /etc/systemd/system/pypen.service.
+# deploy-code.sh installs it when it differs (since 11 Nov 2026).
+# One worker with 4 threads since the speed pass of 11 Nov 2026 (was 3 sync
+# workers): one process holds one store of kept pages (items/pagememo.py), so
+# a page made once is kept for every later request, not for a third of them;
+# and 3 x ~155 MB became one process. A slow AI call holds one thread, not one
+# of three processes.
 # Since 2026-11-01 (PYPEN-4) it runs as its own user from /opt, not as root
 # from /root: the code and the venv are root-owned and read-only to it; it may
 # write only its database (/opt/pypen/data) and the photos (/var/www/pen-media).
@@ -19,8 +24,9 @@ UMask=0022
 WorkingDirectory=/opt/pypen/dpypen
 ExecStart=/opt/pypen/.venv/bin/gunicorn \
     --bind 127.0.0.1:8000 \
-    --workers 3 \
-    --worker-class sync \
+    --workers 1 \
+    --threads 4 \
+    --worker-class gthread \
     --timeout 60 \
     --graceful-timeout 30 \
     --access-logfile - \

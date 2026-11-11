@@ -87,6 +87,15 @@ fi
 # (and so every nightly copy on p340) carried 443 dead ones back to 2020 next
 # to the 55 live ones (PYPEN-4). A deploy comes often enough. collectstatic
 # and the bytecode are root's, like the code.
+# The unit file: installed when the repo's copy differs from bae's.
+UNIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pypen.service"
+if ! ssh "$REMOTE" cat /etc/systemd/system/pypen.service | cmp -s - "$UNIT"; then
+  scp -q "$UNIT" "$REMOTE":/etc/systemd/system/pypen.service.new
+  ssh "$REMOTE" 'set -e; cp /etc/systemd/system/pypen.service /root/pypen.service.bak-$(date +%Y%m%d%H%M%S);
+    mv /etc/systemd/system/pypen.service.new /etc/systemd/system/pypen.service; systemctl daemon-reload'
+  echo "unit: pypen.service installed"
+fi
+
 ssh "$REMOTE" 'set -euo pipefail; cd '"$APP"'/dpypen
   want=$(sha256sum requirements.txt | cut -c1-64)
   have=$(cat '"$APP"'/.venv/.requirements.sha256 2>/dev/null || true)

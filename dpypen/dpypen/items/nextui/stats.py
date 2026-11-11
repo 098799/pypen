@@ -510,7 +510,9 @@ def cupboard() -> dict:
 
     total_b, total_f = sum(bottles.values()) or 1, sum(color_fills.values()) or 1
     share = []
-    for c in sorted(set(bottles) | set(color_fills), key=lambda c: -color_fills[c]):
+    # Ties by name: a set's order follows the process's hash seed, so two
+    # workers drew the same tie in two orders.
+    for c in sorted(set(bottles) | set(color_fills), key=lambda c: (-color_fills[c], str(c))):
         own, use = round(100 * bottles[c] / total_b, 1), round(100 * color_fills[c] / total_f, 1)
         share.append({"name": c, "hex": INK_COLOR_HEX.get(c, "#333"), "own": own, "use": use,
                       "bottles": bottles[c], "fills": color_fills[c], "ml": ml[c],
