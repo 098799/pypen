@@ -5,7 +5,6 @@ import json
 import os
 from dataclasses import dataclass
 
-import anthropic
 
 from dpypen.items.models import Ink, Nib, Pen
 
@@ -99,6 +98,8 @@ def extract_from_image(image_bytes: bytes, media_type: str = "image/jpeg") -> li
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY not configured")
+
+    import anthropic  # 0.4 s and ~40 MB at import: only an upload needs it
 
     client = anthropic.Anthropic(api_key=api_key)
     catalog = _catalog_block()

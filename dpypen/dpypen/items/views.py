@@ -3,10 +3,13 @@ from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 
 from dpypen.items.models import Ink, Pen
-from dpypen.supen import interface
 
 
 def generate(rotation, order, item):
+    # pandas (via supen) costs 0.2 s and ~30 MB at import in every worker; only
+    # these two old text pages use it.
+    from dpypen.supen import interface
+
     supen = interface(rotation=rotation, order=order, item_type=item, to_colorize=False)
 
     head = """<head><style>
