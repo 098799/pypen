@@ -29,11 +29,24 @@ the paths in SKIP.
 
 One process holds one store (the service runs one gunicorn worker with
 threads since this pass); with several workers each keeps its own.
+
+Made again ahead of the request (`Warmer`): a write (any POST) empties the
+store, and the first visit of each page after it paid the whole make again
+(the desk ~80 ms on bae, Timeline ~150). After a POST answered below 400, a
+thread waits a moment (the page the POST sends the browser to is made by that
+request) and then makes again, one by one, the pages kept most recently (at
+most WARM_MAX, used in the last WARM_AGE seconds), by replaying their request
+through Django: same path, query, cookies and headers, so the same key. A GET
+never writes, so a replay changes nothing; a session that ended answers a
+redirect, which is never kept.
 """
 
 import datetime
+import io
 import os
+import sys
 import threading
+import time
 from collections import OrderedDict
 
 from django.db import connection
@@ -58,6 +71,88 @@ memo = Memo(max=160)
 _shapes: OrderedDict = OrderedDict()
 _shapes_lock = threading.Lock()
 _SHAPES_MAX = 512
+
+
+WARM_MAX = 12
+WARM_AGE = 2 * 3600
+WARM_WAIT = 1.0  # seconds after the POST: its own redirect target comes first
+
+
+class Warmer:
+    """The pages to make again after a write, and the thread that does it."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._recipes: OrderedDict = OrderedDict()  # key -> (environ, last used)
+        self._kick = threading.Event()
+        self._thread = None
+        self.handler = None  # the WSGI handler, made on first use
+        self.made = 0  # pages made by replays (tests, the README's numbers)
+        # Only for a database file: the memo keeps nothing for an in-memory
+        # one (the test database), so there is nothing to make again.
+        self.enabled = lambda: os.path.isfile(str(connection.settings_dict["NAME"]))
+
+    def note(self, key, environ):
+        """A kept page was asked for: keep how to ask for it again."""
+        env = {k: v for k, v in environ.items() if isinstance(v, str)}
+        with self._lock:
+            self._recipes[key] = (env, time.monotonic())
+            self._recipes.move_to_end(key)
+            while len(self._recipes) > 4 * WARM_MAX:
+                self._recipes.popitem(last=False)
+
+    def kick(self):
+        """A write happened: make the recent pages again, soon, off the request."""
+        with self._lock:
+            if self._thread is None or not self._thread.is_alive():
+                self._thread = threading.Thread(target=self._loop, name="pagememo-warmer", daemon=True)
+                self._thread.start()
+        self._kick.set()
+
+    def recent(self):
+        now = time.monotonic()
+        with self._lock:
+            items = list(self._recipes.items())
+        fresh = [(k, env) for k, (env, used) in reversed(items) if now - used < WARM_AGE]
+        return fresh[:WARM_MAX]
+
+    def run_once(self):
+        """Replay the recent pages now (the thread's work; tests call it)."""
+        from django.core.handlers.wsgi import WSGIHandler
+
+        if self.handler is None:
+            self.handler = WSGIHandler()
+        for _key, env in self.recent():
+            environ = dict(env)
+            environ.update({
+                "REQUEST_METHOD": "GET", "wsgi.input": io.BytesIO(b""), "wsgi.errors": sys.stderr,
+                "wsgi.version": (1, 0), "wsgi.multithread": True, "wsgi.multiprocess": False,
+                "wsgi.run_once": False, "wsgi.url_scheme": env.get("wsgi.url_scheme", "http"),
+                "HTTP_X_PYPEN_WARM": "1",
+            })
+            try:
+                result = self.handler(environ, lambda status, headers, exc_info=None: None)
+                if hasattr(result, "close"):
+                    result.close()
+                self.made += 1
+            except Exception as exc:  # a replay must never take the thread down
+                print(f"pagememo warm {env.get('PATH_INFO')}: {exc!r}", file=sys.stderr)
+            if self._kick.is_set():
+                return  # another write came: start again from the top
+            time.sleep(0.02)  # give a request the GIL between pages
+
+    def _loop(self):
+        while True:
+            self._kick.wait()
+            time.sleep(WARM_WAIT)
+            self._kick.clear()
+            try:
+                self.run_once()
+            except Exception as exc:
+                print(f"pagememo warm: {exc!r}", file=sys.stderr)
+
+
+warmer = Warmer()
 
 
 class _NotKept(Exception):
@@ -148,6 +243,11 @@ class PageMemo:
         self.get_response = get_response
 
     def __call__(self, request):
+        if ON and request.method == "POST":
+            response = self.get_response(request)
+            if response.status_code < 400 and warmer.enabled():
+                warmer.kick()
+            return response
         if not ON or _skip(request):
             return self.get_response(request)
         user = request.session.get("_auth_user_id")
@@ -159,6 +259,7 @@ class PageMemo:
             shape = _shapes.get(base, frozenset())
         key = base + (datetime.date.today().isoformat(), tuple((k, _meta_value(request.META, k)) for k in sorted(shape)))
         made = []
+        environ = dict(request.META)  # before _make wraps it
 
         def make():
             response = self._make(request, base, shape)
@@ -170,6 +271,8 @@ class PageMemo:
         except _NotKept as e:
             e.response["X-Pypen-Memo"] = "skip"
             return e.response
+        if not request.META.get("HTTP_X_PYPEN_WARM") and warmer.enabled():
+            warmer.note(key, environ)
         return self._answer(request, blob, "miss" if made else "hit")
 
     def _make(self, request, base, shape):

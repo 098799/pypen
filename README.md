@@ -507,6 +507,11 @@ Numbers and the full list of findings: `AUDIT.md`, "Speed pass" (11 Nov 2026).
   `/admin/ /accounts/ /i/ /undo/ /kit/ /api/version`. The answer says `X-Pypen-Memo: hit|miss|skip`;
   `PYPEN_PAGE_MEMO=0` in the secrets file (and a restart) turns it off. A GET must never write, or nothing stays kept: check
   `PRAGMA data_version` over a crawl when a view starts writing on GET.
+- **Made again ahead after a write** (`pagememo.Warmer`): a POST answered below 400 wakes a thread that waits
+  1 s (the POST's own redirect target is made by that request) and then replays, one by one, the 12 pages kept
+  most recently (used in the last 2 h) through Django with their own path, query, cookies and headers: the next
+  tap after a Finish or an edit is a kept page, not a 25-160 ms make. Only for a database file (the tests'
+  in-memory one has no memo); `tests_pagememo` drives it by hand.
 - **One gunicorn worker with 4 threads** (`deploy/pypen.service`, installed by `deploy-code.sh` when it differs):
   one store of kept pages for every request, ~120 MB instead of 3 × 155 MB. `malloc.start()` in `wsgi.py`
   (KIT-MALLOC). Rejected: 3 workers with a shared cache (a file or a table): every hit pays a read and a

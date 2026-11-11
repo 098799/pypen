@@ -55,11 +55,19 @@ class PageMemoTests(TestCase):
         self.saved = pagememo.memo
         pagememo.memo = Memo(version=lambda con: ("test", self.version))
         pagememo._shapes.clear()
+        # The warmer, by hand: on, but no thread (a thread's connection would
+        # not see this test's transaction); self.kicks counts the POSTs.
+        self.saved_warmer = pagememo.warmer
+        pagememo.warmer = pagememo.Warmer()
+        pagememo.warmer.enabled = lambda: True
+        self.kicks = []
+        pagememo.warmer.kick = lambda: self.kicks.append(1)
         self.client.force_login(self.user)
         self.client.cookies["csrftoken"] = CSRF
 
     def tearDown(self):
         pagememo.memo = self.saved
+        pagememo.warmer = self.saved_warmer
         pagememo._shapes.clear()
 
     def changed(self):
@@ -172,4 +180,37 @@ class PageMemoTests(TestCase):
         hows = [self.get("/stats/")[1] for _ in range(3)]
         self.assertEqual(hows[-1], "hit")
         self.assertNotIn("csrftoken", self.client.cookies)
+
+    def test_after_a_write_the_recent_pages_are_made_again_ahead(self):
+        pages = ["/dashboard/", f"/pens/{self.pen.pk}/", "/stats/"]
+        for url in pages:
+            self.get(url)
+        self.client.post(f"/usages/{self.usage.pk}/verdict/", {"verdict": "loved"})
+        self.assertEqual(self.kicks, [1])  # a POST asks for it
+        self.client.cookies.pop("messages", None)  # its toast, read by the next page
+        self.changed()  # what the commit did to the version
+        pagememo.warmer.run_once()  # what the thread does after WARM_WAIT
+        self.assertEqual(pagememo.warmer.made, len(pages))
+        for url in pages:
+            self.assertEqual(self.get(url)[1], "hit", url)
+
+    def test_a_replay_is_the_page_a_request_would_make(self):
+        url = f"/usages/{self.usage.pk}/edit/"
+        self.get(url, HTTP_REFERER="http://testserver/stats/")
+        self.get(url, HTTP_REFERER="http://testserver/stats/")  # kept with the Referer in its key
+        self.changed()
+        Pen.objects.filter(pk=self.pen.pk).update(model="M1000")
+        pagememo.warmer.run_once()
+        r, how, body = self.get(url, HTTP_REFERER="http://testserver/stats/")
+        self.assertEqual(how, "hit")
+        self.assertIn("M1000", body)
+        self.assertIn('value="/stats/"', body)
+
+    def test_a_replay_of_an_ended_session_keeps_nothing(self):
+        self.get("/dashboard/")
+        self.client.logout()
+        self.changed()
+        pagememo.warmer.run_once()
+        # nothing kept at the new version: the replay was sent to sign in
+        self.assertEqual([e for e in pagememo.memo._store.values() if e.n == self.version], [])
 
