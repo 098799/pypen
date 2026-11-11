@@ -96,7 +96,8 @@ def build(request):
         s["title"] = TITLES[s["key"]]
         s["count"] = counts.get(s["key"], 0)
         r = s["rows"][0].rotation
-        s["subtitle"] = f"~every {r.how_often} days" if s["key"].startswith("p") else r.whos if s["key"] == "other" else ""
+        # "about", not "~": Alegreya Sans draws "~e" as one accented e ("ẽvery").
+        s["subtitle"] = f"about every {r.how_often} days" if s["key"].startswith("p") else r.whos if s["key"] == "other" else ""
 
     def _url_with(**changes):
         params = request.GET.copy()

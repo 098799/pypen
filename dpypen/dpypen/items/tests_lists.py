@@ -267,7 +267,7 @@ class Groups(Collection):
         self.pens(5, rot=self.gone)
         first = self.client.get("/prev/pens/").content.decode()
         self.assertEqual(heads(first), ["Priority 0", "Priority 1"])
-        self.assertIn("30 pens · ~every 14 days", first)  # the group, not the 20 on this page
+        self.assertIn("30 pens · about every 14 days", first)  # the group, not the 20 on this page
         more = self.client.get("/prev/pens/?offset=50", **MORE).content.decode()
         # Priority 1 goes on from the last page: no second heading for it.
         self.assertEqual(heads(more), ["Defunct / sold"])
