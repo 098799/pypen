@@ -2,7 +2,7 @@
 
     GET /api/pens    ?q= &rot= &limit= &offset=
     GET /api/inks    ?q= &color= &samples=1 &used=1 &sort= &limit= &offset=
-    GET /api/usages  ?q= &state=active|past &limit= &offset=
+    GET /api/usages  ?q= &state=active|past &verdict=loved|fine|never|none &limit= &offset=
 
     {"items": [...], "total": N, "limit": 50, "offset": 0}
 
@@ -73,5 +73,7 @@ def usages(request):
         "begin": u.begin.isoformat(),
         "end": u.end.isoformat() if u.end else None,
         "days": ((u.end or today) - u.begin).days,
+        "verdict": u.verdict or None,
+        "note": u.note,
     } for u in rows]
     return listing.json_page(items, total, limit, offset)

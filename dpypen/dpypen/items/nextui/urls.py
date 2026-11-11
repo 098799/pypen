@@ -40,6 +40,7 @@ urlpatterns = [
     path("usages/add/", r(crud.usages_create), name="nx_usages_create"),
     path("usages/<int:pk>/edit/", r(crud.usages_edit), name="nx_usages_edit"),
     path("usages/<int:pk>/end/", r(crud.usages_end), name="nx_usages_end"),
+    path("usages/<int:pk>/verdict/", r(crud.usages_verdict), name="nx_usages_verdict"),
     path("usages/<int:pk>/delete/", r(crud.usages_delete), name="nx_usages_delete"),
     path("usages/<int:pk>/samples/add/", r(crud.usages_sample_add), name="nx_usages_sample_add"),
     path("usages/samples/<int:pk>/extract/", r(crud.samples_extract), name="nx_samples_extract"),

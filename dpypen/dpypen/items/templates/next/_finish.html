@@ -1,0 +1,19 @@
+{% comment %}Finish a fill, and say how it wrote (README "How it wrote"). `u` the open
+fill; `label` the button's word; `small` for a row. A <details>: it opens in
+place, needs no script and no layer, and a verdict button finishes the fill with
+that word; "Just finish" finishes it with none, and the summary, open, reads
+"Not yet" and closes it.{% endcomment %}
+<details class="finish-d{% if small %} is-small{% endif %}" data-new="verdicts">
+  <summary class="btn{% if go %} is-go{% endif %}{% if small %} is-small{% endif %}"><span class="fd-closed">{{ label|default:"Finish" }}</span><span class="fd-open">Not yet</span></summary>
+  <form class="finish-sheet" method="post" action="{% url 'nx_usages_end' u.pk %}" data-kit-busy>{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <p class="finish-q">How did it write?</p>
+    <div class="verdict-btns">
+      <button class="vbtn" type="submit" name="verdict" value="loved"><span aria-hidden="true">♥</span><span>Loved</span></button>
+      <button class="vbtn" type="submit" name="verdict" value="fine"><span aria-hidden="true">✓</span><span>Fine</span></button>
+      <button class="vbtn" type="submit" name="verdict" value="never"><span aria-hidden="true">✕</span><span>Not again</span></button>
+    </div>
+    <label class="finish-note"><span>A note, if any</span><input type="text" name="note" maxlength="200" autocomplete="off" placeholder="Wet, dry, shading, cleaned out easily"></label>
+    <button class="nx-link" type="submit" name="verdict" value="">Just finish, say nothing</button>
+  </form>
+</details>

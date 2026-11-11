@@ -54,6 +54,7 @@ urlpatterns = [
     path('prev/usages/add/', crud.usages_create, name='usages_create'),
     path('prev/usages/<int:pk>/edit/', crud.usages_edit, name='usages_edit'),
     path('prev/usages/<int:pk>/end/', crud.usages_end, name='usages_end'),
+    path('prev/usages/<int:pk>/verdict/', crud.usages_verdict, name='usages_verdict'),
     path('prev/usages/<int:pk>/delete/', crud.usages_delete, name='usages_delete'),
     path('prev/usages/<int:pk>/samples/add/', crud.usages_sample_add, name='usages_sample_add'),
     path('prev/samples/<int:pk>/extract/', crud.samples_extract, name='samples_extract'),

@@ -3,8 +3,22 @@
 {% block title %}Pairings · {{ app_name }}{% endblock %}
 {% block content %}
 {% include "next/stats/_head.html" with title="Pairings" sub="Which ink goes back into which pen" %}
-<p class="sentence"><b>{{ pairs_n }}</b> different pairings, <b>{{ repeat_n }}</b> of them used more than once.</p>
+<p class="sentence"><b>{{ pairs_n }}</b> different pairings, <b>{{ repeat_n }}</b> of them used more than once.{% if said.n %} <b>{{ said.n }}</b> of {{ said.ended }} fills say how they wrote.{% endif %}</p>
 <div class="plates" id="pairCharts">
+  <section class="plate" id="howTheyWrote" data-new="verdicts">
+    <h2>How they wrote</h2>
+    {% if said.n %}
+    <p>The word each fill was given; a pairing counts by its newest. <a class="to" href="{% url 'nx_usages_list' %}?verdict=loved">See the loved fills</a></p>
+    <div class="vbar" role="img" aria-label="{% for w in said.words %}{{ w.word }} {{ w.n }}{% if not forloop.last %}, {% endif %}{% endfor %}">{% for w in said.words %}{% if w.n %}<i class="is-{{ w.key }}" style="flex: {{ w.n }}"></i>{% endif %}{% endfor %}</div>
+    <div class="vkey">{% for w in said.words %}<a href="{% url 'nx_usages_list' %}?verdict={{ w.key }}" class="is-{{ w.key }}"><i aria-hidden="true"></i>{{ w.word }} <b>{{ w.n }}</b></a>{% endfor %}</div>
+    {% if said.loved %}<h3 class="vshelf-h is-loved"><span aria-hidden="true">♥</span> Loved</h3>
+    <ul class="rows">{% for b in said.loved %}<li class="row" style="--sw: {{ b.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_pens_detail' b.pen.pk %}">{{ b.pen }}</a><small>{{ b.ink }}</small></div><span class="row-v">{% if b.n > 1 %}{{ b.n }}×<br>{% endif %}{{ b.when|date:"M Y" }}</span></li>{% endfor %}</ul>{% endif %}
+    {% if said.never %}<h3 class="vshelf-h is-never"><span aria-hidden="true">✕</span> Not again</h3>
+    <ul class="rows">{% for b in said.never %}<li class="row" style="--sw: {{ b.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_pens_detail' b.pen.pk %}">{{ b.pen }}</a><small>{{ b.ink }}</small></div><span class="row-v">{{ b.when|date:"M Y" }}</span></li>{% endfor %}</ul>{% endif %}
+    {% else %}
+    <p>No fill says yet how it wrote. When you finish one, pick Loved, Fine or Not again: the loved pairings and the ones to avoid show here, and What to ink next uses them.</p>
+    {% endif %}
+  </section>
   <section class="plate">
     <h2>The favourites</h2><p>Filled most often, then days.</p>
     <ul class="rows">{% for b in best %}<li class="row" style="--sw: {{ b.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_pens_detail' b.pen.pk %}">{{ b.pen }}</a><small>{{ b.ink }}</small></div><span class="row-v">{{ b.n }} fills<br>{{ b.days }} d</span></li>{% endfor %}</ul>

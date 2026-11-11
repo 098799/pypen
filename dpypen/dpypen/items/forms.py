@@ -3,6 +3,7 @@ from datetime import date
 
 from django import forms
 from django.db.models import Count, Max, Q
+from django.utils import timezone
 
 from dpypen.items import constants
 from dpypen.items.models import Brand, Ink, Pen, Usage
@@ -58,11 +59,14 @@ def _limit_currencies(form: forms.ModelForm, field_name: str):
 class UsageForm(forms.ModelForm):
     class Meta:
         model = Usage
-        fields = ["pen", "nib", "ink", "begin", "end"]
+        fields = ["pen", "nib", "ink", "begin", "end", "verdict", "note"]
         widgets = {
             "begin": forms.DateInput(attrs={"type": "date"}),
             "end": forms.DateInput(attrs={"type": "date"}),
+            "verdict": forms.RadioSelect,
+            "note": forms.TextInput(attrs={"placeholder": "Wet, a little dry, shading, cleaned out easily", "maxlength": 200}),
         }
+        labels = {"verdict": "How did it write?", "note": "A note"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -104,6 +108,9 @@ class UsageForm(forms.ModelForm):
             "data-rest-label": "Other nibs",
         })
         self.fields["end"].required = False
+        # The old version's form (/prev/) sends neither field; a field a form
+        # does not send keeps its value (README "How it wrote").
+        self._said = (self.instance.verdict, self.instance.note)
 
     finish_open = forms.BooleanField(required=False, label="Finish that fill on this inking's day")
 
@@ -124,7 +131,12 @@ class UsageForm(forms.ModelForm):
                                f"{old.begin:%-d %b %Y}. Finish that fill first, or tick the box below.")
         return data
 
+    def clean_note(self):
+        return " ".join((self.cleaned_data.get("note") or "").split())
+
     def save(self, commit=True):
+        if (self.instance.verdict, self.instance.note) != self._said:
+            self.instance.verdict_at = timezone.now()
         usage = super().save(commit=commit)
         if commit and getattr(self, "open_fill", None):
             self.open_fill.end = usage.begin

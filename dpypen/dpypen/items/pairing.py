@@ -11,7 +11,9 @@ turns on average, so "most rested first" just lists the dustiest shelf — the
 same trap the dashboard fell into with pens. Rest therefore saturates at two
 turns, and the rest of the score decides between the bottles that are all
 "due": a pairing this pen has never had, an ink that has been inked often (it
-was liked), a colour that is not on the desk already. A bottle that is hard to
+was liked), a colour that is not on the desk already. Since Nov 2026 a fill can
+say how it wrote (verdicts.py): a pairing loved before comes up, one marked
+Not again goes to the bottom, and other pens' verdicts on the ink count a little. A bottle that is hard to
 fill from goes to the bottom for a pen that fills by dipping its nib in it.
 """
 
@@ -23,6 +25,7 @@ from datetime import date
 from django.shortcuts import get_object_or_404
 
 from dpypen.items.skin import render
+from dpypen.items import verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 
@@ -39,6 +42,15 @@ LOVED_PER_DOUBLING = 0.15
 LOVED_CAP = 0.6
 SAME_COLOUR_ON_DESK = 0.6
 HARD_BOTTLE_FOR_DIPPER = 1.5
+# How it wrote (README "How it wrote"): said, not guessed. A pairing marked
+# Not again sinks below every bottle that is merely "due"; one loved comes up
+# about as far as a new pairing does.
+LOVED_HERE = 0.8
+NOT_AGAIN_HERE = 3.0
+LOVED_ELSEWHERE = 0.2  # per other pen, up to the cap
+LOVED_ELSEWHERE_CAP = 0.4
+NOT_AGAIN_ELSEWHERE = 0.25
+NOT_AGAIN_ELSEWHERE_CAP = 0.5
 
 SHOWN = 6
 SHUFFLE_POOL = 24
@@ -54,6 +66,7 @@ class Suggestion:
     last_paired: date | None
     inkings: int  # times this ink has been inked, any pen
     reasons: list[tuple[str, str]] = field(default_factory=list)  # (tone, text)
+    verdict: str = ""  # this pairing's newest verdict (verdicts.py)
 
 
 def due_pens(today, usages, rots, pens_by_rotation):
@@ -140,6 +153,18 @@ def suggest_inks(pen, today, usages):
     if elsewhere:
         desk_colours |= set(Ink.objects.filter(pk__in=elsewhere).values_list("color", flat=True))
 
+    # Each pairing's newest verdict; one query, whatever `usages` was loaded with.
+    said = verdicts.latest(verdicts.said_rows())
+    here = {ink_id: v for (pen_id, ink_id), v in said.items() if pen_id == pen.pk}
+    loved_in, never_in = {}, {}
+    for (pen_id, ink_id), (v, _) in said.items():
+        if pen_id == pen.pk:
+            continue
+        if v == verdicts.LOVED:
+            loved_in[ink_id] = loved_in.get(ink_id, 0) + 1
+        elif v == verdicts.NEVER:
+            never_in[ink_id] = never_in.get(ink_id, 0) + 1
+
     dipper = pen.filling in DIP_FILLERS
     out = []
     for ink in inks:
@@ -178,6 +203,25 @@ def suggest_inks(pen, today, usages):
         if s.inkings >= 3:
             s.score += min(LOVED_CAP, LOVED_PER_DOUBLING * math.log2(1 + s.inkings))
             s.reasons.append(("good", f"a favourite · {s.inkings} inkings"))
+
+        verdict, when = here.get(ink.pk, ("", None))
+        s.verdict = verdict
+        if verdict == verdicts.LOVED:
+            s.score += LOVED_HERE
+            s.reasons.append(("good", f"♥ loved in this pen, {when:%b %Y}"))
+        elif verdict == verdicts.NEVER:
+            s.score -= NOT_AGAIN_HERE
+            s.reasons.append(("warn", f"✕ not again in this pen, {when:%b %Y}"))
+        elif verdict == verdicts.FINE:
+            s.reasons.append(("", f"fine in this pen, {when:%b %Y}"))
+        if loved_in.get(ink.pk):
+            n = loved_in[ink.pk]
+            s.score += min(LOVED_ELSEWHERE_CAP, LOVED_ELSEWHERE * n)
+            s.reasons.append(("good", f"loved in {n} other pen{'s' if n > 1 else ''}"))
+        if never_in.get(ink.pk) and verdict != verdicts.LOVED:
+            n = never_in[ink.pk]
+            s.score -= min(NOT_AGAIN_ELSEWHERE_CAP, NOT_AGAIN_ELSEWHERE * n)
+            s.reasons.append(("warn", f"not again in {n} other pen{'s' if n > 1 else ''}"))
 
         if ink.color in desk_colours:
             s.score -= SAME_COLOUR_ON_DESK

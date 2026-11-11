@@ -1,0 +1,10 @@
+{% load items_extras %}{% comment %}A fill's verdict in a row (README "How it wrote"): the word and the note when
+said; for the owner, an ended fill with none gets the three words as buttons
+(`ask`). Goes inside .row-t.{% endcomment %}
+{% if u.verdict %}<small class="vsaid is-{{ u.verdict }}"><b><span aria-hidden="true">{% if u.verdict == "loved" %}♥{% elif u.verdict == "never" %}✕{% else %}✓{% endif %}</span> {{ u.get_verdict_display }}</b>{% if u.note %} · {% if query %}{{ u.note|highlight:query }}{% else %}{{ u.note }}{% endif %}{% endif %}</small>
+{% elif u.note %}<small class="vsaid">{% if query %}{{ u.note|highlight:query }}{% else %}{{ u.note }}{% endif %}</small>{% endif %}
+{% if ask and can_edit and u.end and not u.verdict %}<form class="vask" method="post" action="{% url 'nx_usages_verdict' u.pk %}" data-kit-busy data-new="verdicts">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><span>How did it write?</span>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="loved"><span aria-hidden="true">♥</span> Loved</button>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="fine"><span aria-hidden="true">✓</span> Fine</button>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="never"><span aria-hidden="true">✕</span> Not again</button>
+</form>{% endif %}

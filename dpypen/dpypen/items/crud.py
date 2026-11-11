@@ -1,10 +1,12 @@
 import logging
 import re
 from datetime import date
+from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.files.base import ContentFile
+from django.db.models import Count
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -12,7 +14,7 @@ from django.views.decorators.http import require_POST
 
 from dpypen.items import skin
 from dpypen.items.skin import render
-from dpypen.items import aierrors, backto, inkindex, inkings, listing, penindex, undo
+from dpypen.items import aierrors, backto, inkindex, inkings, listing, penindex, undo, verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -43,11 +45,23 @@ def usage_scope(request):
         words.append(color)
     if m:
         words.append(date(int(m.group(1)), int(m.group(2)), 1).strftime("%b %Y") if m.group(2) else m.group(1))
-    return {"began": began, "color": color, "label": " · ".join(words)}
+    # How it wrote (README "How it wrote"): its own chips, so not in `label`.
+    verdict = request.GET.get("verdict", "")
+    if verdict not in verdicts.FILTERS:
+        verdict = ""
+    return {"began": began, "color": color, "label": " · ".join(words), "verdict": verdict,
+            "verdict_word": verdicts.FILTER_WORDS.get(verdict, "")}
 
 
-def usage_search(request):
-    """(queryset, q): the inkings the search keeps (/usages/, /api/usages)."""
+def _by_verdict(qs, verdict):
+    if verdict == "none":
+        return qs.filter(verdict="")
+    return qs.filter(verdict=verdict) if verdict else qs
+
+
+def usage_search(request, *, verdict=True):
+    """(queryset, q): the inkings the search keeps (/usages/, /api/usages).
+    verdict=False leaves `?verdict=` out: the chips count over the rest."""
     q = (request.GET.get("q") or "").strip()
     qs = listing.search(Usage.objects.select_related(*USAGE_ROWS), q, listing.USAGE_FIELDS)
     scope = usage_scope(request)
@@ -58,7 +72,27 @@ def usage_search(request):
             qs = qs.filter(begin__month=int(mo))
     if scope["color"]:
         qs = qs.filter(ink__color=scope["color"])
+    if verdict:
+        qs = _by_verdict(qs, scope["verdict"])
     return qs, q
+
+
+def verdict_chips(request, scope):
+    """The inkings' chips for how a fill wrote, each with how many of the
+    searched fills it holds (one grouped query); a lit chip's link turns it off."""
+    base, _ = usage_search(request, verdict=False)
+    counts = {r["verdict"]: r["n"] for r in base.values("verdict").annotate(n=Count("pk")).order_by()}
+    keep = {k: v for k, v in request.GET.items() if k in ("q", "began", "color") and v}
+    chips = []
+    for key in verdicts.FILTERS:
+        n = counts.get("" if key == "none" else key, 0)
+        on = scope["verdict"] == key
+        if not n and not on:
+            continue
+        params = {**keep, **({} if on else {"verdict": key})}
+        chips.append({"key": key, "word": verdicts.FILTER_WORDS[key], "mark": verdicts.MARKS.get(key, ""),
+                      "n": n, "on": on, "url": request.path + ("?" + urlencode(params) if params else "")})
+    return chips
 
 
 def usage_rows(request):
@@ -74,6 +108,7 @@ def usages_list(request):
     40 to a numbered page; Load more suits a phone."""
     limit, offset = listing.page_args(request)
     today = date.today()
+    scope = usage_scope(request)
     active_qs, past_qs, q = usage_rows(request)
     more_only = listing.is_more(request)
     active = [] if (offset or more_only) else list(
@@ -101,7 +136,8 @@ def usages_list(request):
         "past_head": not more_only,
         "total": total,
         "query": q,
-        "scope": usage_scope(request),
+        "scope": scope,
+        "verdict_chips": [] if more_only else verdict_chips(request, scope),
         "more": listing.more(request, offset, limit, total),
         "nav": "usages",
     }))
@@ -158,11 +194,36 @@ def usages_end(request, pk):
     usage = get_object_or_404(Usage, pk=pk)
     before = undo.snapshot(usage)
     usage.end = date.today()
-    usage.save(update_fields=["end"])
-    undo.offer(request, f"Finished {usage.pen} · {usage.ink}.",
+    # Finish asks how it wrote (README "How it wrote"); a word it does not
+    # know is no word, and plain Finish still works.
+    said = verdicts.say(usage, verdicts.parse(request.POST.get("verdict")) or None,
+                        request.POST.get("note") or None)
+    usage.save(update_fields=["end", *said])
+    word = verdicts.WORDS.get(usage.verdict) if "verdict" in said else None
+    undo.offer(request, f"Finished {usage.pen} · {usage.ink}" + (f": {word.lower()}." if word else "."),
                kind="update", frozen=before)
     # Finished on the desk or the pen's page: stay there (the pen's page then
     # offers Ink this pen and the suggestions).
+    return backto.back(request, reverse("usages_list"), avoid=(f"/usages/{pk}/", f"/prev/usages/{pk}/"))
+
+
+@login_required
+@require_POST
+def usages_verdict(request, pk):
+    """How a fill wrote, said after Finish: the desk's "How did they write?", a
+    pen's or an ink's history. `verdict` "" clears it; a `note` is kept when
+    sent. Goes back where it was said."""
+    usage = get_object_or_404(Usage, pk=pk)
+    verdict = verdicts.parse(request.POST["verdict"]) if "verdict" in request.POST else None
+    note = request.POST.get("note")
+    if verdict is None and note is None:
+        return backto.back(request, reverse("usages_list"), avoid=(f"/usages/{pk}/", f"/prev/usages/{pk}/"))
+    before = undo.snapshot(usage)
+    said = verdicts.say(usage, verdict, note)
+    if said:
+        usage.save(update_fields=said)
+        word = verdicts.WORDS.get(usage.verdict, "not said")
+        undo.offer(request, f"{usage.pen} · {usage.ink}: {word.lower()}.", kind="update", frozen=before)
     return backto.back(request, reverse("usages_list"), avoid=(f"/usages/{pk}/", f"/prev/usages/{pk}/"))
 
 

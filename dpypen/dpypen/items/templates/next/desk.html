@@ -72,11 +72,12 @@
       {% for u in recent %}
       <li class="row" style="--sw: {{ u.ink.swatch_bg }}">
         <span class="dab" aria-hidden="true"></span>
-        <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen }}</a><small>{{ u.ink.brand.name }} {{ u.ink.name }}</small></div>
+        <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen }}</a><small>{{ u.ink.brand.name }} {{ u.ink.name }}</small>{% include "next/_verdict.html" with ask=u.ask %}</div>
         <span class="row-v">{{ u.days }} d</span>
       </li>
       {% endfor %}
     </ul>
+    {% if can_edit and unsaid_more > 0 %}<p class="fine"><a href="{% url 'nx_usages_list' %}?verdict=none">{{ unsaid_more }} more fill{{ unsaid_more|pluralize }} of the past year</a> wait{{ unsaid_more|pluralize:"s," }} for a word.</p>{% endif %}
   </section>
   {% endif %}
 </aside>

@@ -22,7 +22,7 @@
     {% if can_edit %}
     <div class="fill-acts">
       <a class="btn is-ghost" href="{% url 'nx_usages_edit' f.u.pk %}">Edit</a>
-      <form method="post" action="{% url 'nx_usages_end' f.u.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn" type="submit">Finish</button></form>
+      {% include "next/_finish.html" with u=f.u %}
     </div>
     {% endif %}
   </div>

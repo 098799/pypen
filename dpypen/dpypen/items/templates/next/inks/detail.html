@@ -39,6 +39,14 @@
   </div>
 </div>
 
+{% if said.loved or said.never %}
+<div class="sec-head" id="howItWrote"><h2>How it wrote</h2><span>{{ said.said }} fill{{ said.said|pluralize }} said</span></div>
+<ul class="rows">
+  {% for v in said.loved %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' v.pen.pk %}">{{ v.pen }}</a><small class="vsaid is-loved"><b><span aria-hidden="true">♥</span> Loved{% if v.n > 1 %} {{ v.n }} times{% endif %}</b>{% if v.note %} · {{ v.note }}{% endif %}</small></div>{% if can_edit and not ink.used_up and v.pen.pk not in inked_pens %}<a class="btn is-small" href="{% url 'nx_usages_create' %}?pen={{ v.pen.pk }}&amp;ink={{ ink.pk }}">Ink it again</a>{% endif %}</li>{% endfor %}
+  {% for v in said.never %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' v.pen.pk %}">{{ v.pen }}</a><small class="vsaid is-never"><b><span aria-hidden="true">✕</span> Not again</b>, {{ v.when|date:"M Y" }}{% if v.note %} · {{ v.note }}{% endif %}</small></div></li>{% endfor %}
+</ul>
+{% endif %}
+
 {% if close %}
 <div class="sec-head"><h2>Closest in the cupboard</h2></div>
 <div class="ink-grid-nx">{% for i in close %}{% include "next/_ink_card.html" %}{% endfor %}</div>
@@ -75,8 +83,8 @@
 <div class="sec-head"><h2>Where it has been</h2></div>
 {% if current or past %}
 <ul class="rows">
-  {% for u in current %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>Since {{ u.begin|date:"j M Y" }}, {{ u.nib }}</small></div><span class="row-v"><span class="pip">Now</span> {{ u.days }} d</span></li>{% endfor %}
-  {% for u in past %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}, {{ u.nib }}</small></div><span class="row-v">{{ u.days }} d</span></li>{% endfor %}
+  {% for u in current %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>Since {{ u.begin|date:"j M Y" }}, {{ u.nib }}</small>{% include "next/_verdict.html" %}</div><span class="row-v"><span class="pip">Now</span> {{ u.days }} d</span>{% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this fill">✎</a>{% endif %}</li>{% endfor %}
+  {% for u in past %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}, {{ u.nib }}</small>{% include "next/_verdict.html" with ask=1 %}</div><span class="row-v">{{ u.days }} d</span>{% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this fill">✎</a>{% endif %}</li>{% endfor %}
 </ul>
 {% else %}
 <div class="kit-empty small" data-kind="none"><p class="kit-empty-t">This ink has never been in a pen</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}?ink={{ ink.pk }}">Use this ink</a></p>{% endif %}</div>

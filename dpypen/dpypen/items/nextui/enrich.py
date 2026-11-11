@@ -13,7 +13,7 @@ from statistics import median
 
 
 
-from dpypen.items import pairing, shelf
+from dpypen.items import pairing, shelf, verdicts
 from dpypen.items.models import Ink, Pen, Usage
 from dpypen.items.nextui import color, stats
 from dpypen.items.public import INK_COLOR_HEX
@@ -86,6 +86,7 @@ def _pen_detail(request, ctx):
     picks = pairing.suggest_inks(pen, today, usages)[:3]
     return {
         **ctx,
+        "said": verdicts.shelf(([current] if current else []) + list(past), "ink"),
         "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
             "median_fill": round(median(ended)) if ended else None,
@@ -136,6 +137,7 @@ def _ink_detail(request, ctx):
     last = max((u.end for u in ctx.get("past") or []), default=None)
     return {
         **ctx,
+        "said": verdicts.shelf(usages, "pen"),
         "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
             "per_ml": f"{price / ink.volume:.2f}" if price and ink.volume else None,
@@ -146,6 +148,8 @@ def _ink_detail(request, ctx):
             "hue": color.ink_hex(ink, INK_COLOR_HEX),
         },
         "worn": worn,
+        # "Ink it again" is not offered for a pen that is inked now.
+        "inked_pens": {u.pen_id for u in all_usages if u.end is None},
         "close": _close_inks(ink),
         "open_to": open_to,
     }

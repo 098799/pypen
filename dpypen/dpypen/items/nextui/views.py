@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_safe
 
-from dpypen.items import history, inkings, pairing
+from dpypen.items import history, inkings, pairing, verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Pen, PenPhoto, Usage
 from dpypen.items.nextui import stats, turns as turns_data
@@ -92,6 +92,9 @@ def _desk_data(today):
     )
     for u in recent:
         u.days = (u.end - u.begin).days
+        # The desk asks only about a fill still remembered (verdicts.ASK_DAYS).
+        u.ask = not u.verdict and (today - u.end).days <= verdicts.ASK_DAYS
+    unsaid = verdicts.waiting(today)
 
     year = today.year
     this_year = [u for u in usages if u.begin.year == year]
@@ -105,6 +108,8 @@ def _desk_data(today):
         "then": [{**d, "rested_span": stats.span(d["rested"]) if d["rested"] is not None else None} for d in due[1:6]],
         "up_next": up_next,
         "recent": recent,
+        # Fills of the past year still waiting for a word, beyond the rows shown.
+        "unsaid_more": unsaid - sum(1 for u in recent if u.ask),
         "year": year,
         "year_n": len(this_year),
         "year_pens": len({u.pen_id for u in this_year}),

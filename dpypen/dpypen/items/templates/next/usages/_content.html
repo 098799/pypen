@@ -1,25 +1,30 @@
 {% load items_extras %}
 <div id="usageContentBody" data-listnav data-more-host="usages">
+{% if verdict_chips %}
+<nav class="kit-chips verdict-chips" id="verdictChips" aria-label="How it wrote" data-new="verdicts">
+  {% for c in verdict_chips %}<a href="{{ c.url }}" class="kit-chip is-{{ c.key }}"{% if c.on %} aria-current="true"{% endif %} hx-get="{{ c.url }}" hx-target="#usageContentBody" hx-swap="outerHTML" hx-select="#usageContentBody" hx-replace-url="true" hx-sync="#usageFilterForm:replace">{% if c.mark %}<span aria-hidden="true">{{ c.mark }}</span> {% endif %}{{ c.word }} <b>{{ c.n }}</b></a>{% endfor %}
+</nav>
+{% endif %}
 {% if active %}
 <div class="group-nx"><h2>Inked now</h2><span>{{ active|length }}</span></div>
 <ul class="rows">
   {% for u in active %}
   <li class="row" style="--sw: {{ u.ink_bg }}" data-listnav-item>
     <span class="dab" aria-hidden="true"></span>
-    <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}, {{ u.days }} d</small></div>
-    {% if can_edit %}<a class="btn is-small is-ghost" href="{% url 'nx_usages_edit' u.pk %}">Edit</a><form method="post" action="{% url 'nx_usages_end' u.pk %}" data-kit-busy>{% csrf_token %}<button class="btn is-small" type="submit">Finish</button></form>{% endif %}
+    <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}, {{ u.days }} d</small>{% include "next/_verdict.html" %}</div>
+    {% if can_edit %}<a class="btn is-small is-ghost" href="{% url 'nx_usages_edit' u.pk %}">Edit</a>{% include "next/_finish.html" with u=u small=1 %}{% endif %}
   </li>
   {% endfor %}
 </ul>
 {% endif %}
 {% if past or past_head %}
 <section data-more-section data-group="past">
-  {% if past_head %}<div class="group-nx" data-more-head><h2>Past</h2><span>{{ total }}{% if query or scope.label %} matching{% endif %}, <a href="{% url 'nx_stats_inkings' %}">charts</a></span></div>{% endif %}
+  {% if past_head %}<div class="group-nx" data-more-head><h2>Past</h2><span>{{ total }}{% if query or scope.label or scope.verdict %} matching{% endif %}, <a href="{% url 'nx_stats_inkings' %}">charts</a></span></div>{% endif %}
   <ul class="rows" data-more-rows>
     {% for u in past %}
     <li class="row" style="--sw: {{ u.ink_bg }}" data-listnav-item>
       <span class="dab" aria-hidden="true"></span>
-      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small></div>
+      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small>{% include "next/_verdict.html" with ask=1 %}</div>
       <span class="row-v">{{ u.days }} d</span>
       {% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this inking">✎</a>{% endif %}
     </li>
@@ -28,8 +33,8 @@
 </section>
 {% endif %}
 {% if not active and not past %}
-{% if query or scope.label %}
-<div class="kit-empty" data-kind="match" role="status"><p class="kit-empty-t">No inking matches{% if query %} “{{ query }}”{% endif %}{% if scope.label %} in {{ scope.label }}{% endif %}</p><p class="kit-empty-p">Every word must match the pen, the ink or the nib.</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_list' %}">All inkings</a></p></div>
+{% if query or scope.label or scope.verdict %}
+<div class="kit-empty" data-kind="match" role="status"><p class="kit-empty-t">No inking matches{% if query %} “{{ query }}”{% endif %}{% if scope.label %} in {{ scope.label }}{% endif %}{% if scope.verdict %}{% if query or scope.label %},{% endif %} {{ scope.verdict_word|lower }}{% endif %}</p><p class="kit-empty-p">{% if query %}Every word must match the pen, the ink, the nib or the note.{% else %}Try another chip.{% endif %}</p><p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_list' %}">All inkings</a></p></div>
 {% else %}
 <div class="kit-empty" data-kind="none" role="status"><p class="kit-empty-t">No inkings yet</p><p class="kit-empty-p">Ink a pen and it shows here.</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}">New inking</a></p>{% endif %}</div>
 {% endif %}

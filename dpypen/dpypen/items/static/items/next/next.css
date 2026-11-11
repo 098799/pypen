@@ -754,3 +754,76 @@ details.more-due > summary { cursor: pointer; color: var(--accent); min-height: 
 .turns-key { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 4px 0 12px; color: var(--dim); font-size: .9rem; }
 .turns-key span { display: inline-flex; align-items: center; gap: 6px; }
 .turns-key i { width: 12px; height: 12px; border-radius: 3px; display: block; background: currentColor; box-shadow: 0 0 0 2px var(--plate); }
+
+/* ---- How it wrote (README "How it wrote") ----
+   Three words on a fill: Loved, Fine, Not again. Each has a glyph next to its
+   word, never instead of it. Loved is a rose ink, Not again the page's --bad;
+   on a paper plate both take a darker step (the plate is light in both themes). */
+:root { --loved: #f4a3bf; --vfine: var(--dim); --vnever: var(--bad); }
+html[data-theme=light] { --loved: #a8285a; }
+.plate { --loved: #a8285a; --vfine: var(--plate-dim); --vnever: #b3261e; }
+
+.finish-d > summary { list-style: none; cursor: pointer; user-select: none; }
+.finish-d > summary::-webkit-details-marker { display: none; }
+.finish-d:not([open]) .fd-open, .finish-d[open] .fd-closed { display: none; }
+.finish-d[open] > summary { background: none; border-color: var(--line); color: var(--dim); font-weight: 500; }
+.finish-sheet {
+  margin-top: 8px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2);
+  display: grid; gap: 10px; text-align: left;
+}
+.finish-q { font: 600 1.05rem/1.25 var(--serif); margin: 0; overflow-wrap: anywhere; }
+.verdict-btns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.vbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 4px 6px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  font: 700 .98rem/1.1 "Alegreya Sans", sans-serif; cursor: pointer; text-align: center;
+  word-spacing: .14em; /* a button resets the body's word space, and the bold space is narrow */
+}
+.vbtn.is-mini { white-space: nowrap; }
+.vbtn:hover { border-color: var(--dim); }
+.vbtn[value=loved] > span:first-child { color: var(--loved); }
+.vbtn[value=fine] > span:first-child { color: var(--vfine); }
+.vbtn[value=never] > span:first-child { color: var(--vnever); }
+.vbtn.is-mini { min-height: 32px; padding: 0 9px; border-radius: 9px; font-size: .9rem; font-weight: 500; position: relative; }
+.vbtn.is-mini::before { content: ""; position: absolute; inset: -6px -2px; }
+.finish-note { display: grid; gap: 3px; color: var(--dim); font-size: .92rem; }
+.finish-note input {
+  width: 100%; min-height: 44px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--fg); font: 400 16px/1.3 "Alegreya Sans", sans-serif;
+}
+.finish-note input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+.finish-sheet .nx-link { justify-self: start; min-height: 36px; }
+/* Open, the sheet takes the whole width; Edit steps aside, "Not yet" stays where Finish was. */
+.fill-foot:has(.finish-d[open]) .fill-acts { grid-column: 1 / -1; }
+.fill-acts:has(.finish-d[open]) > a, .row:has(> .finish-d[open]) > a.btn { display: none; }
+.fill-acts .finish-d[open], .rec-verbs .finish-d[open] { flex-basis: 100%; }
+.fill-acts .finish-d[open] { display: grid; }
+.fill-acts .finish-d[open] > summary { justify-self: end; }
+.fill-acts .finish-d > summary { min-height: 44px; padding: 0 14px; }
+.row:has(> .finish-d[open]) { flex-wrap: wrap; }
+.row > .finish-d[open] { flex-basis: 100%; display: grid; justify-items: end; }
+.row > .finish-d[open] > .finish-sheet { justify-self: stretch; }
+
+.vsaid { display: block; color: var(--dim); font-size: .92rem; line-height: 1.25; margin-top: 2px; overflow-wrap: anywhere; }
+.vsaid b { font-weight: 700; }
+.vsaid.is-loved b { color: var(--loved); }
+.vsaid.is-fine b { color: var(--vfine); }
+.vsaid.is-never b { color: var(--vnever); }
+.vask { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.vask > span { color: var(--dim); font-size: .9rem; flex-basis: 100%; }
+.vshelf-h { display: flex; align-items: center; gap: 6px; font-size: 1.04rem; margin: 12px 0 6px; }
+.vshelf-h.is-loved > span { color: var(--loved); }
+.vshelf-h.is-never > span { color: var(--vnever); }
+.verdict-f .f-label { color: var(--fg); font-weight: 600; }
+.verdict-chips .kit-chip > span { margin-right: 1px; }
+.verdict-chips .kit-chip.is-loved:not([aria-current]) > span { color: var(--loved); }
+.verdict-chips .kit-chip.is-never:not([aria-current]) > span { color: var(--vnever); }
+.vbar { display: flex; height: 14px; gap: 2px; margin-top: 10px; border-radius: 4px; overflow: hidden; }
+.vbar i { display: block; min-width: 3px; }
+.vbar .is-loved, .vkey .is-loved i { background: var(--loved); }
+.vbar .is-fine, .vkey .is-fine i { background: color-mix(in srgb, var(--plate-fg) 35%, var(--plate)); }
+.vbar .is-never, .vkey .is-never i { background: var(--vnever); }
+.vkey { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; font-size: .9rem; }
+.vkey a { display: inline-flex; align-items: center; gap: 5px; color: var(--plate-dim); min-height: 32px; }
+.vkey i { width: 12px; height: 12px; border-radius: 3px; display: block; }
+.vkey b { color: var(--plate-fg); }

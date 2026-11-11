@@ -17,7 +17,7 @@ from django.core.cache import cache
 from django.db.models import Count, F, Max
 from django.urls import reverse
 
-from dpypen.items import history, inkings, pairing
+from dpypen.items import history, inkings, pairing, verdicts
 from dpypen.items.inkings import COLOR_ORDER, MONTHS
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 from dpypen.items.nextui import color as ink_color
@@ -30,10 +30,10 @@ RIVER_W, RIVER_H = 1000, 280
 
 
 def _stamp() -> str:
-    u = Usage.objects.aggregate(n=Count("pk"), last=Max("pk"), began=Max("begin"), ended=Max("end"))
+    u = Usage.objects.aggregate(n=Count("pk"), last=Max("pk"), began=Max("begin"), ended=Max("end"), said=Max("verdict_at"))
     p = Pen.objects.aggregate(n=Count("pk"), last=Max("pk"))
     i = Ink.objects.aggregate(n=Count("pk"), last=Max("pk"))
-    return f"{date.today()}:{u['n']}:{u['last']}:{u['began']}:{u['ended']}:{p['n']}:{p['last']}:{i['n']}:{i['last']}"
+    return f"{date.today()}:{u['n']}:{u['last']}:{u['began']}:{u['ended']}:{u['said']}:{p['n']}:{p['last']}:{i['n']}:{i['last']}"
 
 
 def cached(kind: str, fn):
@@ -677,7 +677,35 @@ def pairs() -> dict:
     inks = Ink.objects.select_related("brand").in_bulk({k[1] for k in ranked})
     best = [{"pen": pens[k[0]], "ink": inks[k[1]], "n": n[k], "days": days[k]} for k in ranked if k[0] in pens and k[1] in inks]
     data = cached("matrix", history._matrix_data)
-    return {**data, "best": best, "pairs_n": len(n), "repeat_n": sum(1 for k in n if n[k] > 1)}
+    return {**data, "best": best, "pairs_n": len(n), "repeat_n": sum(1 for k in n if n[k] > 1), "said": said_pairs()}
+
+
+def said_pairs(shown: int = 10) -> dict:
+    """How the fills wrote (README "How it wrote"): the words given, and the
+    pairings by their newest one, loved (most loves first) and not again."""
+    rows = verdicts.said_rows()
+    ended = Usage.objects.filter(end__isnull=False).count()
+    counts = Counter(r.verdict for r in rows)
+    newest = verdicts.latest(rows)
+    loves = Counter((r.pen_id, r.ink_id) for r in rows if r.verdict == verdicts.LOVED)
+    loved = sorted((k for k, (v, _) in newest.items() if v == verdicts.LOVED),
+                   key=lambda k: (-loves[k], -newest[k][1].toordinal()))[:shown]
+    never = sorted((k for k, (v, _) in newest.items() if v == verdicts.NEVER),
+                   key=lambda k: -newest[k][1].toordinal())[:shown]
+    pens = Pen.objects.select_related("brand").in_bulk({k[0] for k in loved + never})
+    inks = Ink.objects.select_related("brand").in_bulk({k[1] for k in loved + never})
+
+    def item(k):
+        return {"pen": pens[k[0]], "ink": inks[k[1]], "n": loves[k], "when": newest[k][1]}
+
+    return {
+        "n": len(rows),
+        "ended": ended,
+        "words": [{"key": v, "word": verdicts.WORDS[v], "mark": verdicts.MARKS[v], "n": counts[v],
+                   "pct": round(100 * counts[v] / len(rows)) if rows else 0} for v in verdicts.ORDER],
+        "loved": [item(k) for k in loved if k[0] in pens and k[1] in inks],
+        "never": [item(k) for k in never if k[0] in pens and k[1] in inks],
+    }
 
 
 def rebase(value):

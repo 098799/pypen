@@ -12,12 +12,12 @@
   <form id="usageFilterForm" role="search" method="get" action="{% url 'nx_usages_list' %}" data-navform
         hx-get="{% url 'nx_usages_list' %}" hx-trigger="input changed delay:300ms from:#usageQ, submit"
         hx-target="#usageContentBody" hx-swap="outerHTML" hx-select="#usageContentBody" hx-replace-url="true" hx-sync="this:replace" class="kit-search">
-    <input type="search" id="usageQ" name="q" placeholder="Pen, ink, nib" value="{{ query }}" aria-label="Search inkings">
+    <input type="search" id="usageQ" name="q" placeholder="Pen, ink, nib, note" value="{{ query }}" aria-label="Search inkings">
   </form>
 </div>
 {% if scope.label %}
 <nav class="kit-chips" aria-label="Part of the inkings">
-  <a class="kit-chip" aria-current="true" href="{% url 'nx_usages_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}" aria-label="Show all the inkings, not only {{ scope.label }}">{{ scope.label }} <span aria-hidden="true">×</span></a>
+  <a class="kit-chip" aria-current="true" href="{% url 'nx_usages_list' %}{% if query or scope.verdict %}?{% if query %}q={{ query|urlencode }}{% endif %}{% if query and scope.verdict %}&amp;{% endif %}{% if scope.verdict %}verdict={{ scope.verdict }}{% endif %}{% endif %}" aria-label="Show all the inkings, not only {{ scope.label }}">{{ scope.label }} <span aria-hidden="true">×</span></a>
 </nav>
 {% endif %}
 {% include "next/usages/_content.html" %}

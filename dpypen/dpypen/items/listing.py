@@ -159,7 +159,7 @@ def json_page(items: list, total: int, limit: int, offset: int) -> JsonResponse:
 PEN_FIELDS = ["brand.name", "model", "finish", "filling", "obtained_from"]
 INK_FIELDS = ["brand.name", "name", "line", "color", "obtained_from"]
 USAGE_FIELDS = ["pen.brand.name", "pen.model", "pen.finish", "ink.brand.name", "ink.name",
-                "ink.line", "ink.color", "nib.width", "nib.cut", "nib.material"]
+                "ink.line", "ink.color", "nib.width", "nib.cut", "nib.material", "note"]
 
 
 def vary(resp):

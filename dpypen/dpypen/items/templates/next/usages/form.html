@@ -10,6 +10,9 @@
   {% if form.show_finish_open %}<label class="switch-nx">{{ form.finish_open }}<span class="track"></span><span>{{ form.finish_open.label }}</span></label>{% endif %}
   <div class="f2">{% include "next/_field.html" with f=form.nib %}{% include "next/_field.html" with f=form.ink %}</div>
   <div class="f2">{% include "next/_field.html" with f=form.begin label="Inked on" %}{% include "next/_field.html" with f=form.end label="Finished on (blank while inked)" no_opt=1 %}</div>
+  {% if usage or form.end.value %}
+  <div class="f2 verdict-f" data-new="verdicts">{% include "next/_seg.html" with f=form.verdict %}{% include "next/_field.html" with f=form.note %}</div>
+  {% endif %}
   {% for e in form.non_field_errors %}<div class="f-err">{{ e }}</div>{% endfor %}
   <div class="btn-row"><button type="submit" class="btn is-go">{{ submit_label }}</button><a class="btn is-ghost" href="{{ back_to|default:'/usages/' }}">Cancel</a></div>
 </form>

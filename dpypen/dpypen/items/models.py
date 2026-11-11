@@ -371,8 +371,17 @@ class Usage(models.Model):
     def __str__(self):
         return f"{self.pen.brand.name} {self.pen.model} inked with {self.ink.brand.name} {self.ink.name} on {self.begin}"
 
+    # How the pairing wrote, said once the fill is over (or on the way): the
+    # one thing the history could not tell before (README "How it wrote").
+    LOVED, FINE, NEVER = "loved", "fine", "never"
+    VERDICTS = [("", "Not said"), (LOVED, "Loved"), (FINE, "Fine"), (NEVER, "Not again")]
+
     pen = models.ForeignKey(Pen, on_delete=models.CASCADE, blank=False, null=False)
     nib = models.ForeignKey(Nib, on_delete=models.CASCADE, blank=False, null=False)
     ink = models.ForeignKey(Ink, on_delete=models.CASCADE, blank=False, null=False)
     begin = models.DateField(blank=False, null=False, default=date.today)
     end = models.DateField(blank=True, null=True)
+    verdict = models.CharField(max_length=8, choices=VERDICTS, blank=True, default="")
+    note = models.CharField(max_length=200, blank=True, default="")
+    # When the verdict or the note last changed: the Stats' cache key reads it.
+    verdict_at = models.DateTimeField(blank=True, null=True)
