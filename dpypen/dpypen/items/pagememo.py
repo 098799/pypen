@@ -60,7 +60,7 @@ TTL = 15 * 60
 # made again, as before the speed pass. For a suspected stale page, and for
 # comparing made against kept on a spare port.
 ON = os.getenv("PYPEN_PAGE_MEMO", "1") != "0"
-SKIP = ("/admin/", "/accounts/", "/i/", "/undo/", "/kit/", "/sw.js", "/api/version", "/static/", "/media/")
+SKIP = ("/admin/", "/accounts/", "/i/", "/undo/", "/kit/", "/sw.js", "/api/version", "/static/", "/media/", "/icon")
 TYPES = ("text/html", "application/json")
 
 memo = Memo(max=160)

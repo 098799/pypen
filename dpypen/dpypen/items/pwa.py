@@ -141,12 +141,28 @@ def manifest(request):
     return JsonResponse(data)
 
 
+def _icon(request, svg: str):
+    """The icon is in every page's header: with no cache header at all, each
+    page load waited a round trip for it before its load event (speed pass,
+    AUDIT.md P21). A day, then a 304 on its ETag."""
+    from django.utils.http import quote_etag
+
+    tag = quote_etag(hashlib.sha256(svg.encode()).hexdigest()[:16])
+    if tag in request.headers.get("If-None-Match", ""):
+        resp = HttpResponse(status=304)
+    else:
+        resp = HttpResponse(svg, content_type="image/svg+xml")
+    resp["ETag"] = tag
+    resp["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
 def icon(request):
-    return HttpResponse(_ICON_SVG, content_type="image/svg+xml")
+    return _icon(request, _ICON_SVG)
 
 
 def icon_maskable(request):
-    return HttpResponse(_ICON_MASKABLE, content_type="image/svg+xml")
+    return _icon(request, _ICON_MASKABLE)
 
 
 def build_context(request):

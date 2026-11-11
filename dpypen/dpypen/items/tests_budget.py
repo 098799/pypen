@@ -143,3 +143,16 @@ class WorkerBudget(SimpleTestCase):
         self.assertRegex("/static/items/next/fonts/alegreya.89d46f51b51e.woff2", pattern)
         self.assertNotRegex("/static/items/next/next.css", pattern)  # a name that never changes
         self.assertNotRegex("/kit/shell.js", pattern)
+
+
+class IconBudget(SimpleTestCase):
+    """The header's icon went out with no cache header: every page load waited
+    a round trip for it before its load event (P21)."""
+
+    def test_the_icon_is_cached_and_answers_304(self):
+        from django.test import Client
+
+        for url in ("/icon.svg", "/icon-maskable.svg"):
+            r = Client().get(url)
+            self.assertEqual(r["Cache-Control"], "public, max-age=86400", url)
+            self.assertEqual(Client().get(url, HTTP_IF_NONE_MATCH=r["ETag"]).status_code, 304, url)
