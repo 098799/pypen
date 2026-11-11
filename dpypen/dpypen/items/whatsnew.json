@@ -1,4 +1,7 @@
 {"app": "pypen", "entries": [
+  {"id": "verdicts", "date": "2026-11-11", "title": "Say how a fill wrote",
+   "use": "When you finish a fill: tap Finish (on the desk, a pen's page or Inkings) and pick Loved, Fine or Not again, with a note if you like (wet, dry, shading, a hard clean). Fills you finished before wait under Just finished on the desk, and the pen's and ink's history rows ask too. A pen's page then lists the inks it was loved with (one tap inks it again) and the ones not to repeat; an ink's page lists its pens. What to ink next puts a loved pairing up and a Not again one at the bottom. Inkings has a chip per word, and the search finds your notes. Stats, Pairings, How they wrote, sums it up.",
+   "shots": ["/static/items/whatsnew/2026-11-11-verdicts.png"], "try": "/dashboard/"},
   {"id": "new-brand", "date": "2026-11-11", "title": "A pen or ink of a new brand",
    "use": "When a pen or a bottle comes from a maker the app does not know yet: on Add pen or Add ink, tap Not in the list? A new brand under Brand, write its name and pick where it is from. The brand is made when you save (a name it already knows, in any case, is that brand). Before, only the admin could make one.",
    "shots": ["/static/items/whatsnew/2026-11-11-new-brand.png"], "try": "/pens/add/"},

@@ -106,6 +106,41 @@ the commands' own names, so the phone shows what the terminal shows. `/supen/` a
 - The old `/supen` and `/suink` addresses (plain text, signed-in only) stay for the old version and its bookmarks.
 - Tests: `tests_turns.py`.
 
+## How it wrote
+
+(Nov 2026, a feature pass.) The history said which ink went into which pen and for how long, never whether
+the pairing was any good; What to ink next guessed "liked" from how often an ink came back. A fill now carries
+a **verdict**, one of three words, and a short **note** (`Usage.verdict`, `note`, `verdict_at`; `items/verdicts.py`):
+
+- **Loved** (ink it again in this pen), **Fine** (it wrote; nothing to remember), **Not again** (dry,
+  feathering, a stain, a hard clean). Three, not five stars: the question at Finish has to be answered in one
+  tap, and the picker needs a yes or a no, not a mean. A glyph (♥ ✓ ✕) sits next to the word, never instead
+  of it.
+- **Asked at Finish**, wherever Finish is (`next/_finish.html`: the desk's cards, a pen's page, the inkings'
+  Inked now). A `<details>`: it opens in place, needs no script and no layer, and Back has nothing to close.
+  A word finishes the fill with it, "Just finish, say nothing" without; open, the button reads "Not yet".
+  The undo toast takes the word back with the end.
+- **Said later**: the desk's Just finished asks about each of its rows with no word, up to a year after the
+  fill ended, and links the year's rest (`/usages/?verdict=none`). A year, not two months: fills end in batches
+  (seven on 1 Mar 2026, then none until September), so a short window asked about nothing. A pen's and an
+  ink's history rows ask too, and the fill's form has the word and the note (`POST /usages/<pk>/verdict/`:
+  `verdict` "" clears it, a `note` alone keeps the word).
+- **A pairing's verdict is its newest fill's**: an opinion can change, and the newest one is what to act on.
+- **Where it shows**: a pen's page "How it wrote" (Loved with, as swatch cards that ink it again in one tap;
+  Not again with, with the note); an ink's page (the pens, "Ink it again"); the word and note in every history
+  row; the inkings' chips Loved, Fine, Not again, Not said with counts over the search (one grouped query); the
+  note is searched and marked (`listing.USAGE_FIELDS`); Stats, Pairings, "How they wrote"; `/api/usages`
+  (`verdict`, `note`, `?verdict=loved|fine|never|none`); the palette (Loved fills, Fills not said).
+- **What to ink next** (`pairing.suggest_inks`): a pairing loved before +0.8 (about what a new pairing gets),
+  one marked Not again −3 (under every bottle that is merely due), another pen's love +0.2 each up to 0.4,
+  another pen's Not again −0.25 each up to 0.5. Rest still leads: a loved ink just out of the pen has no rest
+  and waits its turn. One query for the verdicts, whatever the caller loaded.
+- **Stats' cache key** carries `Max(verdict_at)`, so a word shows at once.
+- The old version (`/prev/`) shows no verdicts; its fill form sends neither field and keeps them.
+  Guests see the words, never the buttons. The shared pages (`/p/`, `/k/`) show neither: a note is private.
+- Probe: `python3 tools/verdict_probe.py` (DB copy, 390×844; it writes, so never the live site).
+  Tests: `tests_verdicts.py`.
+
 ## Photos found for the pens nobody photographed
 
 (Nov 2026.) 91 of 126 pens had no photo. `manage.py pen_photo_fill` gives each one a catalogue shot, with no
