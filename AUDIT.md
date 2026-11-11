@@ -60,31 +60,118 @@ MemoryCurrent **367 MB** (workers 152–167 MB RSS each). The app's import took 
 Every HTML page carried ~92 KB of the same inline script and style (75–90 % of its gzip bytes). SQL is not the
 cost: under 4 ms on every page, no N+1; the time is Python (model objects, template rendering).
 
+**Result** (live, 11 Nov 2026, after the last deploy; same probes as the baseline). Warm = the third load of a
+page in one browser (HTTP cache on, service worker off); cold = a new browser; "kept" = the server's answer once
+the page memo holds it, "made" = a page made anew on a warm process (a fresh `?zz=` each time), as the first visit
+after a write is when the warmer has not yet made it. Medians over the 15 pages in the browser columns:
+
+| | before | after | |
+|---|---:|---:|---:|
+| server time, kept page (median of 37 pages and APIs) | 42 ms | 5 ms | **−88 %** |
+| server time, made page (Timeline / Records / desk) | 157 / 122 / 81 ms | 35 / 34 / 59 ms | −78 / −72 / −27 % |
+| warm: time to first byte | 111 ms | 57 ms | **−48 %** (one round trip p340 → bae is ~55 ms) |
+| warm: load event | 178 ms | 96 ms | **−46 %** |
+| warm: DOM ready | 146 ms | 87 ms | −40 % |
+| warm: first paint | 164 ms | 104 ms | −37 % |
+| warm: bytes per page | 41 KB | 11 KB | **−73 %** |
+| cold: first byte / first paint / load | 264 / 488 / 534 ms | 196 / 420 / 468 ms | −26 / −14 / −12 % |
+| cold `/pens/`: bytes, requests | 983 KB, 58 | 395 KB, 61 | −60 % bytes |
+| service memory (MemoryCurrent) | 367 MB (3 workers) | 88 MB (1 worker, 4 threads) | **−76 %** |
+| CPU for one crawl of 37 pages × 7 (p340 copy, same DB) | 6.3 s | 1.3 s | **−79 %** |
+| app import at worker start | 734 ms | 70 ms | −90 % |
+| a page after a write (warmer) | made: 25–160 ms | kept: 4–10 ms | |
+
+A tap inside the app (hx-boost swap) at a phone's CPU (4× throttle, local lab): 212–317 → 158–264 ms (−16 to
+−26 %); what is left there is the browser (style, layout, htmx's start-up pass and history snapshot), not the server.
+
+**Goal check.** Met where the server or the bytes are the wait: server time −88 % (kept) and −27 to −78 % (made),
+warm first byte and load −46 to −48 %, bytes −73 %, memory −76 %, CPU −79 %. Not met where the browser or the network
+is the wait: warm first paint −37 %, cold −12 to −26 %. The warm first byte is now one round trip (the floor
+from here); cold is TLS (3 round trips) and TCP slow start over ~280 KB of fonts and scripts. Both need a lighter
+client, not a faster server: see P22.
+
+Per page (live):
+
+| page | server: kept (ms) | server: made (ms) | HTML (KB) | warm load (ms) | warm KB | cold load (ms) | cold KB |
+|---|---|---|---|---|---|---|---|
+| `/` | 8 → **7** | 8 → 6 | 5 → 5 | — | — | — | — |
+| `/dashboard/` | 81 → **6** | 81 → 59 | 122 → 35 | 185 → **99** | 39 → 10 | 626 → 554 | 423 → 305 |
+| `/pens/` | 73 → **8** | 73 → 69 | 146 → 58 | 219 → **112** | 44 → 14 | 602 → 504 | 983 → 395 |
+| `/pens/189/` | 50 → **8** | 50 → 45 | 119 → 30 | 183 → **95** | 40 → 11 | 543 → 513 | 384 → 385 |
+| `/pens/189/edit/` | 42 → **5** | 42 → 34 | 109 → 21 | — | — | — | — |
+| `/pens/add/` | 44 → **5** | 44 → 42 | 104 → 16 | — | — | — | — |
+| `/inks/` | 58 → **6** | 58 → 49 | 125 → 36 | 171 → **106** | 39 → 10 | 534 → 455 | 273 → 274 |
+| `/inks/89/` | 56 → **6** | 56 → 44 | 110 → 21 | 185 → **89** | 38 → 9 | 552 → 493 | 272 → 273 |
+| `/inks/89/edit/` | 40 → **6** | 40 → 31 | 106 → 17 | — | — | — | — |
+| `/usages/` | 56 → **6** | 56 → 51 | 141 → 52 | 177 → **167** | 41 → 11 | 523 → 513 | 274 → 275 |
+| `/usages/add/` | 57 → **6** | 57 → 47 | 117 → 28 | 172 → **89** | 40 → 11 | 503 → 505 | 274 → 275 |
+| `/usages/750/edit/` | 54 → **6** | 54 → 56 | 119 → 30 | — | — | — | — |
+| `/pick/` | 52 → **6** | 52 → 46 | 107 → 19 | 161 → **84** | 38 → 9 | 517 → 456 | 287 → 289 |
+| `/search/?q=pilot` | 43 → **6** | 43 → 30 | 108 → 19 | — | — | — | — |
+| `/supen/` | 67 → **5** | 67 → 37 | 140 → 51 | 182 → **105** | 41 → 11 | 574 → 509 | 298 → 299 |
+| `/suink/` | 59 → **5** | 59 → 32 | 144 → 55 | — | — | — | — |
+| `/stats/` | 30 → **5** | 30 → 15 | 142 → 53 | 133 → **85** | 49 → 19 | 420 → 441 | 282 → 283 |
+| `/stats/inkings/` | 45 → **6** | 45 → 31 | 173 → 84 | 178 → **104** | 46 → 16 | 532 → 457 | 280 → 281 |
+| `/stats/collection/` | 44 → **5** | 44 → 32 | 152 → 64 | — | — | — | — |
+| `/stats/cupboard/` | 32 → **5** | 32 → 27 | 142 → 53 | — | — | — | — |
+| `/stats/rotation/` | 25 → **6** | 25 → 15 | 103 → 15 | — | — | — | — |
+| `/stats/timeline/` | 157 → **7** | 157 → 35 | 311 → 208 | 359 → **128** | 67 → 32 | 603 → 465 | 301 → 296 |
+| `/stats/calendar/` | 58 → **6** | 58 → 38 | 212 → 123 | 172 → **96** | 41 → 11 | 503 → 461 | 275 → 276 |
+| `/stats/pairs/` | 41 → **5** | 41 → 28 | 136 → 47 | — | — | — | — |
+| `/stats/records/` | 122 → **6** | 122 → 34 | 103 → 14 | 251 → **80** | 37 → 8 | 591 → 468 | 270 → 272 |
+| `/settings/` | 18 → **5** | 18 → 10 | 102 → 13 | 128 → **78** | 37 → 8 | 471 → 450 | 270 → 272 |
+| `/pens/needs-photos/` | 28 → **5** | 28 → 20 | 121 → 32 | — | — | — | — |
+| `/api/pens` | 27 → **8** | 27 → 31 | 12 → 12 | — | — | — | — |
+| `/api/inks` | 18 → **4** | 18 → 19 | 9 → 9 | — | — | — | — |
+| `/api/usages` | 25 → **5** | 25 → 24 | 13 → 13 | — | — | — | — |
+| `/api/palette` | 9 → **4** | 9 → 5 | 0 → 0 | — | — | — | — |
+| `/api/version` | 2 → **2** | 2 → 3 | 0 → 0 | — | — | — | — |
+| `/whatsnew.json` | 7 → **4** | 7 → 6 | 7 → 7 | — | — | — | — |
+| `/manifest.json` | 2 → **4** | 2 → 5 | 1 → 1 | — | — | — | — |
+| `/sw.js` | 2 → **2** | 2 → 2 | 22 → 23 | — | — | — | — |
+| `/pub/inks/wall/` | 27 → **5** | 27 → 25 | 56 → 56 | — | — | — | — |
+| `/pub/pens/wall/` | 41 → **5** | 41 → 37 | 68 → 68 | — | — | — | — |
+
+**Checks.** Every page and API made and kept compared byte for byte on a copy of the DB (memo off against memo
+on, with and without the CSRF cookie; the pre-pass code against each rewrite for Timeline, Records and Turns);
+a write from another process, a deleted and an expired session, a Referer-dependent page. Live walk after the last
+deploy (390×844, 2× and 3×): `tools/live_walk.py` all 116 checks, and the 26 main screens of the current version
+200 with no page error and no sideways scroll, tab taps, the photo viewer and Back, row thumbnails and desk cards
+on the 300 px copies. It found P23. Tests: 364 (was 344): `tests_pagememo` (12), `tests_budget` (the start
+imports, inline code under 8 KB a page, the worker's route, the icon's caching, Records' peak day against the old
+loop on 1,500 seeded cases, Timeline's bars against the old template), `tests_sized.RowThumbnails`.
+
+**Next pass.** What is left is P22 (the browser's own work on a page, and a cold load's fonts and TLS): worth a
+pass of its own on the client, estimated at 15–25 % of a warm load, not another 2×.
+
 **Findings.** Severity: **High** = a large share of the wait on many pages, or of the memory; **Med** = one page
 or a smaller share; **Low** = small. Status at the end of the pass in the last column.
 
 | # | sev | where | finding (evidence) | fix | status |
 |---|---|---|---|---|---|
-| P1 | High | every signed-in page | **Each page is made anew on every request**: 25–160 ms of Python on bae (desk 81, pens 73, timeline 157, records 122), the same answer until something is written; a GET never writes (`PRAGMA data_version` stays put over a crawl of every page) | keep whole answers until the DB changes (`items/pagememo.py` on the kit's `dbmemo`), keyed by path, query, session, cookies, day and every header the page read | open |
-| P2 | High | service | **3 sync workers, 367 MB**; each imported pandas (old supen page) and anthropic (notebook import) at start: 734 ms of import, ~80 MB each | lazy imports; one gthread worker (4 threads) so one store of kept pages serves every request; kit `malloc.start()` | open |
-| P3 | High | every page | **92 KB of identical inline script/style in every HTML answer** (`_keys.html` 56 KB, `_shell_early`/`_shell_behave`/`_shell_filternav` ~35 KB), sent again on every tap: ~29 KB gzip of a 33–45 KB page | cached files (`kitshell.py`, the kit's `Shell`) | open |
-| P4 | High | /pens/ | **600 px thumbnails in a 76×57 box**, and lazy loading still pulls 35 of 47 at once: cold 983 KB, 58 requests | a small thumbnail size for the list rows | open |
-| P5 | High | every tap | **A boosted tap downloads the whole page** (149 KB on /pens/) and htmx keeps `#main` (~15 %) | after P3 the rest is small; measure again | open |
-| P6 | Med | /stats/timeline/ | 318 KB HTML, 105 ms to make (local; 157 on bae): 568 bars × a `{% url %}` and filters each, 15-digit floats | precompute the bar strings in the view, round | open |
-| P7 | Med | /stats/records/ | 69 ms (local) on every request, no cache: 4-join load of all inkings, a 27,378 pen-day loop | `values_list` + a sweep line | open |
-| P8 | Med | after any write | the first visit of each page after a write pays the full make (P1 keeps only what was seen) | make the pages last seen again off the request path after a write | open |
-| P9 | Med | stats | stats caches live per worker with a 240 s ttl: each of 3 workers rebuilt each chart every 4 min (cold calendar 135 ms) | P1 + P2 (one process, kept until a write) | open |
-| P10 | Med | service worker | hashed `/static/` files answered network-first and re-written into Cache Storage on every page (~20 writes per load) | cache-first for hashed names (app part of `/sw.js`) | open |
-| P11 | Med | every page | `shell.js` (78 KB) and `member.js` (42 KB) block the parser at the top of `<body>` | `defer` once P3 moves the inline callers | open |
-| P12 | Med | /supen/, /suink/ | 36 ms: all inkings as model objects with `select_related`, grouped again per group | `values_list` | open |
-| P13 | Med | inking form | 28–30 ms: Django renders ~270 `<option>`s | P1 keeps it | open |
-| P14 | Low | every page | tom-select (50 KB JS + 9.7 KB render-blocking CSS) loads on 15 of 15 pages, used on the forms | load it where a form needs it | open |
-| P15 | Low | every page | `/whatsnew.json` (7 KB) fetched on every full load, no ETag | P1 keeps it (1 ms); ETag | open |
-| P16 | Low | fonts | the 500 weight (the digits on every page) is not preloaded; a 44 KB italic face loads for a few words | preload 500 | open |
-| P17 | Low | SQL | no index on `items_usage(end)` / `(begin)`: `SCAN … USE TEMP B-TREE`; saves < 1 ms today | — | open |
-| P18 | Low | nginx (bae) | `/static/` names are content-hashed but sent `expires 1d`: after a day every asset is asked again | `immutable`, a year | open |
-| P19 | Low | /stats/cupboard/ | two colours with the same count came in an order set by the process's hash seed (found by the old-vs-new check: workers disagreed) | tie broken by name | open |
-| P20 | Low | deploy | `deploy-code.sh` did not install the unit file: a unit change in the repo never reached bae | install it when it differs | open |
+| P1 | High | every signed-in page | **Each page is made anew on every request**: 25–160 ms of Python on bae (desk 81, pens 73, timeline 157, records 122), the same answer until something is written; a GET never writes (`PRAGMA data_version` stays put over a crawl of every page) | keep whole answers until the DB changes (`items/pagememo.py` on the kit's `dbmemo`), keyed by path, query, session, cookies, day and every header the page read | fixed 500256e, 32dc911 (warm server 25–157 → 4–10 ms on bae) |
+| P2 | High | service | **3 sync workers, 367 MB**; each imported pandas (old supen page) and anthropic (notebook import) at start: 734 ms of import, ~80 MB each | lazy imports; one gthread worker (4 threads) so one store of kept pages serves every request; kit `malloc.start()` | fixed 4bd9fd6, 500256e (367 → 88 MB; import 734 → 70 ms) |
+| P3 | High | every page | **92 KB of identical inline script/style in every HTML answer** (`_keys.html` 56 KB, `_shell_early`/`_shell_behave`/`_shell_filternav` ~35 KB), sent again on every tap: ~29 KB gzip of a 33–45 KB page | cached files (`kitshell.py`, the kit's `Shell`) | fixed 3b7732e (a page 33–40 → 4.5–11 KB gzip) |
+| P4 | High | /pens/ | **600 px thumbnails in a 76×57 box**, and lazy loading still pulls 35 of 47 at once: cold 983 KB, 58 requests | a small thumbnail size for the list rows | fixed d547aac, 7fba28b (cold /pens/ 983 → 395 KB; ~13 → ~2 KB a row) |
+| P5 | High | every tap | **A boosted tap downloads the whole page** (149 KB on /pens/) and htmx keeps `#main` (~15 %) | after P3 the rest is small; measure again | not done: after P3 the part of a page outside `#main` is ~2 KB gzip; a fragment answer would save that and add a second shape of every page to keep |
+| P6 | Med | /stats/timeline/ | 318 KB HTML, 105 ms to make (local; 157 on bae): 568 bars × a `{% url %}` and filters each, 15-digit floats | precompute the bar strings in the view, round | fixed ea2911d (made 157 → 35 ms on bae; 34.7 → 29.1 KB gzip) |
+| P7 | Med | /stats/records/ | 69 ms (local) on every request, no cache: 4-join load of all inkings, a 27,378 pen-day loop | `values_list` + a sweep line | fixed ea2911d (made 122 → 34 ms on bae) |
+| P8 | Med | after any write | the first visit of each page after a write pays the full make (P1 keeps only what was seen) | make the pages last seen again off the request path after a write | fixed 6082d5b (after a write the recent pages are kept again within ~1 s) |
+| P9 | Med | stats | stats caches live per worker with a 240 s ttl: each of 3 workers rebuilt each chart every 4 min (cold calendar 135 ms) | P1 + P2 (one process, kept until a write) | fixed by P1 + P2: one process, and a page waits for a write, not for a ttl |
+| P10 | Med | service worker | hashed `/static/` files answered network-first and re-written into Cache Storage on every page (~20 writes per load) | cache-first for hashed names (app part of `/sw.js`) | fixed 409c09c (with the HTTP cache spent: 15–16 → 0–1 static files from the network a page) |
+| P11 | Med | every page | `shell.js` (78 KB) and `member.js` (42 KB) block the parser at the top of `<body>` | `defer` once P3 moves the inline callers | not done: warm, each file evaluates in 1–2 ms at 4× CPU (traced); the settings page and the menu search call the kit as they parse, so `defer` needs those changed first — next pass, with P22 |
+| P12 | Med | /supen/, /suink/ | 36 ms: all inkings as model objects with `select_related`, grouped again per group | `values_list` | fixed 4e0e745 (made 67 → 37 ms on bae) |
+| P13 | Med | inking form | 28–30 ms: Django renders ~270 `<option>`s | P1 keeps it | fixed by P1 + P8 (the make itself, ~47 ms on bae, is unchanged) |
+| P14 | Low | every page | tom-select (50 KB JS + 9.7 KB render-blocking CSS) loads on 15 of 15 pages, used on the forms | load it where a form needs it | not done: warm it evaluates in 0.2–1 ms (code cache); cold it is 17 KB gzip of a `defer` script and 2.7 KB of CSS |
+| P15 | Low | every page | `/whatsnew.json` (7 KB) fetched on every full load, no ETag | P1 keeps it (1 ms); ETag | partly: kept by P1 (5 ms on bae), 3 KB gzip, fetched after the page; no ETag yet (Low) |
+| P16 | Low | fonts | the 500 weight (the digits on every page) is not preloaded; a 44 KB italic face loads for a few words | preload 500 | fixed 3347415 |
+| P17 | Low | SQL | no index on `items_usage(end)` / `(begin)`: `SCAN … USE TEMP B-TREE`; saves < 1 ms today | — | not done: < 1 ms on every page (measured on a copy with the indexes) |
+| P18 | Low | nginx (bae) | `/static/` names are content-hashed but sent `expires 1d`: after a day every asset is asked again | `immutable`, a year | not done: nginx on bae is outside the repo; P10 gives the service worker's clients the same (no request for a hashed file) |
+| P19 | Low | /stats/cupboard/ | two colours with the same count came in an order set by the process's hash seed (found by the old-vs-new check: workers disagreed) | tie broken by name | fixed 500256e |
+| P20 | Low | deploy | `deploy-code.sh` did not install the unit file: a unit change in the repo never reached bae | install it when it differs | fixed 500256e |
+| P21 | Med | every page | **`/icon.svg` had no cache header**: every load fetched it again and the load event waited for it (desk: icon at 138 ms, load at 140, the rest by 96) | a day, ETag | fixed 9b8ff24 |
+| P22 | Med | every page (browser) | What is left of a warm page is the browser: htmx's DOMContentLoaded pass over every node (28 ms at 4× CPU on the desk), style and layout of 600–1,200 nodes, htmx's history snapshot on each tap; cold is TLS and slow start over ~280 KB (fonts 140 KB) | a lighter client: fewer nodes per list page, the keys layer only with a keyboard, `defer` for the kit files (P11), fewer font files | open (next pass) |
+| P23 | Low | /pens/ | (walk) each group's subtitle read "ẽvery 240 days": Alegreya Sans draws "~e" as one accented letter | "about every" | fixed 94f041f |
 
 
 ## UX pass (10 Nov 2026, burn p11102208)
