@@ -92,6 +92,9 @@ def verdict_chips(request, scope):
         params = {**keep, **({} if on else {"verdict": key})}
         chips.append({"key": key, "word": verdicts.FILTER_WORDS[key], "mark": verdicts.MARKS.get(key, ""),
                       "n": n, "on": on, "url": request.path + ("?" + urlencode(params) if params else "")})
+    # Before any word is given, a lone "Not said" chip would hold every fill.
+    if not scope["verdict"] and not any(c["key"] != "none" for c in chips):
+        return []
     return chips
 
 

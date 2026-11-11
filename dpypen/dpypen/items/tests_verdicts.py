@@ -215,6 +215,12 @@ class TheInkings(Seeded):
         self.assertIn("Not again <b>1</b>", html)
         self.assertIn("Not said <b>2</b>", html)  # self.old and self.now
 
+    def test_no_chips_before_any_word(self):
+        Usage.objects.update(verdict="")
+        self.assertNotIn('id="verdictChips"', self.client.get("/usages/").content.decode())
+        # A link to the fills not said still shows its chip, to turn it off.
+        self.assertIn('id="verdictChips"', self.client.get("/usages/?verdict=none").content.decode())
+
     def test_a_chip_filters_and_turns_off(self):
         html = self.client.get("/usages/?verdict=loved").content.decode()
         self.assertIn("lovely shading", html)

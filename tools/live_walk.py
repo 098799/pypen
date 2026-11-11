@@ -134,6 +134,14 @@ def next_walk(b):
     check("next: the desk draws swabs", js("document.querySelectorAll('.swab').length") > 0)
     # PYPEN-12: supen and suink are a page; the desk's count of due pens opens it.
     check("next: the desk's due count opens supen", js("document.querySelector('.head-link').getAttribute('href')") == "/supen/")
+    # How it wrote: Finish asks in place and Not yet closes it (a <details>: no request).
+    if page.locator("article.fill summary").count():
+        page.locator("article.fill summary").first.tap()
+        page.wait_for_timeout(250)
+        check("next: Finish asks how it wrote", page.locator("article.fill .finish-sheet").first.is_visible())
+        page.locator("article.fill summary").first.tap()
+        page.wait_for_timeout(250)
+        check("next: Not yet closes it", not page.locator("article.fill .finish-sheet").first.is_visible())
     page.locator("nav.kit-tabs [data-menu-btn]").tap()
     page.wait_for_timeout(300)
     check("next: More opens", js("document.getElementById('menuPanel').classList.contains('open')"))
@@ -157,6 +165,10 @@ def next_walk(b):
     page.wait_for_load_state("networkidle")
     check("next: the ink page has its closest inks", js("document.querySelectorAll('.card-ink').length") > 0)
     shot(page, "next-ink")
+    visit(page, "/usages/?verdict=none")
+    check("next: the inkings have their verdict chips", page.locator("#verdictChips .kit-chip").count() >= 1)
+    visit(page, "/stats/pairs/")
+    check("next: Pairings says how they wrote", page.locator("#howTheyWrote").count() == 1)
     visit(page, "/stats/")
     box = page.locator(".river-plot").bounding_box()
     page.touchscreen.tap(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.6)
