@@ -1,6 +1,6 @@
 {% load items_extras %}
 <div class="pen-row-nx" data-listnav-item>
-  <a class="pen-thumb-nx" href="{% url 'nx_pens_detail' p.pk %}" tabindex="-1" aria-hidden="true">{% if p.list_thumb_url %}<img src="{{ p.list_thumb_url }}" alt="" loading="lazy">{% endif %}</a>
+  <a class="pen-thumb-nx" href="{% url 'nx_pens_detail' p.pk %}" tabindex="-1" aria-hidden="true">{% if p.row_thumb_url %}<img src="{{ p.row_thumb_url }}" alt="" loading="lazy" decoding="async">{% endif %}</a>
   <div>
     <h3><a href="{% url 'nx_pens_detail' p.pk %}">{{ p.brand.name|highlight:query }} {{ p.model|highlight:query }}{% if p.finish %} <span>{{ p.finish|highlight:query }}</span>{% endif %}</a></h3>
     {% if p.now %}<p class="is-now">Inked with {{ p.now.ink.name }}</p>

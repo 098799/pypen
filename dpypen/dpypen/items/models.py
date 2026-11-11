@@ -196,12 +196,27 @@ class PenPhoto(models.Model):
         return f"Photo of {self.pen} #{self.position}"
 
     @property
-    def grid_url(self):
-        """Smallest image that still shows the right thing — for tiles."""
+    def grid_file(self):
+        """Smallest stored image that still shows the right thing — for tiles."""
         for f in (self.styled_thumbnail, self.thumbnail, self.image_styled, self.image):
             if f:
-                return f.url
+                return f
         return None
+
+    @property
+    def grid_url(self):
+        """Smallest image that still shows the right thing — for tiles."""
+        f = self.grid_file
+        return f.url if f else None
+
+    @property
+    def row_url(self):
+        """A WebP copy for a list row's thumbnail (76 x 57 CSS px) or a phone's
+        desk card (92 px): sized.ROW_EDGE on the long side, ~5 KB where the 600
+        px twin is ~40 KB (AUDIT.md P4)."""
+        from dpypen.items import sized
+
+        return sized.url(self.grid_file, sized.ROW_EDGE)
 
     @property
     def full_url(self):

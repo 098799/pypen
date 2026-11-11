@@ -83,7 +83,7 @@ def search(request):
         pens = list(pqs.prefetch_related("photos").order_by(*PEN_ORDER[sort])[offset:offset + limit])
         for p in pens:
             photos = list(p.photos.all()[:1])
-            p.thumb_url = photos[0].grid_url if photos else None
+            p.thumb_url = photos[0].row_url if photos else None
         pen_more = _more(request, "pens", offset, limit, total, type_)
 
     if terms and type_ in ("both", "inks"):

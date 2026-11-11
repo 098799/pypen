@@ -36,7 +36,10 @@ from dpypen.items import webp
 # (900 px, which the ticket guessed, would save another 5-10 KB and be soft on
 # a 3x phone).
 EDGE = 1200
-EDGES = (EDGE,)
+# A list row's thumbnail is 76 x 57 CSS px (x3 = 228), a phone's desk card
+# 92 px wide: 240 px, made from the 600 px grid twin (speed pass, P4).
+ROW_EDGE = 240
+EDGES = (EDGE, ROW_EDGE)
 
 
 def _root() -> Path:

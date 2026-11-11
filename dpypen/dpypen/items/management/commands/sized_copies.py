@@ -19,8 +19,11 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         made = 0
         jobs = []
+        rows = []
         for ph in PenPhoto.objects.all().iterator():
             jobs.append(ph.image_styled or ph.image)
+            if ph.grid_file:
+                rows.append(ph.grid_file)
         for model in (WritingSample, InkSwatch):
             for s in model.objects.all().iterator():
                 jobs.append(s.image_clean or s.image)
@@ -31,6 +34,11 @@ class Command(BaseCommand):
                 if sized.url(field) != field.url:
                     made += 1
             except Exception as exc:  # one bad file must not stop the deploy
+                print(f"{field.name}: {exc}", file=sys.stderr)
+        for field in rows:  # the list rows' 240 px copies (sized.ROW_EDGE)
+            try:
+                sized.url(field, sized.ROW_EDGE)
+            except Exception as exc:
                 print(f"{field.name}: {exc}", file=sys.stderr)
         gone = sized.prune()
         self.stdout.write(f"sized copies: {made} of {len(jobs)} pictures drawn from a copy, {gone} orphans removed")

@@ -13,7 +13,7 @@
   <div class="list-row pen-row" data-listnav-item>
     <a href="{% url 'pens_detail' p.pk %}" class="pen-thumb">
       {% if p.list_thumb_url %}
-        <img src="{{ p.list_thumb_url }}" alt="{{ p }}" loading="lazy"{% if p.list_thumb_styled %} class="styled"{% endif %}>
+        <img src="{{ p.row_thumb_url }}" alt="{{ p }}" loading="lazy"{% if p.list_thumb_styled %} class="styled"{% endif %}>
       {% else %}
         —
       {% endif %}

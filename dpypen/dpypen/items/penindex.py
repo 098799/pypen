@@ -86,6 +86,7 @@ def build(request):
         photos = list(p.photos.all()[:1])
         p.first_photo = photos[0] if photos else None
         p.list_thumb_url = p.first_photo.grid_url if p.first_photo else None
+        p.row_thumb_url = p.first_photo.row_url if p.first_photo else None
         p.list_thumb_styled = bool(p.first_photo and p.first_photo.image_styled)
     prev = GROUP_BY_ORDER[before.grp] if before is not None else None
     listing.heads(rows, lambda p: GROUP_BY_ORDER[p.grp], prev if listing.is_more(request) else None)

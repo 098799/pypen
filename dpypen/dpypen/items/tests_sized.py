@@ -167,3 +167,22 @@ class NoFixedInlineStyle(_Collection):
             if t.name in ("_keys.html", "_filters.html"):  # the kit's own markup (a header that shows it)
                 continue
             self.assertEqual(fixed.findall(t.read_text()), [], t.relative_to(TEMPLATES))
+
+
+class RowThumbnails(_Media):
+    """A list row draws a 76 x 57 box: a 240 px WebP copy, not the 600 px
+    JPEG twin (speed pass, AUDIT.md P4: ~13 KB -> ~1.4 KB a row on live
+    photos, 35 rows fetched at once on /pens/)."""
+
+    def test_the_pens_list_and_search_draw_the_row_copy(self):
+        for url in ("/pens/", "/search/?q=" + self.pen.brand.name):
+            html = self.owner_client.get(url).content.decode()
+            self.assertIn('src="/media/sized/240/pen_photos/a.webp"', html, url)
+        copy = Path(self.media) / "sized" / "240" / "pen_photos" / "a.webp"
+        with Image.open(copy) as im:
+            self.assertEqual(max(im.size), 240)
+
+    def test_the_deploy_command_makes_the_row_copies_and_keeps_them(self):
+        call_command("sized_copies", stdout=io.StringIO())
+        self.assertTrue((Path(self.media) / "sized" / "240" / "pen_photos" / "a.webp").exists())
+        self.assertEqual(sized.prune(), 0)
