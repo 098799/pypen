@@ -37,8 +37,10 @@ from dpypen.items import webp
 # a 3x phone).
 EDGE = 1200
 # A list row's thumbnail is 76 x 57 CSS px (x3 = 228), a phone's desk card
-# 92 px wide: 240 px, made from the 600 px grid twin (speed pass, P4).
-ROW_EDGE = 240
+# 92 x 69 (x3 = 276 x 207): 300 px on the long side of a 4:3 photo, made from
+# the 600 px grid twin (speed pass, P4; 240 left a 3x phone's desk card on the
+# 600 px JPEG through its srcset).
+ROW_EDGE = 300
 EDGES = (EDGE, ROW_EDGE)
 
 
@@ -68,8 +70,17 @@ def url(field, edge: int = EDGE) -> str | None:
 
 def prune() -> int:
     """Remove every copy whose stored photo is gone; returns how many."""
+    import shutil
+
     root = _root()
     gone = 0
+    # Copies at an edge no page draws any more (240 before 300): derived
+    # files, made again from the photos whenever an edge comes back.
+    if (root / "sized").is_dir():
+        for old in (root / "sized").iterdir():
+            if old.is_dir() and old.name.isdigit() and int(old.name) not in EDGES:
+                gone += sum(1 for _ in old.rglob("*.webp"))
+                shutil.rmtree(old, ignore_errors=True)
     for edge in EDGES:
         base = root / "sized" / str(edge)
         if not base.is_dir():

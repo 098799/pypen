@@ -322,9 +322,11 @@ and `tile_url` on a swatch or a writing sample use it; `full_url` /
   they drew the whole stored file before.
 - **Grids keep their 600 px JPEG twins** (`grid_url`): already at the size a
   tile draws.
-- **List rows draw 240 px** (`row_url`, `sized.ROW_EDGE`, speed pass 11 Nov 2026): a pen row's
-  thumbnail is 76 × 57 CSS px, a phone's desk card 92 px (`srcset` there; the desk's big card keeps
-  the 600 px twin). ~13 KB JPEG → ~1.4 KB WebP a row; `/pens/` fetches ~35 rows at once.
+- **List rows draw 300 px** (`row_url`, `sized.ROW_EDGE`, speed pass 11 Nov 2026): a pen row's
+  thumbnail is 76 × 57 CSS px, a phone's desk card 92 × 69 (× 3 = 276: 240 sent a 3× phone's desk
+  to the 600 px JPEG through its `srcset`; the desk's big card keeps the 600 px twin). ~13 KB JPEG →
+  ~2 KB WebP a row; `/pens/` fetches ~35 rows at once. `sized.prune` removes the copies of an edge no
+  page draws any more.
 - `manage.py sized_copies` (the deploy runs it as `pypen`) makes the copies
   ahead and removes those whose photo is gone. A stored file is never
   rewritten under its name (a turn or an edit saves a new random name), so a

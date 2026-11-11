@@ -212,8 +212,8 @@ class PenPhoto(models.Model):
     @property
     def row_url(self):
         """A WebP copy for a list row's thumbnail (76 x 57 CSS px) or a phone's
-        desk card (92 px): sized.ROW_EDGE on the long side, ~5 KB where the 600
-        px twin is ~40 KB (AUDIT.md P4)."""
+        desk card (92 px): sized.ROW_EDGE on the long side, ~2 KB where the 600
+        px twin is ~13 KB (AUDIT.md P4)."""
         from dpypen.items import sized
 
         return sized.url(self.grid_file, sized.ROW_EDGE)

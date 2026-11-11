@@ -170,19 +170,23 @@ class NoFixedInlineStyle(_Collection):
 
 
 class RowThumbnails(_Media):
-    """A list row draws a 76 x 57 box: a 240 px WebP copy, not the 600 px
+    """A list row draws a 76 x 57 box: a 300 px WebP copy, not the 600 px
     JPEG twin (speed pass, AUDIT.md P4: ~13 KB -> ~1.4 KB a row on live
     photos, 35 rows fetched at once on /pens/)."""
 
     def test_the_pens_list_and_search_draw_the_row_copy(self):
         for url in ("/pens/", "/search/?q=" + self.pen.brand.name):
             html = self.owner_client.get(url).content.decode()
-            self.assertIn('src="/media/sized/240/pen_photos/a.webp"', html, url)
-        copy = Path(self.media) / "sized" / "240" / "pen_photos" / "a.webp"
+            self.assertIn('src="/media/sized/300/pen_photos/a.webp"', html, url)
+        copy = Path(self.media) / "sized" / "300" / "pen_photos" / "a.webp"
         with Image.open(copy) as im:
-            self.assertEqual(max(im.size), 240)
+            self.assertEqual(max(im.size), 300)
 
     def test_the_deploy_command_makes_the_row_copies_and_keeps_them(self):
+        old = Path(self.media) / "sized" / "240" / "pen_photos" / "a.webp"  # an edge no page draws now
+        old.parent.mkdir(parents=True)
+        old.write_bytes(b"x")
         call_command("sized_copies", stdout=io.StringIO())
-        self.assertTrue((Path(self.media) / "sized" / "240" / "pen_photos" / "a.webp").exists())
+        self.assertTrue((Path(self.media) / "sized" / "300" / "pen_photos" / "a.webp").exists())
+        self.assertFalse(old.exists())
         self.assertEqual(sized.prune(), 0)
