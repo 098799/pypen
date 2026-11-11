@@ -1,7 +1,6 @@
 """Claude-vision notebook import — OCR a fountain-pen log page into structured inkings."""
 
 import base64
-import json
 import os
 from dataclasses import dataclass
 

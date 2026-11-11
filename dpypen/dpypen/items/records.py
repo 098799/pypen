@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from dpypen.items.skin import render
 from dpypen.items.auth import login_or_guest_required
-from dpypen.items.models import Brand, Ink, Pen, Usage, WritingSample
+from dpypen.items.models import Ink, Pen, Usage, WritingSample
 from dpypen.items.public import INK_COLOR_HEX
 
 

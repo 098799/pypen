@@ -5,8 +5,6 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponseForbidden
-from django.shortcuts import redirect
-from django.urls import reverse
 from django.utils import timezone
 
 

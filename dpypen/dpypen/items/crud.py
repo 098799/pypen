@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.files.base import ContentFile
 from django.db.models import Count
-from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST

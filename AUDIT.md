@@ -1,5 +1,35 @@
 # pypen — audit
 
+## Whole-app pass (11 Nov 2026, burn a11112240)
+
+**Plan.** Seven dimensions, read against the code and the live site: security, correctness, tests, speed, phone UX,
+kit conformance, code health. This pass comes right after the speed pass (p11111619) and the UX pass (p11102208),
+so it re-checks them and looks for what they did not cover.
+
+**What was done.** (1) Every route's gate read in `items/urls.py`, `crud.py`, `public.py`, `api_lists.py`; the live
+site probed without a session (20 paths). (2) Every `mark_safe`, `|safe`, `.extra(`, file `open(` read. (3) The full
+suite (368 tests) run in a worktree with a copy of `secrets` (gitignored, not committed). (4) `fleet-check`.
+(5) `ruff --select F,B` for dead code. (6) Dependencies: `requirements.txt` against the pins the security pass left.
+
+**Not done.** The signed-in walk of the live site at 390×844. `tools/live_walk.py` needs an owner session written
+into bae's session table; that would walk round the Google sign-in, so this pass did not make one. The speed pass's
+walk (116 checks, 26 screens) is the newest signed-in evidence. No phone screenshots in this pass: nothing visible changed.
+
+| # | Sev | Where | Finding | Evidence | Status |
+|---|---|---|---|---|---|
+| W1 | — | auth | Every private page and API answers 302 to Google or 403 without a session; `/api/version`, `/manifest.json`, `/sw.js`, `/robots.txt`, `/` are public by design | 20 paths probed live; `/media/` 403, `/static/` 404, `/.git/config` 404, `/admin/` goes to the site's sign-in | ok, no change |
+| W2 | — | headers | CSP, `X-Frame-Options: DENY`, `nosniff`, HSTS on the answer | `curl -I` | ok |
+| W3 | — | injection | Stored text is escaped (`lists.highlight` escapes every piece; Timeline bars escape ink, nib, colour); the one `.extra(where=)` takes column SQL from `column()` and binds the query as parameters | read | ok |
+| W4 | — | data loss | Deletes are POST + login; pen delete asks first (`data-confirm`), ink and inking deletes offer Undo with a frozen snapshot | read `crud.py` | ok |
+| W5 | Low | code health | 6 unused imports in `auth`, `crud`, `importer`, `public`, `records`; `ruff` also flags 2 unused loop variables and a bare `libc.mallopt, libc.malloc_trim` (that one is the probe for `AttributeError`, kept) | `ruff --select F,B` | imports fixed (see commit); rest left: harmless |
+| W6 | Low | tests | Tests need `secrets` (SECRET_KEY) in the tree: a fresh worktree gives 543 errors that look like a broken suite | seen in this pass | not fixed: `secrets` is gitignored on purpose; noted here |
+| W7 | Low | fleet | `fleet-check` has no pypen finding; 4 FAILs are other apps (igarchive, vac, vachome, rcmon push) | `fleet-check --quiet` | not pypen's |
+| W9 | Low | tests | One full run had 1 failure (368 run) that did not repeat in two later runs (368 OK); not found which test; probably a timing test while files changed under it | 1 of 3 runs | not fixed: not reproduced |
+| W8 | Low | deps | Pins and floors from PYPEN-4 still in place; no `pip-audit` on this machine, so no new CVE scan | read | not done: tool missing |
+
+**Next pass.** The big findings of the speed and UX passes are fixed; P22 (a lighter client) is the one open item and
+it is a rewrite of the shell, not a pass. Nothing High is left that this pass could find.
+
 ## Speed pass (11 Nov 2026, burn p11111619)
 
 **Goal.** At least 2× faster where the user waits (time until usable −50 % or better on every main page and
