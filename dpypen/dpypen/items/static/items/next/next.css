@@ -809,7 +809,10 @@ html[data-theme=light] { --loved: #a8285a; }
 .vsaid.is-loved b { color: var(--loved); }
 .vsaid.is-fine b { color: var(--vfine); }
 .vsaid.is-never b { color: var(--vnever); }
-.vask { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+/* The ask is the row's last child and its own line, under the text, past the dab. */
+.row:has(> .vask) { flex-wrap: wrap; row-gap: 4px; }
+.vask { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 4px; }
+.row:has(> .dab) > .vask { padding-left: 38px; }
 .vask > span { color: var(--dim); font-size: .9rem; flex-basis: 100%; }
 .vshelf-h { display: flex; align-items: center; gap: 6px; font-size: 1.04rem; margin: 12px 0 6px; }
 .vshelf-h.is-loved > span { color: var(--loved); }

@@ -7,6 +7,18 @@ register = template.Library()
 
 
 @register.filter
+def askable(usage) -> bool:
+    """An ended fill with no verdict, ended within verdicts.ASK_DAYS: a row asks
+    how it wrote (README "How it wrote"). Older ones wait on the fill's form."""
+    from datetime import date
+
+    from dpypen.items import verdicts
+
+    end = getattr(usage, "end", None)
+    return bool(end and not usage.verdict and (date.today() - end).days <= verdicts.ASK_DAYS)
+
+
+@register.filter
 def highlight(text, terms):
     """Each search word in <mark>, through the kit's `lists.highlight`
     (KIT-LISTS): accent-folded like the search, so "zur" marks the "Zür" of

@@ -24,9 +24,10 @@
     {% for u in past %}
     <li class="row" style="--sw: {{ u.ink_bg }}" data-listnav-item>
       <span class="dab" aria-hidden="true"></span>
-      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small>{% include "next/_verdict.html" with ask=1 %}</div>
+      <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen.brand.name|highlight:query }} {{ u.pen.model|highlight:query }}{% if u.pen.finish %} {{ u.pen.finish|highlight:query }}{% endif %}</a><small>{{ u.ink.brand.name|highlight:query }} {% if u.ink.line %}{{ u.ink.line|highlight:query }} {% endif %}{{ u.ink.name|highlight:query }}, {{ u.nib|highlight:query }}</small><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}</small>{% include "next/_verdict.html" %}</div>
       <span class="row-v">{{ u.days }} d</span>
       {% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this inking">✎</a>{% endif %}
+      {% include "next/_vask.html" with ask=u|askable %}
     </li>
     {% endfor %}
   </ul>

@@ -123,7 +123,8 @@ a **verdict**, one of three words, and a short **note** (`Usage.verdict`, `note`
 - **Said later**: the desk's Just finished asks about each of its rows with no word, up to a year after the
   fill ended, and links the year's rest (`/usages/?verdict=none`). A year, not two months: fills end in batches
   (seven on 1 Mar 2026, then none until September), so a short window asked about nothing. A pen's and an
-  ink's history rows ask too, and the fill's form has the word and the note (`POST /usages/<pk>/verdict/`:
+  ink's history rows and the inkings ask too (`next/_vask.html`, a line under the row, the same year), and
+  the fill's form has the word and the note (`POST /usages/<pk>/verdict/`:
   `verdict` "" clears it, a `note` alone keeps the word).
 - **A pairing's verdict is its newest fill's**: an opinion can change, and the newest one is what to act on.
 - **Where it shows**: a pen's page "How it wrote" (Loved with, as swatch cards that ink it again in one tap;

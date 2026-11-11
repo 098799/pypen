@@ -97,6 +97,12 @@ class SayItLater(Seeded):
         self.recent.refresh_from_db()
         self.assertEqual((self.recent.verdict, self.recent.verdict_at), ("", None))
 
+    def test_history_rows_ask_only_within_the_year(self):
+        html = self.client.get(f"/pens/{self.due.pk}/").content.decode()
+        self.assertIn(f'action="/usages/{self.recent.pk}/verdict/"', html)
+        self.assertNotIn(f'action="/usages/{self.old.pk}/verdict/"', html)  # ended in 2024
+        self.assertIn(f'href="/usages/{self.old.pk}/edit/"', html)  # its form still can
+
     def test_the_desk_does_not_ask_about_a_fill_long_gone(self):
         Usage.objects.filter(pk=self.recent.pk).update(end=date.today() - timedelta(days=400), begin=date.today() - timedelta(days=420))
         html = self.client.get("/dashboard/").content.decode()

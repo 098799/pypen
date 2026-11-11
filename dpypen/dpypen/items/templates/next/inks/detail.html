@@ -1,4 +1,5 @@
 {% extends "next/_shell.html" %}
+{% load items_extras %}
 {% block title %}{{ ink }} · {{ app_name }}{% endblock %}
 {% block content %}
 <header class="kit-header">
@@ -84,7 +85,7 @@
 {% if current or past %}
 <ul class="rows">
   {% for u in current %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>Since {{ u.begin|date:"j M Y" }}, {{ u.nib }}</small>{% include "next/_verdict.html" %}</div><span class="row-v"><span class="pip">Now</span> {{ u.days }} d</span>{% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this fill">✎</a>{% endif %}</li>{% endfor %}
-  {% for u in past %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}, {{ u.nib }}</small>{% include "next/_verdict.html" with ask=1 %}</div><span class="row-v">{{ u.days }} d</span>{% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this fill">✎</a>{% endif %}</li>{% endfor %}
+  {% for u in past %}<li class="row"><div class="row-t"><a href="{% url 'nx_pens_detail' u.pen.pk %}">{{ u.pen }}</a><small>{{ u.begin|date:"j M Y" }} to {{ u.end|date:"j M Y" }}, {{ u.nib }}</small>{% include "next/_verdict.html" %}</div><span class="row-v">{{ u.days }} d</span>{% if can_edit %}<a class="ibtn is-mini" href="{% url 'nx_usages_edit' u.pk %}" aria-label="Edit this fill">✎</a>{% endif %}{% include "next/_vask.html" with ask=u|askable %}</li>{% endfor %}
 </ul>
 {% else %}
 <div class="kit-empty small" data-kind="none"><p class="kit-empty-t">This ink has never been in a pen</p>{% if can_edit %}<p class="kit-empty-a"><a class="kit-empty-b go" href="{% url 'nx_usages_create' %}?ink={{ ink.pk }}">Use this ink</a></p>{% endif %}</div>

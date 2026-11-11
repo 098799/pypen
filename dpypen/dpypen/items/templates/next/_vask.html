@@ -1,0 +1,8 @@
+{% comment %}The three words as buttons under a row, for an ended fill with no verdict
+(`ask`: the desk's u.ask, or u|askable). A direct child of .row: it takes the
+row's whole width, so it fits next to a pencil.{% endcomment %}
+{% if ask and can_edit and u.end and not u.verdict %}<form class="vask" method="post" action="{% url 'nx_usages_verdict' u.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><span>How did it write?</span>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="loved"><span aria-hidden="true">♥</span> Loved</button>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="fine"><span aria-hidden="true">✓</span> Fine</button>
+  <button class="vbtn is-mini" type="submit" name="verdict" value="never"><span aria-hidden="true">✕</span> Not again</button>
+</form>{% endif %}

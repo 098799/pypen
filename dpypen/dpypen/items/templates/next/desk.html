@@ -72,8 +72,9 @@
       {% for u in recent %}
       <li class="row" style="--sw: {{ u.ink.swatch_bg }}">
         <span class="dab" aria-hidden="true"></span>
-        <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen }}</a><small>{{ u.ink.brand.name }} {{ u.ink.name }}</small>{% include "next/_verdict.html" with ask=u.ask %}</div>
+        <div class="row-t"><a href="{% url 'nx_pens_detail' u.pen_id %}">{{ u.pen }}</a><small>{{ u.ink.brand.name }} {{ u.ink.name }}</small>{% include "next/_verdict.html" %}</div>
         <span class="row-v">{{ u.days }} d</span>
+        {% include "next/_vask.html" with ask=u.ask %}
       </li>
       {% endfor %}
     </ul>
