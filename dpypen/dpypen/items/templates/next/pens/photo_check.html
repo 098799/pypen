@@ -16,7 +16,7 @@
     <form class="check-verbs" method="post" action="{% url 'nx_pens_photo_verdict' ph.pen.pk ph.pk %}" data-kit-busy>{% csrf_token %}
       <input type="hidden" name="next" value="{% url 'nx_pens_photo_check' %}">
       <button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button>
-      <button class="btn is-small is-bad" type="submit" name="verdict" value="wrong">Wrong</button>
+      <button class="btn is-small is-bad" type="submit" name="verdict" value="wrong" data-confirm="Delete this photo of {{ ph.pen }}?" data-confirm-note="Not your pen: the next fill tries another one." data-confirm-label="Delete">Wrong</button>
     </form>
   </li>
   {% endfor %}

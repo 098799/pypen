@@ -4,6 +4,10 @@ A machine-made photo is saved with review="check". The owner sees each one here
 (and as a band on the pen's page) and says Right or Wrong. Right keeps it
 (review="ok"). Wrong deletes it and blocks its source, so the next run of
 pen_photo_fill tries another photo for the pen instead of the same one.
+
+Wrong is asked first (data-confirm on the button, kit README §4 "Delete and
+confirm"): its files go at once and a Gemini drawing cannot be fetched again,
+so there is nothing an Undo could put back without keeping files around.
 """
 
 from __future__ import annotations

@@ -88,8 +88,7 @@ share token instead — the door that is actually open.
       <div class="overflow-panel" role="menu">
         <a href="{% url 'inks_edit' ink.pk %}" data-kbd="edit" role="menuitem">Edit ink</a>
         <button type="button" role="menuitem" data-share-url="{% url 'share_ink' ink.share_token %}" data-share-label="Ink">Share ink</button>
-        <form method="post" action="{% url 'inks_delete' ink.pk %}" class="form-bare"
-              data-confirm="Delete {{ ink }}?" data-confirm-note="This cannot be undone." data-kit-busy>
+        <form method="post" action="{% url 'inks_delete' ink.pk %}" class="form-bare" data-kit-busy>
           {% csrf_token %}
           <button type="submit" class="danger" role="menuitem">Delete ink</button>
         </form>

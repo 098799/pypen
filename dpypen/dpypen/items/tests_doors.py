@@ -329,10 +329,36 @@ class MessagesAreTheKitsToast(_Collection):
         box = html[html.index("<div class=\"kit-msgs\" hidden data-kit-msgs>"):]
         self.assertLess(html.index('<main id="main">'), html.index("data-kit-msgs>"))
         self.assertIn(f'action="/undo/{self.last_token()}/"', box)
-        self.assertIn("data-undo", box)
+        # the kit's form[data-undo] (confirm.html) carries the words of the toast
+        self.assertIn('data-undo="Deleted ', box)
+        self.assertIn("form[data-undo]", kitshell.KIT.files["shell.js"][0].decode())
         self.assertNotIn("data-toast", html)
         self.assertNotIn("toast-x", html)
         self.assertNotIn("{#", html)  # a Django comment that leaked as text
+
+    def test_the_confirm_copy_is_the_kits_byte_for_byte(self):
+        from pathlib import Path
+
+        canon = Path("/home/tgrining/apps/kit/snippets/confirm.html")
+        if canon.exists():
+            copy = Path(__file__).resolve().parent / "templates" / "items" / "_confirm.html"
+            self.assertEqual(copy.read_bytes(), canon.read_bytes())
+
+    def test_a_delete_with_an_undo_is_not_asked_first(self):
+        # kit README §4 "Delete and confirm": never both, never "cannot be undone"
+        # over an Undo.
+        for url in (f"/prev/inks/{self.ink.pk}/", f"/prev/usages/{self.usage.pk}/edit/",
+                    f"/usages/{self.usage.pk}/edit/"):
+            html = self.client.get(url).content.decode()
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+            self.assertNotIn("This cannot be undone", html, url)
+            self.assertNotIn('data-confirm="Delete this inking', html, url)
+            self.assertNotIn(f'data-confirm="Delete {self.ink}', html, url)
+
+    def test_several_messages_join_in_the_undo(self):
+        html = self.client.post(f"/prev/usages/{self.usage.pk}/delete/", follow=True).content.decode()
+        box = html[html.index("data-kit-msgs>"):]
+        self.assertEqual(box.count("data-undo="), 1)
 
     def last_token(self):
         return self.client.session["undo_stack"][-1]["token"]

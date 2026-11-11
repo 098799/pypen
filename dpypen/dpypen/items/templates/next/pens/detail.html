@@ -17,7 +17,7 @@
     <form class="check-band" method="post" action="{% url 'nx_pens_photo_verdict' pen.pk photos.0.pk %}" data-kit-busy>{% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
       <p>{{ photos.0.source_note }}{% if photos.0.source_url %} (<a href="{{ photos.0.source_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">original</a>){% endif %}. Is this your pen?</p>
-      <span class="btn-row"><button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button><button class="btn is-small is-bad" type="submit" name="verdict" value="wrong">Wrong</button></span>
+      <span class="btn-row"><button class="btn is-small is-go" type="submit" name="verdict" value="ok">Right</button><button class="btn is-small is-bad" type="submit" name="verdict" value="wrong" data-confirm="Delete this photo of {{ pen }}?" data-confirm-note="Not your pen: the next fill tries another one." data-confirm-label="Delete">Wrong</button></span>
     </form>
     {% endif %}
     {% if photos|length > 1 %}

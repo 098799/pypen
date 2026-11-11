@@ -34,6 +34,6 @@
 <form method="post" action="{% url 'nx_usages_sample_add' usage.pk %}" enctype="multipart/form-data" hx-boost="false" data-kit-busy>
   {% csrf_token %}<label class="pick-file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Photograph the written page</span><input type="file" name="image" accept="image/*" multiple data-autosubmit></label>
 </form>
-<form method="post" action="{% url 'nx_usages_delete' usage.pk %}" data-confirm="Delete this inking? You can take it back from the note that follows." class="sec-head" data-kit-busy><button class="btn is-bad" type="submit">Delete this inking</button>{% csrf_token %}{% if back_to %}<input type="hidden" name="next" value="{{ back_to }}">{% endif %}</form>
+<form method="post" action="{% url 'nx_usages_delete' usage.pk %}" class="sec-head" data-kit-busy><button class="btn is-bad" type="submit">Delete this inking</button>{% csrf_token %}{% if back_to %}<input type="hidden" name="next" value="{{ back_to }}">{% endif %}</form>
 {% endif %}
 {% endblock %}

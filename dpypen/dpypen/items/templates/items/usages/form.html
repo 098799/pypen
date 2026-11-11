@@ -53,12 +53,12 @@
 
 {% if usage and can_edit %}
 {% comment %}
-Delete used to sit on every past-inking row in the listing. It is a rare,
-irreversible act and does not belong next to 130 rows you are only reading;
-this form is the one place you have already decided to change this inking.
+Delete used to sit on every past-inking row in the listing. It is a rare act
+and does not belong next to 130 rows you are only reading; this form is the
+one place you have already decided to change this inking. It is not asked
+first: the toast that follows offers Undo (kit README §4 "Delete and confirm").
 {% endcomment %}
 <form method="post" action="{% url 'usages_delete' usage.pk %}"
-      data-confirm="Delete this inking?" data-confirm-note="This cannot be undone."
       class="mt-1" data-kit-busy>
   {% csrf_token %}
   <button type="submit" class="btn small danger">Delete this inking</button>

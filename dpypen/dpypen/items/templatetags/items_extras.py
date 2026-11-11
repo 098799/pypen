@@ -62,3 +62,11 @@ def kit_keys():
     from dpypen.items import kitshell
 
     return format_html('{}\n<script src="{}"></script>', mark_safe(kitshell.KEYS_MARKUP), kitshell.url("late.js"))
+
+
+@register.filter
+def msgs_text(messages) -> str:
+    """All of a page's messages as one line, in order: the kit shows one toast
+    at a time, so a message with an Undo carries the others' words in its
+    form's data-undo (a notebook import: a warning per bad row, then the Undo)."""
+    return " ".join(t for t in (str(m).strip() for m in messages) if t)

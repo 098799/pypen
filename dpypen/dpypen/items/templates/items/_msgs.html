@@ -1,10 +1,12 @@
-{% comment %}
+{% load items_extras %}{% comment %}
 Messages. Every message the views raise lands here as data, and the reader
 after _toast.html (outside #main) shows it with the kit's toast. The block
 sits *inside* #main on purpose: hx-boost replaces #main wholesale, so each
 page brings its own messages and none outlives the page it was meant for. A
-message tagged "undo:<token>" keeps its form, hidden: the toast's Undo
-submits it, a plain POST that the server answers with "Undone."
+message tagged "undo:<token>" keeps its form, hidden, as the kit's
+form[data-undo] (confirm.html, README §4 "Delete and confirm"): the kit shows
+the toast with all the page's words and its Undo submits the form, a plain
+POST that the server answers with "Undone."
 {% endcomment %}
 {% if messages %}
 <div class="kit-msgs" hidden data-kit-msgs>
@@ -12,7 +14,7 @@ submits it, a plain POST that the server answers with "Undone."
   <div data-msg{% if m.level_tag == 'error' or m.level_tag == 'warning' %} data-bad{% endif %}>
     <span data-text>{{ m }}</span>
     {% if m.extra_tags and 'undo:' in m.extra_tags %}
-    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" hx-boost="false" data-undo data-kit-busy>
+    <form method="post" action="{% url 'undo' m.extra_tags|cut:'undo:' %}" hx-boost="false" data-undo="{{ messages|msgs_text }}" data-kit-busy>
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ request.get_full_path }}">
     </form>

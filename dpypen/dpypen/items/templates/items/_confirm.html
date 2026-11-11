@@ -1,4 +1,4 @@
-<!-- KIT-CONFIRM: v1.0 2026-11-08
+<!-- KIT-CONFIRM: v1.1 2026-11-11
   Ask before an action that cannot be undone: a bottom sheet on a phone (a
   centred card on a wider screen) with the question, an optional note of what
   will go, Cancel on the left and a red destructive button on the right; or a
@@ -39,9 +39,32 @@
   Escape, pagehide, kit:softnav or any pointerdown outside disarms and restores
   the button's original nodes.
 
+  A tap in the first 0.35 s after the sheet opens, or after a button armed,
+  does nothing: the second tap of a double tap never confirms. An armed button
+  keeps its width; it disarms when the sheet or dialog around it closes.
+
+  Do it, then Undo (a loss that can come back: never asked first):
+    kitUndo('“Bluey” unfollowed', {undo: function () { return post('/x/restore'); }})
+        the server did it; undo() puts it back (a promise: a failure is the
+        red toast "Not undone — …")
+    kitUndo('3 removed', {commit: function (leaving) { … }, undo: putBack})
+        it waits: commit() runs when the toast goes without Undo (time, a
+        tap, the next toast, the page going away). leaving = true when the
+        page goes: send with fetch(url, {method: 'POST', keepalive: true}).
+    -> Promise of 'undone' or 'kept'. Another language: opts.action, or
+    window.KITCONFIRM = {labels: {undo: 'Cofnij', notUndone: 'Nie cofnięto'}}. The toast is the kit's (toast.html):
+    6 s, held while a finger or the focus is on it; Ctrl+Z or Cmd+Z outside a
+    text field presses its Undo.
+    After a server form's redirect: a form with data-undo="Job deleted" in
+    the new page (method post, action the restore, the app's CSRF field in
+    it) shows that toast on load, and Undo submits the form.
+
+  v1.1: the 0.35 s guard on the sheet's button and on an arm; an armed
+  button keeps its width and disarms with its sheet; kitUndo; data-undo.
+
   API: kitConfirm(q, opts?) · kitConfirm.arm(el, label?, fn?, opts?) ·
        kitConfirm.disarm(el?) · kitConfirm.armed() · kitConfirm.close(ok?) ·
-       kitConfirm.state() · kitConfirm.version
+       kitConfirm.state() · kitConfirm.version · kitUndo(text, opts)
 -->
 <style>
 #kit-confirm {
@@ -140,12 +163,13 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
 (function () {
   'use strict';
   if (window.kitConfirm && window.kitConfirm.version) return;
-  var version = 'v1.0 2026-11-08';
+  var version = 'v1.1 2026-11-11';
   var dlg = null, grab = null, titleEl = null, textEl = null;
   var phraseWrap = null, phraseLbl = null, phraseIn = null;
   var cancelBtn = null, okBtn = null, liveEl = null;
   var cur = null;
-  var armedEl = null, armTimer = null;
+  var armedEl = null, armTimer = null, armedAt = 0, openedAt = 0;
+  var GUARD = 350;   // ms: the second tap of a double tap
 
   function ensureLive() {
     if (liveEl && liveEl.isConnected) return liveEl;
@@ -230,7 +254,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     });
     cancelBtn.addEventListener('click', function () { finish(false); });
     okBtn.addEventListener('click', function () {
-      if (okBtn.disabled) return;
+      if (okBtn.disabled || Date.now() - openedAt < GUARD) return;
       finish(true);
     });
     dlg.addEventListener('close', function () {
@@ -334,6 +358,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
       okBtn.textContent = spec.ok;
       okBtn.classList.toggle('is-danger', spec.danger);
 
+      openedAt = Date.now();
       var targetFocus = spec.phrase ? phraseIn : cancelBtn;
       if (window.kitLayer && kitLayer.open) {
         if (!kitLayer.isOpen(el)) {
@@ -380,6 +405,10 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
       }
       delete el.__kitArmNodes;
     }
+    if (el.__kitArmMinW !== undefined) {
+      el.style.minWidth = el.__kitArmMinW;
+      delete el.__kitArmMinW;
+    }
     if (el.__kitArmAria !== undefined) {
       if (el.__kitArmAria === null) el.removeAttribute('aria-label');
       else el.setAttribute('aria-label', el.__kitArmAria);
@@ -392,6 +421,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     if (!el) return false;
     if (typeof label === 'function') { opts = fn; fn = label; label = null; }
     if (el.dataset.kitArmed === '1') {
+      if (Date.now() - armedAt < GUARD) return false;
       disarm(el);
       if (typeof fn === 'function') fn.call(el);
       return true;
@@ -400,6 +430,9 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     var msg = label || el.getAttribute('data-confirm-arm') || 'Tap again to confirm';
     el.__kitArmNodes = [].map.call(el.childNodes, function (n) { return n.cloneNode(true); });
     el.__kitArmAria = el.getAttribute('aria-label');
+    el.__kitArmMinW = el.style.minWidth;
+    var w = el.getBoundingClientRect().width;
+    if (w && getComputedStyle(el).display !== 'inline') el.style.minWidth = w + 'px';
     el.textContent = msg;
     el.setAttribute('aria-label', msg);
     el.dataset.kitArmed = '1';
@@ -407,6 +440,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     el.dataset.sure = '1';
     el.classList.add('kit-armed', 'armed');
     armedEl = el;
+    armedAt = Date.now();
     announce(msg);
     var ms = (opts && typeof opts.ms === 'number') ? opts.ms : 4000;
     clearTimeout(armTimer);
@@ -471,6 +505,11 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     var armBtn = t.closest('[data-confirm-arm]');
     if (armBtn && armBtn.tagName !== 'FORM' && !armBtn.disabled) {
       if (armBtn.dataset.kitArmed === '1') {
+        if (Date.now() - armedAt < GUARD) {
+          ev.preventDefault();
+          ev.stopImmediatePropagation();
+          return;
+        }
         disarm(armBtn);
         return;
       }
@@ -522,6 +561,75 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
     });
   }, true);
 
+  // The sheet or dialog around an armed button closed: the arm goes with it.
+  document.addEventListener('kit:layer', function (ev) {
+    if (armedEl && ev.detail && ev.detail.open === false && !armedEl.getClientRects().length) disarm(armedEl);
+  });
+  document.addEventListener('close', function () {
+    if (armedEl && !armedEl.getClientRects().length) disarm(armedEl);
+  }, true);
+
+  /* ---- Do it, then Undo ---- */
+  var L = {undo: 'Undo', notUndone: 'Not undone'};
+  function lab(k) { var c = window.KITCONFIRM && KITCONFIRM.labels; return (c && c[k]) || L[k]; }
+  var undoing = null;
+  function sayNotUndone(err) {
+    if (typeof window.kitToast !== 'function') return;
+    var why = window.kitBusy && kitBusy.say ? kitBusy.say(err) : (err && err.message) || '';
+    window.kitToast(lab('notUndone') + (why ? ' — ' + why : ''), {kind: 'bad'});
+  }
+  function kitUndo(text, o) {
+    o = o || {};
+    return new Promise(function (resolve) {
+      var done = false;
+      function settleU(v) { if (!done) { done = true; resolve(v); } }
+      function commit(leaving) {
+        if (typeof o.commit !== 'function') return;
+        try { o.commit(!!leaving); } catch (e) { setTimeout(function () { throw e; }); }
+      }
+      if (typeof window.kitToast !== 'function') { commit(false); settleU('kept'); return; }
+      var me = {};
+      undoing = me;
+      window.kitToast(String(text == null ? '' : text), {
+        action: o.action || lab('undo'), ms: o.ms,
+        onAction: function () {
+          settleU('undone');
+          var r;
+          try { r = typeof o.undo === 'function' ? o.undo() : null; } catch (e) { sayNotUndone(e); return; }
+          if (r && typeof r.then === 'function') r.then(null, function (e) { if (!(e && e.kitSaid)) sayNotUndone(e); });
+        },
+        onClose: function (why) {
+          if (undoing === me) undoing = null;
+          if (why === 'action') return;
+          settleU('kept');
+          commit(why === 'leave');
+        }
+      });
+    });
+  }
+  document.addEventListener('keydown', function (ev) {
+    if (!undoing || !(ev.ctrlKey || ev.metaKey) || ev.shiftKey || ev.altKey || (ev.key !== 'z' && ev.key !== 'Z')) return;
+    var a = document.activeElement;
+    if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+    var b = document.querySelector('#kit-toast button:not([hidden])');
+    if (!b) return;
+    ev.preventDefault();
+    b.click();
+  });
+  function offerForms() {
+    var fs = document.querySelectorAll('form[data-undo]:not([data-undo-shown])');
+    if (!fs.length) return;
+    for (var i = 0; i < fs.length; i++) fs[i].setAttribute('data-undo-shown', '');
+    var f = fs[fs.length - 1];
+    kitUndo(f.getAttribute('data-undo'), {undo: function () {
+      if (f.requestSubmit) f.requestSubmit(); else f.submit();
+    }});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', offerForms);
+  else setTimeout(offerForms, 0);
+  // A soft navigation brings a new page in without a load.
+  document.addEventListener('kit:softnav', function () { setTimeout(offerForms, 0); });
+
   function resetAll() {
     disarm();
     if (cur) settle(false);
@@ -544,6 +652,9 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
       phrase: cur.phrase || null
     } : null;
   };
+  kitUndo.version = version;
+  kitUndo.offer = offerForms;
   window.kitConfirm = kitConfirm;
+  window.kitUndo = kitUndo;
 })();
 </script>

@@ -55,6 +55,17 @@ class CheckPage(Base):
         self.assertContains(r, 'value="wrong"')
         self.assertContains(r, "https://shop.example/992.jpg")
 
+    def test_wrong_asks_first_and_right_does_not(self):
+        # Wrong deletes the files at once: the kit asks on that button only.
+        self.machine_photo()
+        self.client.force_login(self.owner)
+        html = self.client.get("/pens/photos/check/").content.decode()
+        wrong = html[html.index('value="wrong"'):]
+        wrong = wrong[:wrong.index(">")]
+        self.assertIn('data-confirm="Delete this photo of', wrong)
+        right = html[html.index('value="ok"'):]
+        self.assertNotIn("data-confirm", right[:right.index(">")])
+
     def test_a_stranger_is_sent_to_log_in(self):
         r = self.client.get("/pens/photos/check/")
         self.assertEqual(r.status_code, 302)
