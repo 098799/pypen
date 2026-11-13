@@ -289,16 +289,12 @@ class UndoBringsItBack(_Collection):
     def test_undo_goes_back_to_the_page_it_was_pressed_on(self):
         # The toast's form sends no `next`; the browser's Referer is a full URL.
         self.client.post(f"/prev/usages/{self.usage.pk}/end/")
-        response = self.client.post(
-            f"/undo/{self.last_token()}/", HTTP_REFERER="http://testserver/pens/"
-        )
+        response = self.client.post(f"/undo/{self.last_token()}/", HTTP_REFERER="http://testserver/pens/")
         self.assertEqual(response["Location"], "http://testserver/pens/")
 
     def test_undo_does_not_follow_another_sites_referer(self):
         self.client.post(f"/prev/usages/{self.usage.pk}/end/")
-        response = self.client.post(
-            f"/undo/{self.last_token()}/", HTTP_REFERER="https://evil.example/pens/"
-        )
+        response = self.client.post(f"/undo/{self.last_token()}/", HTTP_REFERER="https://evil.example/pens/")
         self.assertEqual(response["Location"], "/dashboard/")
 
 
@@ -324,9 +320,10 @@ class MessagesAreTheKitsToast(_Collection):
         # the toast is in shell.js, blocking before the reader of the messages
         self.assertLess(html.index('<script src="/kit/shell.js'), html.index('<script src="/kit/early.js'))
         from dpypen.items import kitshell
+
         self.assertIn("window.kitToast = show", kitshell.KIT.files["shell.js"][0].decode())
         self.assertIn("window.__kitMsgs", kitshell.KIT.files["early.js"][0].decode())
-        box = html[html.index("<div class=\"kit-msgs\" hidden data-kit-msgs>"):]
+        box = html[html.index('<div class="kit-msgs" hidden data-kit-msgs>') :]
         self.assertLess(html.index('<main id="main">'), html.index("data-kit-msgs>"))
         self.assertIn(f'action="/undo/{self.last_token()}/"', box)
         # the kit's form[data-undo] (confirm.html) carries the words of the toast
@@ -347,17 +344,28 @@ class MessagesAreTheKitsToast(_Collection):
     def test_a_delete_with_an_undo_is_not_asked_first(self):
         # kit README §4 "Delete and confirm": never both, never "cannot be undone"
         # over an Undo.
-        for url in (f"/prev/inks/{self.ink.pk}/", f"/prev/usages/{self.usage.pk}/edit/",
-                    f"/usages/{self.usage.pk}/edit/"):
+        for url in (f"/prev/inks/{self.ink.pk}/", f"/prev/usages/{self.usage.pk}/edit/", f"/usages/{self.usage.pk}/edit/"):
             html = self.client.get(url).content.decode()
             self.assertEqual(self.client.get(url).status_code, 200, url)
             self.assertNotIn("This cannot be undone", html, url)
             self.assertNotIn('data-confirm="Delete this inking', html, url)
             self.assertNotIn(f'data-confirm="Delete {self.ink}', html, url)
 
+    def test_a_pen_delete_asks_with_its_name_and_says_what_goes_apart(self):
+        # The question names the thing; what goes with it is the note under it.
+        html = self.client.get(f"/pens/{self.pen.pk}/").content.decode()
+        self.assertIn(f'data-confirm="Delete {self.pen}?" data-confirm-note="Its photos and inkings go too.', html)
+        for name in ("next/pens/form.html", "next/pens/photo_edit.html"):
+            from pathlib import Path
+
+            src = (Path(__file__).resolve().parent / "templates" / name).read_text()
+            if "polished shot" in src:
+                self.assertIn('data-confirm-label="Discard"', src, name)
+                self.assertNotIn("Go back to the original photo? The polished", src, name)
+
     def test_several_messages_join_in_the_undo(self):
         html = self.client.post(f"/prev/usages/{self.usage.pk}/delete/", follow=True).content.decode()
-        box = html[html.index("data-kit-msgs>"):]
+        box = html[html.index("data-kit-msgs>") :]
         self.assertEqual(box.count("data-undo="), 1)
 
     def last_token(self):

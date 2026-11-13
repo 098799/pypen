@@ -58,7 +58,7 @@
       <a class="btn" href="{% url 'nx_pick' %}?pen={{ pen.pk }}">Suggest an ink</a>
       <a class="btn" href="{% url 'nx_pens_edit' pen.pk %}" data-kbd="edit">Edit</a>
       <button class="btn" type="button" data-share-url="{% url 'share_pen' pen.share_token %}" data-share-label="Pen">Share</button>
-      <form method="post" action="{% url 'nx_pens_delete' pen.pk %}" data-confirm="Delete {{ pen }}? Its photos and inkings go too. This cannot be undone." data-kit-busy>{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
+      <form method="post" action="{% url 'nx_pens_delete' pen.pk %}" data-confirm="Delete {{ pen }}?" data-confirm-note="Its photos and inkings go too. This cannot be undone." data-kit-busy>{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>
     </div>
     {% else %}
     <div class="rec-verbs"><a class="btn" href="{% url 'nx_pick' %}?pen={{ pen.pk }}">Suggest an ink</a></div>

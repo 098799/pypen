@@ -31,7 +31,7 @@
       {% if not forloop.first %}<form method="post" action="{% url 'nx_pens_photo_primary' pen.pk ph.pk %}" data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Make first</button></form>{% endif %}
       <form method="post" action="{% url 'nx_pens_photo_rotate' pen.pk ph.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="degrees" value="90"><button class="btn" type="submit">Turn</button></form>
       {% if ph.image_styled %}
-      <form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk ph.pk %}" data-confirm="Go back to the original photo? The polished shot is discarded." data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Original</button></form>
+      <form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk ph.pk %}" data-confirm="Discard the polished shot?" data-confirm-note="The original photo comes back." data-confirm-label="Discard" data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Original</button></form>
       {% else %}
       <form method="post" action="{% url 'nx_pens_photo_enhance' pen.pk ph.pk %}" data-busy-on-submit data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Polish</button></form>
       {% endif %}

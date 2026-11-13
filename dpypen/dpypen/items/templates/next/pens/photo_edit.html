@@ -20,7 +20,7 @@
   <p class="fine">The prompt names the pen's brand, model, finish, filling and era, so the pen stays that pen. Change it if a result drifts. <button type="button" class="nx-link" data-reset-field="promptEditor" data-reset-value="{{ default_prompt }}">Back to the default prompt</button></p>
 </form>
 <div class="btn-row">
-  {% if photo.image_styled %}<form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk photo.pk %}" data-confirm="Discard the polished shot?" data-kit-busy>{% csrf_token %}<button type="submit" class="btn">Back to the original</button></form>{% endif %}
+  {% if photo.image_styled %}<form method="post" action="{% url 'nx_pens_photo_unstyle' pen.pk photo.pk %}" data-confirm="Discard the polished shot?" data-confirm-note="The original photo comes back." data-confirm-label="Discard" data-kit-busy>{% csrf_token %}<button type="submit" class="btn">Back to the original</button></form>{% endif %}
   <form method="post" action="{% url 'nx_pens_photo_rotate' pen.pk photo.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="degrees" value="90"><button type="submit" class="btn">Turn 90°</button></form>
   {% if photo != photo.pen.photos.first %}<form method="post" action="{% url 'nx_pens_photo_primary' pen.pk photo.pk %}" data-kit-busy>{% csrf_token %}<button type="submit" class="btn">Make it the first photo</button></form>{% endif %}
   <form method="post" action="{% url 'nx_pens_photo_delete' pen.pk photo.pk %}" data-confirm="Delete this photo?" data-kit-busy>{% csrf_token %}<button type="submit" class="btn is-bad">Delete photo</button></form>
