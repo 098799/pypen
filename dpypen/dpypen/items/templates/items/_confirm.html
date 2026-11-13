@@ -1,4 +1,4 @@
-<!-- KIT-CONFIRM: v1.1 2026-11-11
+<!-- KIT-CONFIRM: v1.2 2026-11-13
   Ask before an action that cannot be undone: a bottom sheet on a phone (a
   centred card on a wider screen) with the question, an optional note of what
   will go, Cancel on the left and a red destructive button on the right; or a
@@ -61,6 +61,10 @@
 
   v1.1: the 0.35 s guard on the sheet's button and on an arm; an armed
   button keeps its width and disarms with its sheet; kitUndo; data-undo.
+  v1.2: the title keeps its look under an app's h2 rule (no upper case,
+  letter spacing or flex); the accent button's text is --on-accent only
+  (--accent-ink is "accent as text" in some apps: red on red in health).
+  A tap before this file runs: confirm-early.js, inline in <head>.
 
   API: kitConfirm(q, opts?) · kitConfirm.arm(el, label?, fn?, opts?) ·
        kitConfirm.disarm(el?) · kitConfirm.armed() · kitConfirm.close(ok?) ·
@@ -85,8 +89,10 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
   background: var(--line, var(--border, rgba(127, 127, 127, .35)));
   margin: 0 auto 12px;
 }
-.kit-confirm-title {
-  margin: 0; font-size: 16px; font-weight: 650; line-height: 1.3;
+#kit-confirm .kit-confirm-title {
+  display: block; margin: 0; padding: 0; border: 0; background: none;
+  font: 650 16px/1.3 var(--font-sans, system-ui, -apple-system, sans-serif);
+  text-transform: none; letter-spacing: normal;
   color: var(--fg, var(--ink, var(--text, #ede8df)));
   overflow-wrap: anywhere;
 }
@@ -130,7 +136,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
 }
 .kit-confirm-ok {
   background: var(--accent, #c89b3c);
-  color: var(--on-accent, var(--accent-ink, #141210));
+  color: var(--on-accent, #141210);
   border: 1px solid transparent;
 }
 .kit-confirm-ok.is-danger {
@@ -163,7 +169,7 @@ html[data-theme=light] #kit-confirm { box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
 (function () {
   'use strict';
   if (window.kitConfirm && window.kitConfirm.version) return;
-  var version = 'v1.1 2026-11-11';
+  var version = 'v1.2 2026-11-13';
   var dlg = null, grab = null, titleEl = null, textEl = null;
   var phraseWrap = null, phraseLbl = null, phraseIn = null;
   var cancelBtn = null, okBtn = null, liveEl = null;
