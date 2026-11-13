@@ -80,27 +80,37 @@ _SW_APP = """
 _SW_JS = "self.KITSW = " + json.dumps(KITSW) + ";\n" + (_HERE / "_sw.js").read_text() + _SW_APP
 
 
-# The icon (kit §4 "Icons"): a navy nib, its breather hole and slit in the
-# paper colour, on the paper (#f4ecd8, the manifest's background_color, the
-# colour of the phone's splash) edge to edge, so the splash shows no tile. Flat:
-# no gradient, no outline. _NIB is drawn round (0, 0); its box is y -140..190,
-# so the centre of the box is (0, 25). tools/make_icons.py reads these three
-# strings and draws the PNGs in static/items/icons/.
+# The icon (the tower standard, kit §4 "Icons"): one navy nib, its breather
+# hole and slit in the paper colour, inside a dashed ring, the rotation, with
+# one oxblood dot on it, the next pen due; a quiet outer ring round all of it.
+# pens (the catalogue) draws the same nib three times. Flat on the paper
+# (#f4ecd8, the manifest's background_color, the colour of the phone's splash)
+# edge to edge, so the splash shows no tile. _NIB is drawn in a 64 box round
+# (32, 32); its outer edge is the ring, 26.5 from the centre.
+# tools/make_icons.py reads these three strings and draws the PNGs in
+# static/items/icons/.
 _NIB = (
-    '<path d="M 0 -140 C 55 -140, 95 -100, 95 -50 L 70 140 L 0 190 L -70 140'
-    ' L -95 -50 C -95 -100, -55 -140, 0 -140 Z" fill="#1b2a4a"/>'
-    '<circle cx="0" cy="-10" r="17" fill="#f4ecd8"/>'
-    '<path d="M 0 4 V 192" stroke="#f4ecd8" stroke-width="7"/>'
+    '<circle cx="32" cy="32" r="25.5" fill="none" stroke="#b9ad92" stroke-width="2"/>'
+    '<circle cx="32" cy="32" r="18.5" fill="none" stroke="#1b2a4a" stroke-width="2"'
+    ' stroke-dasharray="3.63 2.18" transform="rotate(-90 32 32)"/>'
+    '<path d="M32 45 L24 31 V20 H40 V31 Z" fill="#1b2a4a"/>'
+    '<circle cx="32" cy="30" r="2.4" fill="#f4ecd8"/>'
+    '<path d="M32 32 V45" stroke="#f4ecd8" stroke-width="2"/>'
+    '<circle cx="45" cy="19" r="3.2" fill="#7a1f2b"/>'
 )
-# "any": the nib to 80 % of the height. maskable: farthest point 165 x 0.95 =
-# 157 px = 0.31 x 512, inside the circle of 1/3 the width that Android 12+
+
+
+def _icon_svg(scale: float) -> str:
+    return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+            '<rect width="64" height="64" fill="#f4ecd8"/>'
+            f'<g transform="translate(32 32) scale({scale}) translate(-32 -32)">' + _NIB + '</g></svg>\n')
+
+
+# "any": the sign at full size (0.41 of the width). maskable: 26.5 x 0.75 / 64
+# = 0.31 of the width, inside the circle of 1/3 the width that Android 12+
 # keeps on the splash.
-_ICON_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
-             '<rect width="512" height="512" fill="#f4ecd8"/>'
-             '<g transform="translate(256 256) scale(1.24) translate(0 -25)">' + _NIB + '</g></svg>\n')
-_ICON_MASKABLE = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">'
-                  '<rect width="512" height="512" fill="#f4ecd8"/>'
-                  '<g transform="translate(256 256) scale(0.95) translate(0 -25)">' + _NIB + '</g></svg>\n')
+_ICON_SVG = _icon_svg(1.0)
+_ICON_MASKABLE = _icon_svg(0.75)
 
 
 def service_worker(request):
