@@ -1,4 +1,4 @@
-<!-- KIT-SETTINGS: v1.2 2026-10-31
+<!-- KIT-SETTINGS: v1.3 2026-11-14
   The Settings page: grouped rows, compact on a phone, the same in every app.
   Spec: ~/apps/kit/README.md §4, "Settings". Canonical copy:
   ~/apps/kit/snippets/settings.html. Apps carry a byte-identical copy (fleet-check
@@ -12,14 +12,15 @@
   Markup (every class is optional except the card and its rows):
     <div class="kit-set">                                  the page: one column on a
                                                             phone, two from 900 px
+      <section class="kit-set-g" data-whatsnew-inline></section>
+                                                           What's new, always first:
+                                                           whatsnew.html fills it
       <section class="kit-set-g">                          a group
         <h2 class="kit-set-h">Look</h2>                    its heading (short, quiet)
         <div class="kit-set-card">                         one card per group
           <div class="kit-set-row">                        label left, control right
             <span class="kit-set-k">Theme</span><div data-kit-theme></div></div>
           <div class="kit-set-row" data-kit-install="pod"></div>   filled by this file
-          <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open>
-            <span class="kit-set-k" data-whatsnew-dot>What's new</span></button>
           <a class="kit-set-row kit-set-go" href="/x">                a row that leads on
             <span class="kit-set-k">Label<small class="kit-set-sub">one line</small></span>
             <span class="kit-set-v">value</span></a>
@@ -110,7 +111,7 @@
 (function () {
   'use strict';
   if (window.kitSettings) return;
-  var version = 'v1.2 2026-10-31';
+  var version = 'v1.3 2026-11-14';
   var offer = null, installed = false;
   function standalone() {
     try { return installed || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
