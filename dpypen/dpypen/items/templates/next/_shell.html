@@ -26,7 +26,6 @@ _shell_filternav, _shell_behave are the same files the old shell includes.
 <script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
 <link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
 <script src="{% static 'items/vendor/tom-select-2.4.3.complete.min.js' %}" defer></script>
-<script src="{% static 'items/js/viewer.js' %}" defer></script>
 <script src="{% static 'items/js/share.js' %}" defer></script>
 <script src="{% static 'items/js/charts.js' %}" defer></script>
 <script src="{% static 'items/js/more.js' %}" defer></script>
@@ -39,7 +38,6 @@ if ("serviceWorker" in navigator) {
 </script>
 {% include "items/_theme_boot.html" with theme_dark="#131927" theme_light="#f4f5f7" %}
 <link rel="stylesheet" href="{% static 'items/next/next.css' %}">
-<link rel="stylesheet" href="{% static 'items/css/viewer.css' %}">
 {% if nx_accent %}<style>:root{--accent:{{ nx_accent.dark }};--on-accent:{{ nx_accent.on_dark }}}html[data-theme=light]{--accent:{{ nx_accent.light }};--on-accent:{{ nx_accent.on_light }}}</style>{% endif %}
 {% include "items/_kit_css.html" %}
 </head>

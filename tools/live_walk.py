@@ -246,15 +246,15 @@ def main():
             "as => as.map(a => a.getAttribute('href')).find(h => /^\\/prev\\/pens\\/\\d+\\/$/.test(h))"
         )
         visit(page, pen, "pen")
-        if page.locator("#photoMain img[data-zoom]").count():
-            page.locator("#photoMain img[data-zoom]").click()
+        if page.locator("#photoMain img[data-view]").count():
+            page.locator("#photoMain img[data-view]").click()
             page.wait_for_timeout(1500)
-            check("viewer: opens", page.evaluate("!!document.querySelector('dialog.pv[open]')"))
+            check("viewer: opens", page.evaluate("!!document.querySelector('#kit-viewer[open]')"))
             check("viewer: page locked", page.evaluate("document.documentElement.classList.contains('scroll-lock')"))
             shot(page, "viewer")
             page.go_back()
             page.wait_for_timeout(700)
-            check("viewer: Back closes it, stays", not page.evaluate("!!document.querySelector('dialog.pv[open]')") and page.url.endswith(pen))
+            check("viewer: Back closes it, stays", not page.evaluate("!!document.querySelector('#kit-viewer[open]')") and page.url.endswith(pen))
             check("viewer: lock gone", not page.evaluate("document.documentElement.classList.contains('scroll-lock')"))
         visit(page, "/prev/inks/", "inks")
         ink = page.locator("#main a[href^='/prev/inks/']").evaluate_all(

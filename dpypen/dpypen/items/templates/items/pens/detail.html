@@ -191,20 +191,20 @@ share token instead — the door that is actually open.
       {% if photos %}
         {# What's new: the tag goes here, over the photo, until the first tap. #}
         <span class="pv-new" data-new-tag></span>
-        {# Tap it: the viewer opens on this photo and walks the others (PYPEN-1). #}
-        {# The page draws a 1200 px WebP copy (page_url, sized.py); the viewer opens the stored file (PYPEN-3). #}
+        {# Tap it: the kit's viewer (KIT-VIEWER) opens on this photo and walks the others, at the thumb marked .active. #}
+        {# It opens the 1200 px WebP copy the page draws (page_url, sized.py) and the stored file only when zoomed (hi_url). #}
         <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}"{% if photos.0.image_styled %} class="styled"{% endif %}
-             data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if photos.0.kind != 'other' %} · {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>
+             data-view="{{ photos.0.page_url }}"{% if photos.0.hi_url %} data-view-hi="{{ photos.0.hi_url }}"{% endif %}{% if photos|length > 1 %} data-view-of="pen"{% else %} data-view-cap="{{ pen }}{% if photos.0.kind != 'other' %} · {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>
         <span class="zoom-pip" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6"/></svg></span>
       {% else %}
         <div class="no-photo">no photograph yet</div>
       {% endif %}
     </div>
     {% if photos|length > 1 %}
-    <div class="pen-photo-thumbs">
+    <div class="pen-photo-thumbs" hx-boost="false">{# a thumb links its file (a modified click opens it); htmx must not boost it into #main #}
       {% for ph in photos %}
-      <a href="#" data-img="{{ ph.page_url }}" data-zoom-src="{{ ph.full_url }}"{% if ph.image_styled %} data-styled{% endif %}
-         data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if ph.kind != 'other' %} · {{ ph.get_kind_display|lower }}{% endif %}"
+      <a href="{{ ph.full_url }}" data-thumb data-view="{{ ph.page_url }}"{% if ph.hi_url %} data-view-hi="{{ ph.hi_url }}"{% endif %}{% if ph.image_styled %} data-styled{% endif %}
+         data-view-group="pen" data-view-cap="{{ pen }}{% if ph.kind != 'other' %} · {{ ph.get_kind_display|lower }}{% endif %}"
          aria-label="Show photo {{ forloop.counter }}" class="{% if forloop.first %}active{% endif %}">
         <img src="{{ ph.grid_url }}" alt="" loading="lazy"{% if ph.image_styled %} class="styled"{% endif %}>
       </a>
@@ -307,7 +307,7 @@ share token instead — the door that is actually open.
        owner keeps the way there as the pencil.{% endcomment %}
     <div class="sc{% if not s.image_clean %} raw{% endif %}">
       <img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.ink }}" loading="lazy"
-           data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.ink }}{% if s.notes %} · {{ s.notes }}{% endif %}">
+           data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="samples" data-view-cap="{{ s.usage.ink }}{% if s.notes %} · {{ s.notes }}{% endif %}">
       <div class="cap">{{ s.usage.ink }}</div>
       {% if can_edit %}<a class="sc-edit" href="{% url 'usages_edit' s.usage_id %}" aria-label="Edit the fill this sample belongs to" title="Edit the fill">&#9998;</a>{% endif %}
     </div>
@@ -512,18 +512,28 @@ share token instead — the door that is actually open.
 
 {% if photos %}
 <script>
+/* A thumb shows in the big frame. The thumbs are also the viewer's set (the
+   big photo opens it at the .active one, data-view-of), so this listens on
+   window in the capture phase: it runs before the kit viewer's own click
+   (on document) and takes the tap, which the viewer then leaves alone
+   (defaultPrevented). A modified click opens the file. Bound once: htmx's
+   swaps re-run this script. */
 (function () {
-  var main = document.getElementById("photoImg");
-  if (!main) return;
-  document.querySelectorAll(".pen-photo-thumbs a").forEach(function (a) {
-    a.addEventListener("click", function (e) {
-      e.preventDefault();
-      main.src = a.getAttribute("data-img");
-      main.classList.toggle("styled", a.hasAttribute("data-styled"));
-      document.querySelectorAll(".pen-photo-thumbs a").forEach(function (x) { x.classList.remove("active"); });
-      a.classList.add("active");
-    });
-  });
+  if (window.__penThumbs) return;
+  window.__penThumbs = true;
+  window.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".pen-photo-thumbs a[data-thumb]");
+    var main = document.getElementById("photoImg");
+    if (!a || !main || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+    e.preventDefault();
+    main.src = a.getAttribute("data-view");
+    main.setAttribute("data-view", a.getAttribute("data-view"));
+    if (a.hasAttribute("data-view-hi")) main.setAttribute("data-view-hi", a.getAttribute("data-view-hi"));
+    else main.removeAttribute("data-view-hi");
+    main.classList.toggle("styled", a.hasAttribute("data-styled"));
+    a.parentNode.querySelectorAll("a[data-thumb]").forEach(function (x) { x.classList.remove("active"); });
+    a.classList.add("active");
+  }, true);
 })();
 </script>
 {% endif %}

@@ -63,10 +63,10 @@ the old gift icon (pens have no `how`; it always said Bought). Tests: `tests_nex
 - **The accent is an ink**: the newest coloured ink on the desk (`nextui/context.py`), lightened or darkened per
   theme to 4.6:1 against both papers (`color.accent`). A black or a grey has no colour to lend; then the next ink,
   then royal blue. A test holds the contrast for any ink.
-- **The kit, unchanged**: layer, toast, busy (every POST form `data-kit-busy`; htmx's boosted sends wait through
+- **The kit, unchanged**: layer, toast, busy, the picture viewer (every POST form `data-kit-busy`; htmx's boosted sends wait through
   `_shell_early.html`, a Polish veils its tile until the answer), empty, filters, update, pull to refresh, What's new, install, theme, settings,
   keys, worker. Both shells include the same `_shell_early`, `_shell_filternav`, `_shell_behave`, `_msgs` (cut out of
-  the old shell), `deskbar.js`, `charts.js`, `more.js`, `viewer.js`. The palette has the main addresses (and the old
+  the old shell), `deskbar.js`, `charts.js`, `more.js`. The palette has the main addresses (and the old
   History's), one list for both; `window.__nextUrl` in each shell maps them: History to Stats in the new one, every
   page to its `/prev/` twin in the old one.
 - **Five tabs**: Desk, Pens, Inks, Stats, More. Inkings moved behind More to give the charts a place; the desk's
@@ -321,35 +321,46 @@ State in `localStorage['pypenInstallNudge']`.
 
 ## Photo viewer
 
-(PYPEN-1.) A pen's photos, an ink's swatches and the writing samples open full
-screen on a tap: pinch, wheel or double-tap to zoom, drag to look around, ‹ ›
-or a sideways swipe through the group, a flick down, ✕, Back or Esc to close.
-It is the museum's lightbox (`~/museum/museum/static/base.js`, "pinch-zoom
-lightbox") cut down, in `static/items/js/viewer.js`, loaded by `_shell.html`.
+(PYPEN-1; the kit's since 14 Nov 2026, consistency pass 15.) A pen's photos, an
+ink's swatches and the writing samples open full screen on a tap: the kit's
+picture viewer (`templates/items/_viewer.html`, a byte copy of
+`~/apps/kit/snippets/viewer.html`, KIT-VIEWER), bundled into `/kit/shell.js`
+and `/kit/shell.css` after the layer (`kitshell.py`), so both shells carry it.
+Pinch, double tap, the wheel, a swipe to walk the set, down to close, Back,
+Esc, ✕: kit README §4 "Picture viewer". pypen's own (`static/items/js/viewer.js`
++ `css/viewer.css`, ~400 lines) is gone.
 
-- **Markup only**: a page marks a photo `data-zoom` and its group
-  `data-zoom-group` / `data-zoom-item`; the header of `viewer.js` has the rest.
-  No page script, so an hx-boost swap needs nothing.
-- **A kit layer** (`kitLayer.open`, a modal `<dialog>`): Back closes it and
-  never leaves the page, and the kit sets `html.scroll-lock` under it. pypen
-  has no lock code of its own: since KEYS-LAYER v1.3 (PYPEN-8) the keyboard
-  palette and `?` sheet are kit layers too, so the shell's old scroll-lock
-  watcher is gone.
-- The page's own image shows at once, the stored file (up to 2400 px; new uploads ≤ 1800, `PHOTO_MAX_SIZE`)
-  replaces it in place.
+- **Markup only**: `data-view="<url>"` (empty: the link's href or the img's
+  src), `data-view-group="g"` (a set, page order), `data-view-cap`,
+  `data-view-hi`. No page script, and an hx-boost swap needs nothing (the kit
+  arms new markup itself).
+- **What it opens**: the 1200 px copy the page draws (`page_url`, `tile_url`),
+  so walking a set preloads ~25 KB neighbours, not ~300 KB originals; the
+  stored file (`hi_url`, empty when no copy is smaller) only once zoomed in.
+- **A pen's big photo** (`#photoImg`) is no member of its set: `data-view-of="pen"`
+  opens the thumbs' set at the one marked `aria-current` (new UI) or `.active`
+  (old). A thumb still swaps the big photo: its click listener sits on `window`
+  in the capture phase (`next.js`; the old pen page's own script), before the
+  viewer's on `document`, and takes the tap (`defaultPrevented`, which the
+  viewer leaves alone). The thumbs link their file (a modified click opens it);
+  their strip is `hx-boost="false"`, or htmx would boost that link into `#main`.
+- **Not the Gantt's chips**: `data-zoom` still names the Gantt's Fit/2×/4× chips
+  (`history.html`); the old viewer listened to it too and opened a black viewer
+  on "2". The kit reads `data-view` only.
 - A writing sample no longer links to the fill's edit form (a guest met a
   sign-in page there); the owner gets a pencil on the tile instead.
-- Probe: `python3 tools/viewer_probe.py` (throwaway DB copy, made-up photos).
+- Tests: `items/tests_viewer.py` (the markup on every page with photos).
+  Probe: `python3 tools/viewer_probe.py` (throwaway DB copy, made-up photos).
 
 ## Pictures at the size drawn
 
-(PYPEN-3, kit §5.6.) A page draws a WebP copy, the viewer opens the stored
-file. `items/sized.py` over the kit's `webp.py` (byte copy, KIT-WEBP):
+(PYPEN-3, kit §5.6.) A page draws a WebP copy; the viewer opens it too, and
+the stored file only when zoomed in. `items/sized.py` over the kit's `webp.py` (byte copy, KIT-WEBP):
 `sized.url(field)` gives `/media/sized/1200/<stored name>.webp`, made on first
 use and kept, or the stored file's url when no copy is smaller or the file is
 not on disk. `PenPhoto.page_url` (the pen page's photo and its thumbs' swap)
-and `tile_url` on a swatch or a writing sample use it; `full_url` /
-`shown_url` stay what the viewer opens (`data-zoom`, `data-zoom-src`).
+and `tile_url` on a swatch or a writing sample use it (and the viewer's
+`data-view`); `full_url` / `shown_url` are its sharp file (`hi_url`, `data-view-hi`).
 
 - **1200, not the ~900 the ticket guessed**: the kit's edge is CSS px × 3; the
   frame is ~360 CSS px on a phone, up to ~560 on a desk at 2×. On the live

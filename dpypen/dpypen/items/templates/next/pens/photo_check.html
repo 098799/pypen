@@ -8,7 +8,7 @@
 <ul class="check-grid">
   {% for ph in photos %}
   <li class="check-card" id="check-{{ ph.pk }}" data-listnav-item>
-    <div class="check-img"><img src="{{ ph.grid_url }}" alt="{{ ph.pen }}" loading="lazy" data-zoom="{{ ph.full_url }}" data-zoom-group="check" data-zoom-item="pen" data-zoom-cap="{{ ph.pen }}"></div>
+    <div class="check-img"><img src="{{ ph.grid_url }}" alt="{{ ph.pen }}" loading="lazy" data-view="{{ ph.page_url }}"{% if ph.hi_url %} data-view-hi="{{ ph.hi_url }}"{% endif %} data-view-group="check" data-view-cap="{{ ph.pen }}{% if ph.source_note %}, {{ ph.source_note }}{% endif %}"></div>
     <div class="check-t">
       <a href="{% url 'nx_pens_detail' ph.pen.pk %}"><b>{{ ph.pen.brand.name }} {{ ph.pen.model }}</b>{% if ph.pen.finish %} {{ ph.pen.finish }}{% endif %}</a>
       <small>{{ ph.source_note }}{% if ph.source_url %} · <a href="{{ ph.source_url }}" target="_blank" rel="noopener noreferrer" hx-boost="false">original</a>{% endif %}</small>

@@ -2,6 +2,7 @@ import io
 import secrets as _secrets
 import warnings
 from datetime import date
+from functools import cached_property
 
 from django.core.files.base import ContentFile
 from django.db import models
@@ -233,15 +234,23 @@ class PenPhoto(models.Model):
                 return f.url
         return None
 
-    @property
+    @cached_property
     def page_url(self):
         """The full image at the size the pen page draws it: a 1200 px WebP
         copy (sized.py, PYPEN-3) of what `full_url` points at. The page shows
-        this; the viewer opens `full_url`."""
+        this, and the kit's viewer opens it too (`data-view`): it preloads the
+        neighbours' files, ~25 KB each instead of the ~300 KB originals."""
         for f in (self.image_styled, self.image):
             if f:
                 return sized.url(f)
         return self.full_url
+
+    @property
+    def hi_url(self):
+        """The stored file when the page draws a smaller copy, else "": the
+        viewer's `data-view-hi`, fetched only once a photo is zoomed in."""
+        full = self.full_url
+        return full if full and full != self.page_url else ""
 
     def set_styled(self, data: bytes, base: str | None = None, save: bool = True):
         """Store a catalogue shot and its tile-sized twin together, so the two
@@ -311,13 +320,21 @@ class _Shown:
 
     @property
     def shown_url(self):
-        """The stored file — what the viewer opens."""
+        """The stored file: the viewer's sharp copy (`hi_url`)."""
         return self.shown.url if self.shown else None
 
-    @property
+    @cached_property
     def tile_url(self):
-        """What a tile draws: a 1200 px WebP copy (sized.py, PYPEN-3)."""
+        """What a tile draws, and the viewer opens: a 1200 px WebP copy
+        (sized.py, PYPEN-3)."""
         return sized.url(self.shown)
+
+    @property
+    def hi_url(self):
+        """The stored file when the tile draws a smaller copy, else "": the
+        viewer's `data-view-hi`, fetched only once it is zoomed in."""
+        full = self.shown_url
+        return full if full and full != self.tile_url else ""
 
 
 class InkSwatch(_Shown, models.Model):

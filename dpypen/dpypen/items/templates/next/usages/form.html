@@ -22,7 +22,7 @@
 <div class="thumbs-edit">
   {% for s in samples %}
   <div class="th-e" data-busy-host>
-    <img src="{{ s.tile_url }}" alt="Writing sample" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="Writing sample{% if s.notes %}, {{ s.notes }}{% endif %}">
+    <img src="{{ s.tile_url }}" alt="Writing sample" loading="lazy" data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="samples" data-view-cap="Writing sample{% if s.notes %}, {{ s.notes }}{% endif %}">
     <div class="th-acts">
       {% if not s.image_clean %}<form method="post" action="{% url 'nx_samples_extract' s.pk %}" data-busy-on-submit data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Lift the ink</button></form>{% endif %}
       <form method="post" action="{% url 'nx_samples_delete' s.pk %}" data-confirm="Delete this sample?" data-kit-busy>{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>

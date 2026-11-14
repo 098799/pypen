@@ -229,10 +229,10 @@ def viewer(page):
         return
     page.locator("#photoImg").tap()
     page.wait_for_timeout(350)
-    check("a photo opens the viewer", js("!!document.querySelector('dialog.pv[open]')"))
+    check("a photo opens the viewer", js("!!document.querySelector('#kit-viewer[open]')"))
     page.go_back()
     page.wait_for_timeout(350)
-    check("Back closes the viewer and stays", not js("!!document.querySelector('dialog.pv[open]')") and "/pens/" in page.url)
+    check("Back closes the viewer and stays", not js("!!document.querySelector('#kit-viewer[open]')") and "/pens/" in page.url)
 
 
 def desk(page):

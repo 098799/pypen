@@ -172,16 +172,22 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", arrive);
   else arrive();
 
-  /* ---- a pen's photos: a thumb shows in the big frame ---- */
-  document.addEventListener("click", function (e) {
+  /* ---- a pen's photos: a thumb shows in the big frame ----
+     The thumbs are also the kit viewer's set (data-view-group="pen"); the big
+     photo opens it at the thumb marked aria-current (data-view-of). On window
+     in the capture phase, so it runs before the viewer's own click listener
+     (on document) and takes the tap: the viewer leaves a click another script
+     took (defaultPrevented). A modified click opens the file (the href). */
+  window.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("[data-thumb]");
-    if (!a) return;
-    e.preventDefault();
     var main = document.getElementById("photoImg");
-    if (!main) return;
-    main.src = a.getAttribute("data-img");
-    main.setAttribute("data-zoom", a.getAttribute("data-zoom-src"));
+    if (!a || !main || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return;
+    e.preventDefault();
+    main.src = a.getAttribute("data-view");
+    main.setAttribute("data-view", a.getAttribute("data-view"));
+    if (a.hasAttribute("data-view-hi")) main.setAttribute("data-view-hi", a.getAttribute("data-view-hi"));
+    else main.removeAttribute("data-view-hi");
     a.parentNode.querySelectorAll("[data-thumb]").forEach(function (x) { x.removeAttribute("aria-current"); });
     a.setAttribute("aria-current", "true");
-  });
+  }, true);
 })();

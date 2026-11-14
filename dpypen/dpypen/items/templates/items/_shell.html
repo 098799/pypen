@@ -31,8 +31,6 @@ page load, and it also stopped collectstatic hashing the assets at all.
 <script src="{% static 'items/vendor/htmx-2.0.4.min.js' %}" defer></script>
 <link rel="stylesheet" href="{% static 'items/vendor/tom-select-2.4.3.default.min.css' %}">
 <script src="{% static 'items/vendor/tom-select-2.4.3.complete.min.js' %}" defer></script>
-{# The photo viewer (PYPEN-1): tap a [data-zoom] photo, pinch it, walk its group. #}
-<script src="{% static 'items/js/viewer.js' %}" defer></script>
 <script src="{% static 'items/js/share.js' %}" defer></script>
 <script src="{% static 'items/js/charts.js' %}" defer></script>
 <script src="{% static 'items/js/more.js' %}" defer></script>
@@ -48,11 +46,10 @@ page load, and it also stopped collectstatic hashing the assets at all.
 </script>
 {% include "items/_theme_boot.html" %}
 <link rel="stylesheet" href="{% static 'items/css/app.css' %}">
-<link rel="stylesheet" href="{% static 'items/css/viewer.css' %}">
 {% include "items/_kit_css.html" %}
 </head>
 <body{% if can_edit %} class="can-edit"{% endif %} hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="outerHTML show:window:top">
-{# The kit's snippets: the layer, toast, empty, filters, update, pull to refresh; What's new, install, Settings for members (_kit.html). The server's messages in #main become toasts in _shell_early. #}
+{# The kit's snippets: the layer, toast, empty, filters, update, pull to refresh, the picture viewer; What's new, install, Settings for members (_kit.html). The server's messages in #main become toasts in _shell_early. #}
 {% include "items/_kit.html" %}
 {# The scripts both shells share (the message reader, htmx's failed swaps; the behaviour at the end of this file, the filter-nav in #main): one copy, so a fix lands once. #}
 <a class="skip-link" href="#main">Skip to content</a>

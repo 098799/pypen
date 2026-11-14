@@ -27,7 +27,7 @@
 <div class="thumbs-edit">
   {% for s in swatches %}
   <div class="th-e" data-busy-host>
-    <img src="{{ s.tile_url }}" alt="Swatch" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="Swatch">
+    <img src="{{ s.tile_url }}" alt="Swatch" loading="lazy" data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="swatches" data-view-cap="Swatch">
     <div class="th-acts">
       {% if not s.image_clean %}<form method="post" action="{% url 'nx_swatches_extract' s.pk %}" data-busy-on-submit data-kit-busy>{% csrf_token %}<button class="btn" type="submit">Clean up</button></form>{% endif %}
       <form method="post" action="{% url 'nx_swatches_delete' s.pk %}" data-confirm="Delete this swatch?" data-kit-busy>{% csrf_token %}<button class="btn is-bad" type="submit">Delete</button></form>

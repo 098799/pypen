@@ -10,7 +10,8 @@
   <div>
     <div class="rec-photo{% if not photos %} is-none{% endif %}" id="photoMain">
       {% if photos %}
-      <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}" fetchpriority="high" data-zoom="{{ photos.0.full_url }}" data-zoom-group="pen"{% if photos|length == 1 %} data-zoom-item="pen" data-zoom-cap="{{ pen }}"{% endif %}>
+      {# The kit's viewer (KIT-VIEWER): one photo opens alone; with thumbs it opens their set at the one marked aria-current. #}
+      <img id="photoImg" src="{{ photos.0.page_url }}" alt="{{ pen }}" fetchpriority="high" data-view="{{ photos.0.page_url }}"{% if photos.0.hi_url %} data-view-hi="{{ photos.0.hi_url }}"{% endif %}{% if photos|length > 1 %} data-view-of="pen"{% else %} data-view-cap="{{ pen }}{% if photos.0.kind != 'other' %}, {{ photos.0.get_kind_display|lower }}{% endif %}"{% endif %}>
       {% else %}<span class="nophoto">No photo yet</span>{% endif %}
     </div>
     {% if can_edit and photos and photos.0.review == "check" %}
@@ -21,9 +22,9 @@
     </form>
     {% endif %}
     {% if photos|length > 1 %}
-    <div class="rec-thumbs">
+    <div class="rec-thumbs" hx-boost="false">{# a thumb links its file (a modified click opens it); htmx must not boost it into #main #}
       {% for ph in photos %}
-      <a href="#" data-thumb data-img="{{ ph.page_url }}" data-zoom-src="{{ ph.full_url }}" data-zoom-item="pen" data-zoom-cap="{{ pen }}{% if ph.kind != 'other' %}, {{ ph.get_kind_display|lower }}{% endif %}" aria-label="Show photo {{ forloop.counter }}"{% if forloop.first %} aria-current="true"{% endif %}><img src="{{ ph.grid_url }}" alt="" loading="lazy"></a>
+      <a href="{{ ph.full_url }}" data-thumb data-view="{{ ph.page_url }}"{% if ph.hi_url %} data-view-hi="{{ ph.hi_url }}"{% endif %} data-view-group="pen" data-view-cap="{{ pen }}{% if ph.kind != 'other' %}, {{ ph.get_kind_display|lower }}{% endif %}" aria-label="Show photo {{ forloop.counter }}"{% if forloop.first %} aria-current="true"{% endif %}><img src="{{ ph.grid_url }}" alt="" loading="lazy"></a>
       {% endfor %}
     </div>
     {% endif %}
@@ -121,7 +122,7 @@
 <div class="gallery">
   {% for s in samples %}
   <figure>
-    <img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.ink }}" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.ink }}{% if s.notes %}, {{ s.notes }}{% endif %}">
+    <img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.ink }}" loading="lazy" data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="samples" data-view-cap="{{ s.usage.ink }}{% if s.notes %}, {{ s.notes }}{% endif %}">
     <figcaption>{{ s.usage.ink }}</figcaption>
     {% if can_edit %}<a class="pencil" href="{% url 'nx_usages_edit' s.usage_id %}" aria-label="Edit this fill">✎</a>{% endif %}
   </figure>

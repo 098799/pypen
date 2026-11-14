@@ -5,9 +5,9 @@
   <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_pens_edit' pen.pk %}" aria-label="Back"></a><div class="kit-title"><h1>Edit photo</h1><small class="kit-sub">{{ pen }}</small></div></div>
 </header>
 <div class="compare" data-busy-host>
-  <figure><img src="{{ photo.image.url }}" alt="Original" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Original"><figcaption>Original</figcaption></figure>
+  <figure><img src="{{ photo.image.url }}" alt="Original" data-view data-view-group="compare" data-view-cap="Original"><figcaption>Original</figcaption></figure>
   {% if photo.image_styled %}
-  <figure><img src="{{ photo.image_styled.url }}" alt="Polished" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Polished"><figcaption>Polished by AI</figcaption></figure>
+  <figure><img src="{{ photo.image_styled.url }}" alt="Polished" data-view data-view-group="compare" data-view-cap="Polished"><figcaption>Polished by AI</figcaption></figure>
   {% else %}
   <div class="blank">Not polished yet. The button below makes a clean shot of it.</div>
   {% endif %}

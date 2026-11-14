@@ -69,13 +69,13 @@
 
 {% if swatches %}
 <div class="sec-head"><h2>Swatches</h2><span>{{ swatches|length }}</span></div>
-<div class="gallery">{% for s in swatches %}<figure><img src="{{ s.tile_url }}" alt="Swatch of {{ ink }}" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="{{ ink }}, swatch"></figure>{% endfor %}</div>
+<div class="gallery">{% for s in swatches %}<figure><img src="{{ s.tile_url }}" alt="Swatch of {{ ink }}" loading="lazy" data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="swatches" data-view-cap="{{ ink }}, swatch"></figure>{% endfor %}</div>
 {% endif %}
 {% if samples %}
 <div class="sec-head"><h2>Writing samples</h2><span>{{ samples|length }}</span></div>
 <div class="gallery">
   {% for s in samples %}
-  <figure><img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy" data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.pen }}{% if s.notes %}, {{ s.notes }}{% endif %}"><figcaption>{{ s.usage.pen }}</figcaption>{% if can_edit %}<a class="pencil" href="{% url 'nx_usages_edit' s.usage_id %}" aria-label="Edit this fill">✎</a>{% endif %}</figure>
+  <figure><img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy" data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="samples" data-view-cap="{{ s.usage.pen }}{% if s.notes %}, {{ s.notes }}{% endif %}"><figcaption>{{ s.usage.pen }}</figcaption>{% if can_edit %}<a class="pencil" href="{% url 'nx_usages_edit' s.usage_id %}" aria-label="Edit this fill">✎</a>{% endif %}</figure>
   {% endfor %}
 </div>
 {% endif %}

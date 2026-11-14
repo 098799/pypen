@@ -1,11 +1,19 @@
-"""The photo viewer (PYPEN-1, static/items/js/viewer.js) in a real browser.
+"""The picture viewer (the kit's, KIT-VIEWER, bundled in /kit/shell.js) on
+pypen's pages, in a real browser.
 
 Headless Chromium at 390×844 (touch) against a throwaway copy of the local
 database, with made-up photos in a temp media folder: never the live data on
 bae, never the local db.sqlite3 itself. Shares layer_probe's start-up.
 
-    python3 tools/viewer_probe.py            # playwright on the system python
-    SHOTS=/some/dir python3 tools/viewer_probe.py   # also keep screenshots
+It walks the wiring, not the kit's gestures (the kit's own test does those):
+the big photo opens the thumbs' set at the chosen one (next UI: aria-current,
+the old pages: .active), a thumb still swaps the big photo, the viewer opens
+the 1200 px copy and the stored file only when zoomed, samples and swatches
+open, Back and Esc close, an htmx swap keeps it working, and the Gantt's zoom
+chips are no pictures.
+
+    python3 tools/viewer_probe.py                  # playwright on the system python
+    SHOTS=/some/dir python3 tools/viewer_probe.py  # also keep screenshots
 """
 
 import os
@@ -23,6 +31,10 @@ lp.PORT = int(os.environ.get("PROBE_PORT", "18492"))
 lp.BASE = BASE = f"http://127.0.0.1:{lp.PORT}"
 check, failures = lp.check, lp.failures
 SHOTS = os.environ.get("SHOTS")
+# A worktree has no db.sqlite3 of its own (gitignored): the live checkout's copy.
+DB = lp.APP / "db.sqlite3"
+if not DB.exists():
+    DB = Path("/home/tgrining/pypen/dpypen/db.sqlite3")
 
 SEED = r"""
 import django; django.setup()
@@ -62,12 +74,15 @@ def seed(tmp):
 
 
 def st(page):
-    return page.evaluate("""() => { const d = document.getElementById('pv');
+    return page.evaluate("""() => { const d = document.getElementById('kit-viewer');
+      const v = window.kitViewer && kitViewer.current();
+      const img = v ? v.over.parentNode.querySelector('img') : null;
       return { open: !!(d && d.open), lock: document.documentElement.classList.contains('scroll-lock'),
-               n: d ? d.querySelector('.pv-n').textContent : '', t: d ? d.querySelector('.pv-t').textContent : '',
-               zoomed: !!(d && d.classList.contains('zoomed')), src: d ? (d.querySelector('.pv-img').getAttribute('src') || '') : '',
-               w: d ? d.querySelector('.pv-img').getBoundingClientRect().width : 0,
-               next: d ? !d.querySelector('.pv-next').hidden : false, url: location.pathname } }""")
+               n: d ? d.querySelector('.kv-n').textContent : '', cap: d ? d.querySelector('.kv-cap').textContent : '',
+               index: v ? v.index : -1, count: v ? v.items.length : 0,
+               zoomed: !!(d && d.classList.contains('kv-zoomed')),
+               src: img ? (img.getAttribute('src') || '') : '', alt: img ? img.alt : '',
+               w: img ? img.getBoundingClientRect().width : 0, url: location.pathname } }""")
 
 
 def shot(page, name):
@@ -75,143 +90,133 @@ def shot(page, name):
         page.screenshot(path=str(Path(SHOTS) / name))
 
 
-def pointer(page, kind, pid, x, y):
-    page.evaluate(
-        """([k, id, x, y]) => document.getElementById('pv').dispatchEvent(
-        new PointerEvent(k, {pointerId: id, clientX: x, clientY: y, bubbles: true, pointerType: 'touch', isPrimary: id === 1}))""",
-        [kind, pid, x, y],
+def wait_open(page):
+    page.wait_for_function("document.getElementById('kit-viewer') && document.getElementById('kit-viewer').open")
+    page.wait_for_timeout(450)
+
+
+def wait_closed(page):
+    page.wait_for_function("!(document.getElementById('kit-viewer') && document.getElementById('kit-viewer').open)")
+    page.wait_for_timeout(300)
+
+
+def pen_page(page, pen, base, thumbs, mark):
+    """The big photo and its thumbs, on the next UI (base '') or the old one ('/prev')."""
+    page.goto(f"{BASE}{base}/pens/{pen}/")
+    page.wait_for_load_state("networkidle")
+    where = base or "next"
+    check(f"{where}: the page is no wider than the phone", page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
+    drawn = page.evaluate("(() => { const i = document.getElementById('photoImg'); return [i.currentSrc, i.naturalWidth]; })()")
+    check(f"{where}: the page draws the 1200 px copy", "/media/sized/1200/" in drawn[0] and drawn[1] == 1200)
+    check(f"{where}: the photo is a button for a keyboard", page.get_attribute("#photoImg", "role") == "button")
+
+    page.click("#photoImg")
+    wait_open(page)
+    s = st(page)
+    check(f"{where}: tap the photo: the viewer opens on 1 of 6", s["open"] and s["n"] == "1 of 6")
+    check(f"{where}: the page under it is locked", s["lock"])
+    check(f"{where}: it shows the 1200 px copy, fitted to the width", "/media/sized/1200/" in s["src"] and 380 <= s["w"] <= 391)
+    check(f"{where}: the picture's alt is the caption", s["alt"] and s["alt"] == s["cap"] and "uncapped" in s["cap"].lower())
+    if not base:
+        shot(page, "viewer-open.png")
+    page.keyboard.press("ArrowRight")
+    page.wait_for_timeout(450)
+    s = st(page)
+    check(f"{where}: → walks to the next photo", s["n"] == "2 of 6" and "nib" in s["cap"].lower())
+    page.evaluate("kitViewer.current().zoom(3)")
+    sharp = False
+    for _ in range(40):  # page.wait_for_function's polling is an eval, which the CSP refuses
+        sharp = page.evaluate("""() => { const v = kitViewer.current(); const i = v && v.over.parentNode.querySelector('img');
+            return !!i && i.naturalWidth > 1200; }""")  # the stored file (1800 px; fetched to a blob: url)
+        if sharp:
+            break
+        page.wait_for_timeout(200)
+    check(f"{where}: zoomed in, the stored file replaces the copy", sharp)
+    check(f"{where}: and it says so", st(page)["zoomed"])
+    if not base:
+        shot(page, "viewer-zoomed.png")
+    page.go_back()
+    wait_closed(page)
+    s = st(page)
+    check(f"{where}: Back closes the viewer and stays on the pen", not s["open"] and s["url"] == f"{base}/pens/{pen}/")
+    check(f"{where}: the lock is gone", not s["lock"])
+
+    # a thumb swaps the big photo (the viewer leaves its tap alone), then the big photo opens at it
+    third = page.locator(f"{thumbs} a[data-thumb]").nth(2)
+    third.click()
+    page.wait_for_timeout(300)
+    check(f"{where}: a thumb does not open the viewer, nor leave the page", not st(page)["open"] and page.url.endswith(f"{base}/pens/{pen}/"))
+    check(f"{where}: the chosen thumb is marked", third.evaluate(f"a => a.{mark}"))
+    check(
+        f"{where}: the big photo shows it",
+        page.get_attribute("#photoImg", "src") == third.get_attribute("data-view"),
     )
+    page.click("#photoImg")
+    wait_open(page)
+    check(f"{where}: the photo opens at the thumb chosen", st(page)["n"] == "3 of 6")
+    page.click("#kit-viewer .kv-x")
+    wait_closed(page)
+    check(f"{where}: ✕ closes", not st(page)["open"] and page.url.endswith(f"{base}/pens/{pen}/"))
+
+    # samples on the pen page
+    page.locator("img[data-view-group=samples]").first.scroll_into_view_if_needed()
+    page.locator("img[data-view-group=samples]").first.click()
+    wait_open(page)
+    s = st(page)
+    check(f"{where}: a writing sample opens in the viewer", s["open"] and s["n"].endswith("of 2") and "/media/sized/1200/" in s["src"])
+    page.keyboard.press("Escape")
+    wait_closed(page)
+    check(f"{where}: Esc closes", not st(page)["open"])
 
 
 def run(page, pen, ink):
-    page.goto(f"{BASE}/pens/{pen}/")
-    page.wait_for_load_state("networkidle")
-    shot(page, "pen-page.png")
-    check("the page is no wider than the phone",
-          page.evaluate("document.documentElement.scrollWidth <= innerWidth"))
-    check("the photo sits inside the screen",
-          page.evaluate("document.getElementById('photoMain').getBoundingClientRect().right <= innerWidth"))
-    # PYPEN-3: the page draws a 1200 px WebP copy; the viewer below still
-    # waits for the stored 2400 px file.
-    drawn = page.evaluate("(() => { const i = document.getElementById('photoImg'); return [i.currentSrc, i.naturalWidth]; })()")
-    check(f"the page draws the 1200 px copy {drawn}", "/media/sized/1200/" in drawn[0] and drawn[0].endswith(".webp") and drawn[1] == 1200)
-    tiles = page.evaluate("[...document.querySelectorAll('.samples-strip img')].map(i => i.getAttribute('src'))")
-    check(f"the samples draw 1200 px copies {tiles}", tiles and all("/media/sized/1200/" in t for t in tiles))
-    hist = page.evaluate("history.length")
-    page.click("#photoImg")
-    page.wait_for_function("document.getElementById('pv') && document.getElementById('pv').open")
-    page.wait_for_function("document.querySelector('#pv .pv-img').naturalWidth >= 1800")
-    s = st(page)
-    check("tap the photo: the viewer opens", s["open"])
-    check("the page under it is locked", s["lock"])
-    check("caption says the pen and 1 of 6", s["n"] == "1 of 6" and "uncapped" in s["t"])
-    check("it shows the full file, fitted to the width", 380 <= s["w"] <= 391)
-    shot(page, "viewer-open.png")
+    pen_page(page, pen, "", ".rec-thumbs", "getAttribute('aria-current') === 'true'")
+    pen_page(page, pen, "/prev", ".pen-photo-thumbs", "classList.contains('active')")
 
-    page.click("#pv .pv-next")
-    page.wait_for_timeout(400)
-    s = st(page)
-    check("› walks to the next photo", s["n"] == "2 of 6" and "nib" in s["t"] and s["src"])
+    for base in ("", "/prev"):
+        page.goto(f"{BASE}{base}/inks/{ink}/")
+        page.wait_for_load_state("networkidle")
+        page.locator("img[data-view-group=swatches]").first.click()
+        wait_open(page)
+        s = st(page)
+        check(f"{base or 'next'}: an ink swatch opens", s["open"] and "swatch" in s["cap"].lower())
+        page.go_back()
+        wait_closed(page)
+        check(f"{base or 'next'}: Back closes it on the ink page", not st(page)["open"] and st(page)["url"] == f"{base}/inks/{ink}/")
 
-    # a sideways swipe walks on, too
-    pointer(page, "pointerdown", 1, 300, 420)
-    pointer(page, "pointermove", 1, 150, 425)
-    pointer(page, "pointerup", 1, 150, 425)
-    page.wait_for_timeout(300)
-    check("a swipe left walks on", st(page)["n"] == "3 of 6")
-    for _ in range(3):
-        page.click("#pv .pv-next")
-    page.wait_for_timeout(300)
-    check("at the end, no ›", st(page)["n"] == "6 of 6" and not st(page)["next"])
-
-    # pinch: two fingers apart
-    pointer(page, "pointerdown", 1, 170, 420)
-    pointer(page, "pointerdown", 2, 220, 420)
-    for k in range(1, 6):
-        pointer(page, "pointermove", 1, 170 - 20 * k, 420)
-        pointer(page, "pointermove", 2, 220 + 20 * k, 420)
-    pointer(page, "pointerup", 1, 70, 420)
-    pointer(page, "pointerup", 2, 320, 420)
-    s = st(page)
-    check("pinch zooms in", s["zoomed"] and s["w"] > 900)
-    shot(page, "viewer-zoomed.png")
-
-    # double tap at rest zooms, again fits
-    page.wait_for_timeout(400)
-    pointer(page, "pointerdown", 1, 195, 420)
-    pointer(page, "pointerup", 1, 195, 420)
-    pointer(page, "pointerdown", 1, 195, 420)
-    pointer(page, "pointerup", 1, 195, 420)
-    check("double tap while zoomed fits again", not st(page)["zoomed"])
-    page.wait_for_timeout(400)
-    pointer(page, "pointerdown", 1, 195, 420)
-    pointer(page, "pointerup", 1, 195, 420)
-    pointer(page, "pointerdown", 1, 195, 420)
-    pointer(page, "pointerup", 1, 195, 420)
-    check("double tap zooms in", st(page)["zoomed"])
-
-    page.go_back()
-    page.wait_for_timeout(400)
-    s = st(page)
-    check("Back closes the viewer and stays on the pen", not s["open"] and s["url"] == f"/prev/pens/{pen}/")
-    check("the lock is gone", not s["lock"])
-    check("history is where it was", page.evaluate("history.length") >= hist)
-
-    # a thumb chooses, then the main photo opens at it
-    page.click(".pen-photo-thumbs a:nth-child(3)")
-    page.click("#photoImg")
-    page.wait_for_timeout(300)
-    check("the photo opens at the thumb chosen", st(page)["n"] == "3 of 6")
-    page.click("#pv .pv-close")
-    page.wait_for_timeout(400)
-    check("✕ closes", not st(page)["open"] and page.url.endswith(f"/prev/pens/{pen}/"))
-
-    # flick down closes
-    page.click("#photoImg")
-    page.wait_for_timeout(300)
-    pointer(page, "pointerdown", 1, 195, 300)
-    pointer(page, "pointermove", 1, 198, 500)
-    pointer(page, "pointerup", 1, 198, 500)
-    page.wait_for_timeout(400)
-    check("a flick down closes", not st(page)["open"])
-
-    # samples on the pen page
-    page.locator(".samples-strip img").first.scroll_into_view_if_needed()
-    page.locator(".samples-strip img").first.click()
-    page.wait_for_timeout(400)
-    s = st(page)
-    check("a writing sample opens in the viewer", s["open"] and s["n"].endswith("of 2") and s["url"] == f"/prev/pens/{pen}/")
-    page.keyboard.press("Escape")
-    page.wait_for_timeout(400)
-    check("Esc closes", not st(page)["open"])
-
-    # soft navigation (hx-boost) to the ink page, then its swatch
-    page.goto(f"{BASE}/inks/{ink}/")
-    page.wait_for_load_state("networkidle")
-    page.locator("[data-zoom-item=swatches]").first.click()
-    page.wait_for_timeout(400)
-    s = st(page)
-    check("an ink swatch opens", s["open"] and "swatch" in s["t"])
-    page.go_back()
-    page.wait_for_timeout(300)
-    check("Back closes it on the ink page", not st(page)["open"] and st(page)["url"] == f"/prev/inks/{ink}/")
-
-    # boosted swap from the ink page to the pen, then the photo still opens
+    # boosted swap to the pen, then the photo still opens (the kit arms new markup itself)
     page.goto(f"{BASE}/pens/")
     page.wait_for_load_state("networkidle")
-    page.evaluate(f"htmx.ajax('GET', '/prev/pens/{pen}/', {{target: '#main', select: '#main', swap: 'outerHTML'}})")
+    page.evaluate(f"htmx.ajax('GET', '/pens/{pen}/', {{target: '#main', select: '#main', swap: 'outerHTML'}})")
     page.wait_for_selector("#photoImg")
     page.wait_for_timeout(300)
+    check("after an htmx swap the photo has role=button", page.get_attribute("#photoImg", "role") == "button")
     page.click("#photoImg")
-    page.wait_for_timeout(300)
-    check("after an htmx swap the photo still opens", st(page)["open"])
-    check("and it has role=button", page.get_attribute("#photoImg", "role") == "button")
+    wait_open(page)
+    check("and it opens", st(page)["open"])
     page.keyboard.press("Escape")
+    wait_closed(page)
+
+    # the Gantt's zoom chips (data-zoom) are no pictures any more
+    page.goto(f"{BASE}/prev/history/gantt/")
+    page.wait_for_load_state("networkidle")
+    if page.locator("button.kit-chip[data-zoom='2']").count():
+        chip = page.locator("button.kit-chip[data-zoom='2']")
+        check("Gantt chip: no role or label from the viewer", chip.get_attribute("role") is None and chip.get_attribute("aria-label") is None)
+        chip.click()
+        page.wait_for_timeout(300)
+        check("Gantt chip 2×: no viewer", not st(page)["open"])
+        check(
+            "Gantt chip 2×: the chart is twice as wide",
+            page.get_attribute("#ganttInner", "data-zoom") == "2" and chip.get_attribute("aria-pressed") == "true",
+        )
+    else:
+        print("skip Gantt: no chart in this copy")
 
 
 def main():
     with tempfile.TemporaryDirectory() as tmp:
-        proc, sess = lp.start(tmp)
+        proc, sess = lp.start(tmp, DB)
         try:
             pen, ink = seed(tmp)
             with sync_playwright() as p:

@@ -123,13 +123,13 @@
 <div class="compare">
   <div class="frame">
     <span class="label">Original</span>
-    <img src="{{ photo.image.url }}" alt="Original" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Original">
+    <img src="{{ photo.image.url }}" alt="Original" data-view data-view-group="compare" data-view-cap="Original">
   </div>
 
   {% if photo.image_styled %}
   <div class="frame">
     <span class="label ai">Catalog shot · AI</span>
-    <img src="{{ photo.image_styled.url }}" alt="AI catalog" data-zoom data-zoom-group="compare" data-zoom-item="compare" data-zoom-cap="Catalog shot · AI">
+    <img src="{{ photo.image_styled.url }}" alt="AI catalog" data-view data-view-group="compare" data-view-cap="Catalog shot · AI">
   </div>
   {% else %}
   <div class="frame is-blank" id="styledFrame">

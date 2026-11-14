@@ -128,7 +128,7 @@ share token instead — the door that is actually open.
     {% for s in swatches %}
     <div class="sw{% if not s.image_clean %} raw{% endif %}">
       <img src="{{ s.tile_url }}" alt="Swatch of {{ ink }}" loading="lazy"
-           data-zoom="{{ s.shown_url }}" data-zoom-group="swatches" data-zoom-item="swatches" data-zoom-cap="{{ ink }} · swatch">
+           data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="swatches" data-view-cap="{{ ink }} · swatch">
     </div>
     {% endfor %}
   </div>
@@ -148,7 +148,7 @@ share token instead — the door that is actually open.
        owner keeps the way there as the pencil.{% endcomment %}
     <div class="sc{% if not s.image_clean %} raw{% endif %}">
       <img src="{{ s.tile_url }}" alt="Writing sample, {{ s.usage.pen }}" loading="lazy"
-           data-zoom="{{ s.shown_url }}" data-zoom-group="samples" data-zoom-item="samples" data-zoom-cap="{{ s.usage.pen }}{% if s.notes %} · {{ s.notes }}{% endif %}">
+           data-view="{{ s.tile_url }}"{% if s.hi_url %} data-view-hi="{{ s.hi_url }}"{% endif %} data-view-group="samples" data-view-cap="{{ s.usage.pen }}{% if s.notes %} · {{ s.notes }}{% endif %}">
       <div class="cap">{{ s.usage.pen }}</div>
       {% if can_edit %}<a class="sc-edit" href="{% url 'usages_edit' s.usage_id %}" aria-label="Edit the fill this sample belongs to" title="Edit the fill">&#9998;</a>{% endif %}
     </div>

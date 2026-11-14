@@ -2170,7 +2170,7 @@ html[data-theme="dark"] ::selection {
 html.scroll-lock, html.scroll-lock body { overflow: hidden; }
 #kpal .kp-list, #khelp .kh-card { overscroll-behavior: contain; }
 
-/* The photo viewer: css/viewer.css, linked by both shells. */
+/* The photo viewer: the kit's (_viewer.html, KIT-VIEWER), in /kit/shell.css. */
 /* -------- Error pages (items/error_pages.py, templates/items/error.html) -------- */
 .error-page { max-width: 34rem; }
 .error-page .error-ways { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.4rem 0; }

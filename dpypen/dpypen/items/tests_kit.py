@@ -27,6 +27,7 @@ COPIES = {
     TPL / "_filters.html": KIT / "snippets" / "filters.html",
     TPL / "_whatsnew.html": KIT / "snippets" / "whatsnew.html",
     TPL / "_busy.html": KIT / "snippets" / "busy.html",
+    TPL / "_viewer.html": KIT / "snippets" / "viewer.html",
     HERE / "errors.py": KIT / "py" / "errors.py",
     HERE / "whatsnew.py": KIT / "py" / "whatsnew.py",
     HERE / "lists.py": KIT / "py" / "lists.py",

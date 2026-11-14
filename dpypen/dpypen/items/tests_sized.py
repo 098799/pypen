@@ -1,9 +1,9 @@
 """PYPEN-3: pictures at the size the page draws them, and the pieces two
 pages used to paste (the share script, the samples strip, the back link).
 
-sized.py makes a WebP copy with the kit's webp.py; the page draws the copy and
-the viewer opens the stored file. Each test has its own MEDIA_ROOT, so the
-dev media folder is never written.
+sized.py makes a WebP copy with the kit's webp.py; the page draws the copy, the
+kit's viewer opens it too and fetches the stored file only when zoomed in. Each
+test has its own MEDIA_ROOT, so the dev media folder is never written.
 """
 
 import io
@@ -89,20 +89,26 @@ class PagesDrawTheCopy(_Media):
         self.assertEqual(r.status_code, 200)
         return r.content.decode()
 
-    def test_pen_page_draws_the_copy_and_the_viewer_opens_the_file(self):
-        html = self.html("pens_detail", self.pen.pk)
-        img = re.search(r'<img id="photoImg"[^>]*>', html).group(0)
-        self.assertIn('src="/media/sized/1200/pen_photos/a.webp"', img)
-        self.assertIn('data-zoom="/media/pen_photos/a.jpg"', img)
+    def test_pen_page_draws_the_copy_and_the_viewer_opens_it(self):
+        # The kit's viewer opens the copy the page draws (and preloads the
+        # neighbours' copies, ~25 KB each); the stored file only when zoomed.
+        for name in ("pens_detail", "nx_pens_detail"):
+            html = self.html(name, self.pen.pk)
+            img = re.search(r'<img id="photoImg"[^>]*>', html).group(0)
+            self.assertIn('src="/media/sized/1200/pen_photos/a.webp"', img, name)
+            self.assertIn('data-view="/media/sized/1200/pen_photos/a.webp"', img, name)
+            self.assertIn('data-view-hi="/media/pen_photos/a.jpg"', img, name)
 
     def test_samples_and_swatches_draw_tiles(self):
-        for name, args in (("pens_detail", [self.pen.pk]), ("inks_detail", [self.ink.pk])):
+        for name, args in (("pens_detail", [self.pen.pk]), ("inks_detail", [self.ink.pk]),
+                           ("nx_pens_detail", [self.pen.pk]), ("nx_inks_detail", [self.ink.pk])):
             html = self.html(name, *args)
             self.assertIn('src="/media/sized/1200/writing_samples/a.webp"', html, name)
-            self.assertIn('data-zoom="/media/writing_samples/a.jpg"', html, name)
-        html = self.html("inks_detail", self.ink.pk)
-        self.assertIn('src="/media/sized/1200/ink_swatches/a.webp"', html)
-        self.assertIn('data-zoom="/media/ink_swatches/a.jpg"', html)
+            self.assertIn('data-view="/media/sized/1200/writing_samples/a.webp" data-view-hi="/media/writing_samples/a.jpg"', html, name)
+        for name in ("inks_detail", "nx_inks_detail"):
+            html = self.html(name, self.ink.pk)
+            self.assertIn('src="/media/sized/1200/ink_swatches/a.webp"', html, name)
+            self.assertIn('data-view="/media/sized/1200/ink_swatches/a.webp" data-view-hi="/media/ink_swatches/a.jpg"', html, name)
 
 
 @override_settings(STORAGES=PLAIN_STATIC)

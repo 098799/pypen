@@ -1,0 +1,1017 @@
+<!-- KIT-VIEWER: v1.0 2026-11-14
+  A picture full screen: tap it and it fills the screen, to be pinched, zoomed,
+  walked through and closed — the same in every app. Spec: ~/apps/kit/README.md
+  §4, "Picture viewer". Canonical copy: ~/apps/kit/snippets/viewer.html. Apps
+  carry a byte-identical copy (fleet-check `kit` compares them): change this
+  file, bump the stamp here and in `version` below, copy it out. Never edit a
+  copy.
+
+  Why a piece of our own: 9 apps had their own (AUDIT.md, 2026-11-14, ~3,500
+  lines, 4 markup schemes): the picture's alt was empty in all 9, a late file
+  landed under the next caption in 3, a pinch zoomed the whole page in 2, a
+  resize threw the zoom away in 6, and one app's `data-zoom` also named a
+  chart's zoom chips (a tap on "2×" opened a black viewer on "2").
+
+  Include it once in <body>, after layer.js (kitLayer: Back, focus) and before
+  the scripts that call it (or bundle it through shell.py). It builds its
+  <dialog id="kit-viewer"> on the first open.
+
+  Markup, no script needed (pages swapped in later included):
+    <a href="/m/full.jpg" data-view data-view-group="post-7"><img src="/t/small.jpg" alt="…"></a>
+    <img src="/t/small.jpg" data-view="/m/full.jpg" data-view-cap="Kyoto, 2019" alt="…">
+      data-view="url"        the file to show; empty: the link's href, else the
+                             picture's own src. The picture already on the page
+                             goes up at once; the file replaces it, view kept.
+      data-view-group="g"    every [data-view][data-view-group="g"] on the page,
+                             in page order, is one set to walk.
+      data-view-of="g"       this one opens set g without being in it (a big
+                             photo over its thumbnails): at the member marked
+                             aria-current or .active, else at the same file.
+      data-view-cap="…"      the caption (also the picture's alt, else its img alt)
+      data-view-w / -h       the file's size in px: laid out before it loads
+      data-view-hi="url"     a sharper file, fetched only when zoomed in
+      data-view-src2="url"   tried when the file fails (a smaller copy)
+      data-view-orig="url"   "Open the original ↗" when nothing loads
+      data-view-video="url"  a video (data-view-poster="url"): plays, no zoom
+      data-view-total="647"  the count of a paged list ("3 of 647")
+    A link with data-view keeps its href: a click with a modifier key, a middle
+    click, or no script at all opens the file. An element that is not a link or
+    a button gets tabindex and role=button here, and opens on Enter or Space.
+    A click another script already took (defaultPrevented) is left alone.
+
+  Script:
+    var v = kitViewer.open(items, {at: 2, …})   items: [{src, thumb, cap, alt,
+            w, h, hi, src2, orig, video, poster}] or elements as above; a string
+            is {src}. cap may be a function(item) → text or Promise of text.
+    kitViewer.setup({…})       options for the markup opens (any of below)
+    kitViewer.close() · kitViewer.isOpen() · kitViewer.current() → v or null
+  Options:
+    at        the index to open at (0)
+    total     the count shown when the list is a page of more
+    onShow    function(item, i, v): each time a picture becomes the current one
+    onClose   function(i, why): after it went (why as in kitLayer)
+    onEnded   function(v): a video ended (igarchive: the next story)
+    actions   [{label, icon, run(item, i, v), when(item)}]: ≤ 3 buttons in the
+              top bar, icon = the app's own SVG markup (never a user's text)
+    info      function(item, el, v): fills el under the caption on each show
+    autoplay  true: a video plays when it becomes the current one
+    upscale   false: a small picture is never drawn larger than its pixels
+    loop      true: the last walks on to the first
+    keys      false: no keys of its own but Esc (a baby-tier app)
+    name      kitLayer's name ("picture")
+  v (also given to the hooks): v.index, v.item, v.items, v.go(i), v.step(±1),
+    v.close(), v.zoom(factor), v.pan(dx, dy), v.fit(), v.over (an element over
+    the current picture, transformed with it: a before/after overlay; cleared
+    on each show; stop pointerdown there to keep a drag of your own),
+    v.bar (the top bar, for an app's own control), v.retry().
+  Labels: window.KITVIEWER = {labels: {close, prev, next, of, picture, loading,
+    failed, small, retry, original, sharp, touch, desk, view}} before it loads.
+
+  What it does: a top-layer <dialog>, fixed dark in both themes (a picture is
+  seen on black), opened through kitLayer (Back, Esc, focus back to the
+  picture). Three slides: the picture follows the finger sideways and the next
+  one comes in; past 18 % or a flick it steps, else it springs back; a rubber
+  band at the ends. A pull down follows the finger and closes past 110 px. Pinch,
+  double tap (2.8× at the finger), the wheel (by its size; ctrl = trackpad
+  pinch), + − 0 z. Zoomed: one finger pans, with momentum; ← → ↑ ↓ pan; Esc goes
+  back to fit first; an overview map shows where you are. A tall screenshot
+  rests at reading width from its top. A single tap shows or hides the bars; a
+  tap beside the picture closes. The caption and the counter change with the
+  picture, never after it; a file that comes late for a picture already left
+  is dropped. Nothing after 0.4 s: a ring; nothing at all: "The picture did not
+  load" + Try again (+ the original); only the small copy: says so. A resize
+  keeps the zoom. Reduced motion: no glides.
+-->
+<style>
+#kit-viewer { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; color: #f2f2f2; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; font: 15px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: normal; text-transform: none; outline: none; }
+#kit-viewer::backdrop { background: transparent; }
+#kit-viewer .kv-bg { position: absolute; inset: 0; background: #000; }
+#kit-viewer .kv-slide { position: absolute; inset: 0; will-change: transform; }
+#kit-viewer .kv-pic { position: absolute; left: 0; top: 0; transform-origin: 0 0; opacity: 0; transition: opacity .15s; }
+#kit-viewer .kv-pic.on { opacity: 1; }
+#kit-viewer .kv-pic > img, #kit-viewer .kv-pic > video { display: block; width: 100%; height: 100%; max-width: none; border: 0; border-radius: 0; background: transparent; -webkit-user-drag: none; }
+#kit-viewer .kv-over { position: absolute; inset: 0; }
+#kit-viewer .kv-over:empty { display: none; }
+#kit-viewer .kv-bar { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 6px; padding: calc(env(safe-area-inset-top, 0px) + 6px) 8px 14px 16px; background: linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,0)); transition: opacity .2s; }
+#kit-viewer .kv-n { flex: 1; min-width: 0; font-size: 14px; font-variant-numeric: tabular-nums; color: rgba(242,242,242,.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#kit-viewer .kv-b { flex: none; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 50%; background: rgba(28,28,28,.6); color: #f2f2f2; display: inline-grid; place-items: center; cursor: pointer; font: inherit; box-shadow: none; text-decoration: none; }
+#kit-viewer .kv-b:hover { background: rgba(60,60,60,.75); }
+#kit-viewer .kv-b svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#kit-viewer .kv-b:focus-visible, #kit-viewer .kv-msg button:focus-visible, #kit-viewer .kv-msg a:focus-visible { outline: 2px solid var(--accent, #8ab4f8); outline-offset: 2px; }
+#kit-viewer .kv-step { position: absolute; top: 50%; margin-top: -24px; width: 48px; height: 48px; display: none; transition: opacity .2s; }
+#kit-viewer .kv-prev { left: 10px; }
+#kit-viewer .kv-next { right: 10px; }
+@media (hover: hover) and (pointer: fine) { #kit-viewer .kv-step { display: inline-grid; } }
+#kit-viewer .kv-step[hidden], #kit-viewer.kv-zoomed .kv-step { display: none; }
+#kit-viewer .kv-foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 16px calc(env(safe-area-inset-bottom, 0px) + 14px); background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.65)); transition: opacity .2s; }
+#kit-viewer .kv-foot.none { display: none; }
+#kit-viewer .kv-cap { max-width: 68ch; margin: 0 auto; font-size: 14.5px; line-height: 1.4; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; cursor: default; }
+#kit-viewer .kv-cap.open { -webkit-line-clamp: unset; max-height: 40vh; overflow: auto; }
+#kit-viewer .kv-cap:empty { display: none; }
+#kit-viewer .kv-info { max-width: 68ch; margin: 6px auto 0; }
+#kit-viewer .kv-info:empty { display: none; }
+#kit-viewer.kv-bare .kv-bar, #kit-viewer.kv-bare .kv-foot, #kit-viewer.kv-bare .kv-step { opacity: 0; pointer-events: none; }
+#kit-viewer.kv-zoomed .kv-foot { opacity: 0; pointer-events: none; }
+#kit-viewer .kv-msg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: min(320px, 86vw); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; font-size: 15px; pointer-events: none; }
+#kit-viewer .kv-msg[hidden] { display: none; }
+#kit-viewer .kv-msg.low { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%); background: rgba(28,28,28,.85); padding: 10px 14px; border-radius: 12px; font-size: 13.5px; }
+#kit-viewer .kv-msg.pill { top: calc(env(safe-area-inset-top, 0px) + 64px); transform: translateX(-50%); background: rgba(28,28,28,.85); padding: 6px 12px; border-radius: 16px; font-size: 13px; }
+#kit-viewer .kv-msg button, #kit-viewer .kv-msg a { pointer-events: auto; min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid rgba(242,242,242,.5); background: rgba(28,28,28,.6); color: #f2f2f2; font: inherit; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+#kit-viewer .kv-msg .kv-acts2 { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+#kit-viewer .kv-msg .kv-acts2:empty { display: none; }
+#kit-viewer .kv-ring { width: 30px; height: 30px; border-radius: 50%; border: 3px solid rgba(242,242,242,.25); border-top-color: #f2f2f2; animation: kv-spin .8s linear infinite; }
+#kit-viewer .kv-msg.pill .kv-ring, #kit-viewer .kv-msg.low .kv-ring, #kit-viewer .kv-msg.bad .kv-ring { display: none; }
+@keyframes kv-spin { to { transform: rotate(360deg); } }
+#kit-viewer .kv-map { position: absolute; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); overflow: hidden; background: #111; outline: 1px solid rgba(242,242,242,.5); opacity: 0; transition: opacity .3s; pointer-events: none; }
+#kit-viewer .kv-map.on { opacity: 1; }
+#kit-viewer .kv-map img { display: block; width: 100%; height: 100%; max-width: none; }
+#kit-viewer .kv-map i { position: absolute; outline: 2px solid #fff; box-shadow: 0 0 0 999px rgba(0,0,0,.45); }
+#kit-viewer .kv-hint { position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); transform: translateX(-50%); max-width: 92vw; background: rgba(28,28,28,.85); padding: 8px 14px; border-radius: 18px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; text-align: center; }
+#kit-viewer .kv-hint.on { opacity: 1; }
+#kit-viewer .kv-hint .kv-desk { display: none; }
+@media (hover: hover) and (pointer: fine) { #kit-viewer .kv-hint .kv-touch { display: none; } #kit-viewer .kv-hint .kv-desk { display: inline; } }
+@media (prefers-reduced-motion: reduce) { #kit-viewer .kv-pic, #kit-viewer .kv-bar, #kit-viewer .kv-foot, #kit-viewer .kv-hint, #kit-viewer .kv-map { transition: none; } }
+[data-view]:not(a):not(button) { cursor: zoom-in; }
+</style>
+<script>
+(function () {
+  if (window.kitViewer && window.kitViewer.version) return;
+  var VERSION = '1.0';
+  var GAP = 16, MAXZ = 6, TAP_MS = 300, TAP_PX = 30, DOUBLE = 2.8;
+  var CFG = window.KITVIEWER || {};
+  var L = {
+    close: 'Close', prev: 'Previous picture', next: 'Next picture', of: ' of ', picture: 'Picture',
+    loading: 'Loading…', failed: 'The picture did not load.', small: 'The full picture did not load — this is the small copy.',
+    retry: 'Try again', original: 'Open the original ↗', sharp: 'Loading the sharp picture…',
+    touch: 'Pinch or double-tap to zoom · swipe down to close', desk: 'Scroll or double-click to zoom · ← → next · Esc to close',
+    view: 'View full screen'
+  };
+  var k;
+  for (k in (CFG.labels || {})) L[k] = CFG.labels[k];
+  var ICON = {
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    prev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
+  };
+  var reduce = false;
+  try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  var dlg, bg, bar, countEl, actsEl, xBtn, prevBtn, nextBtn, foot, capEl, infoEl, msgEl, msgText, msgActs, mapEl, mapImg, mapBox, hintEl;
+  var slides = [];         // three: [previous, current, next]
+  var S = null;            // the open session: {items, i, o}
+  var defaults = {};
+  var dragX = 0, anim = 0, stepping = null, capTimer = 0, msgTimer = 0, hintTimer = 0, mapTimer = 0, tapTimer = 0;
+  var pointers = new Map(), g = null, lastTap = null, momentum = 0, viaLayer = false;
+  var closing = false, queued = null;    // a close waiting for its history pop; an open asked meanwhile
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html) e.innerHTML = html;
+    return e;
+  }
+  function W() { return dlg.clientWidth || innerWidth; }
+  function H() { return dlg.clientHeight || innerHeight; }
+  function now() { return performance.now(); }
+  function cur() { return slides[1]; }
+
+  // ——— build, once ———
+  function build() {
+    if (dlg && dlg.isConnected) return;
+    dlg = document.getElementById('kit-viewer');
+    if (!dlg) { dlg = el('dialog'); dlg.id = 'kit-viewer'; document.body.appendChild(dlg); }
+    dlg.setAttribute('aria-label', L.picture);
+    dlg.innerHTML = '';
+    bg = dlg.appendChild(el('div', 'kv-bg'));
+    slides = [0, 1, 2].map(function () {
+      var s = {el: el('div', 'kv-slide'), box: el('div', 'kv-pic'), idx: -1, gen: 0};
+      s.over = el('div', 'kv-over');
+      s.el.appendChild(s.box);
+      dlg.appendChild(s.el);
+      return s;
+    });
+    bar = dlg.appendChild(el('div', 'kv-bar'));
+    countEl = bar.appendChild(el('span', 'kv-n'));
+    countEl.setAttribute('aria-live', 'polite');
+    actsEl = bar.appendChild(el('span', 'kv-acts'));
+    actsEl.style.display = 'contents';
+    xBtn = bar.appendChild(el('button', 'kv-b kv-x', ICON.x));
+    xBtn.type = 'button'; xBtn.setAttribute('aria-label', L.close);
+    prevBtn = dlg.appendChild(el('button', 'kv-b kv-step kv-prev', ICON.prev));
+    nextBtn = dlg.appendChild(el('button', 'kv-b kv-step kv-next', ICON.next));
+    prevBtn.type = nextBtn.type = 'button';
+    prevBtn.setAttribute('aria-label', L.prev); nextBtn.setAttribute('aria-label', L.next);
+    foot = dlg.appendChild(el('div', 'kv-foot'));
+    capEl = foot.appendChild(el('div', 'kv-cap'));
+    infoEl = foot.appendChild(el('div', 'kv-info'));
+    msgEl = dlg.appendChild(el('div', 'kv-msg'));
+    msgEl.setAttribute('role', 'status');
+    msgEl.appendChild(el('div', 'kv-ring'));
+    msgText = msgEl.appendChild(el('div', 'kv-t'));
+    msgActs = msgEl.appendChild(el('div', 'kv-acts2'));
+    msgEl.hidden = true;
+    mapEl = dlg.appendChild(el('div', 'kv-map'));
+    mapEl.setAttribute('aria-hidden', 'true');
+    mapImg = mapEl.appendChild(el('img'));
+    mapImg.alt = '';
+    mapBox = mapEl.appendChild(el('i'));
+    hintEl = dlg.appendChild(el('div', 'kv-hint'));
+    hintEl.setAttribute('aria-hidden', 'true');
+    hintEl.appendChild(el('span', 'kv-touch')).textContent = L.touch;
+    hintEl.appendChild(el('span', 'kv-desk')).textContent = L.desk;
+
+    xBtn.addEventListener('click', function () { close(); });
+    prevBtn.addEventListener('click', function () { step(-1); });
+    nextBtn.addEventListener('click', function () { step(1); });
+    capEl.addEventListener('click', function () { capEl.classList.toggle('open'); });
+    dlg.addEventListener('pointerdown', down);
+    dlg.addEventListener('pointermove', move);
+    dlg.addEventListener('pointerup', up);
+    dlg.addEventListener('pointercancel', up);
+    dlg.addEventListener('wheel', wheel, {passive: false});
+    dlg.addEventListener('keydown', key);
+    dlg.addEventListener('cancel', function (e) { e.preventDefault(); escape(); });
+    // the close event of a close that an open right after already undid: not for kitLayer (it would shut the new one)
+    dlg.addEventListener('close', function (e) { if (dlg.open) e.stopImmediatePropagation(); });
+    dlg.addEventListener('contextmenu', function (e) { if (pointers.size > 1) e.preventDefault(); });
+  }
+
+  // ——— geometry: each slide's picture is laid out at its own size and moved by one transform ———
+  function layout(s) {
+    if (!s.w || !s.h) return;
+    s.box.style.width = s.w + 'px';
+    s.box.style.height = s.h + 'px';
+    var vw = W(), vh = H(), contain = Math.min(vw / s.w, vh / s.h);
+    if (S && S.o.upscale === false) contain = Math.min(contain, 1);
+    var rest = contain;
+    s.tall = false;
+    // A tall screenshot drawn tiny: it rests at reading width, from its top.
+    if (!s.video && s.h / s.w > 2.2 && contain * s.w < vw * 0.6) {
+      rest = Math.min(vw, 900) / s.w;
+      if (S && S.o.upscale === false) rest = Math.min(rest, 1);
+      rest = Math.max(rest, contain);
+      s.tall = rest > contain * 1.01;
+    }
+    s.contain = contain; s.rest = rest;
+    s.min = Math.min(contain, rest);
+    s.max = s.video ? rest : Math.max(rest, contain) * MAXZ;
+    s.scale = rest;
+    s.tx = (vw - s.w * rest) / 2;
+    s.ty = s.tall ? 0 : (vh - s.h * rest) / 2;
+    clamp(s); apply(s);
+  }
+  // keep the zoom across a resize: the same factor over rest, the same point in the middle
+  function relayout(s) {
+    if (!s.w) return;
+    var f = s.scale / s.rest, vw0 = s.vw || W(), vh0 = s.vh || H();
+    var cx = (vw0 / 2 - s.tx) / s.scale, cy = (vh0 / 2 - s.ty) / s.scale;
+    layout(s);
+    if (f > 1.02 || f < 0.98) {
+      s.scale = Math.max(s.min, Math.min(s.max, s.rest * f));
+      s.tx = W() / 2 - cx * s.scale; s.ty = H() / 2 - cy * s.scale;
+      clamp(s); apply(s);
+    }
+  }
+  function clamp(s) {
+    var vw = W(), vh = H(), w = s.w * s.scale, h = s.h * s.scale;
+    s.tx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, s.tx));
+    s.ty = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, s.ty));
+    s.vw = vw; s.vh = vh;
+  }
+  function atRest(s) { return !s.w || Math.abs(s.scale - s.rest) / s.rest < 0.02; }
+  function zoomed(s) { return !!s.w && s.scale > s.rest * 1.02; }
+  function over(s, axis) { return !!s.w && (axis === 'x' ? s.w * s.scale > W() + 1 : s.h * s.scale > H() + 1); }
+  function apply(s) {
+    s.box.style.transform = 'translate(' + s.tx + 'px,' + s.ty + 'px) scale(' + s.scale + ')';
+    if (s === cur() && dlg) {
+      dlg.classList.toggle('kv-zoomed', zoomed(s));
+      mapPaint(s);
+      wantHi(s);
+    }
+  }
+  function zoomTo(s, ns, cx, cy, glide) {
+    if (!s.w || s.video) return;
+    ns = Math.max(s.min, Math.min(s.max, ns));
+    var fx = (cx - s.tx) / s.scale, fy = (cy - s.ty) / s.scale;
+    if (glide && !reduce) {
+      var s0 = s.scale, t0 = now(), id = ++anim;
+      var tick = function () {
+        if (id !== anim) return;
+        var p = Math.min(1, (now() - t0) / 240), e = 1 - Math.pow(1 - p, 3);
+        s.scale = s0 * Math.pow(ns / s0, e);
+        s.tx = cx - fx * s.scale; s.ty = cy - fy * s.scale;
+        clamp(s); apply(s);
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      return;
+    }
+    s.scale = ns; s.tx = cx - fx * ns; s.ty = cy - fy * ns;
+    clamp(s); apply(s);
+  }
+  function toRest(s, glide) {
+    if (!s.w) return;
+    if (glide && !reduce) {
+      // glide to rest about the point that ends where rest puts it
+      var vw = W(), vh = H(), r = s.rest;
+      var tx = (vw - s.w * r) / 2, ty = s.tall ? Math.min(0, Math.max(vh - s.h * r, s.ty / s.scale * r)) : (vh - s.h * r) / 2;
+      var k2 = 1 - r / s.scale;
+      if (Math.abs(k2) > 1e-3) { zoomTo(s, r, (tx - s.tx * r / s.scale) / k2, (ty - s.ty * r / s.scale) / k2, true); return; }
+    }
+    s.scale = s.rest; s.tx = (W() - s.w * s.rest) / 2; s.ty = s.tall ? s.ty : (H() - s.h * s.rest) / 2;
+    clamp(s); apply(s);
+  }
+
+  // ——— the overview: the whole picture, and the part on screen ———
+  function mapPaint(s) {
+    if (!mapEl) return;
+    if (!zoomed(s) || !s.shown) { mapEl.classList.remove('on'); return; }
+    var box = innerWidth < 600 ? 96 : 150, kk = Math.min(box / s.w, box / s.h);
+    var mw = s.w * kk, mh = s.h * kk;
+    mapEl.style.width = mw + 'px'; mapEl.style.height = mh + 'px';
+    if (mapImg.getAttribute('src') !== s.shown) mapImg.src = s.shown;
+    var z = kk / s.scale;
+    var x0 = Math.max(0, -s.tx), y0 = Math.max(0, -s.ty);
+    var x1 = Math.min(s.w * s.scale, W() - s.tx), y1 = Math.min(s.h * s.scale, H() - s.ty);
+    mapBox.style.left = x0 * z + 'px'; mapBox.style.top = y0 * z + 'px';
+    mapBox.style.width = (x1 - x0) * z + 'px'; mapBox.style.height = (y1 - y0) * z + 'px';
+    mapEl.classList.add('on');
+    hintEl.classList.remove('on');
+    clearTimeout(mapTimer);
+    mapTimer = setTimeout(function () { mapEl.classList.remove('on'); }, 1500);
+  }
+
+  // ——— loading: what the page already shows, then the file, then (zoomed) the sharp one ———
+  function norm(it) {
+    if (typeof it === 'string') return {src: it};
+    if (it && it.nodeType === 1) return itemOf(it);
+    return it || {};
+  }
+  function fill(s, idx) {
+    s.gen++;
+    s.idx = idx;
+    unblob(s);
+    s.box.innerHTML = '';
+    s.box.classList.remove('on');
+    s.over.innerHTML = '';
+    s.shown = ''; s.level = 0; s.full = false; s.failed = false; s.hi = 0; s.prog = -1;
+    s.w = 0; s.h = 0; s.media = null; s.video = false;
+    if (idx < 0) { s.el.style.visibility = 'hidden'; return; }
+    s.el.style.visibility = '';
+    var it = S.items[idx], my = s.gen;
+    s.video = !!it.video;
+    if (it.w && it.h) { s.w = +it.w; s.h = +it.h; }
+    if (s.video) {
+      var v = el('video');
+      v.controls = true; v.playsInline = true; v.preload = 'metadata';
+      v.setAttribute('playsinline', '');
+      if (it.poster) v.poster = it.poster;
+      v.addEventListener('loadedmetadata', function () {
+        if (my !== s.gen) return;
+        if (!s.w) { s.w = v.videoWidth || 16; s.h = v.videoHeight || 9; layout(s); }
+        s.box.classList.add('on'); s.shown = it.poster || ''; s.full = true; s.level = 2;
+        if (s === cur()) paintMsg();
+      });
+      v.addEventListener('error', function () {
+        if (my !== s.gen) return;
+        s.failed = true;
+        if (s === cur()) paintMsg();
+      });
+      v.addEventListener('ended', function () {
+        if (my === s.gen && s === cur() && S && S.o.onEnded) S.o.onEnded(api());
+      });
+      v.src = it.video;
+      s.media = v;
+    } else {
+      var img = el('img');
+      img.alt = altOf(it);
+      img.draggable = false;
+      img.decoding = 'async';
+      s.media = img;
+    }
+    s.box.appendChild(s.media);
+    s.box.appendChild(s.over);
+    if (s.w) layout(s);
+    if (s.video) return;
+    // a thumbnail cut to another shape than the file is never stretched over it
+    if (it.thumb && it.thumb !== it.src) put(s, it.thumb, 1, my, true);
+    put(s, it.src, 2, my, false);
+  }
+  function put(s, url, level, my, soft, fallback) {
+    if (!url) { if (level === 2) failed(s, my); return; }
+    var pic = new Image();
+    pic.decoding = 'async';
+    pic.onload = function () {
+      if (my !== s.gen || level < s.level) return;      // a file for a picture left, or a softer one after a sharper
+      var w = pic.naturalWidth, h = pic.naturalHeight;
+      if (!w || !h) { pic.onerror(); return; }
+      if (!s.w) { s.w = w; s.h = h; layout(s); }
+      else if (Math.abs(w / h - s.w / s.h) > 0.03 * (s.w / s.h)) {
+        if (soft) return;                                   // a thumbnail of another shape: wait for the file
+        if (level >= 2) { s.w = w; s.h = h; layout(s); }
+      }
+      s.level = level;
+      s.media.src = url;
+      s.shown = url;
+      s.box.classList.add('on');
+      if (level >= 2) { s.full = true; s.failed = false; }
+      if (s === cur()) { paintMsg(); mapPaint(s); }
+    };
+    pic.onerror = function () {
+      if (my !== s.gen) return;
+      if (level === 2) {
+        var it = S.items[s.idx];
+        if (!fallback && it.src2) { put(s, it.src2, 2, my, false, true); return; }
+        failed(s, my);
+      }
+    };
+    pic.src = url;
+  }
+  function failed(s, my) {
+    if (my !== s.gen) return;
+    s.failed = true;
+    if (s === cur()) paintMsg();
+  }
+  // the sharp file: only when it would show more than the one on screen
+  function wantHi(s) {
+    if (!S || s.hi || !s.full || s.idx < 0) return;
+    var it = S.items[s.idx];
+    if (!it.hi || it.hi === it.src) return;
+    var drawn = s.w * s.scale * (window.devicePixelRatio || 1);
+    var have = s.media && s.media.naturalWidth || s.w;
+    if (!(zoomed(s) || drawn > have * 1.5)) return;
+    s.hi = 1;
+    var my = s.gen, url = it.hi;
+    var done = function (src) {
+      if (my !== s.gen) return;
+      var pic = new Image();
+      pic.onload = function () {
+        if (my !== s.gen) return;
+        s.media.src = src; s.shown = src; s.hi = 2; s.prog = -1; s.level = 3;
+        if (src.indexOf('blob:') === 0) s.blob = src;
+        if (s === cur()) { paintMsg(); mapPaint(s); }
+      };
+      pic.onerror = function () { if (my === s.gen) { s.hi = 3; s.prog = -1; if (s === cur()) paintMsg(); } };
+      pic.src = src;
+    };
+    s.prog = 0;
+    if (s === cur()) paintMsg();
+    var same = false;
+    try { same = new URL(url, location.href).origin === location.origin; } catch (e) {}
+    if (!same || !window.fetch || !window.ReadableStream) { done(url); return; }
+    // same origin: stream it, to say how far it is
+    fetch(url).then(function (r) {
+      if (!r.ok || !r.body) throw new Error(r.status);
+      var total = +r.headers.get('Content-Length') || 0, got = 0, parts = [], rd = r.body.getReader();
+      var pump = function () {
+        return rd.read().then(function (x) {
+          if (my !== s.gen) { try { rd.cancel(); } catch (e) {} return; }
+          if (x.done) { done(URL.createObjectURL(new Blob(parts, {type: r.headers.get('Content-Type') || ''}))); return; }
+          parts.push(x.value); got += x.value.length;
+          if (total) { s.prog = Math.min(99, Math.round(got * 100 / total)); if (s === cur()) paintMsg(); }
+          return pump();
+        });
+      };
+      return pump();
+    }).catch(function () { if (my === s.gen) done(url); });
+  }
+  function unblob(s) {
+    if (s.blob) { try { URL.revokeObjectURL(s.blob); } catch (e) {} s.blob = ''; }
+  }
+  function retry() {
+    var s = cur();
+    if (!s || s.idx < 0) return;
+    var keep = s.idx;
+    fill(s, keep);
+    place();
+    paintMsg();
+  }
+
+  // ——— what the current picture says ———
+  function altOf(it) { return it.alt || (typeof it.cap === 'string' ? it.cap : '') || ''; }
+  function paintMsg() {
+    if (!S || !msgEl) return;
+    var s = cur(), it = S.items[s.idx] || {};
+    clearTimeout(msgTimer);
+    msgActs.innerHTML = '';
+    msgEl.className = 'kv-msg';
+    var show = function (cls, text) {
+      if (cls) msgEl.classList.add(cls);
+      msgText.textContent = text;
+      msgEl.hidden = false;
+    };
+    var retryBtn = function () {
+      var b = msgActs.appendChild(el('button'));
+      b.type = 'button'; b.textContent = L.retry;
+      b.addEventListener('click', function (e) { e.stopPropagation(); retry(); });
+      if (it.orig) {
+        var a = msgActs.appendChild(el('a'));
+        a.href = it.orig; a.target = '_blank'; a.rel = 'noopener'; a.textContent = L.original;
+      }
+    };
+    if (s.failed && !s.shown) { show('bad', L.failed); retryBtn(); msgEl.setAttribute('role', 'alert'); return; }
+    msgEl.setAttribute('role', 'status');
+    if (s.failed && s.shown) { show('low', L.small); retryBtn(); return; }
+    if (s.prog >= 0) { show('pill', L.sharp + (s.prog > 0 ? ' ' + s.prog + '%' : '')); return; }
+    msgEl.hidden = true;
+    if (!s.shown) {
+      msgTimer = setTimeout(function () { if (S && cur() === s && !s.shown && !s.failed) show('', L.loading); }, 400);
+    }
+  }
+  function paintChrome() {
+    var s = cur(), it = S.items[S.i] || {}, n = S.items.length, total = Math.max(+S.o.total || 0, n);
+    countEl.textContent = total > 1 ? (S.i + 1) + L.of + total : '';
+    prevBtn.hidden = n < 2 || (!S.o.loop && S.i <= 0);
+    nextBtn.hidden = n < 2 || (!S.o.loop && S.i >= n - 1);
+    capEl.classList.remove('open');
+    var c = it.cap, my = S.i, sess = S;
+    capEl.textContent = '';
+    if (typeof c === 'function') {
+      // a caption that comes later belongs to its picture: never to the next one
+      Promise.resolve().then(function () { return c(it); }).then(function (t) {
+        if (S === sess && S.i === my) {
+          capEl.textContent = t || '';
+          if (s.media && s.media.tagName === 'IMG' && !it.alt) s.media.alt = t || '';
+          footPaint();
+        }
+      }, function () {});
+    } else capEl.textContent = c || '';
+    infoEl.innerHTML = '';
+    if (S.o.info) { try { S.o.info(it, infoEl, api()); } catch (e) { setTimeout(function () { throw e; }); } }
+    actsEl.innerHTML = '';
+    (S.o.actions || []).slice(0, 3).forEach(function (a) {
+      if (a.when && !a.when(it)) return;
+      var b = actsEl.appendChild(el('button', 'kv-b', a.icon || ''));
+      b.type = 'button';
+      b.setAttribute('aria-label', a.label);
+      b.title = a.label;
+      if (!a.icon) b.textContent = a.label;
+      b.addEventListener('click', function (e) { e.stopPropagation(); a.run(S.items[S.i], S.i, api()); });
+    });
+    footPaint();
+    paintMsg();
+  }
+  function footPaint() { foot.classList.toggle('none', !capEl.textContent && !infoEl.childNodes.length); }
+
+  // ——— the three slides ———
+  function place() {
+    var vw = W();
+    slides.forEach(function (s, j) {
+      s.el.style.transform = 'translate3d(' + ((j - 1) * (vw + GAP) + dragX) + 'px,0,0)';
+    });
+  }
+  function wrapIdx(i) {
+    var n = S.items.length;
+    if (S.o.loop && n > 1) return (i + n) % n;
+    return i >= 0 && i < n ? i : -1;
+  }
+  function showAll() {
+    slides.forEach(function (s, j) { fill(s, wrapIdx(S.i + j - 1)); });
+    dragX = 0;
+    place();
+  }
+  function arrive() {
+    var s = cur();
+    slides.forEach(function (o) {
+      if (o !== s && o.media && o.media.tagName === 'VIDEO') { try { o.media.pause(); } catch (e) {} }
+    });
+    if (s.media && s.media.tagName === 'VIDEO' && S.o.autoplay) {
+      try { var p = s.media.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    }
+    mapEl.classList.remove('on');
+    dlg.classList.toggle('kv-zoomed', zoomed(s));
+    paintChrome();
+    if (S.o.onShow) { try { S.o.onShow(S.items[S.i], S.i, api()); } catch (e) { setTimeout(function () { throw e; }); } }
+    try { document.dispatchEvent(new CustomEvent('kit:viewer', {detail: {open: true, index: S.i, item: S.items[S.i]}})); } catch (e) {}
+  }
+  function slideTo(x, ms, then) {
+    var id = ++anim, x0 = dragX, t0 = now();
+    if (reduce || ms <= 0) { dragX = x; place(); if (then) then(); return; }
+    var tick = function () {
+      if (id !== anim) return;
+      var p = Math.min(1, (now() - t0) / ms), e = 1 - Math.pow(1 - p, 3);
+      dragX = x0 + (x - x0) * e; place();
+      if (p < 1) requestAnimationFrame(tick); else if (then) then();
+    };
+    requestAnimationFrame(tick);
+  }
+  function finishStep() {
+    if (!stepping) return;
+    var f = stepping; stepping = null; anim++; f();
+  }
+  function step(d) {
+    if (!S) return;
+    finishStep();                                // a step under way lands first: none is lost
+    var j = wrapIdx(S.i + d);
+    if (j < 0) {                                 // the end: a bump, not a jump
+      slideTo(-d * 36, 120, function () { slideTo(0, 160); });
+      return;
+    }
+    var vw = W();
+    var land = function () {
+      var leaving = slides[1];
+      if (d > 0) slides.push(slides.shift()); else slides.unshift(slides.pop());
+      S.i = j;
+      dragX = 0;
+      if (leaving.w) { toRest(leaving); }
+      var edge = d > 0 ? slides[2] : slides[0];
+      fill(edge, wrapIdx(S.i + d));
+      place();
+      arrive();
+    };
+    stepping = land;
+    slideTo(-d * (vw + GAP), 220, function () { if (stepping === land) { stepping = null; land(); } });
+  }
+  function go(i) {
+    if (!S) return;
+    finishStep();
+    var j = wrapIdx(i);
+    if (j < 0) return;
+    S.i = j;
+    showAll();
+    arrive();
+  }
+
+  // ——— open and close ———
+  function api() {
+    if (!S) return null;
+    var s = cur();
+    return {
+      index: S.i, item: S.items[S.i], items: S.items, over: s.over, bar: actsEl,
+      go: go, step: step, close: close, retry: retry,
+      zoom: function (f) { zoomTo(s, s.scale * f, W() / 2, H() / 2, true); },
+      pan: function (dx, dy) { s.tx += dx; s.ty += dy; clamp(s); apply(s); },
+      fit: function () { toRest(s, true); }
+    };
+  }
+  function open(items, o) {
+    o = o || {};
+    // closed a moment ago, its Back entry not popped yet: open once it is
+    if (closing) { queued = [items, o]; return null; }
+    var list = (items || []).map(norm).filter(function (it) { return it.src || it.video; });
+    if (!list.length) return null;
+    build();
+    var at = Math.max(0, Math.min(list.length - 1, +o.at || 0));
+    var again = S && dlg.open;
+    S = {items: list, i: at, o: o};
+    dlg.classList.remove('kv-bare', 'kv-zoomed');
+    bg.style.opacity = '';
+    msgEl.hidden = true;
+    if (!again) {
+      viaLayer = !!(window.kitLayer && kitLayer.open);
+      if (viaLayer) {
+        kitLayer.open(dlg, {name: o.name || 'picture', esc: false, backdrop: false, close: shut,
+                            onClose: function (why) { var x = S; S = null; closing = false; if (x && x.o.onClose) x.o.onClose(x.i, why); unqueue(); }});
+      } else {
+        try { dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+      }
+    }
+    showAll();
+    arrive();
+    try { xBtn.focus({preventScroll: true}); } catch (e) {}
+    hint();
+    return api();
+  }
+  function hint() {
+    var n = 0;
+    try { n = +localStorage.getItem('kitViewerHint') || 0; localStorage.setItem('kitViewerHint', n + 1); } catch (e) { n = 9; }
+    if (n >= 3) return;
+    hintEl.classList.add('on');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () { hintEl.classList.remove('on'); }, 2600);
+  }
+  function close() {
+    if (!dlg || !dlg.open || closing) return;
+    if (viaLayer) { closing = true; kitLayer.close(dlg); }
+    else { shut(); var x = S; S = null; if (x && x.o.onClose) x.o.onClose(x.i, 'back'); }
+  }
+  function unqueue() {
+    if (!queued) return;
+    var q = queued; queued = null;
+    setTimeout(function () { open(q[0], q[1]); }, 0);
+  }
+  function shut() {
+    anim++; stepping = null;
+    clearTimeout(msgTimer); clearTimeout(hintTimer); clearTimeout(mapTimer); clearTimeout(tapTimer); clearTimeout(capTimer);
+    cancelAnimationFrame(momentum);
+    pointers.clear(); g = null; lastTap = null;
+    slides.forEach(function (s) {
+      s.gen++;
+      if (s.media && s.media.tagName === 'VIDEO') { try { s.media.pause(); } catch (e) {} s.media.removeAttribute('src'); try { s.media.load(); } catch (e) {} }
+      unblob(s);
+      s.box.innerHTML = ''; s.idx = -1; s.media = null;
+    });
+    if (mapImg) mapImg.removeAttribute('src');
+    if (dlg.open) { try { dlg.close(); } catch (e) { dlg.removeAttribute('open'); } }
+    try { document.dispatchEvent(new CustomEvent('kit:viewer', {detail: {open: false}})); } catch (e) {}
+  }
+  function escape() {
+    var s = cur();
+    if (s && s.w && !atRest(s)) { toRest(s, true); return; }
+    close();
+  }
+
+  // ——— touch and mouse ———
+  function skip(t) {
+    return !!(t.closest && t.closest('.kv-bar, .kv-foot, .kv-msg button, .kv-msg a, .kv-step'));
+  }
+  function onVideoControls(e) {
+    var s = cur();
+    if (!s || !s.video || !s.media) return false;
+    var r = s.media.getBoundingClientRect();
+    return e.clientY > r.bottom - 64 && e.clientY < r.bottom && e.clientX > r.left && e.clientX < r.right;
+  }
+  function down(e) {
+    if (!S || (e.button && e.pointerType === 'mouse') || skip(e.target) || onVideoControls(e)) return;
+    try { dlg.setPointerCapture(e.pointerId); } catch (err) {}
+    pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    cancelAnimationFrame(momentum);
+    var s = cur();
+    if (pointers.size === 1) {
+      if (stepping) finishStep();
+      g = {x0: e.clientX, y0: e.clientY, t0: now(), lx: e.clientX, ly: e.clientY, lt: now(), vx: 0, vy: 0,
+           mode: null, type: e.pointerType, tx0: s.tx, ty0: s.ty};
+    } else if (pointers.size === 2) {
+      clearTimeout(tapTimer); lastTap = null;
+      if (g && g.mode === 'page') slideTo(0, 160);
+      if (g && g.mode === 'pull') pullBack();
+      var p = Array.from(pointers.values());
+      g = {mode: 'pinch', dist: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y),
+           mid: {x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2}, type: e.pointerType};
+      anim++;
+    }
+  }
+  function move(e) {
+    if (!S || !pointers.has(e.pointerId) || !g) return;
+    var was = pointers.get(e.pointerId);
+    pointers.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    var s = cur();
+    if (g.mode === 'pinch') {
+      if (pointers.size < 2) return;
+      var p = Array.from(pointers.values());
+      var dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+      var mid = {x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2};
+      if (g.dist > 0 && s.w && !s.video) {
+        var ns = Math.max(s.min * 0.85, Math.min(s.max, s.scale * dist / g.dist));
+        var fx = (g.mid.x - s.tx) / s.scale, fy = (g.mid.y - s.ty) / s.scale;
+        s.scale = ns; s.tx = mid.x - fx * ns; s.ty = mid.y - fy * ns;
+        clamp(s); apply(s);
+      }
+      g.dist = dist; g.mid = mid;
+      return;
+    }
+    if (pointers.size !== 1) return;
+    var t = now(), dt = Math.max(1, t - g.lt);
+    g.vx = 0.8 * ((e.clientX - g.lx) / dt) + 0.2 * g.vx;
+    g.vy = 0.8 * ((e.clientY - g.ly) / dt) + 0.2 * g.vy;
+    g.lx = e.clientX; g.ly = e.clientY; g.lt = t;
+    var dx = e.clientX - g.x0, dy = e.clientY - g.y0;
+    if (!g.mode) {
+      if (Math.hypot(dx, dy) < 8) return;
+      clearTimeout(tapTimer); lastTap = null;
+      var horiz = Math.abs(dx) > Math.abs(dy);
+      if (zoomed(s) || (horiz ? over(s, 'x') : over(s, 'y'))) g.mode = 'pan';
+      else if (horiz) g.mode = S.items.length > 1 ? 'page' : 'none';
+      else g.mode = 'pull';
+      if (g.mode === 'none') return;
+    }
+    if (g.mode === 'pan') {
+      s.tx += e.clientX - was.x; s.ty += e.clientY - was.y;
+      clamp(s); apply(s);
+    } else if (g.mode === 'page') {
+      var atEnd = !S.o.loop && ((dx > 0 && S.i <= 0) || (dx < 0 && S.i >= S.items.length - 1));
+      anim++;
+      dragX = atEnd ? dx * 0.3 : dx;
+      place();
+    } else if (g.mode === 'pull') {
+      var a = Math.abs(dy), sc = 1 - Math.min(0.25, a / H() * 0.5);
+      s.el.style.transform = 'translate3d(0,' + dy + 'px,0) scale(' + sc + ')';
+      bg.style.opacity = String(Math.max(0.25, 1 - a / 320));
+      dlg.classList.add('kv-bare');
+      g.pulled = dy;
+    }
+  }
+  function pullBack() {
+    var s = cur();
+    s.el.style.transform = 'translate3d(0,0,0)';
+    bg.style.opacity = '';
+    dlg.classList.remove('kv-bare');
+    place();
+  }
+  function up(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (!S || !g) return;
+    var s = cur();
+    if (g.mode === 'pinch') {
+      if (pointers.size === 1) {
+        // one finger stays: it pans from here, it never reads as a swipe
+        var p = Array.from(pointers.values())[0];
+        g = {x0: p.x, y0: p.y, t0: now(), lx: p.x, ly: p.y, lt: now(), vx: 0, vy: 0, mode: 'pan', type: e.pointerType};
+        return;
+      }
+      if (s.w && s.scale < s.min) { zoomTo(s, s.min, W() / 2, H() / 2, true); }
+      else if (s.w && s.scale < s.rest * 1.04 && s.scale > s.rest * 0.96) toRest(s, true);
+      g = null;
+      return;
+    }
+    if (pointers.size) return;
+    var m = g.mode, dx = e.clientX - g.x0, dy = e.clientY - g.y0, vx = g.vx, vy = g.vy, type = g.type;
+    g = null;
+    if (!m) { tap(e, type); return; }
+    if (m === 'pan') {
+      if (Math.hypot(vx, vy) > 0.3 && !reduce) glide(s, vx, vy);
+    } else if (m === 'page') {
+      var vw = W(), d = dx < 0 ? 1 : -1;
+      var can = wrapIdx(S.i + d) >= 0;
+      var flick = Math.abs(vx) > 0.45 && (vx < 0) === (dx < 0);
+      if (can && (Math.abs(dx) > vw * 0.18 || flick)) step(d);
+      else slideTo(0, 180);
+    } else if (m === 'pull') {
+      if (Math.abs(dy) > 110 || Math.abs(vy) > 0.55) close();
+      else pullBack();
+    }
+  }
+  function glide(s, vx, vy) {
+    var t = now();
+    var tick = function () {
+      var t2 = now(), dt = Math.min(48, t2 - t); t = t2;
+      vx *= Math.pow(0.94, dt / 16); vy *= Math.pow(0.94, dt / 16);
+      var bx = s.tx, by = s.ty;
+      s.tx += vx * dt; s.ty += vy * dt; clamp(s); apply(s);
+      if (s.tx === bx) vx = 0;
+      if (s.ty === by) vy = 0;
+      if (Math.hypot(vx, vy) > 0.02 && s === cur()) momentum = requestAnimationFrame(tick);
+    };
+    momentum = requestAnimationFrame(tick);
+  }
+  function tap(e, type) {
+    var t = now(), x = e.clientX, y = e.clientY, s = cur();
+    if (lastTap && t - lastTap.t < TAP_MS && Math.hypot(x - lastTap.x, y - lastTap.y) < TAP_PX) {
+      clearTimeout(tapTimer); lastTap = null;
+      if (!s.w || s.video) return;
+      if (zoomed(s)) toRest(s, true);
+      else if (s.tall && atRest(s)) zoomTo(s, s.contain, x, y, true);
+      else if (!atRest(s)) toRest(s, true);
+      else zoomTo(s, s.rest * DOUBLE, x, y, true);
+      return;
+    }
+    lastTap = {t: t, x: x, y: y};
+    var target = e.target;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(function () {
+      lastTap = null;
+      if (!S) return;
+      var r = s.box.getBoundingClientRect();
+      var inside = s.shown || s.video ? (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) : true;
+      if (target && target.closest && target.closest('.kv-over') && inside) inside = true;
+      if (!inside) { close(); return; }
+      if (type !== 'mouse') dlg.classList.toggle('kv-bare');
+    }, TAP_MS);
+  }
+  function wheel(e) {
+    if (!S) return;
+    if (e.target.closest && e.target.closest('.kv-foot')) return;
+    e.preventDefault();
+    var s = cur();
+    if (!s.w || s.video) return;
+    var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? H() : 1);
+    var dx = e.deltaX * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? W() : 1);
+    // a tall picture at rest reads down; a sideways trackpad scroll pans; else the wheel zooms by its size
+    if (!e.ctrlKey && ((s.tall && atRest(s) && over(s, 'y')) || (Math.abs(dx) > Math.abs(dy) && over(s, 'x')))) {
+      s.tx -= dx; s.ty -= dy; clamp(s); apply(s);
+      return;
+    }
+    var f = Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.002));
+    zoomTo(s, s.scale * f, e.clientX, e.clientY);
+  }
+  function key(e) {
+    if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
+    var kk = e.key, s = cur(), vw = W(), vh = H();
+    var tgt = e.target;
+    if (tgt && tgt !== dlg && tgt.closest && (tgt.closest('.kv-info') || tgt.tagName === 'VIDEO' || tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA')) return;
+    if (kk === 'Escape') { e.preventDefault(); e.stopPropagation(); escape(); return; }
+    if (S.o.keys === false) return;
+    if (kk === 'q') close();
+    else if (kk === '+' || kk === '=') zoomTo(s, s.scale * 1.5, vw / 2, vh / 2, true);
+    else if (kk === '-' || kk === '_') zoomTo(s, s.scale / 1.5, vw / 2, vh / 2, true);
+    else if (kk === '0') toRest(s, true);
+    else if (kk === 'z') { if (zoomed(s)) toRest(s, true); else zoomTo(s, s.rest * DOUBLE, vw / 2, vh / 2, true); }
+    else if (kk === 'ArrowLeft' || kk === 'ArrowRight') {
+      var d = kk === 'ArrowLeft' ? -1 : 1;
+      if (over(s, 'x')) { s.tx -= d * vw * 0.25; clamp(s); apply(s); } else step(d);
+    } else if (kk === 'ArrowUp' || kk === 'ArrowDown' || kk === 'PageUp' || kk === 'PageDown') {
+      if (!over(s, 'y')) return;
+      var big = kk.indexOf('Page') === 0 ? 0.85 : 0.25;
+      s.ty -= (kk === 'ArrowUp' || kk === 'PageUp' ? -1 : 1) * vh * big; clamp(s); apply(s);
+    } else if (kk === 'Home') go(0);
+    else if (kk === 'End') go(S.items.length - 1);
+    else if (kk === ' ' && (tgt === dlg || !tgt || !tgt.closest || !tgt.closest('button, a'))) step(e.shiftKey ? -1 : 1);
+    else return;
+    e.preventDefault(); e.stopPropagation();
+  }
+  window.addEventListener('resize', function () {
+    if (!S || !dlg || !dlg.open) return;
+    slides.forEach(function (s) { if (s.w) { if (s === cur()) relayout(s); else layout(s); } });
+    dragX = 0; place();
+  });
+
+  // ——— the pictures on the page ———
+  function imgOf(e) { return e.tagName === 'IMG' ? e : e.querySelector('img'); }
+  function urlOf(e) {
+    var u = e.getAttribute('data-view');
+    if (u) return u;
+    if (e.tagName === 'A' && e.getAttribute('href')) return e.href;
+    var im = imgOf(e);
+    return im ? (im.getAttribute('data-src') && !im.currentSrc ? im.getAttribute('data-src') : (im.currentSrc || im.src)) : '';
+  }
+  function itemOf(e) {
+    var im = imgOf(e), a = function (n) { return e.getAttribute('data-view-' + n) || ''; };
+    var src = urlOf(e);
+    var shown = im && im.complete && im.naturalWidth ? (im.currentSrc || im.src) : '';
+    var it = {src: src, thumb: a('thumb') || shown, cap: a('cap'), alt: a('cap') || (im && im.alt) || '',
+              hi: a('hi'), src2: a('src2'), orig: a('orig'), video: a('video'), poster: a('poster'), el: e};
+    if (a('w') && a('h')) { it.w = +a('w'); it.h = +a('h'); }
+    if (it.video && !it.src) it.src = '';
+    return it;
+  }
+  function groupOf(t) {
+    var g2 = t.getAttribute('data-view-group'), of = t.getAttribute('data-view-of');
+    var name = g2 || of;
+    if (!name) return {els: [t], at: 0};
+    var sel = '[data-view][data-view-group="' + (window.CSS && CSS.escape ? CSS.escape(name) : name.replace(/"/g, '\\"')) + '"]';
+    var els = Array.prototype.slice.call(document.querySelectorAll(sel)).filter(function (e) { return !dlg || !dlg.contains(e); });
+    var at = els.indexOf(t);
+    if (at < 0) {
+      at = els.findIndex(function (e) { return e.getAttribute('aria-current') && e.getAttribute('aria-current') !== 'false'; });
+      if (at < 0) at = els.findIndex(function (e) { return e.classList.contains('active'); });
+      if (at < 0) { var u = urlOf(t); at = els.findIndex(function (e) { return urlOf(e) === u; }); }
+      if (at < 0) at = 0;
+    }
+    if (!els.length) return {els: [t], at: 0};
+    return {els: els, at: at};
+  }
+  function openFrom(t) {
+    var gr = groupOf(t), items = gr.els.map(itemOf);
+    // the big photo shows the picture already: up at once
+    if (!items[gr.at].thumb) { var own = itemOf(t); if (own.thumb && own.src === items[gr.at].src) items[gr.at].thumb = own.thumb; }
+    var o = {};
+    for (var key2 in defaults) o[key2] = defaults[key2];
+    o.at = gr.at;
+    var tot = t.getAttribute('data-view-total');
+    if (tot) o.total = +tot;
+    return open(items, o);
+  }
+  function modified(e) { return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (e.button && e.button !== 0); }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('[data-view]');
+    if (!t || e.defaultPrevented || modified(e) || (dlg && dlg.contains(t))) return;
+    if (t.matches('input, select, textarea')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openFrom(t);
+  }, true);
+  document.addEventListener('keydown', function (e) {
+    if ((e.key !== 'Enter' && e.key !== ' ') || e.defaultPrevented || !e.target.matches || !e.target.matches('[data-view]')) return;
+    if (e.key === ' ' && e.target.tagName === 'A') return;
+    if (e.target.tagName === 'BUTTON' || (e.target.tagName === 'A' && e.key === 'Enter')) return;   // their click comes
+    e.preventDefault();
+    openFrom(e.target);
+  });
+  function arm() {
+    var list = document.querySelectorAll('[data-view]:not(a):not(button):not([tabindex])');
+    for (var i = 0; i < list.length; i++) {
+      var e = list[i];
+      e.setAttribute('tabindex', '0');
+      e.setAttribute('role', 'button');
+      if (!e.getAttribute('aria-label')) {
+        var im = imgOf(e);
+        var what = e.getAttribute('data-view-cap') || (im && im.alt) || '';
+        e.setAttribute('aria-label', L.view + (what ? ': ' + what : ''));
+      }
+    }
+  }
+  var armQueued = false;
+  function armSoon() {
+    if (armQueued) return;
+    armQueued = true;
+    (window.requestAnimationFrame || setTimeout)(function () { armQueued = false; arm(); });
+  }
+  function start() {
+    arm();
+    try { new MutationObserver(armSoon).observe(document.body, {childList: true, subtree: true}); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+
+  window.kitViewer = {
+    version: VERSION,
+    open: open,
+    close: close,
+    setup: function (o) { defaults = o || {}; },
+    isOpen: function () { return !!(S && dlg && dlg.open && !closing); },
+    current: function () { return S ? api() : null; },
+    labels: L
+  };
+})();
+</script>
