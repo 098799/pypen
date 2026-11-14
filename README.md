@@ -79,6 +79,7 @@ the old gift icon (pens have no `how`; it always said Bought). Tests: `tests_nex
   - A year against the last *up to today's date*, so a running year compares fairly.
   - Is each pen earning its keep: price (log) against days inked (root), PLN per day inked.
   - What you own against what you use, per colour; the cupboard's spectrum in OKLCH hue order; never inked; resting longest.
+  - Ink drunk per year, the thirstiest pens and what runs low (README "Ink left").
   - Rotation: per priority, how many are on time; how long a full round takes at this year's pace.
   - The calendar is twelve month blocks: the old strip of 53 weeks leaves a phone 6 px a day.
 - `CH` in `constants.NATIONALITIES` means both Swiss and Chinese. Stats counts a brand Swiss only if it is
@@ -141,6 +142,41 @@ a **verdict**, one of three words, and a short **note** (`Usage.verdict`, `note`
   Guests see the words, never the buttons. The shared pages (`/p/`, `/k/`) show neither: a note is private.
 - Probe: `python3 tools/verdict_probe.py` (DB copy, 390×844; it writes, so never the live site).
   Tests: `tests_verdicts.py`.
+
+## Ink left
+
+(Nov 2026, a feature pass.) The app knew each bottle's size and every fill drawn from it, and never put the two
+together: a 1 ml sample looked as full after three fills as a new 50 ml bottle. `items/levels.py` does now.
+
+- **A fill takes one pen's worth**: `Pen.fill_ml` when set (the new pen form, "Ink a fill takes, ml"), else the
+  usual for its filling (`levels.FILL_ML`: c/c 0.8, piston 1.4, plunger 1.5, bulk filler and shutoff valve 1.6,
+  lever 1.0, squeeze 0.9, eyedropper 2.5 ml). What is left is the volume less every fill, never below 0.
+- **The owner's look corrects it** (`Ink.level_ml` on `Ink.level_on`): the ink page's "I looked at it" with Full,
+  ¾, ½, ¼, Nearly out (8 %), Empty, posted to `/inks/<pk>/level/` with an Undo. Fills begun after that day are
+  taken off the look. **Empty is Used up** (and its date); a level on a used-up bottle takes the mark off; "Forget
+  my look" goes back to the estimate. Six words, not a number: nobody reads a bottle in ml.
+- **It says "about"** everywhere. Rejected: counting a long fill as several (a fill of 90 days was surely topped
+  up, but by how much nobody wrote down; the look fixes what the guess would get wrong). Rejected: a lower score in
+  the picker for a nearly empty bottle (finishing a bottle is no bad thing); it only says "about one fill left" or
+  warns "under a fill".
+- **Running low**: fewer than two of its usual fills (the median of its last five) left; "probably empty" under
+  0.3 ml. Only an ink drawn from at least once, a bottle in a rotation in use or any sample (the samples have their
+  own rotation, not in use): a sample nobody opened is not news.
+- **Where it shows**: the ink page (a bottle, a vial for a sample, in the ink's own colours on the plate, with
+  quarter lines; the pace over the last three years and how long it lasts); a level line on every card of the wall
+  and row of the list, whose line says "about 24 of 30 ml left"; the sort **Least left** (`levels.left_sql`, the
+  same sum in SQL, so paging keeps the order; a test holds the two equal); `/api/inks` `left_ml` and
+  `level_checked`; the desk's **Running low** (four, the emptiest first, with Used up in one tap unless the ink is
+  in a pen); suink, under each bottle; the picker's reasons; the toast of a new inking from a bottle nearly out;
+  a pen's page ("ml of ink, about 0.8 a fill"); Stats, Cupboard: ml left of the open bottles, **Ink drunk** per
+  year, how many years the open bottles last at the pace (last full year or this one, the faster),
+  **Thirstiest pens**, Running low; the palette ("Running low").
+- **Queries**: one over the fills for any number of inks (`levels.for_inks`). The Stats' cache key carries the
+  looks, the used-up count and the pens' fill sizes.
+- The old version (`/prev/`) shows none of it; its pen form does not send `fill_ml` and keeps it. Guests see the
+  levels, never the buttons. The public pages (`/pub/inks/`, `/k/`) show none.
+- Probe: `python3 tools/levels_probe.py` (DB copy, 390×844; it writes, so never the live site).
+  Tests: `tests_levels.py`.
 
 ## Photos found for the pens nobody photographed
 

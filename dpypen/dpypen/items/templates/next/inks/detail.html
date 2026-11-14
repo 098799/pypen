@@ -34,7 +34,6 @@
       <div><b>{{ total_usages }}</b><small>fill{{ total_usages|pluralize }}</small></div>
       <div><b>{{ distinct_pens }}</b><small>pen{{ distinct_pens|pluralize }}</small></div>
       <div><b>{{ total_days }}</b><small>days on the page</small></div>
-      {% if lvl.fills %}<div><b>{{ lvl_drawn }}</b><small>ml drawn, about</small></div>{% endif %}
       {% if x.median_fill is not None %}<div><b>{{ x.median_fill }}</b><small>days, a typical fill</small></div>{% endif %}
       {% if x.per_ml %}<div><b>{{ x.per_ml }}</b><small>PLN per ml</small></div>{% endif %}
     </div>
