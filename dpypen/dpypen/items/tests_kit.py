@@ -73,11 +73,16 @@ class TheShellCarriesThem(TestCase):
         self.assertNotIn("/kit/member.", html)
         self.assertNotIn("data-whatsnew-dot", html)
 
-    def test_settings_opens_the_log(self):
+    def test_settings_opens_with_whats_new_first(self):
+        # Kit whatsnew v2.1 (PYPEN-14): the snippet's inline block is the first
+        # group of both Settings pages; the old "What's new" row is gone.
         self.client.force_login(self.owner)
-        html = self.client.get("/prev/settings/").content.decode()
-        self.assertIn("data-whatsnew-open", html)
-        self.assertLess(html.index('<h2 class="kit-set-h">Look</h2>'), html.index('type="button" data-whatsnew-open>'))
+        for url in ("/prev/settings/", "/settings/"):
+            html = self.client.get(url).content.decode()
+            block = '<section class="kit-set-g" data-whatsnew-inline></section>'
+            self.assertIn(block, html, url)
+            self.assertLess(html.index(block), html.index('<h2 class="kit-set-h">Look</h2>'), url)
+            self.assertNotIn('type="button" data-whatsnew-open>', html, url)
 
     def test_the_walls_pull_too(self):
         self.client.force_login(self.owner)

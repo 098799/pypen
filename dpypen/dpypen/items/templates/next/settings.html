@@ -6,6 +6,8 @@
 </header>
 {# The kit's rows (KIT-SETTINGS) come with member.js and member.css in the shell (kitshell.py). #}
 <div class="kit-set">
+{# What's new first (kit §4, v2.1): _whatsnew.html fills it, and "Mark all seen" beside its heading. #}
+<section class="kit-set-g" data-whatsnew-inline></section>
 <section class="kit-set-g">
   <h2 class="kit-set-h">Look</h2>
   <div class="kit-set-card">
@@ -18,7 +20,6 @@
   <h2 class="kit-set-h">This version</h2>
   <div class="kit-set-card">
     <a class="kit-set-row kit-set-go kit-set-out" href="{% url 'dashboard' %}" hx-boost="false"><span class="kit-set-k">The old version<small class="kit-set-sub">Still at /prev/ for now: same pens and inks, same data</small></span></a>
-    <button class="kit-set-row kit-set-go" type="button" data-whatsnew-open><span class="kit-set-k"><span class="wn-host" data-whatsnew-dot>What's new</span><small class="kit-set-sub">New things the app can do</small></span></button>
   </div>
 </section>
 <section class="kit-set-g">
