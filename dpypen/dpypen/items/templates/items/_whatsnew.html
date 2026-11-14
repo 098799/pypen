@@ -1,4 +1,4 @@
-<!-- KIT-WHATSNEW: v2.0 2026-10-02
+<!-- KIT-WHATSNEW: v2.1 2026-11-14
   What's new: a quiet log of new features, and a small "new" tag on each new
   control until it is first used. Spec and rules: ~/apps/kit/README.md §4,
   "What's new". Canonical copy: ~/apps/kit/snippets/whatsnew.html. Apps carry a
@@ -54,14 +54,27 @@
   reach inside (`all:unset`), and dialog#kit-wn outranks a `*{margin:0}` reset.
   New labels: showMore, showLess, and the counted updates_* and fresh_* (one
   form per plural category: _one, _few, _many, _other; Intl.PluralRules picks).
+  v2.1 (APPS-4): What's new is the first group of Settings, visible as soon as
+  Settings opens. The app writes an empty <section class="kit-set-g"
+  data-whatsnew-inline></section> first in its .kit-set; the snippet fills it
+  in settings.html's markup: the heading (a dot while unread), the newest 3
+  entries as rows (title, date, a "new" pill while unread and fresh; a tap opens
+  the log at that entry), "All updates · N" (opens the log), and "Mark all
+  seen" beside the heading while anything is unread or tagged. Showing the block
+  marks nothing read: only that button or opening the log does. Its own fetch,
+  ?limit=3 (no `since`: an app quiet for a month still shows its last three).
+  A block drawn later (a JS panel, soft navigation) is filled by
+  kitWhatsNew.paint() or the kit:softnav event. New labels: allUpdates, at.
   and marks up:
     data-new="<entry id>"      the control an entry added; tagged "new" until used
                                (any tap, change or keyboard focus inside it)
     data-new-tag               on a child of that: the tag goes here instead
     data-new-seen="<entry id>" being on this page counts as using it (a new page)
-    data-whatsnew-open         opens the log (a Settings row, a palette entry)
+    data-whatsnew-inline       on an empty section.kit-set-g, first in Settings:
+                               the snippet fills it (v2.1)
+    data-whatsnew-open         opens the log (a palette entry, a button)
     data-whatsnew-dot          shows a dot while the log has unread entries
-                               (the Settings tab, and the row that opens the log)
+                               (the Settings tab; the inline block has its own)
   Nothing pops up by itself: no toast, no auto-open. Plain HTML/JS, no
   template tags, so it can be included from Jinja, Django or served as is.
 -->
@@ -75,6 +88,26 @@
 /* While the log is open the page under it must not scroll (v1.2: a modal
    <dialog> alone does not stop that, least of all on a phone). */
 html.kit-wn-lock,html.kit-wn-lock body{overflow:hidden}
+/* v2.1: the inline block, first group of Settings. It sits in settings.html's
+   kit-set markup (rows, card, heading come from there); these rules add only the
+   heading line, the pill, the button and the loading rows, in the app's tokens. */
+.kit-set .kit-wn-ih{display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:34px; margin:0 0 6px}
+.kit-set .kit-wn-ih .kit-set-h{margin:0}
+.kit-wn-ih .kit-wn-hd{position:relative}
+.kit-set .kit-wn-mark{all:unset; box-sizing:border-box; flex:none; margin-right:4px; padding:6px 12px; border-radius:999px; cursor:pointer;
+  font:inherit; font-size:13px; font-weight:600; line-height:1.25; color:var(--accent,#fb923c);
+  background:color-mix(in srgb,var(--accent,#fb923c) 14%,transparent); -webkit-tap-highlight-color:transparent}
+.kit-set .kit-wn-mark[hidden]{display:none}
+.kit-set .kit-wn-mark:focus-visible{outline:2px solid var(--accent,#fb923c); outline-offset:2px}
+.kit-set .kit-wn-mark:active{background:color-mix(in srgb,var(--accent,#fb923c) 26%,transparent)}
+@media (hover:hover) and (pointer:fine){.kit-set .kit-wn-mark:hover{background:color-mix(in srgb,var(--accent,#fb923c) 24%,transparent)}}
+.kit-set .kit-wn-t{display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere}
+.kit-set [data-wn-at] .kit-set-k{min-width:0}
+.kit-set .kit-wn-pill{flex:none; padding:0 7px; border-radius:999px; font-size:10.5px; line-height:18px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--accent,#fb923c); background:color-mix(in srgb,var(--accent,#fb923c) 15%,transparent)}
+.kit-set .kit-wn-none .kit-set-k{font-weight:400; color:var(--dim,#aaa)}
+.kit-set .kit-wn-sk{display:block; height:11px; width:62%; border-radius:6px; background:var(--line,#333); opacity:.7}
+.kit-set .kit-wn-sk + .kit-wn-sk{width:24%; height:9px; margin-top:7px}
 /* v2.0: a sheet from the bottom on a phone, a card on the desk. The app's
    tokens (--accent --panel --line --fg --dim --bg) colour it; the short names
    below are only for this file. dialog#kit-wn outranks an app's `*{margin:0}`
@@ -185,6 +218,8 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
 #kit-wn a.try{display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:8px 14px; border-radius:999px;
   font-size:13.5px; line-height:1.2; font-weight:650; text-decoration:none; color:var(--wa); background:var(--wt)}
 #kit-wn a.try svg{width:14px; height:14px; stroke-width:2.4; transition:transform .15s}
+#kit-wn li[data-id]{scroll-margin-top:44px}
+#kit-wn li.at h3{color:var(--wa)}
 #kit-wn mark{padding:0 1px; border-radius:3px; color:inherit; background:color-mix(in srgb,var(--wa) 34%,transparent)}
 /* Empty, broken, loading. */
 #kit-wn .none{display:flex; flex-direction:column; align-items:center; gap:14px; padding:64px 12px; text-align:center; color:var(--wd)}
@@ -221,7 +256,8 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
            newest: 'Newest first', oldest: 'Oldest first', more: 'Load more', noMatch: 'Nothing matches',
            nothingUnread: 'Nothing unread.', failed: 'Could not load the list.', retry: 'Retry', clear: 'Clear',
            loading: 'Loading…', markAll: 'Mark all seen', showMore: 'Show more', showLess: 'Show less',
-           updates_one: '{n} update', updates_other: '{n} updates', fresh_one: '{n} new', fresh_other: '{n} new'};
+           updates_one: '{n} update', updates_other: '{n} updates', fresh_one: '{n} new', fresh_other: '{n} new',
+           allUpdates: 'All updates', at: 'Open in the log'};
   Object.keys(CFG.labels || {}).forEach(function (k) { if (CFG.labels[k]) L[k] = String(CFG.labels[k]); });
   // A counted label (v2.0): key_one / _few / _many / _other, picked by the
   // language's plural rule; a form the app did not pass falls back to _other.
@@ -301,12 +337,14 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
     var b = dlg && dlg.querySelector('[data-markall]');
     // Only while a tag is on the page: a live entry whose control is not here is no tag.
     if (b) b.hidden = !document.querySelector('.kit-new-tag');
+    paintMark();
   }
   // "Mark all seen" (v1.7): every tag and the dot go, on this device.
   function markAll() {
     var now = Date.now();
     entries.forEach(function (e) { st.used[e.id] = st.used[e.id] || now; st.read[e.id] = 1; });
-    save(st); paintTags(); paintDots();
+    (IN.items || []).forEach(function (e) { st.read[e.id] = 1; });
+    save(st); paintTags(); paintDots(); paintInline();
   }
   function use(id) { if (id && !st.used[id]) { st.used[id] = Date.now(); save(st); paintTags(); } }
   ['pointerdown', 'focusin', 'change'].forEach(function (t) {
@@ -443,6 +481,12 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
     }
     box.innerHTML = html;
     fit();
+    // Opened from a row of the inline block (v2.1): start at that entry.
+    if (S.at && !busy) {
+      var li = box.querySelector('li[data-id="' + (window.CSS && CSS.escape ? CSS.escape(S.at) : S.at) + '"]');
+      if (li) { li.classList.add('at'); li.scrollIntoView({block: 'start'}); }
+      if (!S.loading) S.at = null;
+    }
   }
   function build() {
     dlg = document.createElement('dialog'); dlg.id = 'kit-wn'; dlg.setAttribute('aria-labelledby', 'kit-wn-t');
@@ -580,29 +624,104 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
   // A reload lands on the page, not in the log: the entry it stands on is no layer.
   if (lvl()) { try { var st0 = Object.assign({}, history.state); delete st0.kitWn; history.replaceState(st0, ''); } catch (e) {} }
 
-  function open() {
+  function open(at) {
     if (depth) return;
     if (!dlg) build();
     finish();
     paintMarkAll();
     // What was unread when the log opened stays marked (and filterable) while it is open.
     S = {q: '', applied: '', shown: '', filter: 'all', sort: '-date', items: [], total: 0, count: null, loading: false, error: false,
-         ctrl: null, plain: false, open: {}, unreadIds: unread().map(function (e) { return e.id; })};
+         ctrl: null, plain: false, open: {}, at: typeof at === 'string' ? at : null,
+         unreadIds: unread().map(function (e) { return e.id; })};
     dlg.querySelector('input').value = '';
     document.documentElement.classList.add('kit-wn-lock');
     dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
     dlg.querySelector('.body').scrollTop = 0;
     push(1);
     fetchPage(false);
-    entries.forEach(function (e) { st.read[e.id] = 1; }); save(st); paintDots();
+    entries.forEach(function (e) { st.read[e.id] = 1; }); save(st); paintDots(); paintInline();
   }
   document.addEventListener('click', function (ev) {
-    var el = ev.target.closest && ev.target.closest('[data-whatsnew-open]');
-    if (el) { ev.preventDefault(); open(); }
+    var el = ev.target.closest && ev.target.closest('[data-whatsnew-open],[data-wn-at],[data-wn-mark],[data-wn-retry]');
+    if (!el) return;
+    ev.preventDefault();
+    if (el.hasAttribute('data-wn-mark')) {
+      var host = el.closest('[data-whatsnew-inline]'), had = document.activeElement === el;
+      markAll();
+      // The button hides: the focus goes to the first row, not to the page's top.
+      var row = had && host && host.querySelector('.kit-set-card .kit-set-row');
+      if (row) row.focus({preventScroll: true});
+      return;
+    }
+    if (el.hasAttribute('data-wn-retry')) return inlineFetch();
+    open(el.getAttribute('data-wn-at') || undefined);
   });
+
+  // The inline block (v2.1): What's new as the first group of Settings. One
+  // fetch per page load, ?limit=3; every host on the page is drawn from it.
+  // IN.items: null while loading, [] for an empty file; IN.error after a failure.
+  var IN = {items: null, total: 0, error: false, busy: false};
+  function inlineFetch() {
+    if (IN.busy) return;
+    IN.busy = true; IN.error = false; IN.items = null; paintInline();
+    fetch(CFG.src + (CFG.src.indexOf('?') < 0 ? '?' : '&') + 'limit=3', {cache: 'no-cache', credentials: 'same-origin'})
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) {
+        var all = d.items ? clean(d.items) : clean(d.entries);   // a server on the plain file: the whole list
+        IN.items = all.slice(0, 3); IN.total = d.items ? (+d.total || all.length) : all.length;
+        IN.busy = false; paintInline();
+      })
+      .catch(function () { IN.busy = false; IN.error = true; IN.items = null; paintInline(); });
+  }
+  // A pill while unread and fresh. Before this device's baseline nothing is news.
+  function pill(e) { return !first && fresh(e) && !st.read[e.id]; }
+  function pending() {
+    return unread().length > 0 || (IN.items || []).some(pill) || !!document.querySelector('.kit-new-tag');
+  }
+  function paintMark() {
+    var on = pending();
+    document.querySelectorAll('[data-whatsnew-inline] [data-wn-mark]').forEach(function (b) { b.hidden = !on; });
+  }
+  function inlineRow(e) {
+    return '<button type="button" class="kit-set-row kit-set-go" data-wn-at="' + esc(e.id) + '" title="' + esc(L.at) + '">' +
+      '<span class="kit-set-k"><span class="kit-wn-t">' + esc(e.title) + '</span>' +
+      '<small class="kit-set-sub"><time datetime="' + esc(e.date) + '">' + esc(fmt(e.date, {day: 'numeric', month: 'short'})) + '</time></small></span>' +
+      (pill(e) ? '<span class="kit-wn-pill">' + esc(L.tag) + '</span>' : '') + '</button>';
+  }
+  function inlineHtml() {
+    var rows;
+    if (IN.error) rows = '<button type="button" class="kit-set-row kit-set-go" data-wn-retry><span class="kit-set-k">' + esc(L.failed) +
+      '<small class="kit-set-sub">' + esc(L.retry) + '</small></span></button>';
+    else if (!IN.items) rows = new Array(4).join('<div class="kit-set-row" aria-hidden="true"><span class="kit-set-k"><i class="kit-wn-sk"></i><i class="kit-wn-sk"></i></span></div>');
+    else if (!IN.items.length) rows = '<div class="kit-set-row kit-wn-none"><span class="kit-set-k">' + esc(L.none) + '</span></div>';
+    else rows = IN.items.map(inlineRow).join('') +
+      '<button type="button" class="kit-set-row kit-set-go" data-whatsnew-open><span class="kit-set-k">' +
+      esc(L.allUpdates) + ' · ' + esc(IN.total) + '</span></button>';
+    return '<div class="kit-wn-ih"><h2 class="kit-set-h" id="kit-wn-ih-t"><span class="kit-wn-hd" data-whatsnew-dot>' + esc(L.title) + '</span></h2>' +
+      '<button type="button" class="kit-wn-mark" data-wn-mark hidden>' + esc(L.markAll) + '</button></div>' +
+      '<div class="kit-set-card" aria-busy="' + String(!IN.items && !IN.error) + '">' + rows + '</div>';
+  }
+  function paintInline() {
+    var hosts = document.querySelectorAll('[data-whatsnew-inline]');
+    if (!hosts.length) return;
+    if (!IN.items && !IN.busy && !IN.error) return inlineFetch();
+    var html = inlineHtml();
+    hosts.forEach(function (h) {
+      // Keep the focus on the row it was on when the block is drawn again.
+      var f = h.contains(document.activeElement) && document.activeElement.getAttribute('data-wn-at');
+      h.setAttribute('aria-labelledby', 'kit-wn-ih-t'); h.innerHTML = html;
+      if (f) { var r = h.querySelector('[data-wn-at="' + (window.CSS && CSS.escape ? CSS.escape(f) : f) + '"]'); if (r) r.focus({preventScroll: true}); }
+    });
+    paintDots(); paintMark();
+  }
+  document.addEventListener('kit:softnav', function () { paintInline(); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { paintInline(); });
+  else paintInline();
+
   function paint() {
     document.querySelectorAll('[data-new-seen]').forEach(function (el) { use(el.dataset.newSeen); });
     paintTags(); paintDots();
+    paintInline();                              // a Settings panel drawn after load
   }
   // Newest first; within a day, the file's own order (it is newest first) —
   // not the id, which put a day's entries in the alphabet's order (v1.5).
@@ -612,7 +731,7 @@ dialog#kit-wn.out{animation:kit-wn-out .16s ease-in forwards}
       .sort(function (a, b) { return Date.parse(b.e.date) - Date.parse(a.e.date) || a.i - b.i; })
       .map(function (x) { return x.e; });
   }
-  window.kitWhatsNew = {version: 'v2.0 2026-10-02', open: open, paint: paint, use: use, ownsPop: ownsPop, markAll: markAll};
+  window.kitWhatsNew = {version: 'v2.1 2026-11-14', open: open, paint: paint, use: use, ownsPop: ownsPop, markAll: markAll};
 
   // Tags and the dot need only the recent entries: one small page, not the whole log.
   var since = new Date(Date.now() - DAYS * 864e5).toISOString().slice(0, 10);
