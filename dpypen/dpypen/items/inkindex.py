@@ -27,7 +27,7 @@ visitor to Google.
 from django.db.models import Case, Count, F, IntegerField, OuterRef, Subquery, Value, When
 from django.db.models.functions import Coalesce
 
-from dpypen.items import listing, skin
+from dpypen.items import levels, listing, skin
 from dpypen.items.models import Ink, Usage
 from dpypen.items.public import INK_COLOR_HEX
 
@@ -41,6 +41,8 @@ SORTS = {
     "new":    ("Newest",     ("used_up", F("obtained").desc(nulls_last=True), "brand__name", "pk")),
     "inked":  ("Most inked", ("used_up", "-n_usages", "brand__name", "pk")),
     "volume": ("Volume",     ("used_up", "-volume", "brand__name", "pk")),
+    # README "Ink left": the estimate in SQL (levels.left_sql), so paging keeps it.
+    "left":   ("Least left", ("used_up", "left", "brand__name", "pk")),
 }
 COLORS = list(INK_COLOR_HEX)
 
@@ -95,10 +97,15 @@ def build(request, *, public):
     qs = qs.select_related("brand", "rotation").annotate(hue=hue_case())
     if sort == "inked":
         qs = qs.annotate(n_usages=n_usages())
+    elif sort == "left":
+        qs = qs.annotate(left=levels.left_sql())
     rows, before = listing.window(qs.order_by(*SORTS[sort][1]), offset, limit)
     for i in rows:
         i.hex = INK_COLOR_HEX.get(i.color, "#333")
         i.bg = i.swatch_bg
+    # The public cupboard says nothing of what is left (a share shows the ink, not the shelf).
+    if not public:
+        levels.attach(rows)
 
     if sort == "color":
         listing.heads(rows, lambda i: i.color,
@@ -194,6 +201,9 @@ def item(i):
         "volume": i.volume,
         "used_up": bool(i.used_up),
         "obtained": i.obtained.isoformat() if i.obtained else None,
+        # README "Ink left": the estimate, and the owner's last look at the bottle.
+        "left_ml": round(i.lvl.left, 1) if getattr(i, "lvl", None) else None,
+        "level_checked": i.level_on.isoformat() if i.level_on else None,
         "url": f"/inks/{i.pk}/",
     }
 

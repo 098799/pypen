@@ -281,7 +281,7 @@ class ThePicker(Seeded):
     def test_one_query_for_the_verdicts(self):
         usages = list(Usage.objects.only("pen_id", "ink_id", "begin", "end"))
         ended(self.due, self.red, self.nib, 400, verdict="never")
-        with self.assertNumQueries(2):  # the bottles, the verdicts
+        with self.assertNumQueries(3):  # the bottles, the verdicts, what is left in them (levels.py)
             pairing.suggest_inks(self.due, date.today(), usages)
 
 

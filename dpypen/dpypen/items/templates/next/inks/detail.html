@@ -3,7 +3,7 @@
 {% block title %}{{ ink }} · {{ app_name }}{% endblock %}
 {% block content %}
 <header class="kit-header">
-  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_inks_list' %}" aria-label="Back"></a><div class="kit-title"><p>{{ ink }}</p><small class="kit-sub">{{ ink.color }}, {{ ink.volume }} ml{% if ink.used_up %}, used up{% endif %}</small></div></div>
+  <div class="kit-lead"><a class="kit-back" hx-boost="false" href="{% url 'nx_inks_list' %}" aria-label="Back"></a><div class="kit-title"><p>{{ ink }}</p><small class="kit-sub">{{ ink.color }}, {{ lvl.row_words }}</small></div></div>
 </header>
 <div class="rec-hero">
   <div class="ink-big" style="--sw: {{ ink_bg }}">
@@ -34,11 +34,14 @@
       <div><b>{{ total_usages }}</b><small>fill{{ total_usages|pluralize }}</small></div>
       <div><b>{{ distinct_pens }}</b><small>pen{{ distinct_pens|pluralize }}</small></div>
       <div><b>{{ total_days }}</b><small>days on the page</small></div>
+      {% if lvl.fills %}<div><b>{{ lvl_drawn }}</b><small>ml drawn, about</small></div>{% endif %}
       {% if x.median_fill is not None %}<div><b>{{ x.median_fill }}</b><small>days, a typical fill</small></div>{% endif %}
       {% if x.per_ml %}<div><b>{{ x.per_ml }}</b><small>PLN per ml</small></div>{% endif %}
     </div>
   </div>
 </div>
+
+{% include "next/inks/_level.html" %}
 
 {% if said.loved or said.never %}
 <div class="sec-head" id="howItWrote"><h2>How it wrote</h2><span>{{ said.said }} fill{{ said.said|pluralize }} said</span></div>

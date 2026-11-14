@@ -67,6 +67,7 @@ urlpatterns = [
     path("inks/<int:pk>/", r(crud.inks_detail), name="nx_inks_detail"),
     path("inks/<int:pk>/edit/", r(crud.inks_edit), name="nx_inks_edit"),
     path("inks/<int:pk>/delete/", r(crud.inks_delete), name="nx_inks_delete"),
+    path("inks/<int:pk>/level/", crud.inks_level, name="nx_inks_level"),
     path("inks/<int:pk>/swatches/add/", r(crud.inks_swatch_add), name="nx_inks_swatch_add"),
     path("inks/swatches/<int:pk>/extract/", r(crud.swatches_extract), name="nx_swatches_extract"),
     path("inks/swatches/<int:pk>/delete/", r(crud.swatches_delete), name="nx_swatches_delete"),

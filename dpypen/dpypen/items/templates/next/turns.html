@@ -41,6 +41,7 @@ since its last fill ended, coloured against the rotation's turn.
           {% for u in r.now %}<small class="turns-now" style="--sw: {{ u.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span>{{ u.ink }}</small>{% endfor %}
           {% else %}<a href="{% url 'nx_inks_detail' r.item.pk %}"><span class="dab" style="--sw: {{ r.item.swatch_bg }}" aria-hidden="true"></span>{{ r.item }}</a>
           {% for u in r.now %}<small class="turns-now">in {{ u.pen }}</small>{% endfor %}
+          {% if r.item.lvl %}<small class="turns-left{% if r.item.lvl.low %} lvl-low{% endif %}">{{ r.item.lvl.row_words|capfirst }}</small>{% endif %}
           {% endif %}
         </th>
         <td>{{ r.fills }}</td>

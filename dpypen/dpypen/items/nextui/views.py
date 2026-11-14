@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_safe
 
-from dpypen.items import history, inkings, pairing, verdicts
+from dpypen.items import history, inkings, levels, pairing, verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Pen, PenPhoto, Usage
 from dpypen.items.nextui import stats, turns as turns_data
@@ -32,6 +32,9 @@ TABS = (
 
 def stat_tabs(active: str) -> list[dict]:
     return [{"url": reverse(name), "label": label, "on": name == active} for name, label in TABS]
+
+
+LOW_SHOWN = 4
 
 
 def _desk_data(today):
@@ -96,6 +99,12 @@ def _desk_data(today):
         u.ask = not u.verdict and (today - u.end).days <= verdicts.ASK_DAYS
     unsaid = verdicts.waiting(today)
 
+    # README "Ink left": the bottles and samples nearly out, the emptiest first.
+    low = levels.running_low(today)
+    in_pen = {u.ink_id for u in usages if u.end is None}
+    for i in low[:LOW_SHOWN]:
+        i.in_pen = i.pk in in_pen
+
     year = today.year
     this_year = [u for u in usages if u.begin.year == year]
     # Pen-days inked this year, by every fill that ran in it (one from last
@@ -115,6 +124,8 @@ def _desk_data(today):
         "year_pens": len({u.pen_id for u in this_year}),
         "year_inks": len({u.ink_id for u in this_year}),
         "year_days": year_days,
+        "low": low[:LOW_SHOWN],
+        "low_n": len(low),
         "no_photo": Pen.objects.filter(photos__isnull=True).count(),
         "to_check": PenPhoto.objects.filter(review="check").count(),
     }
@@ -203,6 +214,9 @@ def _turns(request, kind):
     for g in data["groups"]:
         for r in g["rows"]:
             r["since_words"] = short_span(r["since"]) if r["since"] else ""
+    if kind == "inks":
+        # README "Ink left": what is in each bottle, under its name; one query.
+        levels.attach([r["item"] for g in data["groups"] for r in g["rows"]])
     # One of the stats pages (U19): the Stats tab is lit and its strip leads back.
     return render(request, "next/turns.html", {**data, "nav": "history", "tabs": stat_tabs("nx_supen")})
 

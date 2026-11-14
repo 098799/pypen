@@ -196,7 +196,8 @@ class WhatTheOldPagesHad(Seeded):
     def test_an_ink_row_says_sample_year_and_moi(self):
         Ink.objects.filter(pk=self.red.pk).update(volume=3, obtained=date(2021, 5, 1), moi_url="https://example.com/moi")
         html = self.client.get("/inks/?view=list&samples=1").content.decode()
-        self.assertIn("Red, a sample, 3 ml", html)
+        # the volume says what is left in it since "Ink left" (tests_levels)
+        self.assertIn("Red, a sample, <span>about 2.2 of 3 ml left</span>", html)
         self.assertIn("since 2021", html)
         self.assertIn('href="https://example.com/moi"', html)
 

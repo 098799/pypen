@@ -12,6 +12,12 @@
   </details>
   <div class="f2">{% include "next/_field.html" with f=form.model %}{% include "next/_field.html" with f=form.finish %}</div>
   <div class="f2">{% include "next/_field.html" with f=form.obtained %}{% include "next/_field.html" with f=form.filling %}</div>
+  <div class="f" data-new="ink-left">
+    <label for="{{ form.fill_ml.id_for_label }}">{{ form.fill_ml.label }} <span class="f-opt">optional</span></label>
+    {{ form.fill_ml }}
+    <p class="f-hint">Blank: the usual for its filling ({{ usual_fills }}). Each fill takes this much off the ink left in its bottle.</p>
+    {% for e in form.fill_ml.errors %}<div class="f-err">{{ e }}</div>{% endfor %}
+  </div>
   <div class="f2">{% include "next/_seg.html" with f=form.age %}{% include "next/_field.html" with f=form.rotation %}</div>
   {% include "next/_field.html" with f=form.obtained_from label="Bought from" %}
   {% include "next/_money.html" with f=form.price %}

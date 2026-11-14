@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST
 
 from dpypen.items import skin
 from dpypen.items.skin import render
-from dpypen.items import aierrors, backto, inkindex, inkings, listing, penindex, undo, verdicts
+from dpypen.items import aierrors, backto, inkindex, inkings, levels, listing, penindex, undo, verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.forms import InkForm, PenForm, UsageForm
 from dpypen.items.models import BadImage, Ink, InkSwatch, Pen, PenPhoto, Usage, WritingSample
@@ -158,7 +158,10 @@ def usages_create(request):
     form = UsageForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         usage = form.save()
-        undo.offer(request, f"Inked {usage.pen} with {usage.ink}.",
+        # README "Ink left": the bottle this fill came from, when it is nearly out now.
+        lvl = levels.for_inks([usage.ink])[usage.ink_id]
+        tail = f" {lvl.words} in the {'sample' if usage.ink.volume <= 5 else 'bottle'}." if lvl.low else ""
+        undo.offer(request, f"Inked {usage.pen} with {usage.ink}.{tail}",
                    kind="create", model=Usage, pk=usage.pk)
         return redirect("pens_detail", pk=usage.pen_id)
     return render(request, "items/usages/form.html", {
@@ -728,6 +731,29 @@ def inks_edit(request, pk):
         "submit_label": "Save",
         "nav": "inks",
     })
+
+
+@login_required
+@require_POST
+def inks_level(request, pk):
+    """The owner looked at the bottle (README "Ink left"): `look` is one of
+    levels.LOOKS, or "forget" to go back to the estimate. Empty marks it used up.
+    Goes back where it was said, with an Undo."""
+    ink = get_object_or_404(Ink.objects.select_related("brand"), pk=pk)
+    before = undo.snapshot(ink)
+    key = request.POST.get("look", "")
+    fields = levels.look(ink, key, date.today())
+    if fields:
+        ink.save(update_fields=fields)
+        if key == "forget":
+            text = f"{ink}: back to the estimate."
+        elif key == "empty":
+            text = f"{ink}: used up."
+        else:
+            lvl = levels.for_inks([ink])[ink.pk]
+            text = f"{ink}: {lvl.left_words} left."
+        undo.offer(request, text, kind="update", frozen=before)
+    return backto.back(request, reverse("nx_inks_detail", args=[pk]))
 
 
 @login_required

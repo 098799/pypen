@@ -13,7 +13,7 @@ from statistics import median
 
 
 
-from dpypen.items import pairing, shelf, verdicts
+from dpypen.items import levels, pairing, shelf, verdicts
 from dpypen.items.models import Ink, Pen, Usage
 from dpypen.items.nextui import color, stats
 from dpypen.items.public import INK_COLOR_HEX
@@ -84,8 +84,14 @@ def _pen_detail(request, ctx):
 
     usages = list(Usage.objects.only("pen_id", "ink_id", "begin", "end"))
     picks = pairing.suggest_inks(pen, today, usages)[:3]
+    fill = levels.pen_fill(pen)
+    n_fills = len(past) + (1 if current else 0)
     return {
         **ctx,
+        # README "Ink left": what one fill takes, and what the pen has drunk.
+        "fill_ml": levels.ml(fill),
+        "fill_said": bool(pen.fill_ml),
+        "drunk_ml": levels.ml(fill * n_fills) if n_fills else None,
         "said": verdicts.shelf(([current] if current else []) + list(past), "ink"),
         "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
@@ -135,8 +141,14 @@ def _ink_detail(request, ctx):
     open_to = [d for d in due if d["pen_id"] not in had][:4]
     ended = [u.days for u in ctx.get("past") or []]
     last = max((u.end for u in ctx.get("past") or []), default=None)
+    lvl = levels.for_inks([ink], today)[ink.pk]
     return {
         **ctx,
+        # README "Ink left": what is in the bottle, and the owner's look at it.
+        "lvl": lvl,
+        "looks": levels.LOOKS,
+        "lvl_drawn": levels.ml(lvl.drawn),
+        "lvl_pace": levels.ml(lvl.pace) if lvl.pace else None,
         "said": verdicts.shelf(usages, "pen"),
         "year_bars": stats.rebase(ctx.get("year_bars")),
         "x": {
@@ -153,6 +165,12 @@ def _ink_detail(request, ctx):
         "close": _close_inks(ink),
         "open_to": open_to,
     }
+
+
+def _pen_form(request, ctx):
+    # README "Ink left": what a blank "Ink a fill takes" means, per filling.
+    ctx["usual_fills"] = ", ".join(f"{k.lower() if k != 'c/c' else k} {levels.ml(v)}" for k, v in levels.FILL_ML.items()) + " ml"
+    return ctx
 
 
 def _search(request, ctx):
@@ -186,6 +204,7 @@ _BY_TEMPLATE = {
     "next/inks/_grid.html": _inks,
     "next/pens/detail.html": _pen_detail,
     "next/inks/detail.html": _ink_detail,
+    "next/pens/form.html": _pen_form,
     "next/search.html": _search,
     "next/_search_results.html": _search,
     "next/next.html": _pick,

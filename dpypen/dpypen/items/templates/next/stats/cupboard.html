@@ -13,7 +13,7 @@
     {% for i in spectrum %}<button type="button" style="--sw: {{ i.bg }}" data-tip-title="{{ i.name }}" data-tip-links="Open the ink|{{ i.url }}" aria-label="{{ i.name }}"></button>{% endfor %}
   </div>
 </section>
-<p class="sentence" id="lede"><b>{{ bottles }}</b> bottles with <b>{{ ml }}</b> ml in them, {{ in_pen }} in a pen now. <b>{{ never_n }}</b> never inked, <b>{{ samples }}</b> sample{{ samples|pluralize }} on the side, <b>{{ used_up }}</b> used up.</p>
+<p class="sentence" id="lede"><b>{{ bottles }}</b> bottles with about <b>{{ ml_left }}</b> ml left in them, of {{ ml_open }}, {{ in_pen }} in a pen now. <b>{{ never_n }}</b> never inked, <b>{{ samples }}</b> sample{{ samples|pluralize }} on the side, <b>{{ used_up }}</b> used up.</p>
 <div class="plates" id="cupboardCharts">
   <section class="plate is-wide">
     <h2>What you own against what you use</h2>
@@ -39,6 +39,22 @@
   <section class="plate">
     <h2>Resting longest</h2><p>Out of a pen the longest.</p>
     <ul class="rows">{% for r in resting %}<li class="row" style="--sw: {{ r.ink.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_inks_detail' r.ink.pk %}">{{ r.ink }}</a></div><span class="row-v">{{ r.span }}</span></li>{% endfor %}</ul>
+  </section>
+  <section class="plate is-wide" id="inkLeft" data-new="ink-left">
+    <h2>Ink drunk</h2>
+    <p>About {{ ml_drawn }} ml drawn from the bottles by every fill, a pen's worth each{% if ml_pace %}. At {{ ml_pace }} ml a year, what is left in the open bottles lasts some {{ ml_years }} years{% endif %}.</p>
+    {% include "next/stats/_cols.html" with rows=drawn_year unit=" ml" %}
+  </section>
+  {% if low %}
+  <section class="plate">
+    <h2>Running low</h2><p>Bottles and samples nearly out, the emptiest first.</p>
+    <ul class="rows">{% for i in low %}<li class="row" style="--sw: {{ i.swatch_bg }}"><span class="dab" aria-hidden="true"></span><div class="row-t"><a href="{% url 'nx_inks_detail' i.pk %}#level">{{ i }}</a><small>{{ i.lvl.words }}</small></div></li>{% endfor %}</ul>
+    <p class="fine"><a href="{% url 'nx_inks_list' %}?sort=left&amp;samples=1">Every ink, least left first</a></p>
+  </section>
+  {% endif %}
+  <section class="plate">
+    <h2>Thirstiest pens</h2><p>Ink drawn over all their fills, in ml.</p>
+    <div class="hbars">{% for b in thirsty %}<div class="hbar"><span><a class="to" href="{{ b.url }}">{{ b.label }}</a></span><span class="tr"><i style="width: {{ b.pct|unlocalize }}%"></i></span><b>{{ b.n }}</b></div>{% endfor %}</div>
   </section>
   <section class="plate"><h2>Inks added per year</h2><p>Bottles and samples, used up ones too.</p>{% include "next/stats/_cols.html" with rows=ink_year show_n=True unit=" inks" %}</section>
   <section class="plate"><h2>Spent on ink per year</h2><p>PLN, other currencies at rough rates.</p>{% include "next/stats/_cols.html" with rows=ink_spend_year unit=" PLN" %}</section>

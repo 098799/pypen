@@ -25,7 +25,7 @@ from datetime import date
 from django.shortcuts import get_object_or_404
 
 from dpypen.items.skin import render
-from dpypen.items import verdicts
+from dpypen.items import levels, verdicts
 from dpypen.items.auth import login_or_guest_required
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 
@@ -166,6 +166,10 @@ def suggest_inks(pen, today, usages):
             never_in[ink_id] = never_in.get(ink_id, 0) + 1
 
     dipper = pen.filling in DIP_FILLERS
+    # README "Ink left": a bottle nearly out may not fill this pen. Said, not scored:
+    # finishing a bottle is no bad thing. One query.
+    lvl = levels.for_inks(inks, today)
+    need = levels.pen_fill(pen)
     out = []
     for ink in inks:
         if ink.pk in inked_now:
@@ -226,6 +230,14 @@ def suggest_inks(pen, today, usages):
         if ink.color in desk_colours:
             s.score -= SAME_COLOUR_ON_DESK
             s.reasons.append(("warn", f"{ink.color.lower()} is on the desk"))
+
+        left = lvl[ink.pk]
+        if left.empty:
+            s.reasons.append(("warn", "probably empty"))
+        elif left.left < need:
+            s.reasons.append(("warn", f"about {levels.ml(left.left)} ml left, under a fill"))
+        elif left.left < levels.LOW_FILLS * need:
+            s.reasons.append(("", "about one fill left"))
 
         if dipper and ink.rotation.whos == HARD_BOTTLE:
             s.score -= HARD_BOTTLE_FOR_DIPPER

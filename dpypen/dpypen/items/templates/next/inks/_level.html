@@ -1,0 +1,33 @@
+{% comment %}What is in the bottle (README "Ink left"): a gauge in the ink's own colour,
+the estimate in words, and the owner's look at it. The look is a <details>, as
+Finish is: it opens in place, needs no script and no layer.{% endcomment %}
+<section class="plate level-plate{% if lvl.low %} is-low{% endif %}" id="level" aria-labelledby="levelH">
+  <div class="bottle{% if ink.volume <= 5 %} is-vial{% endif %}" style="--sw: {{ ink_bg }}; --lvl: {{ lvl.pct }}%" role="img" aria-label="{{ lvl.words }}">
+    <i class="bottle-ink"></i>
+  </div>
+  <div class="level-t">
+    <h2 id="levelH">{% if ink.volume <= 5 %}In the sample{% else %}In the bottle{% endif %}</h2>
+    <p class="level-w">{{ lvl.words }}</p>
+    <p class="level-s">
+      {% if lvl.used_up %}{% if ink.used_up_when %}Since {{ ink.used_up_when|date:"M Y" }}. {% endif %}{% if lvl.fills %}{{ lvl.fills }} fill{{ lvl.fills|pluralize }} drew about {{ lvl_drawn }} ml.{% endif %}
+      {% else %}
+      {% if lvl.checked %}You looked on {{ lvl.checked|date:"j M Y" }}; fills since are taken off it.{% elif lvl.fills %}{{ lvl.fills }} fill{{ lvl.fills|pluralize }} took about {{ lvl_drawn }} ml, about {{ lvl.fill }} ml each.{% else %}Never in a pen: as it came.{% endif %}
+      {% if lvl.lasts %}At its pace, {{ lvl_pace }} ml a year, it lasts {{ lvl.lasts }}.{% endif %}
+      {% endif %}
+    </p>
+    {% if can_edit %}
+    <details class="finish-d look-d" data-new="ink-left">
+      <summary class="btn is-small"><span class="fd-closed">{% if lvl.used_up %}It is not used up{% else %}I looked at it{% endif %}</span><span class="fd-open">Not now</span></summary>
+      <form class="finish-sheet look-sheet" method="post" action="{% url 'nx_inks_level' ink.pk %}" data-kit-busy>{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <p class="finish-q">How much is in it?</p>
+        <div class="look-btns">
+          {% for key, word, share in looks %}<button class="vbtn{% if key == 'empty' %} is-empty{% endif %}" type="submit" name="look" value="{{ key }}">{{ word }}</button>{% endfor %}
+        </div>
+        {% if lvl.checked %}<button class="nx-link" type="submit" name="look" value="forget">Forget my look, go back to the estimate</button>{% endif %}
+        <p class="fine">Empty marks it used up.</p>
+      </form>
+    </details>
+    {% endif %}
+  </div>
+</section>

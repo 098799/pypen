@@ -14,10 +14,10 @@ from datetime import date, timedelta
 from statistics import median
 
 from django.core.cache import cache
-from django.db.models import Count, F, Max
+from django.db.models import Count, F, Max, Q, Sum
 from django.urls import reverse
 
-from dpypen.items import history, inkings, pairing, verdicts
+from dpypen.items import history, inkings, levels, pairing, verdicts
 from dpypen.items.inkings import COLOR_ORDER, MONTHS
 from dpypen.items.models import Ink, Pen, Rotation, Usage
 from dpypen.items.nextui import color as ink_color
@@ -31,9 +31,12 @@ RIVER_W, RIVER_H = 1000, 280
 
 def _stamp() -> str:
     u = Usage.objects.aggregate(n=Count("pk"), last=Max("pk"), began=Max("begin"), ended=Max("end"), said=Max("verdict_at"))
-    p = Pen.objects.aggregate(n=Count("pk"), last=Max("pk"))
-    i = Ink.objects.aggregate(n=Count("pk"), last=Max("pk"))
-    return f"{date.today()}:{u['n']}:{u['last']}:{u['began']}:{u['ended']}:{u['said']}:{p['n']}:{p['last']}:{i['n']}:{i['last']}"
+    p = Pen.objects.aggregate(n=Count("pk"), last=Max("pk"), fill=Sum("fill_ml"))
+    # A look at a bottle and a used-up mark change the cupboard's "Ink left".
+    i = Ink.objects.aggregate(n=Count("pk"), last=Max("pk"), look=Max("level_on"), ml=Sum("level_ml"),
+                              up=Count("pk", filter=Q(used_up=True)))
+    return (f"{date.today()}:{u['n']}:{u['last']}:{u['began']}:{u['ended']}:{u['said']}:{p['n']}:{p['last']}:{p['fill']}"
+            f":{i['n']}:{i['last']}:{i['look']}:{i['ml']}:{i['up']}")
 
 
 def cached(kind: str, fn):
@@ -532,6 +535,8 @@ def cupboard() -> dict:
     for r in resting:
         r["span"] = span(r["days"])
 
+    left = _ink_left(inks, open_inks, today)
+
     brands = Counter(i.brand.name for i in open_inks)
     how = Counter(i.how for i in inks)
     # Every ink by the year it came, used up ones too (the old History's two charts).
@@ -557,6 +562,41 @@ def cupboard() -> dict:
         "resting": resting[:8],
         "brands": bars(brands, top=8),
         "how": bars(how),
+        **left,
+    }
+
+
+def _ink_left(inks, open_inks, today: date) -> dict:
+    """README "Ink left": what is in the open bottles, what the pens drank, by
+    year and by pen, and what runs out first. One query over the fills."""
+    rows = list(Usage.objects.values_list("ink_id", "begin", "pen__filling", "pen__fill_ml", "pen_id"))
+    got = levels.for_inks(inks, today, rows=[r[:4] for r in rows])
+    by_year: Counter = Counter()
+    by_pen: Counter = Counter()
+    for ink_id, begin, filling, fill_ml, pen_id in rows:
+        m = float(fill_ml) if fill_ml else levels.usual_fill(filling)
+        by_year[begin.year] += m
+        by_pen[pen_id] += m
+    left_ml = sum(got[i.pk].left for i in open_inks)
+    drawn = sum(by_year.values())
+    years = list(range(min(by_year), today.year + 1)) if by_year else []
+    # This year's pace counts up to today, so a running year is not short: the
+    # last full year's, unless this one runs faster.
+    last_full = by_year.get(today.year - 1, 0.0)
+    so_far = by_year.get(today.year, 0.0) * 365.25 / max(1, (today - date(today.year, 1, 1)).days + 1)
+    pace = max(last_full, so_far)
+    pens = {p.pk: p for p in Pen.objects.select_related("brand").filter(pk__in=[k for k, _ in by_pen.most_common(8)])}
+    low = [i for i in levels.running_low(today)][:8]
+    return {
+        "ml_left": levels.ml(left_ml),
+        "ml_open": f"{sum(i.volume for i in open_inks):,}",
+        "ml_drawn": levels.ml(drawn),
+        "ml_pace": levels.ml(pace) if pace else None,
+        "ml_years": (f"{left_ml / pace:,.0f}" if pace else None),
+        "drawn_year": columns([(f"’{y % 100:02d}", round(by_year[y], 1), f"{y}: about {levels.ml(by_year[y])} ml") for y in years]),
+        "thirsty": [{"label": str(pens[k]), "n": levels.ml(v), "pct": round(100 * v / (by_pen.most_common(1)[0][1] or 1), 2),
+                     "url": reverse("nx_pens_detail", args=[k])} for k, v in by_pen.most_common(8) if k in pens],
+        "low": low,
     }
 
 

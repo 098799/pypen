@@ -1,7 +1,7 @@
 """The lists as JSON, in the kit's one envelope (kit README §14, PYPEN-7):
 
     GET /api/pens    ?q= &rot= &limit= &offset=
-    GET /api/inks    ?q= &color= &samples=1 &used=1 &sort= &limit= &offset=
+    GET /api/inks    ?q= &color= &samples=1 &used=1 &sort= &limit= &offset=   (sort=left: least left first)
     GET /api/usages  ?q= &state=active|past &verdict=loved|fine|never|none &limit= &offset=
 
     {"items": [...], "total": N, "limit": 50, "offset": 0}

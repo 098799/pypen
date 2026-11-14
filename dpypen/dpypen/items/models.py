@@ -108,6 +108,9 @@ class Pen(models.Model):
     price = MoneyField(max_digits=7, decimal_places=2, default_currency="PLN", blank=False, null=False)
     price_out = MoneyField(max_digits=5, decimal_places=2, default_currency="PLN", blank=True, null=True)
     rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, blank=False, null=False)
+    # How much ink one fill takes, in ml; blank: the usual for its filling
+    # (levels.FILL_ML). README "Ink left".
+    fill_ml = models.FloatField(blank=True, null=True)
 
 
 class Nib(models.Model):
@@ -143,6 +146,10 @@ class Ink(models.Model):
     used_up_when = models.DateField(blank=True, null=True)
     volume = models.IntegerField(blank=False, null=False)
     rotation = models.ForeignKey(Rotation, on_delete=models.CASCADE, blank=False, null=False)
+    # The owner's last look at the bottle (README "Ink left"): about this many ml
+    # on that day. Fills begun after it are taken off it; without one, off the volume.
+    level_ml = models.FloatField(blank=True, null=True)
+    level_on = models.DateField(blank=True, null=True)
 
     @property
     def swatch_bg(self) -> str:

@@ -178,13 +178,15 @@ class PenForm(NewBrand, forms.ModelForm):
         model = Pen
         fields = [
             "brand", "model", "finish", "obtained", "filling", "age",
-            "obtained_from", "price", "rotation", "out", "price_out",
+            "obtained_from", "price", "rotation", "out", "price_out", "fill_ml",
         ]
         widgets = {
             "obtained": forms.DateInput(attrs={"type": "date"}),
             "age": forms.RadioSelect(attrs={"class": "segmented-input"}),
             "out": forms.CheckboxInput(attrs={"class": "switch-input"}),
+            "fill_ml": forms.NumberInput(attrs={"step": "0.1", "min": "0.1", "max": "10", "inputmode": "decimal"}),
         }
+        labels = {"fill_ml": "Ink a fill takes, ml"}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -199,6 +201,16 @@ class PenForm(NewBrand, forms.ModelForm):
         _choose(self, "filling")
         if not self.instance.pk:
             self.initial.setdefault("obtained", date.today())
+
+    def clean_fill_ml(self):
+        # The old version's form (/prev/) does not send it: a field a form does
+        # not send keeps its value (README "Ink left").
+        if "fill_ml" not in self.data:
+            return self.instance.fill_ml
+        v = self.cleaned_data.get("fill_ml")
+        if v is not None and not 0.1 <= v <= 10:
+            raise forms.ValidationError("A fill takes between 0.1 and 10 ml.")
+        return v
 
     def clean(self):
         data = super().clean()

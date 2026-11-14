@@ -70,6 +70,7 @@
       {% if x.median_fill is not None %}<div><b>{{ x.median_fill }}</b><small>days, a typical fill</small></div>{% endif %}
       {% if x.price_pln %}<div><b>{{ x.price_pln }}</b><small>PLN paid</small></div>{% endif %}
       {% if x.per_day %}<div><b>{{ x.per_day }}</b><small>PLN a day inked</small></div>{% endif %}
+      {% if drunk_ml %}<div><b>{{ drunk_ml }}</b><small>ml of ink, about {{ fill_ml }} a fill{% if not fill_said %} for a {{ pen.filling }}{% endif %}</small></div>{% endif %}
     </div>
   </div>
 </div>

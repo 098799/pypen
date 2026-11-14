@@ -12,7 +12,8 @@
       <span class="swab" aria-hidden="true"></span>
       <span class="card-ink-name">{{ i.name|highlight:filters.q }}</span>
       <span class="card-ink-brand">{{ i.brand.name|highlight:filters.q }}{% if i.line %} {{ i.line|highlight:filters.q }}{% endif %}</span>
-      <span class="card-ink-sub">{% if i.in_pens %}In {{ i.in_pens.0.model }}{% elif i.used_up %}Used up{% elif i.volume <= 5 %}Sample{% elif i.fills %}{{ i.fills }} fill{{ i.fills|pluralize }}{% if i.last_end %}, {{ i.last_end }}{% endif %}{% else %}Never inked{% endif %}</span>
+      <span class="card-ink-sub">{% if i.in_pens %}In {{ i.in_pens.0.model }}{% elif i.used_up %}Used up{% elif i.lvl.low and i.lvl.fills %}<span class="lvl-low">{{ i.lvl.left_words|capfirst }}</span>{% elif i.volume <= 5 %}Sample{% elif i.fills %}{{ i.fills }} fill{{ i.fills|pluralize }}{% if i.last_end %}, {{ i.last_end }}{% endif %}{% else %}Never inked{% endif %}</span>
+      {% if i.lvl and not i.used_up %}<span class="lvl" style="--lvl: {{ i.lvl.pct }}%" title="{{ i.lvl.words }}"><i></i></span>{% endif %}
     </a>
     {% endfor %}
   </div>

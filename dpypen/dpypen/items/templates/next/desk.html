@@ -65,6 +65,22 @@
     <p class="sentence"><b>{{ year_n }}</b> inking{{ year_n|pluralize }}, in <b>{{ year_pens }}</b> pen{{ year_pens|pluralize }}, with <b>{{ year_inks }}</b> ink{{ year_inks|pluralize }}; <b>{{ year_days }}</b> pen-day{{ year_days|pluralize }} inked.</p>
   </section>
 
+  {% if low %}
+  <section aria-labelledby="lowH" data-new="ink-left">
+    <div class="sec-head"><h2 id="lowH">Running low</h2><a href="{% url 'nx_inks_list' %}?sort=left&amp;samples=1">{% if low_n > low|length %}All {{ low_n }}{% else %}Least left{% endif %}</a></div>
+    <ul class="rows">
+      {% for i in low %}
+      <li class="row" style="--sw: {{ i.swatch_bg }}">
+        <span class="dab" aria-hidden="true"></span>
+        <div class="row-t"><a href="{% url 'nx_inks_detail' i.pk %}#level">{{ i }}</a><small><span class="lvl-low">{{ i.lvl.left_words|capfirst }}</span>{% if i.in_pen %}, in a pen now{% elif not i.lvl.empty %} of {{ i.volume }} ml{% endif %}</small></div>
+        {% if can_edit and not i.in_pen %}<form method="post" action="{% url 'nx_inks_level' i.pk %}" data-kit-busy>{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn is-small" type="submit" name="look" value="empty">Used up</button></form>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="fine">Estimated from the fills drawn from each.{% if can_edit %} Used up marks it, with an Undo; on an ink's page, say what you see in the bottle.{% endif %}</p>
+  </section>
+  {% endif %}
+
   {% if recent %}
   <section aria-labelledby="recentH">
     <div class="sec-head"><h2 id="recentH">Just finished</h2><a href="{% url 'nx_usages_list' %}">All inkings</a></div>
