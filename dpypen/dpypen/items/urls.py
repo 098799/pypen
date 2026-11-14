@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from dpypen.items.auth import login_or_guest_required
 
 from dpypen.items.nextui import urls as nextui_urls
-from dpypen.items import api_lists, crud, history, invite, kitshell, notebook, pairing, palette, public, pwa, records, search, share, undo, views
+from dpypen.items import api_lists, crud, history, invite, kitpwa, kitshell, notebook, pairing, palette, public, records, search, share, undo, views
 
 
 # The old version lives under /prev/ since the new one took the main addresses
@@ -28,16 +28,16 @@ urlpatterns = [
     path('api/pens', api_lists.pens, name='api_pens'),
     path('api/inks', api_lists.inks, name='api_inks'),
     path('api/usages', api_lists.usages, name='api_usages'),
-    path('api/version', pwa.version, name='api_version'),
-    path('whatsnew.json', pwa.whatsnew, name='whatsnew'),
+    path('api/version', kitpwa.version, name='api_version'),
+    path('whatsnew.json', kitpwa.whatsnew, name='whatsnew'),
     path('undo/<str:token>/', undo.undo, name='undo'),
 
-    path('manifest.json', pwa.manifest, name='pwa_manifest'),
-    path('sw.js', pwa.service_worker, name='pwa_sw'),
+    path('manifest.json', kitpwa.manifest, name='pwa_manifest'),
+    path('sw.js', kitpwa.service_worker, name='pwa_sw'),
     # The kit's snippets as cached files (kitshell.py, kit README §5.9).
     path('kit/<str:name>', kitshell.serve, name='kit_shell'),
-    path('icon.svg', pwa.icon, name='pwa_icon'),
-    path('icon-maskable.svg', pwa.icon_maskable, name='pwa_icon_maskable'),
+    path('icon.svg', kitpwa.icon, name='pwa_icon'),
+    path('icon-maskable.svg', kitpwa.icon_maskable, name='pwa_icon_maskable'),
     path('i/leave/', invite.deactivate, name='invite_deactivate'),
     path('i/<str:token>/', invite.activate, name='invite_activate'),
 

@@ -11,7 +11,7 @@ keep it (a page is `no-cache`).
 
 The prefix is /kit/, not /static/: nginx on bae serves /static/ from
 /var/www/pen-static and would never ask Django. The worker keeps /kit/ files
-for offline like /static/ (pwa.KITSW["files"]).
+for offline like /static/ (kitpwa.KITSW["files"]).
 
 Files, in the order the pages had the snippets:
   theme.js           blocking in <head>, after window.KITTHEME (_theme_boot.html)
@@ -110,7 +110,7 @@ def _split(template: str, **ctx) -> shell.Part:
 
 
 def _parts():
-    from dpypen.items.pwa import APP_NAME
+    from dpypen.items.kitpwa import APP_NAME
 
     early = _split("items/_shell_early.html")
     late = [_split("items/_shell_filternav.html"), _split("items/_shell_behave.html")]

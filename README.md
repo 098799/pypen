@@ -7,7 +7,7 @@ The agent notes for this repo are in `CLAUDE.md`.
 
 ## Name
 
-One name, **Grining Pens** (kit §4 Fleet UX "Names", PYPEN-9): `pwa.APP_NAME`,
+One name, **Grining Pens** (kit §4 Fleet UX "Names", PYPEN-9): `kitpwa.APP_NAME`,
 which the context processor hands every template as `app_name`. It is the
 manifest's `name` and `short_name`, the apple title, the worker's offline page,
 the keyboard layer's `name`, the Install row and the Settings group of the app's
@@ -271,7 +271,7 @@ not inline in every page (kit README §5.9): `items/kitshell.py` builds them at
 start with `items/shell.py` (byte copy of `kit/py/shell.py`, KIT-SHELL; never
 edit it) and serves `/kit/<name>?v=<hash>` (immutable, gzip, ETag/304). Not
 `/static/`: nginx on bae serves that from disk. The worker keeps `/kit/` for
-offline (`pwa.KITSW["files"]`).
+offline (`kitpwa.KITSW["files"]`).
 
 - `theme.js` (head, blocking); `shell.css`/`shell.js` (both shells: layer,
   toast, empty, filters, update, pull to refresh); `member.css`/`member.js`
@@ -486,12 +486,12 @@ own CONFIG).
 
 - **New version**: the worker takes over at install (`takeover`), so the
   update toast polls `build`: the page's `kit_build` (context processor
-  `pwa.build_context`) against `GET /api/version` (open, `no-store`). Both are
+  `kitpwa.build_context`) against `GET /api/version` (open, `no-store`). Both are
   the worker's hash of the code, templates and static files.
 - **Pull to refresh**: in the shell and both walls. The walls no longer set
   `overscroll-behavior: none` (the snippet switches the browser's pull off).
 - **What's new**: `items/whatsnew.json`, newest on top, served by
-  `pwa.whatsnew` (owner and guests, like the pages). Opened from Settings →
+  `kitpwa.whatsnew` (owner and guests, like the pages). Opened from Settings →
   Pens → What's new and the palette (`#whatsnew`, handled in `window.__go`);
   the dot sits on More (the desk bar's ⋯) and Settings in the menu.
   Shots in `static/items/whatsnew/`. A `data-new` id must be in the file
@@ -503,7 +503,7 @@ own CONFIG).
   and no static manifest. htmx swaps no 4xx/5xx, so the shell's
   `htmx:beforeSwap` takes these pages for a boosted navigation.
 - **Icons**: committed PNGs in `static/items/icons/` (192, 512, 512
-  maskable, 180 apple-touch), drawn from the SVGs in `pwa.py` by
+  maskable, 180 apple-touch), drawn from the SVGs in `kitpwa.py` by
   `python3 tools/make_icons.py`. A flat navy nib on the paper `#f4ecd8`
   edge to edge: that is the manifest's `background_color`, the phone's
   splash, so no tile shows there; the maskable's nib lies inside the middle

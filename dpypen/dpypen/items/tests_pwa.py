@@ -8,7 +8,7 @@ hand-off. It lives under /accounts/, which the worker never touches.
 from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import resolve
 
-from dpypen.items import pwa
+from dpypen.items import kitpwa, pwa
 from dpypen.items.tests import PLAIN_STATIC, shipped
 
 
@@ -17,19 +17,32 @@ class ServiceWorkerTests(SimpleTestCase):
     def test_sw_is_settings_then_the_kit(self):
         r = Client().get("/sw.js")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r["Content-Type"], "application/javascript")
+        self.assertEqual(r["Content-Type"], "text/javascript; charset=utf-8")
         self.assertEqual(r["Cache-Control"], "no-cache")
         body = r.content.decode()
         self.assertTrue(body.startswith("self.KITSW = {"))
         self.assertIn("/* KIT-SW: v1", body)
         self.assertNotIn("respondWith(fetch(event.request))", body)   # the old pass-through
 
+    def test_sw_js_is_the_kits_pwa_worker_with_the_build(self):
+        """kit/py/pwa.py (KIT-PWA): /sw.js is pwa.Worker's text, carries the
+        build and is sent no-cache, with the scope header the app adds."""
+        r = Client().get("/sw.js")
+        body = r.content.decode()
+        self.assertTrue(body.startswith("self.KITSW = "))
+        self.assertIn("KIT-SW:", body)
+        self.assertIn('"build": "%s"' % kitpwa.BUILD, body)
+        self.assertEqual(kitpwa.KITSW["build"], kitpwa.BUILD)
+        self.assertEqual(r["Cache-Control"], "no-cache")
+        self.assertEqual(r["Service-Worker-Allowed"], "/")
+        self.assertIn("kitSW.route", body)   # pypen's own part after the kit's
+
     def test_settings(self):
-        s = pwa.KITSW
+        s = kitpwa.KITSW
         self.assertEqual((s["app"], s["where"], s["takeover"]), ("pypen", "internet", True))
         self.assertEqual(s["files"], ["/static/", "/kit/"])   # the kit's cached files too (kitshell.py)
         self.assertRegex(s["build"], r"^[0-9a-f]{12}$")
-        self.assertEqual(s["build"], pwa._build())                    # content, not start time
+        self.assertEqual(s["build"], pwa.build_id(kitpwa._PKG, skip=("migrations",)))   # content, not start time
 
     def test_the_oauth_hand_off_is_never_touched(self):
         """Every allauth route and LOGIN_URL is under a skipped prefix."""
@@ -43,7 +56,7 @@ class ServiceWorkerTests(SimpleTestCase):
                     yield from walk(p.url_patterns, route)
                 else:
                     yield route
-        skip = pwa.KITSW["skip"]
+        skip = kitpwa.KITSW["skip"]
         for route in walk(allauth_urls.urlpatterns, "/accounts/"):
             self.assertTrue(any(route.startswith(k) for k in skip), route)
         self.assertTrue(settings.LOGIN_URL.startswith("/accounts/"))
@@ -51,7 +64,7 @@ class ServiceWorkerTests(SimpleTestCase):
 
     def test_sign_out_forgets_the_kept_pages(self):
         from pathlib import Path
-        html = (Path(pwa.__file__).parent / "templates/items/settings.html").read_text()
+        html = (Path(kitpwa.__file__).parent / "templates/items/settings.html").read_text()
         self.assertIn("postMessage('KIT_FORGET')", html)
 
 
@@ -67,13 +80,13 @@ class OneName(TestCase):
         cls.owner = get_user_model().objects.create_user("owner", password="x", is_superuser=True)
 
     def test_the_name(self):
-        self.assertEqual(pwa.APP_NAME, "Grining Pens")
-        self.assertLessEqual(len(pwa.APP_NAME), 12)  # a phone tile shows about 12 letters
+        self.assertEqual(kitpwa.APP_NAME, "Grining Pens")
+        self.assertLessEqual(len(kitpwa.APP_NAME), 12)  # a phone tile shows about 12 letters
 
     def test_manifest_and_worker(self):
         m = Client().get("/manifest.json").json()
-        self.assertEqual((m["name"], m["short_name"]), (pwa.APP_NAME, pwa.APP_NAME))
-        self.assertEqual(pwa.KITSW["name"], pwa.APP_NAME)
+        self.assertEqual((m["name"], m["short_name"]), (kitpwa.APP_NAME, kitpwa.APP_NAME))
+        self.assertEqual(kitpwa.KITSW["name"], kitpwa.APP_NAME)
         self.assertIn('"name": "Grining Pens"', Client().get("/sw.js").content.decode())
 
     def test_every_screen_says_it_the_same_way(self):

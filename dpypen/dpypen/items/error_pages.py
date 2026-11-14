@@ -25,7 +25,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader
 
 from dpypen.items.skin import render
-from dpypen.items import errors, pwa
+from dpypen.items import errors, kitpwa
 
 API = ("/api/", "/whatsnew.json", "/manifest.json")
 FILES = ("/static/", "/media/")
@@ -99,9 +99,9 @@ def server_error(request):
     if not _wants_page(request):
         return _json(err)
     try:
-        body = loader.get_template("items/error_500.html").render({"err": err, "app_name": pwa.APP_NAME})
+        body = loader.get_template("items/error_500.html").render({"err": err, "app_name": kitpwa.APP_NAME})
     except Exception:  # the page must not need what broke
-        body = errors.plain_page(err, pwa.APP_NAME)
+        body = errors.plain_page(err, kitpwa.APP_NAME)
     resp = HttpResponse(body, status=500)
     resp["Cache-Control"] = "no-store"
     return resp

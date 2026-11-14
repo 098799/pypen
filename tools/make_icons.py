@@ -1,13 +1,13 @@
-"""Draw pypen's PNG icons from the sign in dpypen/dpypen/items/pwa.py (_NIB).
+"""Draw pypen's PNG icons from the sign in dpypen/dpypen/items/kitpwa.py (_NIB).
 
     python3 tools/make_icons.py      (needs rsvg-convert)
 
-The sign (pwa.py serves the same drawing as /icon.svg and /icon-maskable.svg):
+The sign (kitpwa.py serves the same drawing as /icon.svg and /icon-maskable.svg):
 one nib, the pen inked now, in a dashed ring, the rotation, with an oxblood
 dot on it, the next pen due. pens, the catalogue, draws the same nib three
 times.
 
-Reads _NIB from pwa.py (no Django needed) and writes static/items/icons/:
+Reads _NIB from kitpwa.py (no Django needed) and writes static/items/icons/:
 icon-192.png and icon-512.png (scale 1), icon-maskable-512.png (0.75: the
 sign inside 0.31 x the width, which Android 12+ keeps on the splash),
 apple-touch-icon.png (180, 0.92: within 80 %). All are flat #f4ecd8, the
@@ -23,7 +23,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-PWA = ROOT / "dpypen" / "dpypen" / "items" / "pwa.py"
+PWA = ROOT / "dpypen" / "dpypen" / "items" / "kitpwa.py"
 OUT = ROOT / "dpypen" / "dpypen" / "items" / "static" / "items" / "icons"
 BG = "#f4ecd8"
 
@@ -32,7 +32,7 @@ def nib() -> str:
     for node in ast.parse(PWA.read_text()).body:
         if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "_NIB":
             return ast.literal_eval(node.value)
-    raise SystemExit("_NIB not found in pwa.py")
+    raise SystemExit("_NIB not found in kitpwa.py")
 
 
 def sign(scale: float) -> str:

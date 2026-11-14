@@ -13,7 +13,7 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.test import Client, RequestFactory, TestCase, override_settings
 
-from dpypen.items import error_pages, pwa
+from dpypen.items import error_pages, kitpwa
 from dpypen.items.tests import PLAIN_STATIC, shipped
 
 HERE = Path(__file__).resolve().parent
@@ -55,7 +55,7 @@ class TheShellCarriesThem(TestCase):
         self.assertEqual(html.count("/*! KIT-PULLREFRESH: v1"), 2)
         self.assertEqual(html.count("/*! KIT-WHATSNEW: v2"), 2)      # member.css and member.js
         # the toast compares this page's build with the server's
-        self.assertIn('id: "%s"' % pwa.KITSW["build"], html)
+        self.assertIn('id: "%s"' % kitpwa.KITSW["build"], html)
         self.assertIn('url: "/api/version"', html)
         self.assertLess(html.index("window.KITUPDATE"), html.index('<script src="/kit/shell.js'))
         self.assertLess(html.index("window.WHATSNEW"), html.index('<script src="/kit/member.js'))
@@ -144,7 +144,7 @@ class TheBuildIsAsked(TestCase):
     def test_version_is_open_and_never_kept(self):
         r = Client().get("/api/version")
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json(), {"build": pwa.KITSW["build"]})
+        self.assertEqual(r.json(), {"build": kitpwa.KITSW["build"]})
         self.assertEqual(r["Cache-Control"], "no-store")
 
 
