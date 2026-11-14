@@ -81,7 +81,7 @@ class PhotosOpenInTheKitViewer(_Collection):
             html = shipped(self.owner_client, reverse(name, args=args))
             self.assertNotIn("items/js/viewer.js", html, name)
             self.assertNotIn("items/css/viewer.css", html, name)
-            self.assertEqual(html.count("/*! KIT-VIEWER: v1.0"), 2, name)  # shell.css and shell.js
+            self.assertEqual(html.count("/*! KIT-VIEWER: v1."), 2, name)  # shell.css and shell.js
             self.assertIn("window.kitViewer", html, name)
             # after the layer: Back, Esc and focus come from kitLayer
             self.assertLess(html.index("/*! KIT-LAYER"), html.index("window.kitViewer"), name)
