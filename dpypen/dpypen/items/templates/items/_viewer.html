@@ -1,4 +1,4 @@
-<!-- KIT-VIEWER: v1.0 2026-11-14
+<!-- KIT-VIEWER: v1.1 2026-11-14
   A picture full screen: tap it and it fills the screen, to be pinched, zoomed,
   walked through and closed — the same in every app. Spec: ~/apps/kit/README.md
   §4, "Picture viewer". Canonical copy: ~/apps/kit/snippets/viewer.html. Apps
@@ -50,12 +50,16 @@
     total     the count shown when the list is a page of more
     onShow    function(item, i, v): each time a picture becomes the current one
     onClose   function(i, why): after it went (why as in kitLayer)
+    onLoad    function(item, i, v): the current picture's file is on screen (once
+              per show; a watched mark counts only what was seen)
+    onError   function(item, i, v): the current picture's file did not load
     onEnded   function(v): a video ended (igarchive: the next story)
     actions   [{label, icon, run(item, i, v), when(item)}]: ≤ 3 buttons in the
               top bar, icon = the app's own SVG markup (never a user's text)
     info      function(item, el, v): fills el under the caption on each show
     autoplay  true: a video plays when it becomes the current one
     upscale   false: a small picture is never drawn larger than its pixels
+    inset     px kept free at the bottom for an app's panel (as v.inset)
     loop      true: the last walks on to the first
     keys      false: no keys of its own but Esc (a baby-tier app)
     name      kitLayer's name ("picture")
@@ -63,9 +67,18 @@
     v.close(), v.zoom(factor), v.pan(dx, dy), v.fit(), v.over (an element over
     the current picture, transformed with it: a before/after overlay; cleared
     on each show; stop pointerdown there to keep a drag of your own),
-    v.bar (the top bar, for an app's own control), v.retry().
+    v.bar (the top bar, for an app's own control), v.retry(), v.refresh()
+    (after the app changed what it put in info), v.inset(px) (keep the bottom
+    px for an app's panel: the picture fits above it; 0 gives it back).
   Labels: window.KITVIEWER = {labels: {close, prev, next, of, picture, loading,
-    failed, small, retry, original, sharp, touch, desk, view}} before it loads.
+    failed, small, retry, original, sharp, touch, desk, view}} before it loads;
+    kitViewer.setLabels({…}) for an app that changes language later.
+  data-view is a picture only when its value is a file (has a / or a .), or it
+    is empty on a link, an img or an element holding an img: data-view="learn"
+    (a tab's name in another app) opens nothing.
+  To take a member's tap first (a thumbnail that swaps the big photo): listen
+    on window with capture: true and preventDefault; with htmx boost, also put
+    hx-boost="false" on that link (boost follows it whatever the default).
 
   What it does: a top-layer <dialog>, fixed dark in both themes (a picture is
   seen on black), opened through kitLayer (Back, Esc, focus back to the
@@ -136,7 +149,7 @@
 <script>
 (function () {
   if (window.kitViewer && window.kitViewer.version) return;
-  var VERSION = '1.0';
+  var VERSION = '1.1';
   var GAP = 16, MAXZ = 6, TAP_MS = 300, TAP_PX = 30, DOUBLE = 2.8;
   var CFG = window.KITVIEWER || {};
   var L = {
@@ -171,7 +184,7 @@
     return e;
   }
   function W() { return dlg.clientWidth || innerWidth; }
-  function H() { return dlg.clientHeight || innerHeight; }
+  function H() { return Math.max(120, (dlg.clientHeight || innerHeight) - ((S && S.inset) || 0)); }
   function now() { return performance.now(); }
   function cur() { return slides[1]; }
 
@@ -370,13 +383,9 @@
         if (my !== s.gen) return;
         if (!s.w) { s.w = v.videoWidth || 16; s.h = v.videoHeight || 9; layout(s); }
         s.box.classList.add('on'); s.shown = it.poster || ''; s.full = true; s.level = 2;
-        if (s === cur()) paintMsg();
+        if (s === cur()) { paintMsg(); loaded(s); }
       });
-      v.addEventListener('error', function () {
-        if (my !== s.gen) return;
-        s.failed = true;
-        if (s === cur()) paintMsg();
-      });
+      v.addEventListener('error', function () { failed(s, my); });
       v.addEventListener('ended', function () {
         if (my === s.gen && s === cur() && S && S.o.onEnded) S.o.onEnded(api());
       });
@@ -415,7 +424,7 @@
       s.shown = url;
       s.box.classList.add('on');
       if (level >= 2) { s.full = true; s.failed = false; }
-      if (s === cur()) { paintMsg(); mapPaint(s); }
+      if (s === cur()) { paintMsg(); mapPaint(s); if (level >= 2) loaded(s); }
     };
     pic.onerror = function () {
       if (my !== s.gen) return;
@@ -430,7 +439,17 @@
   function failed(s, my) {
     if (my !== s.gen) return;
     s.failed = true;
-    if (s === cur()) paintMsg();
+    if (s === cur()) { paintMsg(); hook('onError', s); }
+  }
+  function hook(name, s) {
+    if (!S || !S.o[name] || s.idx < 0) return;
+    try { S.o[name](S.items[s.idx], s.idx, api()); } catch (e) { setTimeout(function () { throw e; }); }
+  }
+  // the file of the current picture is on screen: once per show
+  function loaded(s) {
+    if (s.told === s.gen) return;
+    s.told = s.gen;
+    hook('onLoad', s);
   }
   // the sharp file: only when it would show more than the one on screen
   function wantHi(s) {
@@ -551,7 +570,11 @@
     footPaint();
     paintMsg();
   }
-  function footPaint() { foot.classList.toggle('none', !capEl.textContent && !infoEl.childNodes.length); }
+  function footPaint() {
+    foot.classList.toggle('none', !capEl.textContent && !infoEl.childNodes.length);
+    // the gesture hint sits above the foot, never over an app's panel in it
+    hintEl.style.bottom = foot.classList.contains('none') ? '' : (foot.offsetHeight + 12) + 'px';
+  }
 
   // ——— the three slides ———
   function place() {
@@ -582,6 +605,8 @@
     dlg.classList.toggle('kv-zoomed', zoomed(s));
     paintChrome();
     if (S.o.onShow) { try { S.o.onShow(S.items[S.i], S.i, api()); } catch (e) { setTimeout(function () { throw e; }); } }
+    if (s.full) loaded(s);
+    else if (s.failed) hook('onError', s);
     try { document.dispatchEvent(new CustomEvent('kit:viewer', {detail: {open: true, index: S.i, item: S.items[S.i]}})); } catch (e) {}
   }
   function slideTo(x, ms, then) {
@@ -640,6 +665,12 @@
       index: S.i, item: S.items[S.i], items: S.items, over: s.over, bar: actsEl,
       go: go, step: step, close: close, retry: retry,
       zoom: function (f) { zoomTo(s, s.scale * f, W() / 2, H() / 2, true); },
+      refresh: function () { footPaint(); },
+      inset: function (px) {
+        if (!S) return;
+        S.inset = Math.max(0, +px || 0);
+        slides.forEach(function (o) { if (o.w) { if (o === cur()) relayout(o); else layout(o); } });
+      },
       pan: function (dx, dy) { s.tx += dx; s.ty += dy; clamp(s); apply(s); },
       fit: function () { toRest(s, true); }
     };
@@ -653,7 +684,7 @@
     build();
     var at = Math.max(0, Math.min(list.length - 1, +o.at || 0));
     var again = S && dlg.open;
-    S = {items: list, i: at, o: o};
+    S = {items: list, i: at, o: o, inset: Math.max(0, +o.inset || 0)};
     dlg.classList.remove('kv-bare', 'kv-zoomed');
     bg.style.opacity = '';
     msgEl.hidden = true;
@@ -817,9 +848,12 @@
     }
     if (pointers.size) return;
     var m = g.mode, dx = e.clientX - g.x0, dy = e.clientY - g.y0, vx = g.vx, vy = g.vy, type = g.type;
+    if (now() - g.lt > 80) { vx = 0; vy = 0; }      // the finger rested before it lifted: no flick
     g = null;
     if (!m) { tap(e, type); return; }
     if (m === 'pan') {
+      // the second finger of a pinch below fit: back to fit
+      if (s.w && s.scale < s.min * 0.999) { zoomTo(s, s.min, W() / 2, H() / 2, true); return; }
       if (Math.hypot(vx, vy) > 0.3 && !reduce) glide(s, vx, vy);
     } else if (m === 'page') {
       var vw = W(), d = dx < 0 ? 1 : -1;
@@ -889,7 +923,8 @@
     if (!S || e.metaKey || e.ctrlKey || e.altKey) return;
     var kk = e.key, s = cur(), vw = W(), vh = H();
     var tgt = e.target;
-    if (tgt && tgt !== dlg && tgt.closest && (tgt.closest('.kv-info') || tgt.tagName === 'VIDEO' || tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA')) return;
+    if (tgt && tgt !== dlg && tgt.closest && (tgt.tagName === 'VIDEO' || tgt.matches('input, textarea, select, [contenteditable]') ||
+        ((kk === ' ' || kk === 'Enter') && tgt.closest('button, a, summary')))) return;
     if (kk === 'Escape') { e.preventDefault(); e.stopPropagation(); escape(); return; }
     if (S.o.keys === false) return;
     if (kk === 'q') close();
@@ -962,17 +997,24 @@
     if (tot) o.total = +tot;
     return open(items, o);
   }
+  // data-view names a picture: a file, or empty on a link / an img / what holds an img
+  function isPic(t) {
+    var v = t.getAttribute('data-view');
+    if (t.hasAttribute('data-view-video')) return true;
+    if (v) return /[\/.]/.test(v);
+    return t.tagName === 'A' || t.tagName === 'IMG' || !!t.querySelector('img');
+  }
   function modified(e) { return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || (e.button && e.button !== 0); }
   document.addEventListener('click', function (e) {
     var t = e.target.closest && e.target.closest('[data-view]');
-    if (!t || e.defaultPrevented || modified(e) || (dlg && dlg.contains(t))) return;
+    if (!t || e.defaultPrevented || modified(e) || (dlg && dlg.contains(t)) || !isPic(t)) return;
     if (t.matches('input, select, textarea')) return;
     e.preventDefault();
     e.stopPropagation();
     openFrom(t);
   }, true);
   document.addEventListener('keydown', function (e) {
-    if ((e.key !== 'Enter' && e.key !== ' ') || e.defaultPrevented || !e.target.matches || !e.target.matches('[data-view]')) return;
+    if ((e.key !== 'Enter' && e.key !== ' ') || e.defaultPrevented || !e.target.matches || !e.target.matches('[data-view]') || !isPic(e.target)) return;
     if (e.key === ' ' && e.target.tagName === 'A') return;
     if (e.target.tagName === 'BUTTON' || (e.target.tagName === 'A' && e.key === 'Enter')) return;   // their click comes
     e.preventDefault();
@@ -982,6 +1024,7 @@
     var list = document.querySelectorAll('[data-view]:not(a):not(button):not([tabindex])');
     for (var i = 0; i < list.length; i++) {
       var e = list[i];
+      if (!isPic(e)) continue;
       e.setAttribute('tabindex', '0');
       e.setAttribute('role', 'button');
       if (!e.getAttribute('aria-label')) {
@@ -999,7 +1042,8 @@
   }
   function start() {
     arm();
-    try { new MutationObserver(armSoon).observe(document.body, {childList: true, subtree: true}); } catch (e) {}
+    // a data-view put on a picture already there (museum's quiz, once its pixels show) is armed too
+    try { new MutationObserver(armSoon).observe(document.body, {childList: true, subtree: true, attributes: true, attributeFilter: ['data-view']}); } catch (e) {}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
@@ -1011,7 +1055,17 @@
     setup: function (o) { defaults = o || {}; },
     isOpen: function () { return !!(S && dlg && dlg.open && !closing); },
     current: function () { return S ? api() : null; },
-    labels: L
+    labels: L,
+    setLabels: function (o) {
+      for (var n in (o || {})) L[n] = o[n];
+      if (!dlg) return;
+      dlg.setAttribute('aria-label', L.picture);
+      xBtn.setAttribute('aria-label', L.close);
+      prevBtn.setAttribute('aria-label', L.prev); nextBtn.setAttribute('aria-label', L.next);
+      hintEl.querySelector('.kv-touch').textContent = L.touch;
+      hintEl.querySelector('.kv-desk').textContent = L.desk;
+      if (S) paintChrome();
+    }
   };
 })();
 </script>
