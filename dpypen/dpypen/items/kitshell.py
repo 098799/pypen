@@ -23,6 +23,8 @@ Files, in the order the pages had the snippets:
                      a stranger has no bar)
   wall.css/.js       the public walls: pull to refresh, update, filters
   tabs.css/.js       the walls, the owner and guests only: the tab bar
+  place.js           every full-load page, `defer` (KIT-PLACE, APPS-8): Back and a
+                     reload land where you left (a soft Back is htmx's own)
 
 The scripts are NOT `defer`: the shells' own inline scripts (_shell_early,
 _shell_behave, the What's new repaint, the settings page) call kitToast,
@@ -61,6 +63,7 @@ KIT.js("wall.js", *WALL)
 # A wall's tab bar, for the owner and guests (most of a wall's audience is signed out).
 KIT.css("tabs.css", "_tabs.html")
 KIT.js("tabs.js", "_tabs.html")
+KIT.js("place.js", "_place.js")
 
 
 def url(name: str) -> str:

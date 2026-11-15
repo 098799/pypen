@@ -277,8 +277,14 @@ offline (`kitpwa.KITSW["files"]`).
   toast, empty, filters, update, pull to refresh); `member.css`/`member.js`
   (owner and guests: What's new, install bar, Settings' rows, the tab bar);
   `wall.css`/`wall.js` (the walls: pull to refresh, update, filters);
-  `tabs.css`/`tabs.js` (a wall's tab bar, owner and guests only). `_kit.html`
-  and `_kit_css.html` link them.
+  `tabs.css`/`tabs.js` (a wall's tab bar, owner and guests only); `place.js`
+  (KIT-PLACE, APPS-8: Back and a reload land where you left; `defer`, on both
+  shells and the walls, after its `window.KITPLACE`). `_kit.html` and
+  `_kit_css.html` link them.
+- **Back keeps the place**: a soft Back is htmx's own snapshot (0 px measured);
+  place.js does the full loads (a reload, a Back the phone loads again). htmx
+  writes `{htmx: true}` over the entry it leaves, so `_shell_early.html` wraps
+  `history.replaceState` to carry place.js's `kitPlaceY`/`kitPlaceAt` along.
 - **Blocking at the top of `<body>`, not `defer`**: `_shell_early`,
   `_shell_behave`, the What's new repaint and the settings page call the kit
   as they run. A cached file costs one fetch per deploy.
@@ -489,7 +495,7 @@ floating menu button that showed on scroll).
 ## Kit pieces
 
 `AUDIT.md` "Kit adherence" walks `~/apps/kit/README.md` section by section
-(PYPEN-2). Byte copies, all in fleet-check `kit`: `_layer.js`, `_toast.html`,
+(PYPEN-2). Byte copies, all in fleet-check `kit`: `_layer.js`, `_place.js`, `_toast.html`,
 `_settings.html`, `_theme.js`, `_sw.js`, `_update.html`, `_pullrefresh.html`,
 `_whatsnew.html` (templates) and `errors.py`, `whatsnew.py`, `webp.py`,
 `lists.py` (items/). `_keys.html` is in fleet-check `keys` (stamp only: it carries its

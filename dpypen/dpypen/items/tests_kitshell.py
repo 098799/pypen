@@ -97,6 +97,34 @@ class TheTabBarComesInAFile(TestCase):
 
 
 @override_settings(STORAGES=PLAIN_STATIC)
+class BackKeepsThePlace(TestCase):
+    """KIT-PLACE (kit README §4 "Back keeps the place", APPS-8): /kit/place.js, `defer`, once on
+    every full-load page (both shells, the walls); htmx's replaceState keeps its two fields."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = get_user_model().objects.create_user("owner", password="x")
+
+    def test_the_file_is_the_kits_place_js(self):
+        self.assertIn(b"KIT-PLACE: v1", kitshell.KIT.files["place.js"][0])
+        self.assertIn(b"window.kitPlace", kitshell.KIT.files["place.js"][0])
+        self.assertIn(b"kitPlaceKept", kitshell.KIT.files["early.js"][0])
+
+    def test_every_full_load_page_carries_it_once(self):
+        self.client.force_login(self.owner)
+        for url, cfg in (("/pens/", 'window.KITPLACE = {header: "#hdr"}'), ("/inks/", 'window.KITPLACE = {header: "#hdr"}'),
+                         ("/usages/", 'window.KITPLACE = {header: "#hdr"}'), ("/prev/pens/", 'window.KITPLACE = {header: "#hdr"}'),
+                         ("/pub/pens/wall/", 'window.KITPLACE = {anchors: ".wall a[href], .wall-foot a[href]"'),
+                         ("/pub/inks/wall/", 'window.KITPLACE = {anchors: ".wall a[href], .wall-foot a[href]"')):
+            with self.subTest(url=url):
+                html = self.client.get(url).content.decode()
+                self.assertEqual(len(re.findall(r'<script src="/kit/place\.js\?v=\w+" defer></script>', html)), 1)
+                self.assertEqual(html.count("window.KITPLACE"), 1)
+                self.assertLess(html.index(cfg), html.index("/kit/place.js"))
+                self.assertNotIn("KIT-PLACE", html)
+
+
+@override_settings(STORAGES=PLAIN_STATIC)
 class TheFilesAreKept(TestCase):
     @classmethod
     def setUpTestData(cls):

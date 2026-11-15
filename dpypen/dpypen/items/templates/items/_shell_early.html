@@ -1,4 +1,21 @@
 <script>
+/* htmx writes {htmx: true} over the entry it leaves (history.replaceState), and
+   so dropped the place the kit's place.js keeps there (KIT-PLACE: kitPlaceY,
+   kitPlaceAt): a Back the phone loads again landed at the top. Its two fields
+   go along (APPS-8). */
+(function () {
+  var rs = history.replaceState;
+  if (!rs || rs.kitPlaceKept) return;
+  history.replaceState = function (st, t, u) {
+    var was = history.state;
+    if (st && st.htmx && was && was.kitPlaceAt && !st.kitPlaceAt)
+      st = Object.assign({}, st, {kitPlaceY: was.kitPlaceY, kitPlaceAt: was.kitPlaceAt});
+    return rs.apply(history, [st].concat([].slice.call(arguments, 1)));
+  };
+  history.replaceState.kitPlaceKept = true;
+})();
+</script>
+<script>
 /* On each full load and after each htmx swap: the messages not yet shown.
    The kit shows one toast at a time, so several messages at once (a notebook
    import: a warning per bad row, then "Saved n inkings") become one toast,

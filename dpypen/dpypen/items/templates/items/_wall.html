@@ -37,6 +37,9 @@ made it old) and the filters the ink wall's header carries (on the pen wall it f
 {% endcomment %}
 <script>window.KITUPDATE = {app: "pypen", build: {url: "/api/version", id: "{{ kit_build }}"}};</script>
 <script src="{% kit_shell 'wall.js' %}"></script>
+{# Back keeps the place (KIT-PLACE, APPS-8): a wall has no <main>, its tiles are the anchors. #}
+<script>window.KITPLACE = {anchors: ".wall a[href], .wall-foot a[href]", header: ".wall-head"};</script>
+<script src="{% kit_shell 'place.js' %}" defer></script>
 {% if is_owner or is_guest %}<script src="{% kit_shell 'tabs.js' %}"></script>{% endif %}
 
 <header class="wall-head">
